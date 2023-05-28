@@ -41,6 +41,7 @@ namespace csknow::key_retake_events {
         vector<string> roundTestName;
         vector<int> roundTestIndex;
         vector<int> roundNumTests;
+        vector<bool> roundHasStartTest;
         vector<bool> roundHasCompleteTest;
         vector<bool> roundHasFailedTest;
         vector<bool> roundBaiters;

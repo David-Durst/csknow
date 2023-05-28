@@ -146,18 +146,13 @@ def draw_all_players(data_series: pd.Series, pred_series: pd.Series, im_draw: Im
                     if prob < 0.05:
                         color = (255, 0, 0, 100)
                     else:
+                        clamped_prob = max(0.5, min(1., prob))
                         if xy_coord_to_max_prob_z_index[xy_coord] == 0:
-                            color = (int(255 * (1-prob)), 0, int(255 * prob), 255)
-                            if prob > 0.3:
-                                x = 1
+                            color = (0, 0, int(255 * clamped_prob), 255)
                         if xy_coord_to_max_prob_z_index[xy_coord] == 1:
-                            color = (int(255 * (1-prob)), int(255 * prob), 0, 255)
-                            if prob > 0.3:
-                                x = 1
+                            color = (0, int(255 * clamped_prob), 0, 255)
                         elif xy_coord_to_max_prob_z_index[xy_coord] == 2:
-                            color = (int(255 * (1-prob)), int(255 * prob), int(255 * prob), 255)
-                            if prob > 0.3:
-                                x = 1
+                            color = (0, int(255 * clamped_prob), int(255 * clamped_prob), 255)
                     xy_coord_to_sum_coord[xy_coord].draw_vis(im_draw, False, color)
     return result
 

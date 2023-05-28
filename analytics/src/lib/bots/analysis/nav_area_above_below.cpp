@@ -20,7 +20,7 @@ namespace csknow::nav_area_above_below {
 
     NavAreaAboveBelow::NavAreaAboveBelow(const MapMeshResult &mapMeshResult, const std::string &navPath) {
         std::string filePath = navPath + "/de_dust2_nav_above_below.hdf5";
-        if (false && std::filesystem::exists(filePath)) {
+        if (std::filesystem::exists(filePath)) {
             load(filePath);
         }
         else {

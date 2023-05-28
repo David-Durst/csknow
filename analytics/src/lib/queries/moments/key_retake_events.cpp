@@ -31,10 +31,11 @@ namespace csknow::key_retake_events {
         roundTestName.resize(rounds.size, "INVALID");
         roundTestIndex.resize(rounds.size, INVALID_ID);
         roundNumTests.resize(rounds.size, INVALID_ID);
+        roundHasStartTest.resize(rounds.size, false);
         roundHasCompleteTest.resize(rounds.size, false);
         roundHasFailedTest.resize(rounds.size, false);
         roundBaiters.resize(rounds.size, false);
-#pragma omp parallel for
+//#pragma omp parallel for
         for (int64_t roundIndex = 0; roundIndex < rounds.size; roundIndex++) {
             bool foundFirstFireInRound = false, foundFirstPlantInRound = false, foundFirstDefusalInRound = false,
                 foundExplosionInRound = false, foundTestStartInRound = false, foundTestFinishInRound = false;
@@ -110,19 +111,37 @@ namespace csknow::key_retake_events {
                         roundTestName[roundIndex] = parsedMessage[1];
                         roundTestIndex[roundIndex] = std::stoi(parsedMessage[2]);
                         roundNumTests[roundIndex] = std::stoi(parsedMessage[3]);
+                        roundHasStartTest[roundIndex] = true;
                     }
                     else if (sayMessage.find(test_finished_string) != std::string::npos) {
                         foundTestFinishInRound = true;
-                        roundHasCompleteTest[roundIndex] = foundTestStartInRound && foundTestFinishInRound;
-                        if (sayMessage.find("Bait") != std::string::npos) {
-                            roundBaiters[roundIndex] = true;
+                        // for tests that require round finishing, check prior round
+                        if (foundTestStartInRound) {
+                            roundHasCompleteTest[roundIndex] = true;
+                            if (sayMessage.find("Bait") != std::string::npos) {
+                                roundBaiters[roundIndex] = true;
+                            }
+                        }
+                        else if (roundHasStartTest[roundIndex - 1]) {
+                            roundHasCompleteTest[roundIndex-1] = true;
+                            if (sayMessage.find("Bait") != std::string::npos) {
+                                roundBaiters[roundIndex-1] = true;
+                            }
                         }
                     }
                     else if (sayMessage.find(test_failed_string) != std::string::npos) {
                         foundTestFinishInRound = true;
-                        roundHasFailedTest[roundIndex] = foundTestStartInRound && foundTestFinishInRound;
-                        if (sayMessage.find("Bait") != std::string::npos) {
-                            roundBaiters[roundIndex] = true;
+                        if (foundTestStartInRound) {
+                            roundHasFailedTest[roundIndex] = true;
+                            if (sayMessage.find("Bait") != std::string::npos) {
+                                roundBaiters[roundIndex] = true;
+                            }
+                        }
+                        else if (roundHasStartTest[roundIndex - 1]) {
+                            roundHasFailedTest[roundIndex-1] = true;
+                            if (sayMessage.find("Bait") != std::string::npos) {
+                                roundBaiters[roundIndex-1] = true;
+                            }
                         }
                     }
                 }
