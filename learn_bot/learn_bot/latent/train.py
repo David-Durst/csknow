@@ -308,7 +308,7 @@ def train(train_type: TrainType, all_data_df: pd.DataFrame, hyperparameter_optio
                 test_loss, test_accuracy = train_or_test_SL_epoch(test_dataloader, model, None, False)
             cur_test_less_float = test_loss.get_total_loss().item()
             if cur_test_less_float < min_test_loss:
-                #save_model()
+                save_model()
                 min_test_loss = cur_test_less_float
             save_tensorboard(train_loss, test_loss, train_accuracy, test_accuracy, epoch_num)
 

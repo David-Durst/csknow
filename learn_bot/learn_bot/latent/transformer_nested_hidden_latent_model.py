@@ -128,31 +128,30 @@ class TransformerNestedHiddenLatentModel(nn.Module):
 
         x_pos = rearrange(x[:, self.players_pos_columns], "b (p d) -> b p d", p=self.num_players, d=3)
 
-        y_per_player = delta_one_hot_to_index(y)
-        # shift by 1 so never looking into future (and 0 out for past)
-        y_per_player_shifted = torch.roll(y_per_player, 1, dims=1)
-        y_per_player_shifted[:, 0] = 0
-        y_pos = rearrange(compute_new_pos(x_pos, y_per_player_shifted, self.nav_above_below, self.nav_region),
-                          "b (p d) -> b p d", p=self.num_players, d=3)
-
         x_pos_encoded = self.encode_pos(x_pos)
-        y_pos_encoded = self.encode_pos(y_pos)
 
         x_non_pos = rearrange(x[:, self.players_non_pos_columns], "b (p d) -> b p d", p=self.num_players)
         x_gathered = torch.cat([x_pos_encoded, x_non_pos], -1)
-        y_gathered = torch.cat([y_pos_encoded, x_non_pos], -1)
 
         alive_gathered = x[:, self.alive_columns]
         dead_gathered = alive_gathered < 0.1
 
         # run model except last layer
         x_encoded = self.encoder_model(x_gathered)
-        y_encoded = self.encoder_model(y_gathered)
 
-        if y is None:
-            raise Exception("y can't be none for now")
+        if y is not None:
+            y_per_player = delta_one_hot_to_index(y)
+            # shift by 1 so never looking into future (and 0 out for past)
+            y_per_player_shifted = torch.roll(y_per_player, 1, dims=1)
+            y_per_player_shifted[:, 0] = 0
+            y_pos = rearrange(compute_new_pos(x_pos, y_per_player_shifted, self.nav_above_below, self.nav_region),
+                              "b (p d) -> b p d", p=self.num_players, d=3)
+            y_pos_encoded = self.encode_pos(y_pos)
+            y_gathered = torch.cat([y_pos_encoded, x_non_pos], -1)
+            y_encoded = self.encoder_model(y_gathered)
+
         tgt_mask = self.generate_square_subsequent_mask(x.device.type)
-        transformed = self.transformer_model(x_encoded, y_encoded, tgt_mask=tgt_mask, src_key_padding_mask=dead_gathered)
+        transformed = self.transformer_model(x_encoded, x_encoded if y is None else y_encoded, tgt_mask=tgt_mask, src_key_padding_mask=dead_gathered)
         #transformed = self.transformer_model(x_encoded, y_encoded, src_key_padding_mask=dead_gathered)
 
         #if torch.isnan(transformed).any():
