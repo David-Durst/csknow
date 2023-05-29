@@ -8,7 +8,7 @@ from learn_bot.latent.order.column_names import team_strs, player_team_str, flat
 from learn_bot.latent.place_area.column_names import specific_player_place_area_columns, delta_pos_grid_num_cells
 from learn_bot.latent.place_area.pos_abs_delta_conversion import compute_new_pos, load_nav_region_and_above_below, \
     delta_one_hot_max_to_index, delta_one_hot_prob_to_index
-from learn_bot.libs.io_transforms import IOColumnTransformers, CUDA_DEVICE_STR
+from learn_bot.libs.io_transforms import IOColumnTransformers, CUDA_DEVICE_STR, CPU_DEVICE_STR
 from learn_bot.libs.positional_encoding import *
 from einops import rearrange
 
@@ -77,6 +77,7 @@ class TransformerNestedHiddenLatentModel(nn.Module):
         )
 
         self.nav_region, self.nav_above_below = load_nav_region_and_above_below()
+        self.nav_above_below_cpu = self.nav_above_below.to(CPU_DEVICE_STR)
 
         transformer_encoder_layer = nn.TransformerEncoderLayer(d_model=self.internal_width, nhead=num_heads, batch_first=True)
         transformer_encoder = nn.TransformerEncoder(transformer_encoder_layer, num_layers=num_layers, enable_nested_tensor=False)
@@ -124,8 +125,12 @@ class TransformerNestedHiddenLatentModel(nn.Module):
         # shift by 1 so never looking into future (and 0 out for past)
         y_per_player_shifted = torch.roll(y_per_player, 1, dims=1)
         y_per_player_shifted[:, 0] = 0
-        y_pos = rearrange(compute_new_pos(x_pos, y_per_player_shifted, self.nav_above_below, self.nav_region),
-                          "b (p d) -> b p d", d=3)
+        if x_pos.device.type == CPU_DEVICE_STR:
+            y_pos = rearrange(compute_new_pos(x_pos, y_per_player_shifted, self.nav_above_below_cpu, self.nav_region),
+                              "b (p d) -> b p d", d=3)
+        else:
+            y_pos = rearrange(compute_new_pos(x_pos, y_per_player_shifted, self.nav_above_below, self.nav_region),
+                              "b (p d) -> b p d", d=3)
         y_pos_encoded = self.encode_pos(y_pos)
         y_gathered = torch.cat([y_pos_encoded, x_non_pos], -1)
         return self.encoder_model(y_gathered)

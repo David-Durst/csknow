@@ -67,10 +67,11 @@ def compute_new_pos(input_pos_tensor: torch.tensor, pred_per_player: torch.Tenso
     output_pos_tensor[:, :, 2] = output_pos_tensor[:, :, 2].clamp(min=nav_region.min.z, max=nav_region.max.z)
 
     # compute z pos
+    device_str = input_pos_tensor.device.type
     num_y_steps = int(ceil((nav_region.max.y - nav_region.min.y) / nav_step_size))
     num_z_steps = int(ceil((nav_region.max.z - nav_region.min.z) / nav_step_size))
-    num_steps = torch.tensor([[[num_y_steps * num_z_steps, num_z_steps, 1]]]).to(CUDA_DEVICE_STR).long()
-    nav_grid_base = torch.tensor([[[nav_region.min.x, nav_region.min.y, nav_region.min.z]]]).to(CUDA_DEVICE_STR)
+    num_steps = torch.tensor([[[num_y_steps * num_z_steps, num_z_steps, 1]]]).to(device_str).long()
+    nav_grid_base = torch.tensor([[[nav_region.min.x, nav_region.min.y, nav_region.min.z]]]).to(device_str)
     nav_grid_steps = torch.floor((output_pos_tensor - nav_grid_base) / nav_step_size).long()
     nav_grid_index = rearrange(torch.sum(num_steps * nav_grid_steps, dim=-1), 'b p -> (b p)')
     nav_above_below_per_player = rearrange(torch.index_select(nav_above_below, 0, nav_grid_index), '(b p) o -> b p o',
