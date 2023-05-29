@@ -19,7 +19,7 @@ string ModelNavData::print(const ServerState &) const {
         for (size_t i = 0; i < deltaPosProbs.size(); i++) {
             optionAndProbs.push_back({std::to_string(i), deltaPosProbs[i]});
         }
-        result << "next delta pos index " << deltaPosIndex << ", delta x " << deltaXVal << ", delta y " << deltaYVal
+        result << "next delta pos index " << deltaPosIndex << ", delta x " << deltaXVal << ", delta y " << deltaYVal << ", delta z " << deltaZVal
                << ", next area " << nextArea << ", unmodified target pos " << unmodifiedTargetPos.toString() << ", delta pos options: ";
     }
     else {

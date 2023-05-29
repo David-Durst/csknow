@@ -13,7 +13,7 @@ struct ModelNavData {
     bool deltaPosMode;
     vector<float> deltaPosProbs;
     int64_t deltaPosIndex;
-    int deltaXVal, deltaYVal;
+    int deltaZVal, deltaXVal, deltaYVal;
     std::optional<AreaId> disabledArea;
     // this is a target pos that doesn't need to be modified to match the world
     Vec3 unmodifiedTargetPos;

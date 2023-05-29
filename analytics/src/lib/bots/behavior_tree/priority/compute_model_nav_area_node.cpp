@@ -16,8 +16,17 @@ namespace csknow::compute_nav_area {
         curPriority.targetPos = curClient.getFootPosForPlayer() + Vec3{
                 static_cast<double>(modelNavData.deltaXVal * csknow::feature_store::delta_pos_grid_cell_dim),
                 static_cast<double>(modelNavData.deltaYVal * csknow::feature_store::delta_pos_grid_cell_dim),
-                0.
+                modelNavData.deltaZVal > 1 ? MAX_JUMP_HEIGHT : 0.
         };
+
+        // if not jumping or falling, get nearest in 3d
+        size_t navAboveBelowIndex = blackboard.navAboveBelow.posToIndex(curPriority.targetPos);
+        if (modelNavData.deltaZVal == 0) {
+            curPriority.targetAreaId = blackboard.navAboveBelow.areaNearest[navAboveBelowIndex];
+        }
+        else {
+            curPriority.targetAreaId = blackboard.navAboveBelow.areaBelow[navAboveBelowIndex];
+        }
 
         /*
         curPriority.targetPos = Vec3{-2182.96875, 2191.69189453125, 1.5059620141983032} + Vec3{
@@ -32,6 +41,7 @@ namespace csknow::compute_nav_area {
         curPriority.targetAreaId = blackboard.navFile
                 .get_nearest_area_by_position_z_limit(vec3Conv(curPriority.targetPos), 2000.f, 2*MAX_JUMP_HEIGHT).get_id();
                 */
+        /*
         // check if closer jumping or not
         const nav_mesh::nav_area & flatArea = blackboard.navFile
                 .get_nearest_area_by_position(vec3Conv(curPriority.targetPos));
@@ -48,6 +58,7 @@ namespace csknow::compute_nav_area {
         else {
             curPriority.targetAreaId = flatArea.get_id();
         }
+         */
 
         Vec3 desiredPos = curPriority.targetPos;
 
@@ -139,6 +150,7 @@ namespace csknow::compute_nav_area {
                                  (csknow::feature_store::delta_pos_grid_num_cells_per_xy_dim / 2);
         modelNavData.deltaYVal = (xyPredLabel / csknow::feature_store::delta_pos_grid_num_cells_per_xy_dim) -
                                  (csknow::feature_store::delta_pos_grid_num_cells_per_xy_dim / 2);
+        modelNavData.deltaZVal = deltaPosOption / csknow::feature_store::delta_pos_grid_num_xy_cells_per_z_change;
 
         if ((modelNavData.deltaXVal < 0 || modelNavData.deltaYVal < 0) && curClient.getFootPosForPlayer().x < 600 && curClient.getFootPosForPlayer().y > 1700) {
             int x = 1;

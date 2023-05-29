@@ -25,6 +25,7 @@
 #include "bots/analysis/feature_store.h"
 #include "bots/analysis/inference_manager.h"
 #include "bots/behavior_tree/priority/model_nav_data.h"
+#include "bots/analysis/nav_area_above_below.h"
 #include <filesystem>
 #include <memory>
 #include <random>
@@ -122,6 +123,7 @@ struct Blackboard {
     MapMeshResult mapMeshResult;
     ReachableResult reachability;
     DistanceToPlacesResult distanceToPlaces;
+    csknow::nav_area_above_below::NavAreaAboveBelow navAboveBelow;
     csknow::orders::OrdersResult ordersResult;
 
     // all player data
@@ -277,6 +279,7 @@ struct Blackboard {
         visPoints(navFile), nearestNavCell(visPoints), mapMeshResult(queryMapMesh(navFile, "")),
         reachability(queryReachable(visPoints, mapMeshResult, "", mapsPath, mapName)),
         distanceToPlaces(queryDistanceToPlaces(navFile, reachability, "", mapsPath, mapName)),
+        navAboveBelow(mapMeshResult, navFolderPath),
         ordersResult(visPoints, mapMeshResult, distanceToPlaces),
         aggressionDis(0., 1.),
         tDangerAreaLastCheckTime(navFile.m_areas.size(), defaultTime),
@@ -300,7 +303,9 @@ struct Blackboard {
                const VisPoints & visPoints,
                const csknow::nearest_nav_cell::NearestNavCell & nearestNavCell,
                const MapMeshResult & mapMeshResult, const ReachableResult & reachability,
-               const DistanceToPlacesResult & distanceToPlaces, const csknow::orders::OrdersResult & ordersResult,
+               const DistanceToPlacesResult & distanceToPlaces,
+               const csknow::nav_area_above_below::NavAreaAboveBelow & navAreaAboveBelow,
+               const csknow::orders::OrdersResult & ordersResult,
                csknow::feature_store::FeatureStorePreCommitBuffer & featureStorePreCommitBuffer) :
         navFolderPath(std::filesystem::path(navPath).remove_filename().string()),
         navPath(navPath), mapsPath(navFolderPath),
@@ -309,6 +314,7 @@ struct Blackboard {
         visPoints(visPoints), nearestNavCell(nearestNavCell), mapMeshResult(mapMeshResult),
         reachability(reachability),
         distanceToPlaces(distanceToPlaces),
+        navAboveBelow(navAreaAboveBelow),
         ordersResult(ordersResult),
         aggressionDis(0., 1.),
         tDangerAreaLastCheckTime(navFile.m_areas.size(), defaultTime),

@@ -44,6 +44,7 @@ namespace csknow::behavior_tree_latent_states {
                                             const MapMeshResult & mapMeshResult, const ReachableResult & reachability,
                                             const DistanceToPlacesResult & distanceToPlaces,
                                             const nearest_nav_cell::NearestNavCell & nearestNavCell,
+                                            const nav_area_above_below::NavAreaAboveBelow & navAreaAboveBelow,
                                             const csknow::orders::OrdersResult & ordersResult,
                                             const Players & players, const Games & games, const Rounds & rounds,
                                             const Ticks & ticks, const PlayerAtTick & playerAtTick,
@@ -81,7 +82,7 @@ namespace csknow::behavior_tree_latent_states {
             tmpRoundStarts[threadNum].push_back(static_cast<int64_t>(tmpStartTickId[threadNum].size()));
             std::unique_ptr<Blackboard> blackboard =
                     make_unique<Blackboard>(navPath, invalidInferenceManager, visPoints, nearestNavCell,
-                                            mapMeshResult, reachability, distanceToPlaces,
+                                            mapMeshResult, reachability, distanceToPlaces, navAreaAboveBelow,
                                             ordersResult, tmpPreCommitBuffer[threadNum]);
             blackboard->inAnalysis = true;
             std::unique_ptr<GlobalQueryNode> globalQueryNode = make_unique<GlobalQueryNode>(*blackboard);

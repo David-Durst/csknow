@@ -41,6 +41,7 @@ void Tree::tick(ServerState & state, const string & mapsPath) {
                                                          blackboard->visPoints, blackboard->nearestNavCell,
                                                          blackboard->mapMeshResult,
                                                          blackboard->reachability, blackboard->distanceToPlaces,
+                                                         blackboard->navAboveBelow,
                                                          blackboard->ordersResult,
                                                          featureStoreResult.defaultBuffer);
                 }
