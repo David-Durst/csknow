@@ -118,7 +118,7 @@ class TransformerNestedHiddenLatentModel(nn.Module):
         return self.positional_encoder(pos_scaled)
 
     def encode_y(self, x_pos, x_non_pos, y, take_max) -> torch.Tensor:
-        if True or take_max:
+        if take_max:
             y_per_player = delta_one_hot_max_to_index(y)
         else:
             y_per_player = delta_one_hot_prob_to_index(y)
@@ -166,5 +166,6 @@ class TransformerNestedHiddenLatentModel(nn.Module):
                                                              tgt_key_padding_mask=dead_gathered)
                 transformed = transformed.masked_fill(torch.isnan(transformed), 0)
                 latent = self.decoder(transformed)
-                y = self.prob_output(latent)
-            return self.logits_output(latent), self.prob_output(latent),
+                prob_output_nested = rearrange(self.prob_output(latent), "b (p d) -> b p d", p = self.num_players)
+                y_nested[:, i] = prob_output_nested[:, i]
+            return self.logits_output(latent), self.prob_output(latent), delta_one_hot_prob_to_index(y)
