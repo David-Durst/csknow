@@ -94,6 +94,9 @@ def delta_one_hot_max_to_index(pred: torch.Tensor) -> torch.Tensor:
 
 
 def delta_one_hot_prob_to_index(pred: torch.Tensor) -> torch.Tensor:
-    probs = rearrange(pred, 'b (p d) -> (b p) d', p=len(specific_player_place_area_columns))
-    return rearrange(torch.multinomial(probs, 1, replacement=True), '(b p) d -> b (p d)',
-                     p=len(specific_player_place_area_columns))
+    if pred.device.type == CUDA_DEVICE_STR:
+        probs = rearrange(pred, 'b (p d) -> (b p) d', p=len(specific_player_place_area_columns))
+        return rearrange(torch.multinomial(probs, 1, replacement=True), '(b p) d -> b (p d)',
+                         p=len(specific_player_place_area_columns))
+    else:
+        return delta_one_hot_max_to_index(pred)

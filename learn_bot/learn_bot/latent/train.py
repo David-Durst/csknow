@@ -81,10 +81,10 @@ class HyperparameterOptions:
 
 
 default_hyperparameter_options = HyperparameterOptions()
-hyperparameter_option_range = [HyperparameterOptions(batch_size=512, learning_rate=1e-5),
-                               HyperparameterOptions(batch_size=512, learning_rate=1e-6),
-                               HyperparameterOptions(batch_size=512, learning_rate=5e-7),
-                               HyperparameterOptions(batch_size=512, learning_rate=1e-7)]
+hyperparameter_option_range = [HyperparameterOptions(num_epochs=3000, batch_size=512, learning_rate=1e-5),
+                               HyperparameterOptions(num_epochs=3000, batch_size=512, learning_rate=1e-6),
+                               HyperparameterOptions(num_epochs=3000, batch_size=512, learning_rate=5e-7),
+                               HyperparameterOptions(num_epochs=3000, batch_size=512, learning_rate=1e-7)]
 #hyperparameter_option_range = [HyperparameterOptions(learning_rate=1e-5),
 #                               HyperparameterOptions(num_epochs=3000, learning_rate=1e-6),
 #                               HyperparameterOptions(weight_decay=0.1),
