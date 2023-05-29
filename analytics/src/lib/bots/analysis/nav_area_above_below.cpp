@@ -20,7 +20,7 @@ namespace csknow::nav_area_above_below {
 
     NavAreaAboveBelow::NavAreaAboveBelow(const MapMeshResult &mapMeshResult, const std::string &navPath) {
         std::string filePath = navPath + "/de_dust2_nav_above_below.hdf5";
-        if (std::filesystem::exists(filePath)) {
+        if (false && std::filesystem::exists(filePath)) {
             load(filePath);
         }
         else {
@@ -37,7 +37,7 @@ namespace csknow::nav_area_above_below {
                             navRegion.min.z + static_cast<double>(zStep) * step_size,
                         };
                         size_t index = posToIndex(pos);
-                        if (index == 4002863) {
+                        if (index == 4596937) {
                             int x = 0;
                             posToIndex(pos);
                             (void) x;

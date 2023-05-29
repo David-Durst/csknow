@@ -5,6 +5,10 @@ MapMeshResult::OverlappingResult MapMeshResult::overlappingAreas(Vec3 pos) const
     result.nearest = 0;
     double nearestDistance = std::numeric_limits<double>::max();
     for (size_t i = 0; i < coordinate.size(); i++) {
+        // skip empty
+        if (connectionAreaIds[i].empty()) {
+            continue;
+        }
         if (pointInRegion(coordinate[i], pos)) {
             result.overlappingIn3D.push_back(areaId[i]);
         }

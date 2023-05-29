@@ -51,6 +51,7 @@ class TransformerNestedHiddenLatentModel(nn.Module):
 
         self.num_players = len(players_columns)
         assert self.num_players == outer_latent_size
+        self.num_players_per_team = self.num_players // 2
 
         self.alive_columns = flatten_list(
             [range_list_to_index_list(cts.get_name_ranges(True, True, contained_str=player_place_area_columns.alive))
@@ -135,6 +136,21 @@ class TransformerNestedHiddenLatentModel(nn.Module):
         y_gathered = torch.cat([y_pos_encoded, x_non_pos], -1)
         return self.encoder_model(y_gathered)
 
+    def generate_tgt_mask(self, device: str) -> torch.Tensor:
+        # base tgt mask that is diagonal to ensure only look at future teammates
+        tgt_mask = self.transformer_model.generate_square_subsequent_mask(self.num_players, device)
+
+        # team-based mask
+        negs = torch.full((self.num_players, self.num_players), float('-inf'), device=device)
+        team_mask = torch.zeros((self.num_players, self.num_players), device=device)
+        team_mask[:self.num_players_per_team, self.num_players_per_team:] = \
+            negs[:self.num_players_per_team, self.num_players_per_team:]
+        team_mask[self.num_players_per_team:, :self.num_players_per_team] = \
+            negs[self.num_players_per_team:, :self.num_players_per_team]
+        team_mask = tgt_mask + team_mask
+
+        return team_mask
+
     def forward(self, x, y=None):
         x_pos = rearrange(x[:, self.players_pos_columns], "b (p d) -> b p d", p=self.num_players, d=3)
         x_pos_encoded = self.encode_pos(x_pos)
@@ -145,7 +161,7 @@ class TransformerNestedHiddenLatentModel(nn.Module):
         alive_gathered = x[:, self.alive_columns]
         dead_gathered = alive_gathered < 0.1
 
-        tgt_mask = self.transformer_model.generate_square_subsequent_mask(self.num_players, x.device.type)
+        tgt_mask = self.generate_tgt_mask(x.device.type)
 
         if y is not None:
             y_encoded = self.encode_y(x_pos, x_non_pos, y, True)
@@ -160,7 +176,7 @@ class TransformerNestedHiddenLatentModel(nn.Module):
             y_nested[:, :, 0] = 1.
             y = rearrange(y_nested, "b p d -> b (p d)")
             memory = self.transformer_model.encoder(x_encoded, src_key_padding_mask=dead_gathered)
-            for i in range(self.num_players):
+            for i in range(self.num_players_per_team):
                 y_encoded = self.encode_y(x_pos, x_non_pos, y, False)
                 transformed = self.transformer_model.decoder(y_encoded, memory, tgt_mask=tgt_mask,
                                                              tgt_key_padding_mask=dead_gathered)
@@ -168,4 +184,5 @@ class TransformerNestedHiddenLatentModel(nn.Module):
                 latent = self.decoder(transformed)
                 prob_output_nested = rearrange(self.prob_output(latent), "b (p d) -> b p d", p = self.num_players)
                 y_nested[:, i] = prob_output_nested[:, i]
+                y_nested[:, i + self.num_players_per_team] = prob_output_nested[:, i + self.num_players_per_team]
             return self.logits_output(latent), self.prob_output(latent), delta_one_hot_prob_to_index(y)

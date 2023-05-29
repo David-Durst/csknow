@@ -107,7 +107,7 @@ namespace csknow::behavior_tree_latent_states {
                 if (newPlayers != curPlayers) {
                     curPlayers = newPlayers;
                     blackboard = make_unique<Blackboard>(navPath, invalidInferenceManager, visPoints, nearestNavCell,
-                                                         mapMeshResult, reachability, distanceToPlaces,
+                                                         mapMeshResult, reachability, distanceToPlaces, navAreaAboveBelow,
                                                          ordersResult, tmpPreCommitBuffer[threadNum]);
                     blackboard->inAnalysis = true;
                     globalQueryNode = make_unique<GlobalQueryNode>(*blackboard);

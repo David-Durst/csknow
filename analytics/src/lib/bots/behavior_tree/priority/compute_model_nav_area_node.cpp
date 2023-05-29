@@ -21,7 +21,7 @@ namespace csknow::compute_nav_area {
 
         // if not jumping or falling, get nearest in 3d
         size_t navAboveBelowIndex = blackboard.navAboveBelow.posToIndex(curPriority.targetPos);
-        if (modelNavData.deltaZVal == 0) {
+        if (modelNavData.deltaZVal == 1 || !blackboard.navAboveBelow.foundBelow[navAboveBelowIndex]) {
             curPriority.targetAreaId = blackboard.navAboveBelow.areaNearest[navAboveBelowIndex];
         }
         else {
