@@ -142,11 +142,14 @@ class TransformerNestedHiddenLatentModel(nn.Module):
 
         tgt_mask = self.transformer_model.generate_square_subsequent_mask(self.num_players, x.device.type)
 
-        if False and y is not None:
+        if y is not None:
             y_encoded = self.encode_y(x_pos, x_non_pos, y, True)
             transformed = self.transformer_model(x_encoded, y_encoded, tgt_mask=tgt_mask,
-                                                 src_key_padding_mask=dead_gathered, tgt_key_padding_mask=dead_gathered)
+                                                 src_key_padding_mask=dead_gathered)#,
+                                                 #tgt_key_padding_mask=dead_gathered)
+            #transformed = transformed.masked_fill(torch.isnan(transformed), 0)
             latent = self.decoder(transformed)
+            latent_has_nan = torch.isnan(latent).any()
             return self.logits_output(latent), self.prob_output(latent)
         else:
             y_nested = torch.zeros([x.shape[0], self.num_players, delta_pos_grid_num_cells], device=x.device.type)
@@ -156,8 +159,8 @@ class TransformerNestedHiddenLatentModel(nn.Module):
             for i in range(self.num_players):
                 y_encoded = self.encode_y(x_pos, x_non_pos, y, False)
                 transformed = self.transformer_model.decoder(y_encoded, memory, tgt_mask=tgt_mask,
-                                                             memory_key_padding_mask=dead_gathered,
                                                              tgt_key_padding_mask=dead_gathered)
+                transformed = transformed.masked_fill(torch.isnan(transformed), 0)
                 latent = self.decoder(transformed)
                 y = self.prob_output(latent)
             return self.logits_output(latent), self.prob_output(latent),
