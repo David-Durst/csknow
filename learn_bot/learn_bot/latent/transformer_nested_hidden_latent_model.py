@@ -7,7 +7,7 @@ from learn_bot.latent.engagement.column_names import max_enemies
 from learn_bot.latent.order.column_names import team_strs, player_team_str, flatten_list
 from learn_bot.latent.place_area.column_names import specific_player_place_area_columns, delta_pos_grid_num_cells
 from learn_bot.latent.place_area.pos_abs_delta_conversion import compute_new_pos, load_nav_region_and_above_below, \
-    delta_one_hot_to_index
+    delta_one_hot_max_to_index, delta_one_hot_prob_to_index
 from learn_bot.libs.io_transforms import IOColumnTransformers, CUDA_DEVICE_STR
 from learn_bot.libs.positional_encoding import *
 from einops import rearrange
@@ -116,8 +116,11 @@ class TransformerNestedHiddenLatentModel(nn.Module):
 
         return self.positional_encoder(pos_scaled)
 
-    def encode_y(self, x_pos, x_non_pos, y) -> torch.Tensor:
-        y_per_player = delta_one_hot_to_index(y)
+    def encode_y(self, x_pos, x_non_pos, y, take_max) -> torch.Tensor:
+        if True or take_max:
+            y_per_player = delta_one_hot_max_to_index(y)
+        else:
+            y_per_player = delta_one_hot_prob_to_index(y)
         # shift by 1 so never looking into future (and 0 out for past)
         y_per_player_shifted = torch.roll(y_per_player, 1, dims=1)
         y_per_player_shifted[:, 0] = 0
@@ -128,83 +131,33 @@ class TransformerNestedHiddenLatentModel(nn.Module):
         return self.encoder_model(y_gathered)
 
     def forward(self, x, y=None):
-        # transform inputs
-        #x_transformed = self.cts.transform_columns(True, x, x)
-
         x_pos = rearrange(x[:, self.players_pos_columns], "b (p d) -> b p d", p=self.num_players, d=3)
-
         x_pos_encoded = self.encode_pos(x_pos)
-
         x_non_pos = rearrange(x[:, self.players_non_pos_columns], "b (p d) -> b p d", p=self.num_players)
         x_gathered = torch.cat([x_pos_encoded, x_non_pos], -1)
+        x_encoded = self.encoder_model(x_gathered)
 
         alive_gathered = x[:, self.alive_columns]
         dead_gathered = alive_gathered < 0.1
 
-        # run model except last layer
-        x_encoded = self.encoder_model(x_gathered)
-
         tgt_mask = self.transformer_model.generate_square_subsequent_mask(self.num_players, x.device.type)
 
         if False and y is not None:
-            y_encoded = self.encode_y(x_pos, x_non_pos, y)
+            y_encoded = self.encode_y(x_pos, x_non_pos, y, True)
             transformed = self.transformer_model(x_encoded, y_encoded, tgt_mask=tgt_mask,
                                                  src_key_padding_mask=dead_gathered, tgt_key_padding_mask=dead_gathered)
             latent = self.decoder(transformed)
             return self.logits_output(latent), self.prob_output(latent)
         else:
-            y = torch.zeros([x.shape[0], self.num_players * delta_pos_grid_num_cells], device=x.device.type)
+            y_nested = torch.zeros([x.shape[0], self.num_players, delta_pos_grid_num_cells], device=x.device.type)
+            y_nested[:, :, 0] = 1.
+            y = rearrange(y_nested, "b p d -> b (p d)")
             memory = self.transformer_model.encoder(x_encoded, src_key_padding_mask=dead_gathered)
             for i in range(self.num_players):
-                y_encoded = self.encode_y(x_pos, x_non_pos, y)
+                y_encoded = self.encode_y(x_pos, x_non_pos, y, False)
                 transformed = self.transformer_model.decoder(y_encoded, memory, tgt_mask=tgt_mask,
                                                              memory_key_padding_mask=dead_gathered,
                                                              tgt_key_padding_mask=dead_gathered)
                 latent = self.decoder(transformed)
                 y = self.prob_output(latent)
-            return self.logits_output(latent), self.prob_output(latent)
-
-
-        #transformed = self.transformer_model(x_encoded, y_encoded, src_key_padding_mask=dead_gathered)
-
-        #if torch.isnan(transformed).any():
-        #       all_in_tick_dead_gathered = dead_gathered.all(axis=1)
-        #       all_in_tick_dead_gathered = all_in_tick_dead_gathered.unflatten(0, [-1, 1, 1]).expand(transformed.shape)
-        #       new_transformed = torch.where(all_in_tick_dead_gathered, 0., transformed)
-        #       if torch.isnan(new_transformed).any():
-        #           print("bad")
-        #       transformed = new_transformed
-
-        #max_diff = -1
-        #for i in range(transformed.shape[0]):
-        #    for j in range(transformed.shape[1]):
-        #        tmp_l = self.decoder(transformed[i, j])
-        #        max_diff = max(torch.max(torch.abs(latent[i, j] - tmp_l)), max_diff)
-
-
-        # https://github.com/pytorch/pytorch/issues/22440 how to parse tuple output
-
-
-#class SimplifiedTransformerNestedHiddenLatentModel(nn.Module):
-#
-#    def __init__(self):
-#        super(SimplifiedTransformerNestedHiddenLatentModel, self).__init__()
-#
-#        self.transformer_model = nn.Sequential(
-#            nn.TransformerEncoderLayer(d_model=512, nhead=4, batch_first=True),
-#        )
-#
-#    def forward(self, x):
-#        # transform inputs
-#        transformed = self.transformer_model(x)
-#
-#        return transformed
-#
-#        ones = torch.rand(encoded.shape).to(CUDA_DEVICE_STR)
-#        ones_output = self.simple_transformer_encoder_layer(ones)
-#        second_ones_output = self.simple_transformer_encoder_layer(ones)
-#        ones_mask_output = self.simple_transformer_encoder_layer(ones, src_key_padding_mask=alive_gathered)
-#        ones_mod = torch.clone(ones)
-#        ones_mod[:, 1, :] = 2
-#        ones_mod_output = self.simple_transformer_encoder_layer(ones_mod)
-#        ones_mod_mask_output = self.simple_transformer_encoder_layer(ones_mod, src_key_padding_mask=alive_gathered)
+            return self.logits_output(latent), self.prob_output(latent),

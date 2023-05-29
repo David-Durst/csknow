@@ -60,7 +60,7 @@ def step(rollout_tensor: torch.Tensor, pred_tensor: torch.Tensor, model: Transfo
                                  p=len(specific_player_place_area_columns))
     pred = get_untransformed_outputs(model(input_tensor))
     pred_tensor[rollout_tensor_input_indices] = pred.to(CPU_DEVICE_STR)
-    pred_per_player = delta_one_hot_to_index(pred)
+    pred_per_player = delta_one_hot_to_index(pred, False)
 
     tmp_rollout = rollout_tensor[rollout_tensor_input_indices]
     tmp_rollout[:, model.players_pos_columns] = compute_new_pos(input_pos_tensor, pred_per_player,
