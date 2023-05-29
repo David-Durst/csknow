@@ -11,14 +11,15 @@ from learn_bot.latent.dataset import LatentDataset
 from learn_bot.latent.engagement.column_names import round_id_column, tick_id_column
 from learn_bot.latent.place_area.pos_abs_delta_conversion import delta_pos_grid_num_cells_per_xy_dim, \
     delta_pos_grid_cell_dim, \
-    delta_pos_grid_num_xy_cells_per_z_change, compute_new_pos, load_nav_region_and_above_below, AABB, delta_one_hot_to_index
+    delta_pos_grid_num_xy_cells_per_z_change, compute_new_pos, NavData
 from learn_bot.latent.train import manual_latent_team_hdf5_data_path, rollout_latent_team_hdf5_data_path, \
     latent_team_hdf5_data_path
 from learn_bot.latent.transformer_nested_hidden_latent_model import *
 from learn_bot.latent.vis.run_vis_checkpoint import load_model_file_for_rollout
 from learn_bot.latent.vis.vis import vis
 from learn_bot.libs.hdf5_to_pd import load_hdf5_to_pd, load_hdf5_extra_to_list
-from learn_bot.libs.io_transforms import get_untransformed_outputs, CPU_DEVICE_STR
+from learn_bot.libs.io_transforms import get_untransformed_outputs, CPU_DEVICE_STR, get_label_outputs
+
 
 @dataclass
 class RoundLengths:
@@ -50,7 +51,7 @@ def build_rollout_tensor(round_lengths: RoundLengths, dataset: LatentDataset) ->
 
 
 def step(rollout_tensor: torch.Tensor, pred_tensor: torch.Tensor, model: TransformerNestedHiddenLatentModel,
-         round_lengths: RoundLengths, step_index: int, nav_above_below: torch.Tensor, nav_region: AABB):
+         round_lengths: RoundLengths, step_index: int, nav_data: NavData):
     rollout_tensor_input_indices = [step_index + round_lengths.max_length_per_round * round_id
                                     for round_id in range(round_lengths.num_rounds)]
     rollout_tensor_output_indices = [index + 1 for index in rollout_tensor_input_indices]
@@ -58,13 +59,14 @@ def step(rollout_tensor: torch.Tensor, pred_tensor: torch.Tensor, model: Transfo
     input_tensor = rollout_tensor[rollout_tensor_input_indices].to(CUDA_DEVICE_STR)
     input_pos_tensor = rearrange(input_tensor[:, model.players_pos_columns], 'b (p d) -> b p d',
                                  p=len(specific_player_place_area_columns))
-    pred = get_untransformed_outputs(model(input_tensor))
-    pred_tensor[rollout_tensor_input_indices] = pred.to(CPU_DEVICE_STR)
-    pred_per_player = delta_one_hot_to_index(pred, False)
+    pred = model(input_tensor)
+    pred_prob = get_untransformed_outputs(pred)
+    pred_tensor[rollout_tensor_input_indices] = pred_prob.to(CPU_DEVICE_STR)
+    pred_labels = get_label_outputs(pred)
 
     tmp_rollout = rollout_tensor[rollout_tensor_input_indices]
-    tmp_rollout[:, model.players_pos_columns] = compute_new_pos(input_pos_tensor, pred_per_player,
-                                                                nav_above_below, nav_region).to(CPU_DEVICE_STR)
+    tmp_rollout[:, model.players_pos_columns] = compute_new_pos(input_pos_tensor, pred_labels,
+                                                                nav_data).to(CPU_DEVICE_STR)
     rollout_tensor[rollout_tensor_output_indices] = tmp_rollout
 
 
@@ -86,8 +88,7 @@ def match_round_lengths(df: pd.DataFrame, rollout_tensor: torch.Tensor, pred_ten
 
 
 def delta_pos_rollout(df: pd.DataFrame, dataset: LatentDataset, model: TransformerNestedHiddenLatentModel,
-                      cts: IOColumnTransformers, nav_above_below: torch.Tensor,
-                      nav_region: AABB) -> Tuple[pd.DataFrame, pd.DataFrame]:
+                      cts: IOColumnTransformers, nav_data: NavData) -> Tuple[pd.DataFrame, pd.DataFrame]:
     round_lengths = get_round_lengths(df)
     rollout_tensor = build_rollout_tensor(round_lengths, dataset)
     pred_tensor = torch.zeros(rollout_tensor.shape[0], dataset.Y.shape[1])
@@ -96,7 +97,7 @@ def delta_pos_rollout(df: pd.DataFrame, dataset: LatentDataset, model: Transform
         num_steps = round_lengths.max_length_per_round - 1
         with tqdm(total=num_steps, disable=False) as pbar:
             for step_index in range(num_steps):
-                step(rollout_tensor, pred_tensor, model, round_lengths, step_index, nav_above_below, nav_region)
+                step(rollout_tensor, pred_tensor, model, round_lengths, step_index, nav_data)
                 pbar.update(1)
     return match_round_lengths(df, rollout_tensor, pred_tensor, round_lengths, cts)
 
@@ -105,7 +106,7 @@ manual_data = True
 rollout_data = False
 
 if __name__ == "__main__":
-    nav_region, nav_above_below = load_nav_region_and_above_below()
+    nav_data = NavData(CUDA_DEVICE_STR)
 
     if manual_data:
         all_data_df = load_hdf5_to_pd(manual_latent_team_hdf5_data_path)
@@ -120,6 +121,6 @@ if __name__ == "__main__":
     load_result = load_model_file_for_rollout(all_data_df, "delta_pos_checkpoint.pt")
 
     rollout_df, pred_df = delta_pos_rollout(load_result.test_df, load_result.test_dataset, load_result.model,
-                                            load_result.column_transformers, nav_above_below, nav_region)
+                                            load_result.column_transformers, nav_data)
 
     vis(rollout_df, pred_df)

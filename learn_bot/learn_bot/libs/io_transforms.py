@@ -1090,5 +1090,5 @@ def get_transformed_outputs(x: ModelOutput) -> torch.Tensor:
 def get_untransformed_outputs(x: ModelOutput):
     return x[1]
 
-def get_labels(x: ModelOutput):
+def get_label_outputs(x: ModelOutput):
     return x[2]

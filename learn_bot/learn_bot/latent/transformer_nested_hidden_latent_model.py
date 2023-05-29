@@ -6,7 +6,7 @@ from torch import nn
 from learn_bot.latent.engagement.column_names import max_enemies
 from learn_bot.latent.order.column_names import team_strs, player_team_str, flatten_list
 from learn_bot.latent.place_area.column_names import specific_player_place_area_columns, delta_pos_grid_num_cells
-from learn_bot.latent.place_area.pos_abs_delta_conversion import compute_new_pos, load_nav_region_and_above_below, \
+from learn_bot.latent.place_area.pos_abs_delta_conversion import compute_new_pos, NavData, \
     delta_one_hot_max_to_index, delta_one_hot_prob_to_index
 from learn_bot.libs.io_transforms import IOColumnTransformers, CUDA_DEVICE_STR, CPU_DEVICE_STR
 from learn_bot.libs.positional_encoding import *
@@ -76,8 +76,8 @@ class TransformerNestedHiddenLatentModel(nn.Module):
             nn.Linear(self.internal_width, self.internal_width),
         )
 
-        self.nav_region, self.nav_above_below = load_nav_region_and_above_below()
-        self.nav_above_below_cpu = self.nav_above_below.to(CPU_DEVICE_STR)
+        self.nav_data_cpu = NavData(CPU_DEVICE_STR)
+        self.nav_data_cuda = NavData(CUDA_DEVICE_STR)
 
         transformer_encoder_layer = nn.TransformerEncoderLayer(d_model=self.internal_width, nhead=num_heads, batch_first=True)
         transformer_encoder = nn.TransformerEncoder(transformer_encoder_layer, num_layers=num_layers, enable_nested_tensor=False)
@@ -126,10 +126,10 @@ class TransformerNestedHiddenLatentModel(nn.Module):
         y_per_player_shifted = torch.roll(y_per_player, 1, dims=1)
         y_per_player_shifted[:, 0] = 0
         if x_pos.device.type == CPU_DEVICE_STR:
-            y_pos = rearrange(compute_new_pos(x_pos, y_per_player_shifted, self.nav_above_below_cpu, self.nav_region),
+            y_pos = rearrange(compute_new_pos(x_pos, y_per_player_shifted, self.nav_data_cpu),
                               "b (p d) -> b p d", d=3)
         else:
-            y_pos = rearrange(compute_new_pos(x_pos, y_per_player_shifted, self.nav_above_below, self.nav_region),
+            y_pos = rearrange(compute_new_pos(x_pos, y_per_player_shifted, self.nav_data_cuda),
                               "b (p d) -> b p d", d=3)
         y_pos_encoded = self.encode_pos(y_pos)
         y_gathered = torch.cat([y_pos_encoded, x_non_pos], -1)
@@ -154,7 +154,6 @@ class TransformerNestedHiddenLatentModel(nn.Module):
                                                  #tgt_key_padding_mask=dead_gathered)
             #transformed = transformed.masked_fill(torch.isnan(transformed), 0)
             latent = self.decoder(transformed)
-            latent_has_nan = torch.isnan(latent).any()
             return self.logits_output(latent), self.prob_output(latent)
         else:
             y_nested = torch.zeros([x.shape[0], self.num_players, delta_pos_grid_num_cells], device=x.device.type)

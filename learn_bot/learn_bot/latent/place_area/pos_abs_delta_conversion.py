@@ -26,11 +26,22 @@ def nav_region_to_aabb(nav_region: List[int]) -> AABB:
 nav_above_below_hdf5_data_path = Path(__file__).parent / '..' / '..' / '..' / '..' / 'analytics' / 'nav' / 'de_dust2_nav_above_below.hdf5'
 
 
-def load_nav_region_and_above_below() -> Tuple[AABB, torch.tensor]:
-    nav_region = nav_region_to_aabb(load_hdf5_extra_to_list(nav_above_below_hdf5_data_path)[0])
-    nav_above_below_df = load_hdf5_to_pd(nav_above_below_hdf5_data_path)
-    nav_above_below_tensor = torch.Tensor(nav_above_below_df[['z nearest', 'z below']].to_numpy()).to(CUDA_DEVICE_STR)
-    return nav_region, nav_above_below_tensor
+class NavData:
+    nav_region: AABB
+    num_steps: torch.Tensor
+    nav_grid_base: torch.Tensor
+    nav_above_below: torch.Tensor
+
+    def __init__(self, device_str):
+        self.nav_region = nav_region_to_aabb(load_hdf5_extra_to_list(nav_above_below_hdf5_data_path)[0])
+        nav_above_below_df = load_hdf5_to_pd(nav_above_below_hdf5_data_path)
+        self.nav_above_below = torch.Tensor(nav_above_below_df[['z nearest', 'z below']].to_numpy()).to(device_str)
+
+        num_y_steps = int(ceil((self.nav_region.max.y - self.nav_region.min.y) / nav_step_size))
+        num_z_steps = int(ceil((self.nav_region.max.z - self.nav_region.min.z) / nav_step_size))
+        self.num_steps = torch.tensor([[[num_y_steps * num_z_steps, num_z_steps, 1]]]).to(device_str).long()
+        self.nav_grid_base = torch.tensor([[[self.nav_region.min.x, self.nav_region.min.y, self.nav_region.min.z]]]).to(device_str)
+
 
 # 130 units per half second (rounded up), 12.8 ticks per second
 max_run_speed_per_tick = 130. / (12.8 / 2)
@@ -38,14 +49,13 @@ max_jump_height = 65.
 nav_step_size = 10.
 
 
-def compute_new_pos(input_pos_tensor: torch.tensor, pred_per_player: torch.Tensor,
-                    nav_above_below: torch.Tensor, nav_region: AABB):
+def compute_new_pos(input_pos_tensor: torch.tensor, pred_labels: torch.Tensor, nav_data: NavData):
     # compute indices for changes
-    z_jump_index = torch.floor(pred_per_player / delta_pos_grid_num_xy_cells_per_z_change)
-    xy_pred_per_player = torch.floor(torch.remainder(pred_per_player, delta_pos_grid_num_xy_cells_per_z_change))
-    x_index = torch.floor(torch.remainder(xy_pred_per_player, delta_pos_grid_num_cells_per_xy_dim)) - \
+    z_jump_index = torch.floor(pred_labels / delta_pos_grid_num_xy_cells_per_z_change)
+    xy_pred_label = torch.floor(torch.remainder(pred_labels, delta_pos_grid_num_xy_cells_per_z_change))
+    x_index = torch.floor(torch.remainder(xy_pred_label, delta_pos_grid_num_cells_per_xy_dim)) - \
               int(delta_pos_grid_num_cells_per_xy_dim / 2)
-    y_index = torch.floor(xy_pred_per_player / delta_pos_grid_num_cells_per_xy_dim) - \
+    y_index = torch.floor(xy_pred_label / delta_pos_grid_num_cells_per_xy_dim) - \
               int(delta_pos_grid_num_cells_per_xy_dim / 2)
     z_index = torch.zeros_like(x_index)
 
@@ -62,20 +72,18 @@ def compute_new_pos(input_pos_tensor: torch.tensor, pred_per_player: torch.Tenso
     # apply to input pos
     output_pos_tensor = input_pos_tensor + scaled_pos_change
     output_pos_tensor[:, :, 2] += torch.where(z_jump_index == 2., max_jump_height, 0.)
-    output_pos_tensor[:, :, 0] = output_pos_tensor[:, :, 0].clamp(min=nav_region.min.x, max=nav_region.max.x)
-    output_pos_tensor[:, :, 1] = output_pos_tensor[:, :, 1].clamp(min=nav_region.min.y, max=nav_region.max.y)
-    output_pos_tensor[:, :, 2] = output_pos_tensor[:, :, 2].clamp(min=nav_region.min.z, max=nav_region.max.z)
+    output_pos_tensor[:, :, 0] = output_pos_tensor[:, :, 0].clamp(min=nav_data.nav_region.min.x,
+                                                                  max=nav_data.nav_region.max.x)
+    output_pos_tensor[:, :, 1] = output_pos_tensor[:, :, 1].clamp(min=nav_data.nav_region.min.y,
+                                                                  max=nav_data.nav_region.max.y)
+    output_pos_tensor[:, :, 2] = output_pos_tensor[:, :, 2].clamp(min=nav_data.nav_region.min.z,
+                                                                  max=nav_data.nav_region.max.z)
 
     # compute z pos
-    device_str = input_pos_tensor.device.type
-    num_y_steps = int(ceil((nav_region.max.y - nav_region.min.y) / nav_step_size))
-    num_z_steps = int(ceil((nav_region.max.z - nav_region.min.z) / nav_step_size))
-    num_steps = torch.tensor([[[num_y_steps * num_z_steps, num_z_steps, 1]]]).to(device_str).long()
-    nav_grid_base = torch.tensor([[[nav_region.min.x, nav_region.min.y, nav_region.min.z]]]).to(device_str)
-    nav_grid_steps = torch.floor((output_pos_tensor - nav_grid_base) / nav_step_size).long()
-    nav_grid_index = rearrange(torch.sum(num_steps * nav_grid_steps, dim=-1), 'b p -> (b p)')
-    nav_above_below_per_player = rearrange(torch.index_select(nav_above_below, 0, nav_grid_index), '(b p) o -> b p o',
-                                           p=len(specific_player_place_area_columns))
+    nav_grid_steps = torch.floor((output_pos_tensor - nav_data.nav_grid_base) / nav_step_size).long()
+    nav_grid_index = rearrange(torch.sum(nav_data.num_steps * nav_grid_steps, dim=-1), 'b p -> (b p)')
+    nav_above_below_per_player = rearrange(torch.index_select(nav_data.nav_above_below, 0, nav_grid_index),
+                                           '(b p) o -> b p o', p=len(specific_player_place_area_columns))
     output_pos_tensor[:, :, 2] = torch.where(z_jump_index == 1,
                                              nav_above_below_per_player[:, :, 0], nav_above_below_per_player[:, :, 1])
     return rearrange(output_pos_tensor, 'b p d -> b (p d)')
