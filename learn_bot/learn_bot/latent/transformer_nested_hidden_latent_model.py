@@ -26,7 +26,7 @@ d2_max = [1832., 3157., 236.]
 
 
 class TransformerNestedHiddenLatentModel(nn.Module):
-    internal_width = 256
+    internal_width = 128
     cts: IOColumnTransformers
     output_layers: List[nn.Module]
     latent_to_distributions: Callable
@@ -149,7 +149,7 @@ class TransformerNestedHiddenLatentModel(nn.Module):
             negs[self.num_players_per_team:, :self.num_players_per_team]
         team_mask = tgt_mask + team_mask
 
-        return tgt_mask #team_mask
+        return team_mask
 
     def forward(self, x, y=None):
         x_pos = rearrange(x[:, self.players_pos_columns], "b (p d) -> b p d", p=self.num_players, d=3)
