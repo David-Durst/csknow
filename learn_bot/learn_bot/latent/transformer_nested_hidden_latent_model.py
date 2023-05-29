@@ -149,7 +149,7 @@ class TransformerNestedHiddenLatentModel(nn.Module):
             negs[self.num_players_per_team:, :self.num_players_per_team]
         team_mask = tgt_mask + team_mask
 
-        return team_mask
+        return tgt_mask #team_mask
 
     def forward(self, x, y=None):
         x_pos = rearrange(x[:, self.players_pos_columns], "b (p d) -> b p d", p=self.num_players, d=3)

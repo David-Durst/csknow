@@ -14,7 +14,7 @@ from learn_bot.libs.io_transforms import IOColumnTransformers, CUDA_DEVICE_STR
 from learn_bot.latent.transformer_nested_hidden_latent_model import TransformerNestedHiddenLatentModel
 from learn_bot.latent.train import checkpoints_path, TrainResult, manual_latent_team_hdf5_data_path, \
     latent_team_hdf5_data_path, rollout_latent_team_hdf5_data_path, ColumnsToFlip
-from learn_bot.libs.df_grouping import make_index_column, train_test_split_by_col
+from learn_bot.libs.df_grouping import make_index_column, train_test_split_by_col_ids
 from learn_bot.latent.vis.off_policy_inference import off_policy_inference
 from learn_bot.latent.vis.vis import vis
 
@@ -23,7 +23,7 @@ def load_model_file(all_data_df: pd.DataFrame, model_file_name: str) -> TrainRes
     model_file = torch.load(checkpoints_path / model_file_name)
 
     if model_file['diff_test_train']:
-        train_test_split = train_test_split_by_col(all_data_df, round_id_column)
+        train_test_split = train_test_split_by_col_ids(all_data_df, round_id_column, model_file['train_group_ids'])
         train_df = train_test_split.train_df.copy()
         make_index_column(train_df)
         test_df = train_test_split.test_df.copy()
@@ -87,5 +87,5 @@ if __name__ == "__main__":
     else:
         load_result = load_model_file(all_data_df, "delta_pos_checkpoint.pt")
 
-    pred_df = off_policy_inference(load_result.test_dataset, load_result.model, load_result.column_transformers)
-    vis(load_result.test_df, pred_df)
+    pred_df = off_policy_inference(load_result.train_dataset, load_result.model, load_result.column_transformers)
+    vis(load_result.train_df, pred_df)
