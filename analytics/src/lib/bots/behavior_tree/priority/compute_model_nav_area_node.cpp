@@ -105,7 +105,7 @@ namespace csknow::compute_nav_area {
         }
          */
         size_t deltaPosOption = 0;
-        /*
+        // / *
         bool setDeltaPosOption = false;
         double probSample = blackboard.aggressionDis(blackboard.gen);
         double weightSoFar = 0.;
@@ -118,8 +118,8 @@ namespace csknow::compute_nav_area {
                 setDeltaPosOption = true;
             }
         }
-        */
-        // / *
+        // * /
+        /*
         double maxProb = -1.;
         modelNavData.deltaPosProbs.clear();
         for (size_t i = 0; i < probabilities.size(); i++) {
@@ -129,14 +129,15 @@ namespace csknow::compute_nav_area {
                 maxProb = probabilities[i];
             }
         }
-        // * /
+        */
         modelNavData.deltaPosIndex = deltaPosOption;
 
+        size_t xyPredLabel = deltaPosOption % csknow::feature_store::delta_pos_grid_num_xy_cells_per_z_change;
         // compute map grid to pos, and then pos to area
         // ok to pick bad area, as computePath in path node will pick a valid alternative (tree computes alternatives)
-        modelNavData.deltaXVal = (deltaPosOption % csknow::feature_store::delta_pos_grid_num_cells_per_xy_dim) -
+        modelNavData.deltaXVal = (xyPredLabel % csknow::feature_store::delta_pos_grid_num_cells_per_xy_dim) -
                                  (csknow::feature_store::delta_pos_grid_num_cells_per_xy_dim / 2);
-        modelNavData.deltaYVal = (deltaPosOption / csknow::feature_store::delta_pos_grid_num_cells_per_xy_dim) -
+        modelNavData.deltaYVal = (xyPredLabel / csknow::feature_store::delta_pos_grid_num_cells_per_xy_dim) -
                                  (csknow::feature_store::delta_pos_grid_num_cells_per_xy_dim / 2);
 
         if ((modelNavData.deltaXVal < 0 || modelNavData.deltaYVal < 0) && curClient.getFootPosForPlayer().x < 600 && curClient.getFootPosForPlayer().y > 1700) {
