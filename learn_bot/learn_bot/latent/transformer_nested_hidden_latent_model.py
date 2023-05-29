@@ -5,7 +5,7 @@ from torch import nn
 
 from learn_bot.latent.engagement.column_names import max_enemies
 from learn_bot.latent.order.column_names import team_strs, player_team_str, flatten_list
-from learn_bot.latent.place_area.column_names import specific_player_place_area_columns
+from learn_bot.latent.place_area.column_names import specific_player_place_area_columns, delta_pos_grid_num_cells
 from learn_bot.latent.place_area.pos_abs_delta_conversion import compute_new_pos, load_nav_region_and_above_below, \
     delta_one_hot_to_index
 from learn_bot.libs.io_transforms import IOColumnTransformers, CUDA_DEVICE_STR
@@ -116,11 +116,16 @@ class TransformerNestedHiddenLatentModel(nn.Module):
 
         return self.positional_encoder(pos_scaled)
 
-    #https://pytorch.org/tutorials/beginner/translation_transformer.html
-    def generate_square_subsequent_mask(self, device):
-        mask = (torch.triu(torch.ones((self.num_players, self.num_players), device=device)) == 1).transpose(0, 1)
-        mask = mask.float().masked_fill(mask == 0, float('-inf')).masked_fill(mask == 1, float(0.0))
-        return mask
+    def encode_y(self, x_pos, x_non_pos, y) -> torch.Tensor:
+        y_per_player = delta_one_hot_to_index(y)
+        # shift by 1 so never looking into future (and 0 out for past)
+        y_per_player_shifted = torch.roll(y_per_player, 1, dims=1)
+        y_per_player_shifted[:, 0] = 0
+        y_pos = rearrange(compute_new_pos(x_pos, y_per_player_shifted, self.nav_above_below, self.nav_region),
+                          "b (p d) -> b p d", d=3)
+        y_pos_encoded = self.encode_pos(y_pos)
+        y_gathered = torch.cat([y_pos_encoded, x_non_pos], -1)
+        return self.encoder_model(y_gathered)
 
     def forward(self, x, y=None):
         # transform inputs
@@ -139,19 +144,27 @@ class TransformerNestedHiddenLatentModel(nn.Module):
         # run model except last layer
         x_encoded = self.encoder_model(x_gathered)
 
-        if y is not None:
-            y_per_player = delta_one_hot_to_index(y)
-            # shift by 1 so never looking into future (and 0 out for past)
-            y_per_player_shifted = torch.roll(y_per_player, 1, dims=1)
-            y_per_player_shifted[:, 0] = 0
-            y_pos = rearrange(compute_new_pos(x_pos, y_per_player_shifted, self.nav_above_below, self.nav_region),
-                              "b (p d) -> b p d", p=self.num_players, d=3)
-            y_pos_encoded = self.encode_pos(y_pos)
-            y_gathered = torch.cat([y_pos_encoded, x_non_pos], -1)
-            y_encoded = self.encoder_model(y_gathered)
+        tgt_mask = self.transformer_model.generate_square_subsequent_mask(self.num_players, x.device.type)
 
-        tgt_mask = self.generate_square_subsequent_mask(x.device.type)
-        transformed = self.transformer_model(x_encoded, x_encoded if y is None else y_encoded, tgt_mask=tgt_mask, src_key_padding_mask=dead_gathered)
+        if False and y is not None:
+            y_encoded = self.encode_y(x_pos, x_non_pos, y)
+            transformed = self.transformer_model(x_encoded, y_encoded, tgt_mask=tgt_mask,
+                                                 src_key_padding_mask=dead_gathered, tgt_key_padding_mask=dead_gathered)
+            latent = self.decoder(transformed)
+            return self.logits_output(latent), self.prob_output(latent)
+        else:
+            y = torch.zeros([x.shape[0], self.num_players * delta_pos_grid_num_cells], device=x.device.type)
+            memory = self.transformer_model.encoder(x_encoded, src_key_padding_mask=dead_gathered)
+            for i in range(self.num_players):
+                y_encoded = self.encode_y(x_pos, x_non_pos, y)
+                transformed = self.transformer_model.decoder(y_encoded, memory, tgt_mask=tgt_mask,
+                                                             memory_key_padding_mask=dead_gathered,
+                                                             tgt_key_padding_mask=dead_gathered)
+                latent = self.decoder(transformed)
+                y = self.prob_output(latent)
+            return self.logits_output(latent), self.prob_output(latent)
+
+
         #transformed = self.transformer_model(x_encoded, y_encoded, src_key_padding_mask=dead_gathered)
 
         #if torch.isnan(transformed).any():
@@ -162,7 +175,6 @@ class TransformerNestedHiddenLatentModel(nn.Module):
         #           print("bad")
         #       transformed = new_transformed
 
-        latent = self.decoder(transformed)
         #max_diff = -1
         #for i in range(transformed.shape[0]):
         #    for j in range(transformed.shape[1]):
@@ -171,7 +183,6 @@ class TransformerNestedHiddenLatentModel(nn.Module):
 
 
         # https://github.com/pytorch/pytorch/issues/22440 how to parse tuple output
-        return self.logits_output(latent), self.prob_output(latent)
 
 
 #class SimplifiedTransformerNestedHiddenLatentModel(nn.Module):
