@@ -32,51 +32,36 @@ namespace communicate::spacing {
             }
         }
 
-        if (!blackboard.defuserId) {
-            for (const CSGOId playerId : state.getPlayersOnTeam(ENGINE_TEAM_CT)) {
-                const ServerState::Client & client = state.getClient(playerId);
-                if (client.isAlive && client.isBot) {
-                    const nav_mesh::nav_area & playerNavArea = blackboard.getPlayerNavArea(client);
-                    const nav_mesh::nav_area & c4NavArea = blackboard.getC4NavArea(state);
-                    if (c4NavArea.m_place == playerNavArea.m_place) {
-                        blackboard.defuserId = playerId;
-                        break;
-                    }
-                }
+
+        // if no T alive, assign closest to C4
+        bool tAlive = false, ctAlive = false;
+        for (const auto & client : state.clients) {
+            if (client.team == ENGINE_TEAM_T && client.isAlive) {
+                tAlive = true;
+                break;
             }
         }
-
-        if (!blackboard.defuserId) {
-            // if no T alive, assign closest to C4
-            bool tAlive = false, ctAlive = false;
-            for (const auto & client : state.clients) {
-                if (client.team == ENGINE_TEAM_T && client.isAlive) {
-                    tAlive = true;
-                    break;
-                }
+        for (const auto & client : state.clients) {
+            if (client.team == ENGINE_TEAM_CT && client.isAlive) {
+                ctAlive = true;
+                break;
             }
+        }
+        if (!tAlive && ctAlive) {
+            double minDistance = std::numeric_limits<double>::max();
+            int64_t closestClientId = INVALID_ID;
             for (const auto & client : state.clients) {
                 if (client.team == ENGINE_TEAM_CT && client.isAlive) {
-                    ctAlive = true;
-                    break;
-                }
-            }
-            if (!tAlive && ctAlive) {
-                double minDistance = std::numeric_limits<double>::max();
-                int64_t closestClientId = INVALID_ID;
-                for (const auto & client : state.clients) {
-                    if (client.team == ENGINE_TEAM_CT && client.isAlive) {
-                        const nav_mesh::nav_area & playerNavArea = blackboard.getPlayerNavArea(client);
-                        const nav_mesh::nav_area & c4NavArea = blackboard.getC4NavArea(state);
-                        double distanceToC4 = blackboard.reachability.getDistance(playerNavArea.get_id(),
-                                                                                  c4NavArea.get_id(), blackboard.navFile);
-                        if (distanceToC4 < minDistance) {
-                            minDistance = distanceToC4;
-                            closestClientId = client.csgoId;
-                        }
+                    const nav_mesh::nav_area & playerNavArea = blackboard.getPlayerNavArea(client);
+                    const nav_mesh::nav_area & c4NavArea = blackboard.getC4NavArea(state);
+                    double distanceToC4 = blackboard.reachability.getDistance(playerNavArea.get_id(),
+                                                                              c4NavArea.get_id(), blackboard.navFile);
+                    if (distanceToC4 < minDistance) {
+                        minDistance = distanceToC4;
+                        closestClientId = client.csgoId;
                     }
-                    blackboard.defuserId = closestClientId;
                 }
+                blackboard.defuserId = closestClientId;
             }
         }
         blackboard.executeIfAllFinishedSetup(state);

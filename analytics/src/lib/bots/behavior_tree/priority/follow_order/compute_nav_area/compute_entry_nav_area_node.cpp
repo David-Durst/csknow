@@ -63,6 +63,12 @@ namespace follow::compute_nav_area {
             }
         }
 
+        // finished if defuser and on last waypoint of c4
+        if (blackboard.defuserId == treeThinker.csgoId && maxFinishedWaypoint + 2 == curOrder.waypoints.size() &&
+            curOrder.waypoints.back().type == WaypointType::C4) {
+            blackboard.strategy.playersFinishedStrategy.insert(treeThinker.csgoId);
+        }
+
         playerNodeState[treeThinker.csgoId] = NodeState::Success;
         return playerNodeState[treeThinker.csgoId];
     }
