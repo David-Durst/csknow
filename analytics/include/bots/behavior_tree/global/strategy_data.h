@@ -319,6 +319,7 @@ class Strategy {
 public:
     map<CSGOId, int64_t> playerToWaypointIndex;
     map<CSGOId, int32_t> playerToEntryIndex;
+    set<CSGOId> playersFinishedStrategy;
     // a and b orders created each new blackboard, tOrders and ctOrders are specified for current site
     vector<Order> aModelTOrders, bModelTOrders, aModelCTOrders, bModelCTOrders;
 
@@ -329,6 +330,7 @@ public:
         orderToPlayers.clear();
         playerToWaypointIndex.clear();
         playerToEntryIndex.clear();
+        playersFinishedStrategy.clear();
         playerToExecuteStatus.clear();
     }
 

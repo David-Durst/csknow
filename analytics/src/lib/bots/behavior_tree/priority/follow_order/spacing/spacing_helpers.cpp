@@ -42,7 +42,7 @@ NumAheadResult computeNumAhead(Blackboard & blackboard, const ServerState & stat
                     blackboard.navFile.find_path_detailed(vec3Conv(otherPos), vec3Conv(targetPos));
 
             float otherClientDistanceToTarget;
-            // quit if can't path for current client
+            // quit if can't path for current client or finished
             if (otherClientWaypoints) {
                 otherClientDistanceToTarget = blackboard.navFile.compute_path_length_from_origin(vec3Conv(otherPos), otherClientWaypoints.value());
             }
@@ -58,11 +58,14 @@ NumAheadResult computeNumAhead(Blackboard & blackboard, const ServerState & stat
             else {
                 result.numBehind++;
             }
-            if (distanceInFront > 0) {
-                result.nearestInFront = std::min(result.nearestInFront, distanceInFront);
-            }
-            else {
-                result.nearestBehind = std::min(result.nearestBehind, -1 * distanceInFront);
+            // only count them as too close if not finished
+            if (blackboard.strategy.playersFinishedStrategy.count(followerId) == 0) {
+                if (distanceInFront > 0) {
+                    result.nearestInFront = std::min(result.nearestInFront, distanceInFront);
+                }
+                else {
+                    result.nearestBehind = std::min(result.nearestBehind, -1 * distanceInFront);
+                }
             }
         }
     }

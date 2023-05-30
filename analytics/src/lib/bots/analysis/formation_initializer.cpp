@@ -64,7 +64,7 @@ namespace csknow::formation_initializer {
         file.createDataSet("/data/pos x", posX);
         file.createDataSet("/data/pos y", posY);
         file.createDataSet("/data/pos z", posZ);
-        file.createDataSet("/data/player aggressive", playerAggressive)
+        file.createDataSet("/data/player aggressive", playerAggressive);
         file.createDataSet("/extra/players per formation", playersPerFormation);
         file.createDataSet("/extra/c4 planted a", c4PlantedA);
         file.createDataSet("/extra/team", team);
@@ -132,6 +132,7 @@ namespace csknow::formation_initializer {
             ), "DisableDuringSetup");
 
             Node::Ptr finishCondition;
+            /*
             if (waitForever) {
                 finishCondition = make_unique<RepeatDecorator>(blackboard,
                                                                make_unique<movement::WaitNode>(blackboard, 30, false),
@@ -156,6 +157,7 @@ namespace csknow::formation_initializer {
                                                          std::move(finishCondition),
                                                          make_unique<SuccessEndNode>(blackboard, name, testIndex, numTests)),
                                                  "LearnedNavSequence");
+                                                 */
         }
     }
 

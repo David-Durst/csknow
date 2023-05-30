@@ -27,6 +27,10 @@ namespace follow::compute_nav_area {
         curPriority.moveOptions = {true, false, false};
         curPriority.shootOptions = ShootOptions::DontShoot;
 
+        if (blackboard.strategy.playersFinishedStrategy.count(treeThinker.csgoId) > 0) {
+            blackboard.strategy.playersFinishedStrategy.erase(treeThinker.csgoId);
+        }
+
         /*
         const auto & curArea = blackboard.navFile.get_nearest_area_by_position(
             vec3Conv(state.clients[state.csgoIdToCSKnowId[treeThinker.csgoId]].getFootPosForPlayer()));
@@ -49,6 +53,7 @@ namespace follow::compute_nav_area {
             }
             // otherwise, stop (if in air, could be landing, so keep going forward then)
             else {
+                blackboard.strategy.playersFinishedStrategy.insert(treeThinker.csgoId);
                 // if interrupted while defusing, when swithc back make sure to return to final waypont and not initial entry
                 blackboard.strategy.playerToWaypointIndex[treeThinker.csgoId] =
                     static_cast<int64_t>(curOrder.waypoints.size()) - 1;
