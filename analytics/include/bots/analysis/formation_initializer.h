@@ -39,18 +39,22 @@ namespace csknow::formation_initializer {
         void save(const string& filePath);
         void load(const string& filePath);
 
-        vector<Script::Ptr> createFormationScripts(bool quitAtEnd);
+        vector<Script::Ptr> createFormationScripts(const MapMeshResult & mapMeshResult, bool quitAtEnd);
     };
 
     class FormationScript : public Script {
     public:
         OrderId addedOrderId;
+        set<string> validStoppingPlaces;
+        vector<Vec3> playerPos;
+        bool c4PlantedA;
         size_t testIndex, numTests;
         bool waitForever;
-        explicit FormationScript(const std::string &name, vector<NeededBot> neededBots, ObserveSettings observeSettings,
-                                 size_t testIndex, size_t numTests, bool waitForever);
+        FormationScript(const std::string &name, vector<NeededBot> neededBots, ObserveSettings observeSettings,
+                        set<string> validStoppingPlaces, vector<Vec3> playerPos, bool c4PlantedA,
+                        size_t testIndex, size_t numTests, bool waitForever);
 
-        void initialize(Tree &tree, ServerState &state, vector<Vec3> playerPos, bool c4PlantedA);
+        void initialize(Tree &tree, ServerState &state);
     };
 }
 

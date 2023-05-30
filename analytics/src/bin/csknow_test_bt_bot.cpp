@@ -22,6 +22,7 @@
 #include "navmesh/nav_file.h"
 #include "bots/testing/scripts/test_setup.h"
 #include "bots/testing/scripts/learned/test_learned_teamwork.h"
+#include "bots/analysis/formation_initializer.h"
 #include <iostream>
 #include <thread>
 #include <chrono>
@@ -65,6 +66,12 @@ int main(int argc, char * argv[]) {
     ScriptsRunner learnedHoldDataGenerator(csknow::tests::learned::createLearnedHoldScripts(200, true), false);
     ScriptsRunner learnedTeamworkDataGenerator(csknow::tests::learned::createLearnedTeamworkScripts(60, true), false);
     ScriptsRunner outDistributionDataGenerator(csknow::tests::learned::createOutDistributionNavScripts(200, true), false);
+
+    string navPath = mapsPath + "/de_dust2.nav";
+    nav_mesh::nav_file navFile(navPath.c_str());
+    MapMeshResult mapMeshResult(queryMapMesh(navFile, ""));
+    csknow::formation_initializer::FormationInitializer formationInitializer(mapMeshResult, mapsPath);
+    ScriptsRunner formationDataGenerator(formationInitializer.createFormationScripts(mapMeshResult, true), false);
 
     ScriptsRunner scriptsRunner(Script::makeList(
          //make_unique<GooseToCatScript>(state)
@@ -149,8 +156,8 @@ int main(int argc, char * argv[]) {
             else if (state.clients.size() > 0) {
                 //std::cout << "time since last save " << state.getSecondsBetweenTimes(start, priorStart) << std::endl;
                 if (runTest) {
-                    scriptsRunner.initialize(tree, state);
-                    finishedTests = scriptsRunner.tick(tree, state);
+                    //scriptsRunner.initialize(tree, state);
+                    //finishedTests = scriptsRunner.tick(tree, state);
                     //scenarioRunner.initialize(tree, state);
                     //finishedTests = scenarioRunner.tick(tree, state);
                     //humanScenarioRunner.initialize(tree, state);
@@ -163,6 +170,8 @@ int main(int argc, char * argv[]) {
                     //finishedTests = learnedTeamworkDataGenerator.tick(tree, state);
                     //outDistributionDataGenerator.initialize(tree, state);
                     //finishedTests = outDistributionDataGenerator.tick(tree, state);
+                    formationDataGenerator.initialize(tree, state);
+                    finishedTests = formationDataGenerator.tick(tree, state);
                 }
                 else {
                     roundScriptsRunner.initialize(tree, state);

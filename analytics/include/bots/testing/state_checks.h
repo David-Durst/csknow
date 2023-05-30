@@ -137,6 +137,29 @@ public:
     }
 };
 
+class InPlaces : public Node {
+    CSGOId sourceId;
+    set<string> places;
+
+public:
+    InPlaces(Blackboard & blackboard, CSGOId sourceId, const set<string>& places) :
+            Node(blackboard, "InPlaces_" + std::to_string(sourceId)), sourceId(sourceId), places(places) { };
+
+    NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
+        const ServerState::Client & sourceClient = state.getClient(sourceId);
+        const nav_mesh::nav_area & srcArea =
+                blackboard.navFile.get_nearest_area_by_position(vec3Conv(sourceClient.getFootPosForPlayer()));
+
+        if (places.count(blackboard.navFile.get_place(srcArea.m_place)) > 0) {
+            playerNodeState[treeThinker.csgoId] = NodeState::Success;
+        }
+        else {
+            playerNodeState[treeThinker.csgoId] = NodeState::Failure;
+        }
+        return playerNodeState[treeThinker.csgoId];
+    }
+};
+
 class NearPlace : public Node {
     CSGOId sourceId;
     string place;
