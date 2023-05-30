@@ -380,13 +380,13 @@ public:
             Node::Ptr placeChecks = make_unique<SequenceNode>(blackboard, Node::makeList(
                     make_unique<RepeatDecorator>(blackboard, make_unique<InPlace>(blackboard, neededBots[0].id, "BombsiteB"), true),
                     make_unique<RepeatDecorator>(blackboard, make_unique<InPlace>(blackboard, neededBots[1].id, "BDoors"), true),
-                    make_unique<RepeatDecorator>(blackboard, make_unique<InPlace>(blackboard, neededBots[2].id, "BombsiteA"), true)
+                    make_unique<RepeatDecorator>(blackboard, make_unique<InPlace>(blackboard, neededBots[2].id, "UpperTunnel"), true)
             ));
             commands = make_unique<SequenceNode>(blackboard, Node::makeList(
                     std::move(disableAllDuringSetup),
                     make_unique<ParallelFirstNode>(blackboard, Node::makeList(
                             std::move(placeChecks),
-                            make_unique<movement::WaitNode>(blackboard, 95, false))
+                            make_unique<movement::WaitNode>(blackboard, 35, false))
                     ))
             );
         }
