@@ -230,6 +230,7 @@ int main(int argc, char * argv[]) {
             testLogFile << learnedHoldDataGenerator.curLog();
             testLogFile << learnedTeamworkDataGenerator.curLog();
             testLogFile << outDistributionDataGenerator.curLog();
+            testLogFile << formationDataGenerator.curLog();
         }
         else {
             testLogFile << roundScriptsRunner.curLog();

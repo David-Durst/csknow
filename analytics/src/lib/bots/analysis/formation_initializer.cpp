@@ -10,17 +10,24 @@ namespace csknow::formation_initializer {
     Vec3 FormationInitializer::getValidPlayerCoordinate(const MapMeshResult &mapMeshResult) {
         while (true) {
             int areaIndex = navAreaDist(gen);
-            if (!mapMeshResult.connectionAreaIds[areaIndex].empty()) {
-                return getCenter(mapMeshResult.coordinate[areaIndex]);
+            AABB areaAABB = mapMeshResult.coordinate[areaIndex];
+            Vec3 areaDelta = areaAABB.max - areaAABB.min;
+            if (!mapMeshResult.connectionAreaIds[areaIndex].empty() && areaDelta.x > 2 * WIDTH &&
+                areaDelta.y > 2 * WIDTH) {
+                Vec3 pos = getCenter(mapMeshResult.coordinate[areaIndex]);
+                pos.z += 30;
+                return pos;
             }
         }
     }
 
     FormationInitializer::FormationInitializer(const MapMeshResult & mapMeshResult, const string & navPath) :
-        gen(rd()), realDist(0, 1), playersPerTeamDist(0, static_cast<int>(NUM_PLAYERS / 2) - 1),
+        gen(rd()), realDist(0, 1), ctPlayersPerTeamDist(1, static_cast<int>(NUM_PLAYERS / 2) - 1),
+        // one fewer for t as fewewer players on that team
+        tPlayersPerTeamDist(1, static_cast<int>(NUM_PLAYERS / 2) - 2),
         navAreaDist(0, mapMeshResult.id.size()-1) {
         std::string filePath = navPath + "/de_dust2_formations.hdf5";
-        if (std::filesystem::exists(filePath)) {
+        if (false && std::filesystem::exists(filePath)) {
             load(filePath);
         }
         else {
@@ -28,7 +35,7 @@ namespace csknow::formation_initializer {
                 Formation formation;
                 formation.team = i % 2 == 0 ? ENGINE_TEAM_CT : ENGINE_TEAM_T;
                 formation.c4PlantedA = realDist(gen) < 0.5;
-                int numPlayers = playersPerTeamDist(gen);
+                int numPlayers = formation.team == ENGINE_TEAM_CT ? ctPlayersPerTeamDist(gen) : tPlayersPerTeamDist(gen);
                 for (int playerIndex = 0; playerIndex < numPlayers; playerIndex++) {
                     formation.playerPos.push_back(getValidPlayerCoordinate(mapMeshResult));
                     // for now, everyone is aggresive to prevent lurking deadlocks
@@ -196,6 +203,7 @@ namespace csknow::formation_initializer {
                                                                         make_unique<TeleportPlantedC4>(blackboard),
                                                                         make_unique<ClearMemoryCommunicationDangerNode>(blackboard),
                                                                         make_unique<movement::WaitNode>(blackboard, 0.1),
+                                                                        make_unique<RecomputeOrdersNode>(blackboard),
                                                                         make_unique<RepeatDecorator>(blackboard,
                                                                                                      make_unique<StandingStill>(blackboard, neededBotIds), true)),
                                                                 "Setup");

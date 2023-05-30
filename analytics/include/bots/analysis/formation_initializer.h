@@ -15,8 +15,8 @@
 #include "bots/testing/scripts/learned/log_nodes.h"
 
 namespace csknow::formation_initializer {
-    size_t numFormations = 2000;
-    Vec3 aSiteC4Pos{1241., 2586., 127.}, bSiteC4Pos{-1463., 2489., 46.};
+    constexpr size_t numFormations = 2000;
+    const Vec3 aSiteC4Pos{1241., 2586., 127.}, bSiteC4Pos{-1463., 2489., 46.};
     struct Formation {
         vector<Vec3> playerPos;
         vector<bool> playerAggressive;
@@ -28,7 +28,7 @@ namespace csknow::formation_initializer {
         std::random_device rd;
         std::mt19937 gen;
         std::uniform_real_distribution<> realDist;
-        std::uniform_int_distribution<> playersPerTeamDist, navAreaDist;
+        std::uniform_int_distribution<> ctPlayersPerTeamDist, tPlayersPerTeamDist, navAreaDist;
 
         Vec3 getValidPlayerCoordinate(const MapMeshResult & mapMeshResult);
     public:
