@@ -33,7 +33,7 @@ namespace csknow::formation_initializer {
         else {
             for (size_t i = 0; i < numFormations; i++) {
                 Formation formation;
-                formation.team = ENGINE_TEAM_T;//i % 2 == 0 ? ENGINE_TEAM_CT : ENGINE_TEAM_T;
+                formation.team = i % 2 == 0 ? ENGINE_TEAM_CT : ENGINE_TEAM_T;
                 formation.c4PlantedA = realDist(gen) < 0.5;
                 int numPlayers = formation.team == ENGINE_TEAM_CT ? ctPlayersPerTeamDist(gen) : tPlayersPerTeamDist(gen);
                 for (int playerIndex = 0; playerIndex < numPlayers; playerIndex++) {
@@ -236,7 +236,8 @@ namespace csknow::formation_initializer {
                 }
                 finishCondition = make_unique<ParallelFirstNode>(blackboard, Node::makeList(
                         make_unique<RepeatDecorator>(blackboard, make_unique<ParallelAndNode>(blackboard, std::move(conditionPlayerNodes)), true),
-                        make_unique<csknow::tests::learned::FailIfTimeoutEndNode>(blackboard, name, testIndex, numTests, 50)));
+                        make_unique<DisableActionsNode>(blackboard, "disableDefuse", neededBotIds, false, false, false, true),
+                        make_unique<csknow::tests::learned::FailIfTimeoutEndNode>(blackboard, name, testIndex, numTests, 70)));
             }
 
             commands = make_unique<SequenceNode>(blackboard, Node::makeList(

@@ -25,9 +25,11 @@ namespace follow::spacing {
 
         NumAheadResult numAheadResult = computeNumAhead(blackboard, state, curClient);
         // ready if reached first waypoint and in front
-        bool readyToExecute = numAheadResult.numBehind == static_cast<int>(curOrderFollowers.size()) - 1 &&
+        // or if already finished
+        bool readyToExecute = (numAheadResult.numBehind == static_cast<int>(curOrderFollowers.size()) - 1 &&
                 numAheadResult.nearestBehind > MIN_BAIT_DISTANCE &&
-                blackboard.strategy.playerToWaypointIndex[treeThinker.csgoId] > 0;
+                blackboard.strategy.playerToWaypointIndex[treeThinker.csgoId] > 0) ||
+                blackboard.strategy.playerFinishedSetup(treeThinker.csgoId) > 0;
         if (readyToExecute) {
             blackboard.strategy.playerReady(treeThinker.csgoId);
         }

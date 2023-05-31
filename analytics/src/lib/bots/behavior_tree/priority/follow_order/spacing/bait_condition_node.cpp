@@ -22,8 +22,17 @@ namespace follow::spacing {
 
         NumAheadResult numAheadResult = computeNumAhead(blackboard, state, curClient);
         // ready to execute if enough people ahead and near enough to next person in stack
+        bool allPlayersInFrontFinished = true;
+        int32_t curPlayerEntryIndex = blackboard.strategy.playerToEntryIndex[treeThinker.csgoId];
+        const OrderId & curOrderId = blackboard.strategy.getOrderIdForPlayer(curClient.csgoId);
+        for (const auto & csgoId : blackboard.strategy.getOrderFollowers(curOrderId)) {
+            if (blackboard.strategy.playerToEntryIndex[csgoId] < curPlayerEntryIndex &&
+                !blackboard.strategy.playerFinishedSetup(csgoId)) {
+                allPlayersInFrontFinished = false;
+            }
+        }
         bool readyToExecute = numAheadResult.numAhead == blackboard.strategy.playerToEntryIndex[treeThinker.csgoId] &&
-                numAheadResult.nearestInFront < MAX_BAIT_DISTANCE;
+                (numAheadResult.nearestInFront < MAX_BAIT_DISTANCE || allPlayersInFrontFinished);
         if (readyToExecute) {
             blackboard.strategy.playerReady(treeThinker.csgoId);
         }

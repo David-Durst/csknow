@@ -51,8 +51,8 @@ NumAheadResult computeNumAhead(Blackboard & blackboard, const ServerState & stat
             }
             // other person ahead if you are more than BAIT_DISTANCE behind them
             double distanceInFront = curClientDistanceToTarget - otherClientDistanceToTarget;
-            // allow tolerance since can have different paths
-            if (distanceInFront > 0) {
+            // allow tolerance since can have different paths, also count anyone on objective as ahead
+            if (distanceInFront > 0 || blackboard.strategy.playersFinishedStrategy.count(followerId) > 0) {
                 result.numAhead++;
             }
             else {

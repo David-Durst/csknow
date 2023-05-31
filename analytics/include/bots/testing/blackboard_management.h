@@ -121,13 +121,14 @@ public:
 
 class DisableActionsNode : public Node {
     vector<CSGOId> targetIds;
-    bool disableMouse, disableFiring, disableMove;
+    bool disableMouse, disableFiring, disableMove, disableDefuse;
 public:
-    DisableActionsNode(Blackboard & blackboard, string name, vector<CSGOId> targetIds, bool disableMouse = true, bool disableFiring = true, bool disableMove = true) :
-            Node(blackboard, std::move(name)), targetIds(std::move(targetIds)), disableMouse(disableMouse), disableFiring(disableFiring), disableMove(disableMove) { };
+    DisableActionsNode(Blackboard & blackboard, string name, vector<CSGOId> targetIds, bool disableMouse = true, bool disableFiring = true, bool disableMove = true, bool disableDefuse = false) :
+            Node(blackboard, std::move(name)), targetIds(std::move(targetIds)), disableMouse(disableMouse), disableFiring(disableFiring), disableMove(disableMove), disableDefuse(disableDefuse) { };
     NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
         for (size_t i = 0; i < targetIds.size(); i++) {
             bool oldFireValue = blackboard.playerToAction[targetIds[i]].getButton(IN_ATTACK);
+            bool oldDefuseValue = blackboard.playerToAction[targetIds[i]].getButton(IN_USE);
             if (disableMove) {
                 blackboard.playerToAction[targetIds[i]].buttons = 0;
             }
@@ -137,6 +138,7 @@ public:
                 blackboard.playerToAction[targetIds[i]].inputAngleAbsolute = true;
             }
             blackboard.playerToAction[targetIds[i]].setButton(IN_ATTACK, disableFiring ? false : oldFireValue);
+            blackboard.playerToAction[targetIds[i]].setButton(IN_USE, disableDefuse ? false : oldDefuseValue);
             blackboard.playerToAction[targetIds[i]].forceInput = true;
         }
         playerNodeState[treeThinker.csgoId] = NodeState::Running;
