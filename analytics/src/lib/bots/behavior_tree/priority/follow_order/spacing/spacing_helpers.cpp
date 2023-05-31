@@ -27,6 +27,8 @@ NumAheadResult computeNumAhead(Blackboard & blackboard, const ServerState & stat
         return result;
     }
 
+    int32_t curPlayerEntryIndex = blackboard.strategy.playerToEntryIndex[curClient.csgoId];
+
     // find other order followers who are ahead, make sure num ahead matches number assigned to follow
     for (const auto & followerId : blackboard.strategy.getOrderFollowers(curOrderId)) {
         if (followerId == curClient.csgoId) {
@@ -51,8 +53,12 @@ NumAheadResult computeNumAhead(Blackboard & blackboard, const ServerState & stat
             }
             // other person ahead if you are more than BAIT_DISTANCE behind them
             double distanceInFront = curClientDistanceToTarget - otherClientDistanceToTarget;
-            // allow tolerance since can have different paths, also count anyone on objective as ahead
-            if (distanceInFront > 0 || blackboard.strategy.playersFinishedStrategy.count(followerId) > 0) {
+            // allow tolerance since can have different paths, also count anyone on objective as ahead and
+            // they are supposed to be in front (if they are in front but done, don't worry about them)
+            int32_t otherPlayerEntryIndex = blackboard.strategy.playerToEntryIndex[followerId];
+            bool otherPlayerFinishedAndInFront = otherPlayerEntryIndex < curPlayerEntryIndex &&
+                    blackboard.strategy.playersFinishedStrategy.count(followerId) > 0;
+            if (distanceInFront > 0 || otherPlayerFinishedAndInFront) {
                 result.numAhead++;
             }
             else {

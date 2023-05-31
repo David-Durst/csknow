@@ -30,7 +30,7 @@ namespace follow::spacing {
                 numAheadResult.nearestBehind > MIN_BAIT_DISTANCE &&
                 blackboard.strategy.playerToWaypointIndex[treeThinker.csgoId] > 0) ||
                 blackboard.strategy.playerFinishedSetup(treeThinker.csgoId) > 0;
-        if (readyToExecute) {
+        if (readyToExecute || blackboard.strategy.playersFinishedStrategy.count(treeThinker.csgoId) > 0) {
             blackboard.strategy.playerReady(treeThinker.csgoId);
         }
         else {
