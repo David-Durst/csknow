@@ -34,7 +34,7 @@ namespace csknow::formation_initializer {
     public:
         vector<Formation> initialConditions;
 
-        FormationInitializer(const MapMeshResult & mapMeshResult, const string & navPath);
+        FormationInitializer(const MapMeshResult & mapMeshResult, const string & savedDataPath);
 
         void save(const string& filePath);
         void load(const string& filePath);
@@ -48,10 +48,11 @@ namespace csknow::formation_initializer {
         set<string> validStoppingPlaces;
         vector<Vec3> playerPos;
         bool c4PlantedA;
+        TeamId team;
         size_t testIndex, numTests;
         bool waitForever;
         FormationScript(const std::string &name, vector<NeededBot> neededBots, ObserveSettings observeSettings,
-                        set<string> validStoppingPlaces, vector<Vec3> playerPos, bool c4PlantedA,
+                        set<string> validStoppingPlaces, vector<Vec3> playerPos, bool c4PlantedA, TeamId team,
                         size_t testIndex, size_t numTests, bool waitForever);
 
         void initialize(Tree &tree, ServerState &state);

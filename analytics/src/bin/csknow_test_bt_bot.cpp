@@ -70,7 +70,7 @@ int main(int argc, char * argv[]) {
     string navPath = mapsPath + "/de_dust2.nav";
     nav_mesh::nav_file navFile(navPath.c_str());
     MapMeshResult mapMeshResult(queryMapMesh(navFile, ""));
-    csknow::formation_initializer::FormationInitializer formationInitializer(mapMeshResult, mapsPath);
+    csknow::formation_initializer::FormationInitializer formationInitializer(mapMeshResult, savedDatasetsDir);
     ScriptsRunner formationDataGenerator(formationInitializer.createFormationScripts(mapMeshResult, true), false);
 
     ScriptsRunner scriptsRunner(Script::makeList(

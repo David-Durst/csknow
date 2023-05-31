@@ -21,29 +21,34 @@ namespace csknow::formation_initializer {
         }
     }
 
-    FormationInitializer::FormationInitializer(const MapMeshResult & mapMeshResult, const string & navPath) :
+    FormationInitializer::FormationInitializer(const MapMeshResult & mapMeshResult, const string & savedDataPath) :
         gen(rd()), realDist(0, 1), ctPlayersPerTeamDist(1, static_cast<int>(NUM_PLAYERS / 2) - 1),
         // one fewer for t as fewewer players on that team
         tPlayersPerTeamDist(1, static_cast<int>(NUM_PLAYERS / 2) - 2),
         navAreaDist(0, mapMeshResult.id.size()-1) {
-        std::string filePath = navPath + "/de_dust2_formations.hdf5";
-        if (false && std::filesystem::exists(filePath)) {
+        std::string filePath = savedDataPath + "/de_dust2_formations.hdf5";
+        if (std::filesystem::exists(filePath)) {
             load(filePath);
         }
         else {
             for (size_t i = 0; i < numFormations; i++) {
                 Formation formation;
-                formation.team = i % 2 == 0 ? ENGINE_TEAM_CT : ENGINE_TEAM_T;
+                formation.team = ENGINE_TEAM_T;//i % 2 == 0 ? ENGINE_TEAM_CT : ENGINE_TEAM_T;
                 formation.c4PlantedA = realDist(gen) < 0.5;
                 int numPlayers = formation.team == ENGINE_TEAM_CT ? ctPlayersPerTeamDist(gen) : tPlayersPerTeamDist(gen);
                 for (int playerIndex = 0; playerIndex < numPlayers; playerIndex++) {
                     formation.playerPos.push_back(getValidPlayerCoordinate(mapMeshResult));
-                    // for now, everyone is aggresive to prevent lurking deadlocks
-                    formation.playerAggressive.push_back(true);
-                    //formation.playerAggressive.push_back(realDist(gen) < 0.5);
+                    // for now, everyone on CT is aggresive to prevent lurking deadlocks
+                    if (formation.team == ENGINE_TEAM_T) {
+                        formation.playerAggressive.push_back(realDist(gen) < 0.5);
+                    }
+                    else {
+                        formation.playerAggressive.push_back(true);
+                    }
                 }
                 initialConditions.push_back(formation);
             }
+            save(filePath);
         }
     }
 
@@ -93,11 +98,13 @@ namespace csknow::formation_initializer {
         initialConditions.clear();
         for (size_t i = 0; i < posX.size(); i++) {
             if (curFormationIndex < 0 || playersInCurFormation >= playersPerFormation[curFormationIndex]) {
+                playersInCurFormation = 0;
                 curFormationIndex++;
                 initialConditions.push_back({{}, {}, c4PlantedA[curFormationIndex], team[curFormationIndex]});
             }
             initialConditions.back().playerPos.push_back({posX[i], posY[i], posZ[i]});
             initialConditions.back().playerAggressive.push_back(playerAggressive[i]);
+            playersInCurFormation++;
         }
     }
 
@@ -164,7 +171,7 @@ namespace csknow::formation_initializer {
 
             result.push_back(make_unique<FormationScript>("Formation_" + std::to_string(i), neededBots,
                                                           ObserveSettings{ObserveType::FirstPerson, 0}, validStoppingPlaces,
-                                                          initialCondition.playerPos, initialCondition.c4PlantedA,
+                                                          initialCondition.playerPos, initialCondition.c4PlantedA, initialCondition.team,
                                                           i, initialConditions.size(), false));
         }
         if (quitAtEnd) {
@@ -177,11 +184,11 @@ namespace csknow::formation_initializer {
 
     FormationScript::FormationScript(const std::string &name, vector<NeededBot> neededBots,
                                      ObserveSettings observeSettings, set<string> validStoppingPlaces,
-                                     vector<Vec3> playerPos, bool c4PlantedA,
+                                     vector<Vec3> playerPos, bool c4PlantedA, TeamId team,
                                      std::size_t testIndex, std::size_t numTests,
                                      bool waitForever) : Script(name, neededBots, observeSettings),
                                      validStoppingPlaces(validStoppingPlaces), playerPos(playerPos), c4PlantedA(c4PlantedA),
-                                     testIndex(testIndex), numTests(numTests), waitForever(waitForever) { }
+                                     team(team), testIndex(testIndex), numTests(numTests), waitForever(waitForever) { }
 
     void FormationScript::initialize(Tree &tree, ServerState &state) {
         if (tree.newBlackboard) {
@@ -224,9 +231,12 @@ namespace csknow::formation_initializer {
                 for (const auto & neededBot : neededBots) {
                     conditionPlayerNodes.emplace_back(make_unique<InPlaces>(blackboard, neededBot.id, validStoppingPlaces));
                 }
+                if (team == ENGINE_TEAM_T) {
+                    conditionPlayerNodes.emplace_back(make_unique<StandingStill>(blackboard, neededBotIds));
+                }
                 finishCondition = make_unique<ParallelFirstNode>(blackboard, Node::makeList(
                         make_unique<RepeatDecorator>(blackboard, make_unique<ParallelAndNode>(blackboard, std::move(conditionPlayerNodes)), true),
-                        make_unique<csknow::tests::learned::FailIfTimeoutEndNode>(blackboard, name, testIndex, numTests, 30)));
+                        make_unique<csknow::tests::learned::FailIfTimeoutEndNode>(blackboard, name, testIndex, numTests, 50)));
             }
 
             commands = make_unique<SequenceNode>(blackboard, Node::makeList(
