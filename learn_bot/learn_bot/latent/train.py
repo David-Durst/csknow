@@ -27,7 +27,7 @@ from learn_bot.latent.place_area.column_names import place_area_input_column_typ
     num_places, area_grid_size, area_output_column_types, delta_pos_output_column_types, test_success_col
 from learn_bot.latent.profiling import profile_latent_model
 from learn_bot.latent.transformer_nested_hidden_latent_model import TransformerNestedHiddenLatentModel
-from learn_bot.libs.hdf5_to_pd import load_hdf5_to_pd
+from learn_bot.libs.hdf5_to_pd import load_hdf5_to_pd, HDF5Wrapper
 from learn_bot.libs.io_transforms import CUDA_DEVICE_STR
 from learn_bot.latent.accuracy_and_loss import compute_loss, compute_accuracy, finish_accuracy, \
     CPU_DEVICE_STR, LatentLosses
@@ -128,7 +128,7 @@ class ColumnsToFlip:
             df[col2] = df[col1]
 
 
-def train(train_type: TrainType, all_data_df: pd.DataFrame, hyperparameter_options: HyperparameterOptions = default_hyperparameter_options,
+def train(train_type: TrainType, all_data: HDF5Wrapper, hyperparameter_options: HyperparameterOptions = default_hyperparameter_options,
           diff_train_test=True, flip_columns: List[ColumnsToFlip] = []) -> TrainResult:
 
     run_checkpoints_path = checkpoints_path
@@ -138,16 +138,16 @@ def train(train_type: TrainType, all_data_df: pd.DataFrame, hyperparameter_optio
 
 
     if diff_train_test:
-        train_test_split = train_test_split_by_col(all_data_df, round_id_column)
-        train_df = train_test_split.train_df.copy()
+        train_test_split = train_test_split_by_col(all_data.id_df, round_id_column)
+        train_hdf5 = train_test_split.train_df.copy()
         train_group_ids = train_test_split.train_group_ids
-        make_index_column(train_df)
+        make_index_column(train_hdf5.id_df)
         test_df = train_test_split.test_df.copy()
         test_group_ids = get_test_col_ids(train_test_split, round_id_column)
         make_index_column(test_df)
     else:
-        make_index_column(all_data_df)
-        train_df = all_data_df
+        make_index_column(all_data)
+        train_df = all_data
         train_group_ids = list(all_data_df.loc[:, round_id_column].unique())
         test_df = all_data_df.copy(deep=True)
         test_group_ids = train_group_ids
@@ -336,15 +336,12 @@ manual_latent_team_hdf5_data_path = Path(__file__).parent / '..' / '..' / '..' /
 manual_rounds_data_path = Path(__file__).parent / '..' / '..' / '..' / 'analytics' / 'saved_datasets' / 'bot_sample_traces_5_10_23_ticks.csv'
 rollout_latent_team_hdf5_data_path = Path(__file__).parent / '..' / '..' / '..' / 'analytics' / 'rollout_outputs' / 'behaviorTreeTeamFeatureStore.hdf5'
 
-use_small_data = False
 use_manual_data = True
 
 def run_team_analysis():
     read_start = time.time()
-    if use_small_data:
-        team_data_df = pd.read_parquet(small_latent_team_hdf5_data_path)
-    elif use_manual_data:
-        team_data_df = load_hdf5_to_pd(manual_latent_team_hdf5_data_path)
+    if use_manual_data:
+        team_data = HDF5Wrapper(manual_latent_team_hdf5_data_path, ['id', round_id_column, test_success_col])
         #valid_rounds_df = pd.read_csv(manual_rounds_data_path)
         #rounds_condition = False
         #for index, row in valid_rounds_df.iterrows():
@@ -355,32 +352,32 @@ def run_team_analysis():
         #team_data_df = team_data_df[team_data_df['test name'] == b'LearnedGooseToCatScript']
         #team_data_df = team_data_df[team_data_df[round_id_column].isin(team_data_df[round_id_column].unique()[0:40])]
     else:
-        team_data_df = load_hdf5_to_pd(latent_team_hdf5_data_path)
+        team_data = load_hdf5_to_pd(latent_team_hdf5_data_path)
         #valid_selector_df = valid_df[valid_df['valid'] == 1.].index
         #team_data_df = load_hdf5_to_pd(latent_team_hdf5_data_path, selector_df=valid_selector_df)
-        read_end = time.time()
-        print(f'''read time: {read_end - read_start}''')
+        #read_end = time.time()
+        #print(f'''read time: {read_end - read_start}''')
         #print(f'''num retake save ticks {len(team_data_df[(team_data_df['valid'] == 1.) & (team_data_df['c4 status'] < 2) &
         #                                                  (team_data_df['retake save round tick'] == 1)])}''')
         #print(f'''num retake non-save ticks {len(team_data_df[(team_data_df['valid'] == 1.) & (team_data_df['c4 status'] < 2) &
         #                                                  (team_data_df['retake save round tick'] == 0)])}''')
-        team_data_df = team_data_df[(team_data_df['valid'] == 1.) & (team_data_df['c4 status'] < 2)]
+        #team_data_df = team_data_df[(team_data_df['valid'] == 1.) & (team_data_df['c4 status'] < 2)]
                                     #(team_data_df['round id'] == 14)].iloc[range(100)]
         #team_data_df = team_data_df[(team_data_df['valid'] == 1.) & (team_data_df['freeze time ended'] == 1.)]
                                     #(team_data_df['retake save round tick'] == 0)]
-        team_data_df.to_parquet(small_latent_team_hdf5_data_path)
+        #team_data_df.to_parquet(small_latent_team_hdf5_data_path)
     #train_result = train(TrainType.Order, team_data_df, num_epochs=3, windowed=False)
     #train_result = train(TrainType.Place, team_data_df, num_epochs=500, windowed=False, diff_train_test=False)
     #train_result = train(TrainType.Area, team_data_df, num_epochs=3, windowed=False)
-    team_data_df = team_data_df[team_data_df[test_success_col] == 1.]
+    team_data = team_data.limit(team_data.id_df[test_success_col] == 1.)
     hyperparameter_options = default_hyperparameter_options
     if len(sys.argv) > 1:
         hyperparameter_indices = [int(i) for i in sys.argv[1].split(",")]
         for index in hyperparameter_indices:
             hyperparameter_options = hyperparameter_option_range[index]
-            train(TrainType.DeltaPos, team_data_df, hyperparameter_options, diff_train_test=True)
+            train(TrainType.DeltaPos, team_data, hyperparameter_options, diff_train_test=True)
     else:
-        train_result = train(TrainType.DeltaPos, team_data_df, diff_train_test=True)
+        train_result = train(TrainType.DeltaPos, team_data, diff_train_test=True)
                              #flip_columns=[ColumnsToFlip(" CT 0", " CT 1")])
 
 

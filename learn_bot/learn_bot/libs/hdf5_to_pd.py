@@ -4,10 +4,32 @@ import numpy as np
 from pathlib import Path
 from typing import List, Set, Optional
 
-from pandas.core.dtypes.common import is_numeric_dtype
+
+class HDF5Wrapper:
+    hdf5_path: str
+    id_cols: List[str]
+    id_df: pd.DataFrame
+    sample_df: pd.DataFrame
+    hdf5_file: h5py.File
+    hdf5_data: h5py.Group
+
+    def __init__(self, hdf5_path: str, id_cols: List[str]):
+        self.hdf5_path = hdf5_path
+        self.id_cols = id_cols
+        self.id_df = load_hdf5_to_pd(hdf5_path, cols_to_get=id_cols)
+        self.sample_df = load_hdf5_to_pd(hdf5_path, rows_to_get=range(0, min(100, len(self.id_df))))
+        self.hdf5_file = h5py.File(hdf5_path, 'r')
+        self.hdf5_data = self.hdf5_file['data']
+
+    def limit(self, selector_df: pd.DataFrame):
+        self.id_df = self.id_df[selector_df]
+
+    def __len__(self):
+        return len(self.id_df)
 
 
-def load_hdf5_to_pd(hdf5_path: Path, selector_df: Optional[pd.DataFrame] = None, cols_to_get: Optional[List] = None):
+def load_hdf5_to_pd(hdf5_path: Path, selector_df: Optional[pd.DataFrame] = None, cols_to_get: Optional[List] = None,
+                    rows_to_get: Optional[range] = None):
     # get data as numpy arrays and column names
     #np_arrs: List[np.ndarray] = []
     #col_names: List[List[str]] = []
@@ -17,7 +39,10 @@ def load_hdf5_to_pd(hdf5_path: Path, selector_df: Optional[pd.DataFrame] = None,
         for k in hdf5_data.keys():
             if cols_to_get is not None and k not in cols_to_get:
                 continue
-            np_arr: np.ndarray = hdf5_data[k][...]
+            if rows_to_get is None:
+                np_arr: np.ndarray = hdf5_data[k][...]
+            else:
+                np_arr: np.ndarray = hdf5_data[k][rows_to_get]
             col_names: List[str]
             if hdf5_data[k].attrs:
                 col_names = hdf5_data[k].attrs['column names'].split(',')
