@@ -14,6 +14,7 @@ namespace csknow::inference_latent_order {
         // c4 float data
         result.rowCPP.push_back(static_cast<float>(teamFeatureStoreResult.c4DistanceToASite[rowIndex]));
         result.rowCPP.push_back(static_cast<float>(teamFeatureStoreResult.c4DistanceToBSite[rowIndex]));
+        /*
         for (size_t orderIndex = 0; orderIndex < csknow::feature_store::num_orders_per_site; orderIndex++) {
             result.rowCPP.push_back(static_cast<float>(
                                  teamFeatureStoreResult.c4DistanceToNearestAOrderNavArea[orderIndex][rowIndex]));
@@ -87,6 +88,7 @@ namespace csknow::inference_latent_order {
             }
             ctColumnData = false;
         }
+         */
         return result;
     }
 

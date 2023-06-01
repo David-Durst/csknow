@@ -767,9 +767,9 @@ namespace csknow::feature_store {
 
     void TeamFeatureStoreResult::computeAcausalLabels(const Games & games, const Rounds & rounds,
                                                       const Ticks & ticks,
-                                                      const Players & players,
-                                                      const DistanceToPlacesResult & distanceToPlacesResult,
-                                                      const nav_mesh::nav_file & navFile,
+                                                      const Players &,
+                                                      const DistanceToPlacesResult &,
+                                                      const nav_mesh::nav_file &,
                                                       const csknow::key_retake_events::KeyRetakeEvents & keyRetakeEvents) {
         std::atomic<int64_t> roundsProcessed = 0;
         /*
@@ -781,7 +781,7 @@ namespace csknow::feature_store {
          */
 //#pragma omp parallel for
         for (int64_t roundIndex = 0; roundIndex < rounds.size; roundIndex++) {
-            int64_t gameIndex = rounds.gameId[roundIndex];
+            //int64_t gameIndex = rounds.gameId[roundIndex];
             TickRates tickRates = computeTickRates(games, rounds, roundIndex);
             CircularBuffer<int64_t> ticks1sFutureTracker(4), ticks2sFutureTracker(4), ticks6sFutureTracker(6),
                 // this one I add to every frame and remove when too far in the future, more accuracte

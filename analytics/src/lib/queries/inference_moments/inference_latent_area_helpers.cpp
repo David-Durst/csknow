@@ -13,6 +13,7 @@ namespace csknow::inference_latent_area {
                 featureStoreResult.teamFeatureStoreResult;
         // c4 float data
         result.rowCPP.push_back(static_cast<float>(teamFeatureStoreResult.c4DistanceToASite[rowIndex]));
+        /*
         result.rowCPP.push_back(static_cast<float>(teamFeatureStoreResult.c4DistanceToBSite[rowIndex]));
         result.rowCPP.push_back(static_cast<float>(teamFeatureStoreResult.c4Pos[rowIndex].x));
         result.rowCPP.push_back(static_cast<float>(teamFeatureStoreResult.c4Pos[rowIndex].y));
@@ -70,6 +71,7 @@ namespace csknow::inference_latent_area {
             }
             ctColumnData = false;
         }
+         */
         return result;
     }
 

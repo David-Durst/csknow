@@ -64,7 +64,7 @@ namespace follow::compute_nav_area {
         }
 
         // finished if defuser and on last waypoint of c4
-        if (blackboard.defuserId == treeThinker.csgoId && maxFinishedWaypoint + 2 == curOrder.waypoints.size() &&
+        if (blackboard.defuserId == treeThinker.csgoId && maxFinishedWaypoint + 2 == static_cast<int64_t>(curOrder.waypoints.size()) &&
             curOrder.waypoints.back().type == WaypointType::C4) {
             blackboard.strategy.playersFinishedStrategy.insert(treeThinker.csgoId);
         }
