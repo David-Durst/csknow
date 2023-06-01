@@ -28,7 +28,7 @@ from learn_bot.latent.place_area.column_names import place_area_input_column_typ
     num_places, area_grid_size, area_output_column_types, delta_pos_output_column_types, test_success_col
 from learn_bot.latent.profiling import profile_latent_model
 from learn_bot.latent.transformer_nested_hidden_latent_model import TransformerNestedHiddenLatentModel
-from learn_bot.libs.hdf5_to_pd import load_hdf5_to_pd, HDF5Wrapper
+from learn_bot.libs.hdf5_to_pd import load_hdf5_to_pd, HDF5Wrapper, convert_hdf5_to_arrow
 from learn_bot.libs.io_transforms import CUDA_DEVICE_STR
 from learn_bot.latent.accuracy_and_loss import compute_loss, compute_accuracy, finish_accuracy, \
     CPU_DEVICE_STR, LatentLosses
@@ -340,6 +340,7 @@ use_manual_data = True
 def run_team_analysis():
     read_start = time.time()
     if use_manual_data:
+        convert_hdf5_to_arrow(manual_latent_team_hdf5_data_path)
         team_data = HDF5Wrapper(manual_latent_team_hdf5_data_path, ['id', round_id_column, test_success_col])
         #valid_rounds_df = pd.read_csv(manual_rounds_data_path)
         #rounds_condition = False
