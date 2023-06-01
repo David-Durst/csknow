@@ -17,6 +17,7 @@ from learn_bot.latent.dataset import *
 from learn_bot.latent.engagement.column_names import round_id_column, engagement_input_column_types, engagement_output_column_types
 from learn_bot.latent.engagement.latent_to_distributions import get_engagement_target_distributions, num_target_options, \
     get_engagement_probability
+from learn_bot.latent.latent_hdf5_dataset import LatentHDF5Dataset
 from learn_bot.latent.lstm_latent_model import LSTMLatentModel
 from learn_bot.latent.mlp_hidden_latent_model import MLPHiddenLatentModel
 from learn_bot.latent.mlp_latent_model import MLPLatentModel
@@ -128,8 +129,8 @@ class ColumnsToFlip:
             df[col2] = df[col1]
 
 
-def train(train_type: TrainType, all_data: HDF5Wrapper, hyperparameter_options: HyperparameterOptions = default_hyperparameter_options,
-          diff_train_test=True, flip_columns: List[ColumnsToFlip] = []) -> TrainResult:
+def train(train_type: TrainType, all_data_hdf5: HDF5Wrapper, hyperparameter_options: HyperparameterOptions = default_hyperparameter_options,
+          diff_train_test=True, flip_columns: List[ColumnsToFlip] = []):
 
     run_checkpoints_path = checkpoints_path
     if hyperparameter_options != default_hyperparameter_options:
@@ -138,28 +139,27 @@ def train(train_type: TrainType, all_data: HDF5Wrapper, hyperparameter_options: 
 
 
     if diff_train_test:
-        train_test_split = train_test_split_by_col(all_data.id_df, round_id_column)
-        train_hdf5 = train_test_split.train_df.copy()
+        train_test_split = train_test_split_by_col(all_data_hdf5.id_df, round_id_column)
+        train_hdf5 = HDF5Wrapper(all_data_hdf5.hdf5_path, all_data_hdf5.id_cols)
+        train_hdf5.limit(train_test_split.train_predicate)
         train_group_ids = train_test_split.train_group_ids
-        make_index_column(train_hdf5.id_df)
-        test_df = train_test_split.test_df.copy()
+        test_hdf5 = HDF5Wrapper(all_data_hdf5.hdf5_path, all_data_hdf5.id_cols)
+        test_hdf5.limit(~train_test_split.train_predicate)
         test_group_ids = get_test_col_ids(train_test_split, round_id_column)
-        make_index_column(test_df)
     else:
-        make_index_column(all_data)
-        train_df = all_data
-        train_group_ids = list(all_data_df.loc[:, round_id_column].unique())
-        test_df = all_data_df.copy(deep=True)
+        train_hdf5 = all_data_hdf5
+        train_group_ids = list(all_data_hdf5.id_df.loc[:, round_id_column].unique())
+        test_hdf5 = all_data_hdf5
         test_group_ids = train_group_ids
 
-    if len(flip_columns) > 0:
-        io_column_transform_df = all_data_df.copy(deep=True)
-        for flip_column in flip_columns:
-            flip_column.apply_flip(test_df)
-            flip_column.check_flip(train_df, test_df)
-            flip_column.duplicate(io_column_transform_df)
-    else:
-        io_column_transform_df = all_data_df
+    #if len(flip_columns) > 0:
+    #    io_column_transform_df = all_data_df.copy(deep=True)
+    #    for flip_column in flip_columns:
+    #        flip_column.apply_flip(test_df)
+    #        flip_column.check_flip(train_df, test_df)
+    #        flip_column.duplicate(io_column_transform_df)
+    #else:
+    #    io_column_transform_df = all_data_df
 
     # Get cpu or gpu device for training.
     device: str = CUDA_DEVICE_STR if torch.cuda.is_available() else CPU_DEVICE_STR
@@ -169,7 +169,7 @@ def train(train_type: TrainType, all_data: HDF5Wrapper, hyperparameter_options: 
     # Define model
     if train_type == TrainType.DeltaPos:
         column_transformers = IOColumnTransformers(place_area_input_column_types, delta_pos_output_column_types,
-                                                   io_column_transform_df)
+                                                   train_hdf5.sample_df)
         model = TransformerNestedHiddenLatentModel(column_transformers, 2 * max_enemies, delta_pos_grid_num_cells,
                                                    hyperparameter_options.layers, hyperparameter_options.heads).to(device)
         input_column_types = place_area_input_column_types
@@ -312,9 +312,9 @@ def train(train_type: TrainType, all_data: HDF5Wrapper, hyperparameter_options: 
                 min_test_loss = cur_test_less_float
             save_tensorboard(train_loss, test_loss, train_accuracy, test_accuracy, epoch_num)
 
-    train_data = LatentDataset(train_df, column_transformers)
-    test_data = LatentDataset(test_df, column_transformers)
-    batch_size = min(hyperparameter_options.batch_size, min(len(train_df), len(test_df)))
+    train_data = LatentHDF5Dataset(train_hdf5, column_transformers)
+    test_data = LatentHDF5Dataset(test_hdf5, column_transformers)
+    batch_size = min(hyperparameter_options.batch_size, min(len(train_hdf5), len(test_hdf5)))
     train_dataloader = DataLoader(train_data, batch_size=batch_size, num_workers=0, shuffle=True, pin_memory=True)
     test_dataloader = DataLoader(test_data, batch_size=batch_size, num_workers=0, shuffle=True, pin_memory=True)
 
@@ -328,7 +328,6 @@ def train(train_type: TrainType, all_data: HDF5Wrapper, hyperparameter_options: 
 
     train_and_test_SL(model, train_dataloader, test_dataloader, hyperparameter_options.num_epochs)
 
-    return TrainResult(train_data, test_data, train_df, test_df, column_transformers, model)
 
 latent_team_hdf5_data_path = Path(__file__).parent / '..' / '..' / '..' / 'analytics' / 'csv_outputs' / 'behaviorTreeTeamFeatureStore.hdf5'
 small_latent_team_hdf5_data_path = Path(__file__).parent / '..' / '..' / '..' / 'analytics' / 'csv_outputs' / 'smallBehaviorTreeTeamFeatureStore.parquet'
@@ -369,7 +368,7 @@ def run_team_analysis():
     #train_result = train(TrainType.Order, team_data_df, num_epochs=3, windowed=False)
     #train_result = train(TrainType.Place, team_data_df, num_epochs=500, windowed=False, diff_train_test=False)
     #train_result = train(TrainType.Area, team_data_df, num_epochs=3, windowed=False)
-    team_data = team_data.limit(team_data.id_df[test_success_col] == 1.)
+    team_data.limit(team_data.id_df[test_success_col] == 1.)
     hyperparameter_options = default_hyperparameter_options
     if len(sys.argv) > 1:
         hyperparameter_indices = [int(i) for i in sys.argv[1].split(",")]
@@ -377,7 +376,7 @@ def run_team_analysis():
             hyperparameter_options = hyperparameter_option_range[index]
             train(TrainType.DeltaPos, team_data, hyperparameter_options, diff_train_test=True)
     else:
-        train_result = train(TrainType.DeltaPos, team_data, diff_train_test=True)
+        train(TrainType.DeltaPos, team_data, diff_train_test=True)
                              #flip_columns=[ColumnsToFlip(" CT 0", " CT 1")])
 
 
