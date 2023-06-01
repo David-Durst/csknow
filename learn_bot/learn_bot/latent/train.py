@@ -82,7 +82,7 @@ class HyperparameterOptions:
 
 
 default_hyperparameter_options = HyperparameterOptions()
-hyperparameter_option_range = [HyperparameterOptions(num_epochs=3000, batch_size=512, learning_rate=1e-5),
+hyperparameter_option_range = [HyperparameterOptions(layers=4, heads=8),
                                HyperparameterOptions(num_epochs=3000, batch_size=512, learning_rate=1e-6),
                                HyperparameterOptions(num_epochs=3000, batch_size=512, learning_rate=5e-7),
                                HyperparameterOptions(num_epochs=3000, batch_size=512, learning_rate=1e-7)]

@@ -109,7 +109,7 @@ if __name__ == "__main__":
     nav_data = NavData(CUDA_DEVICE_STR)
 
     if manual_data:
-        all_data_df = load_hdf5_to_pd(manual_latent_team_hdf5_data_path)
+        all_data_df = load_hdf5_to_pd(manual_latent_team_hdf5_data_path, rows_to_get=[i for i in range(20000)])
         #all_data_df = all_data_df[all_data_df['test name'] == b'LearnedGooseToCatScript']
     elif rollout_data:
         all_data_df = load_hdf5_to_pd(rollout_latent_team_hdf5_data_path)
