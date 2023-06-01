@@ -28,7 +28,7 @@ from learn_bot.latent.place_area.column_names import place_area_input_column_typ
     num_places, area_grid_size, area_output_column_types, delta_pos_output_column_types, test_success_col
 from learn_bot.latent.profiling import profile_latent_model
 from learn_bot.latent.transformer_nested_hidden_latent_model import TransformerNestedHiddenLatentModel
-from learn_bot.libs.hdf5_to_pd import load_hdf5_to_pd, HDF5Wrapper, convert_hdf5_to_arrow
+from learn_bot.libs.hdf5_to_pd import load_hdf5_to_pd, HDF5Wrapper
 from learn_bot.libs.io_transforms import CUDA_DEVICE_STR
 from learn_bot.latent.accuracy_and_loss import compute_loss, compute_accuracy, finish_accuracy, \
     CPU_DEVICE_STR, LatentLosses
@@ -315,8 +315,8 @@ def train(train_type: TrainType, all_data_hdf5: HDF5Wrapper, hyperparameter_opti
     train_data = LatentHDF5Dataset(train_hdf5, column_transformers)
     test_data = LatentHDF5Dataset(test_hdf5, column_transformers)
     batch_size = min(hyperparameter_options.batch_size, min(len(train_hdf5), len(test_hdf5)))
-    train_dataloader = DataLoader(train_data, batch_size=batch_size, num_workers=0, shuffle=True, pin_memory=True)
-    test_dataloader = DataLoader(test_data, batch_size=batch_size, num_workers=0, shuffle=True, pin_memory=True)
+    train_dataloader = DataLoader(train_data, batch_size=batch_size, num_workers=10, shuffle=True, pin_memory=True)
+    test_dataloader = DataLoader(test_data, batch_size=batch_size, num_workers=10, shuffle=True, pin_memory=True)
 
     print(f"num train examples: {len(train_data)}")
     print(f"num test examples: {len(test_data)}")
@@ -340,7 +340,6 @@ use_manual_data = True
 def run_team_analysis():
     read_start = time.time()
     if use_manual_data:
-        convert_hdf5_to_arrow(manual_latent_team_hdf5_data_path)
         team_data = HDF5Wrapper(manual_latent_team_hdf5_data_path, ['id', round_id_column, test_success_col])
         #valid_rounds_df = pd.read_csv(manual_rounds_data_path)
         #rounds_condition = False

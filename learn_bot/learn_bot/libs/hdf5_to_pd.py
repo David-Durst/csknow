@@ -3,7 +3,6 @@ from tempfile import NamedTemporaryFile
 import h5py
 import pandas as pd
 import numpy as np
-import pyarrow as pa
 from pathlib import Path
 from typing import List, Set, Optional, Dict
 
@@ -13,16 +12,22 @@ class HDF5Wrapper:
     id_cols: List[str]
     id_df: pd.DataFrame
     sample_df: pd.DataFrame
-    hdf5_file: h5py.File
-    hdf5_data: h5py.Group
+    file_data: Dict[Path, Dict[str, np.ndarray]] = {}
 
-    def __init__(self, hdf5_path: str, id_cols: List[str]):
+    def __init__(self, hdf5_path: Path, id_cols: List[str], id_df: Optional[pd.DataFrame] = None,
+                 sample_df: Optional[pd.DataFrame] = None):
+        if hdf5_path not in HDF5Wrapper.file_data:
+            HDF5Wrapper.file_data[hdf5_path] = load_hdf5_to_np_dict(hdf5_path)
         self.hdf5_path = hdf5_path
         self.id_cols = id_cols
-        self.id_df = load_hdf5_to_pd(hdf5_path, cols_to_get=id_cols)
-        self.sample_df = load_hdf5_to_pd(hdf5_path, rows_to_get=[i for i in range(min(100, len(self.id_df)))])
-        self.hdf5_file = h5py.File(hdf5_path, 'r')
-        self.hdf5_data = self.hdf5_file['data']
+        if id_df is None:
+            self.id_df = load_hdf5_to_pd(hdf5_path, cols_to_get=id_cols)
+        else:
+            self.id_df = id_df
+        if sample_df is None:
+            self.sample_df = load_hdf5_to_pd(hdf5_path, rows_to_get=[i for i in range(min(100, len(self.id_df)))])
+        else:
+            self.sample_df = sample_df
 
     def limit(self, selector_df: pd.Series):
         self.id_df = self.id_df[selector_df]
@@ -31,9 +36,11 @@ class HDF5Wrapper:
         return len(self.id_df)
 
     def clone(self):
-        result = HDF5Wrapper(self.hdf5_path, self.id_cols)
-        result.id_df = self.id_df.copy()
+        result = HDF5Wrapper(self.hdf5_path, self.id_cols, self.id_df.copy(), self.sample_df.copy())
         return result
+
+    def get_data(self) -> Dict[str, np.ndarray]:
+        return HDF5Wrapper.file_data[self.hdf5_path]
 
 
 
@@ -104,7 +111,7 @@ def load_hdf5_extra_to_list(hdf5_path: Path) -> List[List[int]]:
     return result
 
 
-def convert_hdf5_to_arrow(hdf5_path: Path):
+def load_hdf5_to_np_dict(hdf5_path: Path) -> Dict[str, np.ndarray]:
     # get data as numpy arrays and column names
     #np_arrs: List[np.ndarray] = []
     #col_names: List[List[str]] = []
@@ -127,14 +134,7 @@ def convert_hdf5_to_arrow(hdf5_path: Path):
 
             for i in range(len(col_names)):
                 columns[col_names[i]] = np_arr
-
-    f = NamedTemporaryFile(delete=False)
-    f.close()
-    pa_table = pa.table(columns)
-    with pa.OSFile(f.name, 'wb') as sink:
-        with pa.RecordBatchFileWriter(sink, pa_table) as writer:
-            writer.write_table(pa_table)
-
+    return columns
 
 
 

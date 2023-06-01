@@ -11,32 +11,22 @@ from learn_bot.latent.order.column_names import *
 class LatentHDF5Dataset(Dataset):
     x_cols: List[str]
     y_cols: List[str]
-    hdf5_path: str
-    id_cols: List[str]
-    hdf5_wrapper: HDF5Wrapper
+    data_hdf5: HDF5Wrapper
 
     def __init__(self, data_hdf5: HDF5Wrapper, cts: IOColumnTransformers):
         self.x_cols = cts.input_types.column_names_all_categorical_columns()
         self.y_cols = cts.output_types.column_names_all_categorical_columns()
-        self.hdf5_path = data_hdf5.hdf5_path
-        self.id_cols = data_hdf5.id_cols
-
-    def open_hdf5(self):
-        self.hdf5_wrapper = HDF5Wrapper(self.hdf5_path, self.id_cols)
+        self.data_hdf5 = data_hdf5
 
     def __len__(self):
-        if not hasattr(self, 'hdf5_wrapper'):
-            self.open_hdf5()
-        return len(self.hdf5_wrapper)
+        return len(self.data_hdf5)
 
     def __getitem__(self, idx):
-        if not hasattr(self, 'hdf5_wrapper'):
-            self.open_hdf5()
         x_tensor = torch.zeros([len(self.x_cols)])
         y_tensor = torch.zeros([len(self.y_cols)])
-        hdf5_id = self.hdf5_wrapper.id_df.loc[idx, 'id']
+        hdf5_id = self.data_hdf5.id_df.iloc[idx].loc['id']
         for i in range(len(self.x_cols)):
-            x_tensor[i] = float(self.hdf5_wrapper.hdf5_data[self.x_cols[i]][hdf5_id])
+            x_tensor[i] = float(self.data_hdf5.get_data()[self.x_cols[i]][hdf5_id])
         for i in range(len(self.y_cols)):
-            y_tensor[i] = float(self.hdf5_wrapper.hdf5_data[self.y_cols[i]][hdf5_id])
+            y_tensor[i] = float(self.data_hdf5.get_data()[self.y_cols[i]][hdf5_id])
         return x_tensor, y_tensor
