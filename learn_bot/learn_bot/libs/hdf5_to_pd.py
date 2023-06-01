@@ -27,6 +27,12 @@ class HDF5Wrapper:
     def __len__(self):
         return len(self.id_df)
 
+    def clone(self):
+        result = HDF5Wrapper(self.hdf5_path, self.id_cols)
+        result.id_df = self.id_df.copy()
+        return result
+
+
 
 def load_hdf5_to_pd(hdf5_path: Path, selector_df: Optional[pd.DataFrame] = None, cols_to_get: Optional[List] = None,
                     rows_to_get: Optional[List[int]] = None):

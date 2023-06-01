@@ -140,10 +140,10 @@ def train(train_type: TrainType, all_data_hdf5: HDF5Wrapper, hyperparameter_opti
 
     if diff_train_test:
         train_test_split = train_test_split_by_col(all_data_hdf5.id_df, round_id_column)
-        train_hdf5 = HDF5Wrapper(all_data_hdf5.hdf5_path, all_data_hdf5.id_cols)
+        train_hdf5 = all_data_hdf5.clone()
         train_hdf5.limit(train_test_split.train_predicate)
         train_group_ids = train_test_split.train_group_ids
-        test_hdf5 = HDF5Wrapper(all_data_hdf5.hdf5_path, all_data_hdf5.id_cols)
+        test_hdf5 = all_data_hdf5.clone()
         test_hdf5.limit(~train_test_split.train_predicate)
         test_group_ids = get_test_col_ids(train_test_split, round_id_column)
     else:

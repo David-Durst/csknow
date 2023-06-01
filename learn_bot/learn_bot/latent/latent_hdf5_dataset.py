@@ -15,7 +15,7 @@ class LatentHDF5Dataset(Dataset):
     id_cols: List[str]
     hdf5_wrapper: HDF5Wrapper
 
-    def __init__(self, cts: IOColumnTransformers, data_hdf5: HDF5Wrapper):
+    def __init__(self, data_hdf5: HDF5Wrapper, cts: IOColumnTransformers):
         self.x_cols = cts.input_types.column_names_all_categorical_columns()
         self.y_cols = cts.output_types.column_names_all_categorical_columns()
         self.hdf5_path = data_hdf5.hdf5_path
@@ -34,9 +34,9 @@ class LatentHDF5Dataset(Dataset):
             self.open_hdf5()
         x_tensor = torch.zeros([len(self.x_cols)])
         y_tensor = torch.zeros([len(self.y_cols)])
-        hdf5_id = self.hdf5_wrapper.id_df[idx]
+        hdf5_id = self.hdf5_wrapper.id_df.loc[idx, 'id']
         for i in range(len(self.x_cols)):
-            x_tensor[i] = self.hdf5_wrapper.hdf5_data[self.x_cols[i]][hdf5_id]
+            x_tensor[i] = float(self.hdf5_wrapper.hdf5_data[self.x_cols[i]][hdf5_id])
         for i in range(len(self.y_cols)):
-            y_tensor[i] = self.hdf5_wrapper.hdf5_data[self.y_cols[i]][hdf5_id]
+            y_tensor[i] = float(self.hdf5_wrapper.hdf5_data[self.y_cols[i]][hdf5_id])
         return x_tensor, y_tensor
