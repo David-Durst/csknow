@@ -22,11 +22,7 @@ class LatentHDF5Dataset(Dataset):
         return len(self.data_hdf5)
 
     def __getitem__(self, idx):
-        x_tensor = torch.zeros([len(self.x_cols)])
-        y_tensor = torch.zeros([len(self.y_cols)])
         hdf5_id = self.data_hdf5.id_df.iloc[idx].loc['id']
-        for i in range(len(self.x_cols)):
-            x_tensor[i] = float(self.data_hdf5.get_data()[self.x_cols[i]][hdf5_id])
-        for i in range(len(self.y_cols)):
-            y_tensor[i] = float(self.data_hdf5.get_data()[self.y_cols[i]][hdf5_id])
+        x_tensor = torch.tensor(self.data_hdf5.get_input_data()[hdf5_id])
+        y_tensor = torch.tensor(self.data_hdf5.get_output_data()[hdf5_id])
         return x_tensor, y_tensor

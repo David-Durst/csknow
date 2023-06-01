@@ -312,6 +312,7 @@ def train(train_type: TrainType, all_data_hdf5: HDF5Wrapper, hyperparameter_opti
                 min_test_loss = cur_test_less_float
             save_tensorboard(train_loss, test_loss, train_accuracy, test_accuracy, epoch_num)
 
+    train_hdf5.create_np_array(column_transformers)
     train_data = LatentHDF5Dataset(train_hdf5, column_transformers)
     test_data = LatentHDF5Dataset(test_hdf5, column_transformers)
     batch_size = min(hyperparameter_options.batch_size, min(len(train_hdf5), len(test_hdf5)))

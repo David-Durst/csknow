@@ -1,23 +1,25 @@
 from tempfile import NamedTemporaryFile
 
 import h5py
+import numpy
 import pandas as pd
 import numpy as np
 from pathlib import Path
 from typing import List, Set, Optional, Dict
 
+from learn_bot.libs.io_transforms import IOColumnTransformers
+
 
 class HDF5Wrapper:
-    hdf5_path: str
+    hdf5_path: Path
     id_cols: List[str]
     id_df: pd.DataFrame
     sample_df: pd.DataFrame
-    file_data: Dict[Path, Dict[str, np.ndarray]] = {}
+    input_data: Dict[Path, np.ndarray] = {}
+    output_data: Dict[Path, np.ndarray] = {}
 
     def __init__(self, hdf5_path: Path, id_cols: List[str], id_df: Optional[pd.DataFrame] = None,
                  sample_df: Optional[pd.DataFrame] = None):
-        if hdf5_path not in HDF5Wrapper.file_data:
-            HDF5Wrapper.file_data[hdf5_path] = load_hdf5_to_np_dict(hdf5_path)
         self.hdf5_path = hdf5_path
         self.id_cols = id_cols
         if id_df is None:
@@ -39,8 +41,17 @@ class HDF5Wrapper:
         result = HDF5Wrapper(self.hdf5_path, self.id_cols, self.id_df.copy(), self.sample_df.copy())
         return result
 
-    def get_data(self) -> Dict[str, np.ndarray]:
-        return HDF5Wrapper.file_data[self.hdf5_path]
+    def create_np_array(self, cts: IOColumnTransformers):
+        HDF5Wrapper.input_data[self.hdf5_path] = load_hdf5_to_np_array(self.hdf5_path,
+                                                                       cts.input_types.column_names_all_categorical_columns())
+        HDF5Wrapper.output_data[self.hdf5_path] = load_hdf5_to_np_array(self.hdf5_path,
+                                                                        cts.output_types.column_names_all_categorical_columns())
+
+    def get_input_data(self) -> np.ndarray:
+        return HDF5Wrapper.input_data[self.hdf5_path]
+
+    def get_output_data(self) -> np.ndarray:
+        return HDF5Wrapper.output_data[self.hdf5_path]
 
 
 
@@ -111,32 +122,20 @@ def load_hdf5_extra_to_list(hdf5_path: Path) -> List[List[int]]:
     return result
 
 
-def load_hdf5_to_np_dict(hdf5_path: Path) -> Dict[str, np.ndarray]:
+def load_hdf5_to_np_array(hdf5_path: Path, cols_to_get: List[str]) -> np.ndarray:
     # get data as numpy arrays and column names
     #np_arrs: List[np.ndarray] = []
     #col_names: List[List[str]] = []
-    columns: Dict[str, np.ndarray] = {}
+    result = None
     with h5py.File(hdf5_path) as hdf5_file:
         hdf5_data = hdf5_file['data']
-        for k in hdf5_data.keys():
+        for i, k in enumerate(cols_to_get):
             np_arr: np.ndarray = hdf5_data[k][...]
-            col_names: List[str]
-            if hdf5_data[k].attrs:
-                col_names = hdf5_data[k].attrs['column names'].split(',')
-            else:
-                col_names = [k]
-
-            if len(np_arr.shape) == 2 and np_arr.shape[1] > np_arr.shape[0]:
-                np_arr = np_arr.transpose()
-
-            if str(np_arr.dtype) == 'bool':
-                np_arr = np_arr.astype(int)
-
-            for i in range(len(col_names)):
-                columns[col_names[i]] = np_arr
-    return columns
-
-
+            np_arr = np_arr.astype(np.float32)
+            if i == 0:
+                result = np.empty([len(cols_to_get), len(np_arr)], dtype=np.float32)
+            result[i] = np_arr
+    return result.transpose()
 
 
 def compare_to_csv(new_df: pd.DataFrame, old_df: pd.DataFrame):
