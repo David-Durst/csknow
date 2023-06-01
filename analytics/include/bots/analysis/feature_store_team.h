@@ -71,7 +71,7 @@ namespace csknow::feature_store {
         array<vector<bool>, num_c4_timer_buckets> c4TimerBucketed;
         vector<Vec3> c4Pos;
         vector<float> c4DistanceToASite, c4DistanceToBSite;
-        array<vector<float>, num_orders_per_site> c4DistanceToNearestAOrderNavArea, c4DistanceToNearestBOrderNavArea;
+        //array<vector<float>, num_orders_per_site> c4DistanceToNearestAOrderNavArea, c4DistanceToNearestBOrderNavArea;
 
         struct ColumnPlayerData {
             vector<int64_t> playerId;
@@ -80,18 +80,18 @@ namespace csknow::feature_store {
             vector<bool> ctTeam;
             vector<bool> alive;
             vector<Vec3> footPos;
-            vector<Vec3> alignedFootPos;
+            //vector<Vec3> alignedFootPos;
             array<vector<Vec3>, num_prior_ticks> priorFootPos;
             array<vector<bool>, num_prior_ticks> priorFootPosValid;
             vector<Vec3> velocity;
-            vector<float> distanceToASite, distanceToBSite;
-            array<vector<float>, num_orders_per_site> distanceToNearestAOrderNavArea, distanceToNearestBOrderNavArea;
-            array<vector<bool>, num_places> curPlace;
-            array<vector<bool>, area_grid_size> areaGridCellInPlace;
+            //vector<float> distanceToASite, distanceToBSite;
+            //array<vector<float>, num_orders_per_site> distanceToNearestAOrderNavArea, distanceToNearestBOrderNavArea;
+            //array<vector<bool>, num_places> curPlace;
+            //array<vector<bool>, area_grid_size> areaGridCellInPlace;
             // outputs
-            array<vector<float>, num_orders_per_site> distributionNearestAOrders, distributionNearestBOrders;
-            array<vector<float>, num_places> distributionNearestPlace;
-            array<vector<float>, area_grid_size> distributionNearestAreaGridInPlace;
+            //array<vector<float>, num_orders_per_site> distributionNearestAOrders, distributionNearestBOrders;
+            //array<vector<float>, num_places> distributionNearestPlace;
+            //array<vector<float>, area_grid_size> distributionNearestAreaGridInPlace;
             array<vector<bool>, delta_pos_grid_num_cells> deltaPos;
         };
         array<ColumnPlayerData, maxEnemies> columnCTData, columnTData;
@@ -114,7 +114,7 @@ namespace csknow::feature_store {
             s15,
             s30
         };
-        void computeOrderACausalLabels(int64_t curTick, CircularBuffer<int64_t> & futureTracker,
+        /* void computeOrderACausalLabels(int64_t curTick, CircularBuffer<int64_t> & futureTracker,
                                        array<ColumnPlayerData, maxEnemies> & columnData, ACausalTimingOption timingOption);
         void computePlaceACausalLabels(const Games & games, const Ticks & ticks, const TickRates & tickRates,
                                        int64_t curGame, int64_t curTick,
@@ -127,6 +127,7 @@ namespace csknow::feature_store {
                                            CircularBuffer<int64_t> & futureTracker,
                                            array<ColumnPlayerData,maxEnemies> & columnData,
                                            double futureSecondsTheshold);
+                                          */
         void computeDeltaPosACausalLabels(int64_t curTick, CircularBuffer<int64_t> & futureTracker,
                                           array<ColumnPlayerData,maxEnemies> & columnData);
         void computeAcausalLabels(const Games & games, const Rounds & rounds, const Ticks & ticks,
