@@ -62,7 +62,7 @@ namespace csknow::tests::learned {
     LearnedPushLurkBaitASiteScript::LearnedPushLurkBaitASiteScript(std::size_t testIndex, std::size_t numTests, bool waitForever) :
             LearnedTeamworkScript("LearnedPushLurkBaitASiteScript",
                                   {{0, ENGINE_TEAM_CT, AggressiveType::Bait}, {0, ENGINE_TEAM_CT, AggressiveType::Bait},
-                                   {0, ENGINE_TEAM_CT, AggressiveType::Push}, {0, ENGINE_TEAM_T}},
+                                   {0, ENGINE_TEAM_CT, AggressiveType::Push}/*, {0, ENGINE_TEAM_T}*/},
                                    {ObserveType::FirstPerson, 0},
                                    testIndex, numTests, waitForever) { }
 
@@ -72,10 +72,10 @@ namespace csknow::tests::learned {
             Script::initialize(tree, state);
             vector<Vec3> playerPos {
                     {473.290436, -67.194908, 59.092133}, {-14.934761, -817.601318, 62.097897},
-                    {-421.860260, 856.695313, 42.407509}, {883.084106, 2491.471436, 160.187653}
+                    {-421.860260, 856.695313, 42.407509}//, {883.084106, 2491.471436, 160.187653}
             };
             vector<Vec2> playerViewAngle {
-                    {-78.701942, -7.463999}, {-89.683349, 0.746031}, {-89.683349, 0.746031}, {-89.683349, 0.746031}
+                    {-78.701942, -7.463999}, {-89.683349, 0.746031}, {-89.683349, 0.746031}//, {-89.683349, 0.746031}
             };
 
             Node::Ptr forceSetup = make_unique<SequenceNode>(blackboard, Node::makeList(
@@ -105,7 +105,7 @@ namespace csknow::tests::learned {
                     std::move(pusherHoldsLurkerReachesLongBaiterFollows)
             ));
             Node::Ptr condition = make_unique<ParallelFirstNode>(blackboard, Node::makeList(
-                    make_unique<DisableActionsNode>(blackboard, "DisableEnemy", vector{neededBots[3].id}),
+                    //make_unique<DisableActionsNode>(blackboard, "DisableEnemy", vector{neededBots[3].id}),
                     make_unique<DisableActionsNode>(blackboard, "DisablePush", vector{neededBots[2].id}, false, true, false),
                     std::move(placeChecks)),
                 "Condition");
