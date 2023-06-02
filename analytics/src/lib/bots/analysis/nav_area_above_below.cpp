@@ -9,9 +9,9 @@
 
 namespace csknow::nav_area_above_below {
     size_t NavAreaAboveBelow::posToIndex(Vec3 pos) {
-        size_t xStep = static_cast<size_t>((pos.x - navRegion.min.x) / step_size);
-        size_t yStep = static_cast<size_t>((pos.y - navRegion.min.y) / step_size);
-        size_t zStep = static_cast<size_t>((pos.z - navRegion.min.z) / step_size);
+        size_t xStep = static_cast<size_t>(std::max(pos.x - navRegion.min.x, 0.) / step_size);
+        size_t yStep = static_cast<size_t>(std::max(pos.y - navRegion.min.y, 0.) / step_size);
+        size_t zStep = static_cast<size_t>(std::max(pos.z - navRegion.min.z, 0.) / step_size);
 
         size_t numYSteps = static_cast<size_t>(std::ceil((navRegion.max.y - navRegion.min.y) / step_size));
         size_t numZSteps = static_cast<size_t>(std::ceil((navRegion.max.z - navRegion.min.z) / step_size));

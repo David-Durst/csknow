@@ -906,7 +906,7 @@ namespace csknow::feature_store {
         file.createDataSet("/data/baiting", baiting, hdf5FlatCreateProps);
         file.createDataSet("/data/c4 status", vectorOfEnumsToVectorOfInts(c4Status), hdf5FlatCreateProps);
         file.createDataSet("/data/c4 planted a", c4PlantA, hdf5FlatCreateProps);
-        file.createDataSet("/data/c4 planted b", c4PlantB, hdf5FlatCreateProps);
+        file.createDataSet("/data/c4 p`lanted b", c4PlantB, hdf5FlatCreateProps);
         file.createDataSet("/data/c4 not planted", c4NotPlanted, hdf5FlatCreateProps);
         file.createDataSet("/data/c4 ticks since plant", c4TicksSincePlant, hdf5FlatCreateProps);
         for (size_t c4TimerBucketIndex = 0; c4TimerBucketIndex < num_c4_timer_buckets; c4TimerBucketIndex++) {
