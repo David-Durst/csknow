@@ -166,12 +166,12 @@ int main(int argc, char * argv[]) {
                     //finishedTests = learnedNavDataGenerator.tick(tree, state);
                     //learnedHoldDataGenerator.initialize(tree, state);
                     //finishedTests = learnedHoldDataGenerator.tick(tree, state);
-                    learnedTeamworkDataGenerator.initialize(tree, state);
-                    finishedTests = learnedTeamworkDataGenerator.tick(tree, state);
+                    //learnedTeamworkDataGenerator.initialize(tree, state);
+                    //finishedTests = learnedTeamworkDataGenerator.tick(tree, state);
                     //outDistributionDataGenerator.initialize(tree, state);
                     //finishedTests = outDistributionDataGenerator.tick(tree, state);
-                    //formationDataGenerator.initialize(tree, state);
-                    //finishedTests = formationDataGenerator.tick(tree, state);
+                    formationDataGenerator.initialize(tree, state);
+                    finishedTests = formationDataGenerator.tick(tree, state);
                 }
                 else {
                     roundScriptsRunner.initialize(tree, state);

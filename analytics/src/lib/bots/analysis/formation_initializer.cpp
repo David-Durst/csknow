@@ -229,7 +229,12 @@ namespace csknow::formation_initializer {
             else {
                 vector<Node::Ptr> conditionPlayerNodes;
                 for (const auto & neededBot : neededBots) {
-                    conditionPlayerNodes.emplace_back(make_unique<InPlaces>(blackboard, neededBot.id, validStoppingPlaces));
+                    if (getPlaceAreaModelProbabilities(ENGINE_TEAM_CT) || getPlaceAreaModelProbabilities(ENGINE_TEAM_T)) {
+                        conditionPlayerNodes.emplace_back(make_unique<NearPlaces>(blackboard, neededBot.id, validStoppingPlaces, 200));
+                    }
+                    else {
+                        conditionPlayerNodes.emplace_back(make_unique<InPlaces>(blackboard, neededBot.id, validStoppingPlaces));
+                    }
                 }
                 if (team == ENGINE_TEAM_T) {
                     conditionPlayerNodes.emplace_back(make_unique<StandingStill>(blackboard, neededBotIds));
