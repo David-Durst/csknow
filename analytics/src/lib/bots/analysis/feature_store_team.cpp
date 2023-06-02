@@ -906,7 +906,7 @@ namespace csknow::feature_store {
         file.createDataSet("/data/baiting", baiting, hdf5FlatCreateProps);
         file.createDataSet("/data/c4 status", vectorOfEnumsToVectorOfInts(c4Status), hdf5FlatCreateProps);
         file.createDataSet("/data/c4 planted a", c4PlantA, hdf5FlatCreateProps);
-        file.createDataSet("/data/c4 p`lanted b", c4PlantB, hdf5FlatCreateProps);
+        file.createDataSet("/data/c4 planted b", c4PlantB, hdf5FlatCreateProps);
         file.createDataSet("/data/c4 not planted", c4NotPlanted, hdf5FlatCreateProps);
         file.createDataSet("/data/c4 ticks since plant", c4TicksSincePlant, hdf5FlatCreateProps);
         for (size_t c4TimerBucketIndex = 0; c4TimerBucketIndex < num_c4_timer_buckets; c4TimerBucketIndex++) {
@@ -915,13 +915,6 @@ namespace csknow::feature_store {
         saveVec3VectorToHDF5(c4Pos, file, "c4 pos", hdf5FlatCreateProps);
         file.createDataSet("/data/c4 distance to a site", c4DistanceToASite, hdf5FlatCreateProps);
         file.createDataSet("/data/c4 distance to b site", c4DistanceToBSite, hdf5FlatCreateProps);
-        /*
-        for (size_t orderIndex = 0; orderIndex < num_orders_per_site; orderIndex++) {
-            string orderIndexStr = std::to_string(orderIndex);
-            file.createDataSet("/data/c4 distance to nearest a order " + orderIndexStr + " nav area", c4DistanceToNearestAOrderNavArea[orderIndex], hdf5FlatCreateProps);
-            file.createDataSet("/data/c4 distance to nearest b order " + orderIndexStr + " nav area", c4DistanceToNearestBOrderNavArea[orderIndex], hdf5FlatCreateProps);
-        }
-         */
         for (size_t columnDataIndex = 0; columnDataIndex < getAllColumnData().size(); columnDataIndex++) {
             const array<ColumnPlayerData, maxEnemies> & columnData = getAllColumnData()[columnDataIndex];
             string columnTeam = allColumnDataTeam[columnDataIndex];
@@ -939,8 +932,6 @@ namespace csknow::feature_store {
                                    columnData[columnPlayer].ctTeam, hdf5FlatCreateProps);
                 saveVec3VectorToHDF5(columnData[columnPlayer].footPos, file,
                                      "player pos " + columnTeam + " " + iStr, hdf5FlatCreateProps);
-                //saveVec3VectorToHDF5(columnData[columnPlayer].alignedFootPos, file,
-                //                     "player aligned pos " + columnTeam + " " + iStr, hdf5FlatCreateProps);
                 for (int priorTick = 0; priorTick < num_prior_ticks; priorTick++) {
                     saveVec3VectorToHDF5(columnData[columnPlayer].priorFootPos[priorTick], file,
                                          "player pos " + columnTeam + " " + iStr + " t-" + std::to_string(priorTick+1),
@@ -950,54 +941,67 @@ namespace csknow::feature_store {
                 }
                 saveVec3VectorToHDF5(columnData[columnPlayer].velocity, file,
                                      "player velocity " + columnTeam + " " + iStr, hdf5FlatCreateProps);
-                /*
-                file.createDataSet("/data/distance to a site " + columnTeam + " " + iStr,
-                                   columnData[columnPlayer].distanceToASite, hdf5FlatCreateProps);
-                file.createDataSet("/data/distance to b site " + columnTeam + " " + iStr,
-                                   columnData[columnPlayer].distanceToBSite, hdf5FlatCreateProps);
-                for (size_t orderIndex = 0; orderIndex < num_orders_per_site; orderIndex++) {
-                    string orderIndexStr = std::to_string(orderIndex);
-                    file.createDataSet("/data/distance to nearest a order " + orderIndexStr + " nav area " + columnTeam + " " + iStr,
-                                       columnData[columnPlayer].distanceToNearestAOrderNavArea[orderIndex], hdf5FlatCreateProps);
-                    file.createDataSet("/data/distance to nearest b order " + orderIndexStr + " nav area " + columnTeam + " " + iStr,
-                                       columnData[columnPlayer].distanceToNearestBOrderNavArea[orderIndex], hdf5FlatCreateProps);
-                    file.createDataSet("/data/distribution nearest a order " + orderIndexStr + " " + columnTeam + " " + iStr,
-                                       columnData[columnPlayer].distributionNearestAOrders[orderIndex], hdf5FlatCreateProps);
-                    file.createDataSet("/data/distribution nearest b order " + orderIndexStr + " " + columnTeam + " " + iStr,
-                                       columnData[columnPlayer].distributionNearestBOrders[orderIndex], hdf5FlatCreateProps);
-                    //file.createDataSet("/data/distribution nearest a order " + orderIndexStr + " 15s " + columnTeam + " " + iStr,
-                    //                   columnData[columnPlayer].distributionNearestAOrders15s[orderIndex], hdf5FlatCreateProps);
-                    //file.createDataSet("/data/distribution nearest b order " + orderIndexStr + " 15s " + columnTeam + " " + iStr,
-                    //                   columnData[columnPlayer].distributionNearestBOrders15s[orderIndex], hdf5FlatCreateProps);
-                    //file.createDataSet("/data/distribution nearest a order " + orderIndexStr + " 30s " + columnTeam + " " + iStr,
-                    //                   columnData[columnPlayer].distributionNearestAOrders30s[orderIndex], hdf5FlatCreateProps);
-                    //file.createDataSet("/data/distribution nearest b order " + orderIndexStr + " 30s " + columnTeam + " " + iStr,
-                    //                   columnData[columnPlayer].distributionNearestBOrders30s[orderIndex], hdf5FlatCreateProps);
-                }
-                for (size_t placeIndex = 0; placeIndex < num_places; placeIndex++) {
-                    string placeIndexStr = std::to_string(placeIndex);
-                    file.createDataSet("/data/cur place " + placeIndexStr + " " + columnTeam + " " + iStr,
-                                       columnData[columnPlayer].curPlace[placeIndex], hdf5FlatCreateProps);
-                    file.createDataSet("/data/distribution nearest place " + placeIndexStr + " " + columnTeam + " " + iStr,
-                                       columnData[columnPlayer].distributionNearestPlace[placeIndex], hdf5FlatCreateProps);
-                }
-                for (size_t areaGridIndex = 0; areaGridIndex < area_grid_size; areaGridIndex++) {
-                    string areaGridIndexStr = std::to_string(areaGridIndex);
-                    file.createDataSet("/data/area grid cell in place " + areaGridIndexStr + " " + columnTeam + " " + iStr,
-                                       columnData[columnPlayer].areaGridCellInPlace[areaGridIndex], hdf5FlatCreateProps);
-                    file.createDataSet("/data/distribution nearest area grid in place " + areaGridIndexStr + " " + columnTeam + " " + iStr,
-                                       columnData[columnPlayer].distributionNearestAreaGridInPlace[areaGridIndex], hdf5FlatCreateProps);
-                }
-                 */
                 vector<string> deltaPosNames;
                 for (size_t deltaPosIndex = 0; deltaPosIndex < delta_pos_grid_num_cells; deltaPosIndex++) {
                     string deltaPosIndexStr = std::to_string(deltaPosIndex);
-                    //deltaPosNames.push_back("delta pos " + deltaPosIndexStr + " " + columnTeam + " " + iStr);
                     file.createDataSet("/data/delta pos " + deltaPosIndexStr + " " + columnTeam + " " + iStr,
                                        columnData[columnPlayer].deltaPos[deltaPosIndex], hdf5FlatCreateProps);
                 }
-                //saveArrayOfVectorsToHDF5(columnData[columnPlayer].deltaPos, file, "delta pos " + columnTeam + " " + iStr, deltaPosNames,
-                //                         hdf5FlatCreateProps);
+            }
+        }
+    }
+
+    void TeamFeatureStoreResult::load(const std::string &filePath) {
+        HighFive::File file(filePath, HighFive::File::ReadOnly);
+
+        roundId = file.getDataSet("/data/round id").read<std::vector<int64_t>>();
+        roundNumber = file.getDataSet("/data/round number").read<std::vector<int64_t>>();
+        tickId = file.getDataSet("/data/tick id").read<std::vector<int64_t>>();
+        gameTickNumber = file.getDataSet("/data/game tick number").read<std::vector<int64_t>>();
+        valid = file.getDataSet("/data/valid").read<std::vector<bool>>();
+        freezeTimeEnded = file.getDataSet("/data/freeze time ended").read<std::vector<bool>>();
+        retakeSaveRoundTick = file.getDataSet("/data/retake save round tick").read<std::vector<bool>>();
+        testName = file.getDataSet("/data/test name").read<std::vector<string>>();
+        testSuccess = file.getDataSet("/data/test success").read<std::vector<bool>>();
+        baiting = file.getDataSet("/data/baiting").read<std::vector<bool>>();
+        loadVectorOfEnums(file, "/data/c4 status", c4Status);
+        c4PlantA = file.getDataSet("/data/c4 planted a").read<std::vector<bool>>();
+        c4PlantB = file.getDataSet("/data/c4 planted b").read<std::vector<bool>>();
+        c4NotPlanted = file.getDataSet("/data/c4 not planted").read<std::vector<bool>>();
+        c4TicksSincePlant = file.getDataSet("/data/c4 ticks since plant").read<std::vector<int64_t>>();
+        for (size_t c4TimerBucketIndex = 0; c4TimerBucketIndex < num_c4_timer_buckets; c4TimerBucketIndex++) {
+            c4TimerBucketed[c4TimerBucketIndex] = file.getDataSet("/data/c4 timer bucketed " + std::to_string(c4TimerBucketIndex)).read<std::vector<bool>>();
+        }
+        loadVec3VectorFromHDF5(c4Pos, file, "c4 pos");
+        c4DistanceToASite = file.getDataSet("/data/c4 distance to a site").read<std::vector<float>>();
+        c4DistanceToBSite = file.getDataSet("/data/c4 distance to b site").read<std::vector<float>>();
+        for (size_t columnDataIndex = 0; columnDataIndex < getAllColumnData().size(); columnDataIndex++) {
+            array<ColumnPlayerData, maxEnemies> &columnData = getAllColumnData()[columnDataIndex];
+            string columnTeam = allColumnDataTeam[columnDataIndex];
+            for (size_t columnPlayer = 0; columnPlayer < columnData.size(); columnPlayer++) {
+                string iStr = std::to_string(columnPlayer);
+                columnData[columnPlayer].playerId = file.getDataSet(
+                        "/data/player id " + columnTeam + " " + iStr).read<std::vector<int64_t>>();
+                for (int indexOnTeam = 0; indexOnTeam < maxEnemies; indexOnTeam++) {
+                    columnData[columnPlayer].indexOnTeam[indexOnTeam] = file.getDataSet(
+                            "/data/player index on team " + std::to_string(indexOnTeam) + " " + columnTeam + " " + iStr).read<std::vector<bool>>();
+                }
+                columnData[columnPlayer].alive = file.getDataSet("/data/alive " + columnTeam + " " + iStr).read<std::vector<bool>>();
+                columnData[columnPlayer].ctTeam = file.getDataSet("/data/player ctTeam " + columnTeam + " " + iStr).read<std::vector<bool>>();
+                loadVec3VectorFromHDF5(columnData[columnPlayer].footPos, file, "player pos " + columnTeam + " " + iStr);
+                for (int priorTick = 0; priorTick < num_prior_ticks; priorTick++) {
+                    loadVec3VectorFromHDF5(columnData[columnPlayer].priorFootPos[priorTick], file,
+                                           "player pos " + columnTeam + " " + iStr + " t-" + std::to_string(priorTick + 1));
+                    columnData[columnPlayer].priorFootPosValid[priorTick] =
+                            file.getDataSet("/data/player history valid " + columnTeam + " " + iStr + " t-" + std::to_string(priorTick + 1)).read<std::vector<bool>>();
+                }
+                loadVec3VectorFromHDF5(columnData[columnPlayer].velocity, file, "player velocity " + columnTeam + " " + iStr);
+                vector<string> deltaPosNames;
+                for (size_t deltaPosIndex = 0; deltaPosIndex < delta_pos_grid_num_cells; deltaPosIndex++) {
+                    string deltaPosIndexStr = std::to_string(deltaPosIndex);
+                    columnData[columnPlayer].deltaPos[deltaPosIndex] =
+                            file.getDataSet("/data/delta pos " + deltaPosIndexStr + " " + columnTeam + " " + iStr).read<std::vector<bool>>();
+                }
             }
         }
     }

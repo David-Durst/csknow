@@ -98,6 +98,9 @@ namespace csknow::feature_store {
         vector<std::reference_wrapper<const array<ColumnPlayerData, maxEnemies>>> getAllColumnData() const {
             return {columnCTData, columnTData};
         }
+        vector<std::reference_wrapper<array<ColumnPlayerData, maxEnemies>>> getAllColumnData() {
+            return {columnCTData, columnTData};
+        }
         vector<string> allColumnDataTeam = {"CT", "T"};
 
 
@@ -135,6 +138,7 @@ namespace csknow::feature_store {
                                   const nav_mesh::nav_file & navFile,
                                   const csknow::key_retake_events::KeyRetakeEvents & keyRetakeEvents);
         void toHDF5Inner(HighFive::File & file) override;
+        void load(const std::string &filePath);
         /*
         void checkPossiblyBadValue() {
             std::cout << "checking possibly bad value on init " << columnTData[4].distributionNearestAOrders15s[0][8240] << std::endl;

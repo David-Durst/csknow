@@ -183,8 +183,8 @@ namespace csknow::tests::learned {
 
         for (size_t i = 0; i < numTests; i++) {
             result.push_back(make_unique<LearnedPushLurkBaitASiteScript>(i, numTests, false));
-            //result.push_back(make_unique<LearnedPushATwoOrdersScript>(i, numTests, false));
-            //result.push_back(make_unique<LearnedPushThreeBScript>(i, numTests, false));
+            result.push_back(make_unique<LearnedPushATwoOrdersScript>(i, numTests, false));
+            result.push_back(make_unique<LearnedPushThreeBScript>(i, numTests, false));
         }
         if (quitAtEnd) {
             result.push_back(make_unique<QuitScript>());
