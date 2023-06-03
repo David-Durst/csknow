@@ -88,7 +88,7 @@ namespace csknow::trajectory_comparison {
                 }
 
                 // compute metrics on baseline trajectory subcomponent best matching generated trajectory
-                baselineData[baselineTrajectoryIndex].
+                //baselineData[baselineTrajectoryIndex].
 
 
             }

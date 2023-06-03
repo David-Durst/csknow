@@ -23,6 +23,7 @@
 #include "bots/testing/scripts/test_setup.h"
 #include "bots/testing/scripts/learned/test_learned_teamwork.h"
 #include "bots/analysis/formation_initializer.h"
+#include "bots/testing/scripts/learned/test_learned_all.h"
 #include <iostream>
 #include <thread>
 #include <chrono>
@@ -66,6 +67,7 @@ int main(int argc, char * argv[]) {
     ScriptsRunner learnedHoldDataGenerator(csknow::tests::learned::createLearnedHoldScripts(200, true), false);
     ScriptsRunner learnedTeamworkDataGenerator(csknow::tests::learned::createLearnedTeamworkScripts(60, true), false);
     ScriptsRunner outDistributionDataGenerator(csknow::tests::learned::createOutDistributionNavScripts(200, true), false);
+    ScriptsRunner learnedAllDataGenerator(csknow::tests::learned::createAllLearnedScripts(60, true), false);
 
     string navPath = mapsPath + "/de_dust2.nav";
     nav_mesh::nav_file navFile(navPath.c_str());
@@ -166,10 +168,12 @@ int main(int argc, char * argv[]) {
                     //finishedTests = learnedNavDataGenerator.tick(tree, state);
                     //learnedHoldDataGenerator.initialize(tree, state);
                     //finishedTests = learnedHoldDataGenerator.tick(tree, state);
-                    learnedTeamworkDataGenerator.initialize(tree, state);
-                    finishedTests = learnedTeamworkDataGenerator.tick(tree, state);
+                    //learnedTeamworkDataGenerator.initialize(tree, state);
+                    //finishedTests = learnedTeamworkDataGenerator.tick(tree, state);
                     //outDistributionDataGenerator.initialize(tree, state);
                     //finishedTests = outDistributionDataGenerator.tick(tree, state);
+                    learnedAllDataGenerator.initialize(tree, state);
+                    finishedTests = learnedAllDataGenerator.tick(tree, state);
                     //formationDataGenerator.initialize(tree, state);
                     //finishedTests = formationDataGenerator.tick(tree, state);
                 }
@@ -230,6 +234,7 @@ int main(int argc, char * argv[]) {
             testLogFile << learnedHoldDataGenerator.curLog();
             testLogFile << learnedTeamworkDataGenerator.curLog();
             testLogFile << outDistributionDataGenerator.curLog();
+            testLogFile << learnedAllDataGenerator.curLog();
             testLogFile << formationDataGenerator.curLog();
         }
         else {
