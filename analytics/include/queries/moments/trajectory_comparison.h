@@ -14,24 +14,32 @@
 #include "bots/analysis/feature_store_team.h"
 
 namespace csknow::trajectory_comparison {
-    struct TrajectoryPairData {
+    struct BaselineTraceRowToGeneratedTrajectoryData {
+        bool valid;
         float startDistance, endDistance;
+        std::map<int, int> ctGeneratedColumnIndexToBaselineColumnIndex, tGeneratedColumnIndexToBaselineColumnIndex;
     };
 
     struct TrajectoryData {
         size_t startTraceIndex, endTraceIndex;
-        size_t bestBaselineMatchGeneratedStartTraceIndex, bestBaselineMatchGeneratedEndTraceIndex;
-        // for baseline, these are using start/end based on best match generated
-        float time, distance;
+    };
+
+    struct BaselineTrajectoryToGeneratedTrajectoryData {
+        size_t bestMatchBaselineStartTraceIndex, bestMatchBaselineEndTraceIndex;
+        float baselineTime, baselineDistance;
+        float generatedTime, generatedDistance;
     };
 
     class TrajectoryComparison {
     public:
-        // per baseline trajectory row per entire generated trajectory data
-        vector<vector<TrajectoryPairData>> baselineRowToGeneratedTrajectoryData;
+        // per baseline trajectory row in trace per entire generated trajectory data
+        vector<vector<BaselineTraceRowToGeneratedTrajectoryData>> baselineTraceRowToGeneratedTrajectoryData;
 
         // per trajectory
         vector<TrajectoryData> baselineData, generatedData;
+
+        // per baseline generated trajectory pair
+        vector<vector<BaselineTrajectoryToGeneratedTrajectoryData>> baselineTrajectoryToGeneratedTrajectoryData;
 
         void generateTrajectoryStartEnds(vector<TrajectoryData> & trajectoryData,
                                          const csknow::feature_store::TeamFeatureStoreResult & traces);
