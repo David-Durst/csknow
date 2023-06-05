@@ -46,8 +46,6 @@ namespace csknow::multi_trajectory_similarity {
     CutMultiTrajectories cutMultiTrajectory(MultiTrajectory mt);
 
     struct DenseMultiTrajectory : MultiTrajectory {
-        size_t startTraceIndex, endTraceIndex;
-
         DenseMultiTrajectory(MultiTrajectory mt);
         DenseMultiTrajectory() { }
         double minTime(const csknow::feature_store::TeamFeatureStoreResult & traces) const override;

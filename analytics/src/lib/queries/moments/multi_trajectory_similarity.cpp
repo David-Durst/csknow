@@ -106,8 +106,6 @@ namespace csknow::multi_trajectory_similarity {
     DenseMultiTrajectory::DenseMultiTrajectory(csknow::multi_trajectory_similarity::MultiTrajectory mt) {
         trajectories = mt.trajectories;
         size_t minEndTraceIndex = mt.minEndTraceIndex();
-        startTraceIndex = mt.trajectories.front().startTraceIndex;
-        endTraceIndex = minEndTraceIndex;
         for (const auto & trajectory : mt.trajectories) {
             if (trajectory.endTraceIndex != minEndTraceIndex) {
                 throw std::runtime_error("dense multi trajectory not dense as trajectories end at different times");
