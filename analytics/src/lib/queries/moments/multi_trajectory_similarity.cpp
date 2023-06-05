@@ -222,11 +222,47 @@ namespace csknow::multi_trajectory_similarity {
         return mts;
     }
 
+    struct PartialMapping{
+        set<int> usedTargets;
+        map<int, int> srcToTgt;
+    };
+
+    vector<PartialMapping> computePartialMappingsForCTorT(const vector<PartialMapping> & initMappings,
+                                                          int numAlive, int offset) {
+        // first do ct mappings
+        vector<PartialMapping> partialMappings = initMappings;
+        for (int depth = offset; depth < offset + numAlive; depth++) {
+            vector<PartialMapping> oldPartialMappings = partialMappings;
+            partialMappings.clear();
+            for (const auto & partialMapping : oldPartialMappings) {
+                for (int curTgt = offset; curTgt < offset + numAlive; curTgt++) {
+                    if (partialMapping.usedTargets.count(curTgt) > 0) {
+                        continue;
+                    }
+                    auto newPartialMapping = partialMapping;
+                    newPartialMapping.usedTargets.insert(curTgt);
+                    newPartialMapping.srcToTgt[depth] = curTgt;
+                    partialMappings.push_back(newPartialMapping);
+                }
+            }
+        }
+        return partialMappings;
+    }
+
     CTAliveTAliveToAgentMappingOptions generateAllPossibleMappings() {
         CTAliveTAliveToAgentMappingOptions ctAliveTAliveToAgentMapping;
+        vector<PartialMapping> initialPartialMappings{{}};
         for (int ctAlive = 0; ctAlive <= csknow::feature_store::maxEnemies; ctAlive++) {
+            vector<PartialMapping> ctPartialMappings = computePartialMappingsForCTorT(initialPartialMappings,
+                                                                                      ctAlive, 0);
             for (int tAlive = 0; tAlive <= csknow::feature_store::maxEnemies; tAlive++) {
-                // this is just DFS where adding all leaf nodes
+                vector<PartialMapping> partialMappings = computePartialMappingsForCTorT(ctPartialMappings,
+                                                                                          tAlive, 0);
+                vector<AgentMapping> mappingOptions;
+                for (const auto & partialMapping : partialMappings) {
+                    mappingOptions.push_back(partialMapping.srcToTgt);
+                }
+                ctAliveTAliveToAgentMapping[ctAlive][tAlive] = mappingOptions;
             }
         }
     }
