@@ -38,4 +38,5 @@ int main(int argc, char * argv[]) {
     vector<csknow::multi_trajectory_similarity::MultiTrajectorySimilarityResult> multiTrajectorySimilarityResults =
             csknow::multi_trajectory_similarity::computeMultiTrajectorySimilarityForAllPredicted(predictedTraces,
                                                                                                  groundTruthTraces);
+    int x = 1;
 }

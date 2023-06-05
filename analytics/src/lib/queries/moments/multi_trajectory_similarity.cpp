@@ -124,6 +124,8 @@ namespace csknow::multi_trajectory_similarity {
 
     DenseMultiTrajectory::DenseMultiTrajectory(csknow::multi_trajectory_similarity::MultiTrajectory mt) {
         trajectories = mt.trajectories;
+        ctTrajectories = mt.ctTrajectories;
+        tTrajectories = mt.tTrajectories;
         size_t minEndTraceIndex = mt.minEndTraceIndex();
         for (const auto & trajectory : mt.trajectories) {
             if (trajectory.endTraceIndex != minEndTraceIndex) {
