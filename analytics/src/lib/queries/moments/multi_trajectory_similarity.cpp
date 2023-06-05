@@ -25,10 +25,6 @@ namespace csknow::multi_trajectory_similarity {
         getPos(traces, endTraceIndex);
     }
 
-    double Trajectory::displacement(const csknow::feature_store::TeamFeatureStoreResult &traces) const {
-        return computeDistance(startPos(traces), endPos(traces));
-    }
-
     double Trajectory::distance(const csknow::feature_store::TeamFeatureStoreResult &traces) const {
         double result = 0.;
         for (size_t traceIndex = startTraceIndex; traceIndex < endTraceIndex; traceIndex++) {
@@ -47,14 +43,6 @@ namespace csknow::multi_trajectory_similarity {
             secondHalf.startTraceIndex = cutTraceIndex + 1;
             return {firstHalf, secondHalf};
         }
-    }
-
-    double MultiTrajectory::displacement(const csknow::feature_store::TeamFeatureStoreResult & traces) const {
-        double result = 0.;
-        for (const auto & trajectory : trajectories) {
-            result += trajectory.displacement(traces);
-        }
-        return result;
     }
 
     double MultiTrajectory::distance(const csknow::feature_store::TeamFeatureStoreResult & traces) const {

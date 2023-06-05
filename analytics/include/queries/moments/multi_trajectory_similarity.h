@@ -22,7 +22,6 @@ namespace csknow::multi_trajectory_similarity {
         Vec3 getPos(const csknow::feature_store::TeamFeatureStoreResult & traces, size_t traceIndex) const;
         Vec3 startPos(const csknow::feature_store::TeamFeatureStoreResult & traces) const;
         Vec3 endPos(const csknow::feature_store::TeamFeatureStoreResult & traces) const;
-        double displacement(const csknow::feature_store::TeamFeatureStoreResult & traces) const;
         double distance(const csknow::feature_store::TeamFeatureStoreResult & traces) const;
         vector<Trajectory> cutTrajectory(size_t cutTraceIndex) const;
     };
@@ -31,7 +30,6 @@ namespace csknow::multi_trajectory_similarity {
         vector<Trajectory> trajectories;
         int ctTrajectories, tTrajectories;
 
-        double displacement(const csknow::feature_store::TeamFeatureStoreResult & traces) const;
         double distance(const csknow::feature_store::TeamFeatureStoreResult & traces) const;
         double fde(const csknow::feature_store::TeamFeatureStoreResult & curTraces, const MultiTrajectory & otherMT,
                    const csknow::feature_store::TeamFeatureStoreResult & otherTraces,
