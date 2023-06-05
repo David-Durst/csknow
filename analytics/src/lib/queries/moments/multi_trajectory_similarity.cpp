@@ -18,11 +18,11 @@ namespace csknow::multi_trajectory_similarity {
     }
 
     Vec3 Trajectory::startPos(const csknow::feature_store::TeamFeatureStoreResult &traces) const {
-        getPos(traces, startTraceIndex);
+        return getPos(traces, startTraceIndex);
     }
 
     Vec3 Trajectory::endPos(const csknow::feature_store::TeamFeatureStoreResult &traces) const {
-        getPos(traces, endTraceIndex);
+        return getPos(traces, endTraceIndex);
     }
 
     double Trajectory::distance(const csknow::feature_store::TeamFeatureStoreResult &traces) const {
@@ -87,20 +87,39 @@ namespace csknow::multi_trajectory_similarity {
 
     CutMultiTrajectories cutMultiTrajectory(MultiTrajectory mt) {
         CutMultiTrajectories result;
+        result.preCutMT.tTrajectories = 0;
+        result.preCutMT.ctTrajectories = 0;
+        result.postCutMT.tTrajectories = 0;
+        result.postCutMT.ctTrajectories = 0;
         size_t minEndTraceIndex = mt.minEndTraceIndex();
         for (const auto & trajectory : mt.trajectories) {
             if (trajectory.endTraceIndex == minEndTraceIndex) {
                 result.preCutMT.trajectories.push_back(trajectory);
+                if (trajectory.team == ENGINE_TEAM_T) {
+                    result.preCutMT.tTrajectories++;
+                }
+                else {
+                    result.preCutMT.ctTrajectories++;
+                }
             }
             else if (trajectory.endTraceIndex > minEndTraceIndex) {
                 vector<Trajectory> cutTrajectory = trajectory.cutTrajectory(minEndTraceIndex);
                 result.preCutMT.trajectories.push_back(cutTrajectory[0]);
                 result.postCutMT.trajectories.push_back(cutTrajectory[1]);
+                if (trajectory.team == ENGINE_TEAM_T) {
+                    result.preCutMT.tTrajectories++;
+                    result.postCutMT.tTrajectories++;
+                }
+                else {
+                    result.preCutMT.ctTrajectories++;
+                    result.postCutMT.ctTrajectories++;
+                }
             }
             else {
                 throw std::runtime_error("invalid min trace index computation");
             }
         }
+        return result;
     }
 
     DenseMultiTrajectory::DenseMultiTrajectory(csknow::multi_trajectory_similarity::MultiTrajectory mt) {
@@ -243,7 +262,7 @@ namespace csknow::multi_trajectory_similarity {
                                                                                       ctAlive, 0);
             for (int tAlive = 0; tAlive <= csknow::feature_store::maxEnemies; tAlive++) {
                 vector<PartialMapping> partialMappings = computePartialMappingsForCTorT(ctPartialMappings,
-                                                                                          tAlive, 0);
+                                                                                          tAlive, ctAlive);
                 vector<AgentMapping> mappingOptions;
                 for (const auto & partialMapping : partialMappings) {
                     mappingOptions.push_back(partialMapping.srcToTgt);
@@ -251,6 +270,7 @@ namespace csknow::multi_trajectory_similarity {
                 ctAliveTAliveToAgentMapping[ctAlive][tAlive] = mappingOptions;
             }
         }
+        return ctAliveTAliveToAgentMapping;
     }
 
     MultiTrajectorySimilarityResult::MultiTrajectorySimilarityResult(
@@ -310,7 +330,7 @@ namespace csknow::multi_trajectory_similarity {
                                 groundTruthMTs = createMTs(groundTruthTraces);
 
         vector<DenseMultiTrajectory> groundTruthDMTs;
-        for (const auto groundTruthMT : groundTruthDMTs) {
+        for (const auto & groundTruthMT : groundTruthMTs) {
             vector<DenseMultiTrajectory> curDMTs = densifyMT(groundTruthMT);
             groundTruthDMTs.insert(groundTruthDMTs.end(), curDMTs.begin(), curDMTs.end());
         }
