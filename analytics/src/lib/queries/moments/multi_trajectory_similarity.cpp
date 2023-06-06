@@ -318,6 +318,7 @@ namespace csknow::multi_trajectory_similarity {
                                   curResult.bestFitGroundTruthDMT.minTime(groundTruthTraces);
             curResult.deltaDistance = curResult.predictedDMT.distance(predictedTraces) -
                                       curResult.bestFitGroundTruthDMT.distance(groundTruthTraces);
+            resultPerDMT.push_back(curResult);
             sumFDE += curResult.fde;
             sumAbsDeltaTime += std::abs(curResult.deltaTime);
             sumAbsDeltaDistance += std::abs(curResult.deltaDistance);
