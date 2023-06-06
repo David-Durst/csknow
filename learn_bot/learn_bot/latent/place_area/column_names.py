@@ -3,7 +3,6 @@ from typing import TypeVar, Optional
 
 from learn_bot.latent.engagement.column_names import *
 from learn_bot.latent.order.column_names import *
-from learn_bot.latent.place_area.pos_abs_delta_conversion import *
 
 delta_pos_grid_radius = 130
 delta_pos_grid_cell_dim = 20

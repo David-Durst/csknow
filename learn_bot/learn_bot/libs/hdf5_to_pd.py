@@ -138,19 +138,32 @@ def load_hdf5_to_np_array(hdf5_path: Path, cols_to_get: List[str]) -> np.ndarray
     return result.transpose()
 
 
-def compare_to_csv(new_df: pd.DataFrame, old_df: pd.DataFrame):
-    assert(sorted(new_df.columns) == sorted(old_df.columns))
+class PDWrapper(HDF5Wrapper):
+    def __init__(self, df: pd.DataFrame, id_cols: List[str]):
+        self.hdf5_path = None
+        self.id_cols = id_cols
+        self.id_df = df.loc[:, id_cols]
+        self.sample_df = df
 
-    for col_name in new_df.columns:
-        if new_df[col_name].dtype.name != 'bool':
-            if not np.allclose(np.around(new_df[col_name], 6), np.around(old_df[col_name], 6)):
-                is_close = np.isclose(np.around(new_df[col_name], 6), np.around(old_df[col_name], 6))
-                first_fail = list(is_close).index(False)
-                print(f'''{col_name} isn't close, ''' +
-                      f'''example new: {new_df[col_name][first_fail]} ; old: {old_df[col_name][first_fail]}''')
-        else:
-            if not np.array_equal(new_df[col_name], old_df[col_name]):
-                is_equal = np.equal(new_df[col_name], old_df[col_name])
-                first_fail = list(is_equal).index(False)
-                print(f'''{col_name} isn't close, ''' +
-                      f'''example new: {new_df[col_name][first_fail]} ; old: {old_df[col_name][first_fail]}''')
+    def limit(self, selector_df: pd.Series):
+        self.id_df = self.id_df[selector_df]
+
+    def __len__(self):
+        return len(self.id_df)
+
+    def clone(self):
+        result = PDWrapper(self.sample_df.copy(), self.id_cols)
+        return result
+
+    def create_np_array(self, cts: IOColumnTransformers):
+        HDF5Wrapper.input_data[self.hdf5_path] = \
+            self.sample_df.loc[:, cts.input_types.column_names_all_categorical_columns()].to_numpy(dtype=np.float32)
+        HDF5Wrapper.output_data[self.hdf5_path] = \
+            self.sample_df.loc[:, cts.output_types.column_names_all_categorical_columns()].to_numpy(dtype=np.float32)
+
+    def get_input_data(self) -> np.ndarray:
+        return HDF5Wrapper.input_data[self.hdf5_path]
+
+    def get_output_data(self) -> np.ndarray:
+        return HDF5Wrapper.output_data[self.hdf5_path]
+

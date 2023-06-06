@@ -22,13 +22,14 @@ from learn_bot.latent.lstm_latent_model import LSTMLatentModel
 from learn_bot.latent.mlp_hidden_latent_model import MLPHiddenLatentModel
 from learn_bot.latent.mlp_latent_model import MLPLatentModel
 from learn_bot.latent.mlp_nested_hidden_latent_model import MLPNestedHiddenLatentModel
+from learn_bot.latent.place_area.create_test_data import create_left_right_test_data
 from learn_bot.latent.place_area.pos_abs_delta_conversion import delta_pos_grid_num_cells
 from learn_bot.latent.order.latent_to_distributions import get_order_probability
 from learn_bot.latent.place_area.column_names import place_area_input_column_types, place_output_column_types, \
     num_places, area_grid_size, area_output_column_types, delta_pos_output_column_types, test_success_col
 from learn_bot.latent.profiling import profile_latent_model
 from learn_bot.latent.transformer_nested_hidden_latent_model import TransformerNestedHiddenLatentModel
-from learn_bot.libs.hdf5_to_pd import load_hdf5_to_pd, HDF5Wrapper
+from learn_bot.libs.hdf5_to_pd import load_hdf5_to_pd, HDF5Wrapper, PDWrapper
 from learn_bot.libs.io_transforms import CUDA_DEVICE_STR
 from learn_bot.latent.accuracy_and_loss import compute_loss, compute_accuracy, finish_accuracy, \
     CPU_DEVICE_STR, LatentLosses
@@ -336,57 +337,33 @@ manual_latent_team_hdf5_data_path = Path(__file__).parent / '..' / '..' / '..' /
 manual_rounds_data_path = Path(__file__).parent / '..' / '..' / '..' / 'analytics' / 'saved_datasets' / 'bot_sample_traces_5_10_23_ticks.csv'
 rollout_latent_team_hdf5_data_path = Path(__file__).parent / '..' / '..' / '..' / 'analytics' / 'rollout_outputs' / 'behaviorTreeTeamFeatureStore.hdf5'
 
-use_manual_data = True
+use_manual_data = False
+use_test_data = True
 
 def run_team_analysis():
     read_start = time.time()
+    diff_train_test = True
     if use_manual_data:
         team_data = HDF5Wrapper(manual_latent_team_hdf5_data_path, ['id', round_id_column, test_success_col])
-        #valid_rounds_df = pd.read_csv(manual_rounds_data_path)
-        #rounds_condition = False
-        #for index, row in valid_rounds_df.iterrows():
-        #    rounds_condition = rounds_condition | ((team_data_df['round number'] == row['round id']) &
-        #                       (team_data_df['game tick number'] >= row['start game tick']) &
-        #                       (team_data_df['game tick number'] <= row['end game tick']))
-        #team_data_df = team_data_df[rounds_condition]
-        #team_data_df = team_data_df[team_data_df['test name'] == b'LearnedGooseToCatScript']
-        #team_data_df = team_data_df[team_data_df[round_id_column].isin(team_data_df[round_id_column].unique()[0:40])]
+    elif use_test_data:
+        base_data = load_hdf5_to_pd(manual_latent_team_hdf5_data_path, rows_to_get=[i for i in range(1)])
+        team_data_df = create_left_right_test_data(base_data)
+        team_data = PDWrapper(team_data_df, ['id', round_id_column, test_success_col])
+        diff_train_test = False
     else:
         team_data = load_hdf5_to_pd(latent_team_hdf5_data_path)
-        #valid_selector_df = valid_df[valid_df['valid'] == 1.].index
-        #team_data_df = load_hdf5_to_pd(latent_team_hdf5_data_path, selector_df=valid_selector_df)
-        #read_end = time.time()
-        #print(f'''read time: {read_end - read_start}''')
-        #print(f'''num retake save ticks {len(team_data_df[(team_data_df['valid'] == 1.) & (team_data_df['c4 status'] < 2) &
-        #                                                  (team_data_df['retake save round tick'] == 1)])}''')
-        #print(f'''num retake non-save ticks {len(team_data_df[(team_data_df['valid'] == 1.) & (team_data_df['c4 status'] < 2) &
-        #                                                  (team_data_df['retake save round tick'] == 0)])}''')
-        #team_data_df = team_data_df[(team_data_df['valid'] == 1.) & (team_data_df['c4 status'] < 2)]
-                                    #(team_data_df['round id'] == 14)].iloc[range(100)]
-        #team_data_df = team_data_df[(team_data_df['valid'] == 1.) & (team_data_df['freeze time ended'] == 1.)]
-                                    #(team_data_df['retake save round tick'] == 0)]
-        #team_data_df.to_parquet(small_latent_team_hdf5_data_path)
-    #train_result = train(TrainType.Order, team_data_df, num_epochs=3, windowed=False)
-    #train_result = train(TrainType.Place, team_data_df, num_epochs=500, windowed=False, diff_train_test=False)
-    #train_result = train(TrainType.Area, team_data_df, num_epochs=3, windowed=False)
     team_data.limit(team_data.id_df[test_success_col] == 1.)
     hyperparameter_options = default_hyperparameter_options
     if len(sys.argv) > 1:
         hyperparameter_indices = [int(i) for i in sys.argv[1].split(",")]
         for index in hyperparameter_indices:
             hyperparameter_options = hyperparameter_option_range[index]
-            train(TrainType.DeltaPos, team_data, hyperparameter_options, diff_train_test=True)
+            train(TrainType.DeltaPos, team_data, hyperparameter_options, diff_train_test=diff_train_test)
     else:
-        train(TrainType.DeltaPos, team_data, diff_train_test=True)
+        train(TrainType.DeltaPos, team_data, diff_train_test=diff_train_test)
                              #flip_columns=[ColumnsToFlip(" CT 0", " CT 1")])
 
 
 if __name__ == "__main__":
     run_team_analysis()
 
-# all_data_df[((all_data_df['pct nearest crosshair enemy 2s 0'] + all_data_df['pct nearest crosshair enemy 2s 1'] + all_data_df['pct nearest crosshair enemy 2s 2'] + all_data_df['pct nearest crosshair enemy 2s 3'] + all_data_df['pct nearest crosshair enemy 2s 4'] + all_data_df['pct nearest crosshair enemy 2s 5']) < 0.9) & (all_data_df['valid'] == 1)]
-# all_data_df[(all_data_df['pct nearest enemy change 2s decrease'] + all_data_df['pct nearest enemy change 2s constant'] + all_data_df['pct nearest enemy change 2s increase'] < 0.9) & (all_data_df['valid'] == 1)]
-# all_data_df[(all_data_df['pct nearest enemy change 2s decrease'] + all_data_df['pct nearest enemy change 2s constant'] > 0.1) & (all_data_df['valid'] == 1)]
-# all_data_df[(all_data_df['fire next 2s'] + all_data_df['neg fire next 2s'] < 0.9) & (all_data_df['valid'] == 1)]
-# all_data_df[(all_data_df['visible enemy 2s'] + all_data_df['neg visible enemy 2s'] < 0.9) & (all_data_df['valid'] == 1)]
-# team_data_df[(team_data_df['distribution nearest a order 1 30s CT 0'] + team_data_df['distribution nearest a order 2 30s CT 0'] > 1.)]
