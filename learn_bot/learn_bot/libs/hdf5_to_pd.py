@@ -139,7 +139,7 @@ def load_hdf5_to_np_array(hdf5_path: Path, cols_to_get: List[str]) -> np.ndarray
 
 
 class PDWrapper(HDF5Wrapper):
-    def __init__(self, hdf5_path: str, df: pd.DataFrame, id_cols: List[str]):
+    def __init__(self, hdf5_path: Path, df: pd.DataFrame, id_cols: List[str]):
         self.hdf5_path = hdf5_path
         self.id_cols = id_cols
         self.id_df = df.loc[:, id_cols]
@@ -152,7 +152,7 @@ class PDWrapper(HDF5Wrapper):
         return len(self.id_df)
 
     def clone(self):
-        result = PDWrapper(self.sample_df.copy(), self.id_cols)
+        result = PDWrapper(self.hdf5_path, self.sample_df.copy(), self.id_cols)
         return result
 
     def create_np_array(self, cts: IOColumnTransformers):
