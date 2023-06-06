@@ -65,9 +65,9 @@ def create_left_right_test_data(all_data_df: pd.DataFrame) -> pd.DataFrame:
     id_counter = 0
     # increasing x and
     for i in range(num_test_ticks):
-        add_tick_row(1, 1, 1, -20 * float(i), 4., 1, -1, base_series, new_ticks)
+        add_tick_row(1, 1, 1, float(i), 0.5, 1, 0, base_series, new_ticks)
 
     for i in range(num_test_ticks):
-        add_tick_row(1, 1, 1, -20 * float(i), 4., 0, -1, base_series, new_ticks)
+        add_tick_row(1, 1, 1, float(i), 0.5, 0, -1, base_series, new_ticks)
 
     return pd.DataFrame(new_ticks)
