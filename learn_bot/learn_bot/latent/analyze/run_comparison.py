@@ -47,7 +47,7 @@ def compare_trajectories():
     os.makedirs(similarity_plots_path, exist_ok=True)
     similarity_df = load_hdf5_to_pd(similiarity_hdf5_data_path)
     similarity_match_index_df = load_hdf5_to_pd(similiarity_hdf5_data_path, root_key='extra')
-    rollout_df = load_hdf5_to_pd(rollout_latent_team_hdf5_data_path)
+    rollout_df = load_hdf5_to_pd(rollout_latent_team_hdf5_data_path).copy()
     rollout_result = load_model_file(rollout_df, "delta_pos_checkpoint.pt")
 
     rollout_to_manual_dict: RolloutToManualDict = {}
@@ -68,7 +68,7 @@ def compare_trajectories():
     manual_indices_ranges = sorted(manual_indices_ranges, key=lambda r: r.start)
     manual_indices = [i for r in manual_indices_ranges for i in r]
 
-    manual_df = load_hdf5_to_pd(manual_latent_team_hdf5_data_path, rows_to_get=manual_indices)
+    manual_df = load_hdf5_to_pd(manual_latent_team_hdf5_data_path, rows_to_get=manual_indices).copy()
     manual_result = load_model_file(manual_df, "delta_pos_checkpoint.pt")
 
     rollout_pred_pf = off_policy_inference(rollout_result.train_dataset, rollout_result.model,

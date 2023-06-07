@@ -178,7 +178,7 @@ def vis_two(rollout_data_df: pd.DataFrame, rollout_pred_df: pd.DataFrame,
     # state setters
     def change_round_dependent_data():
         nonlocal rollout_selected_df, rollout_pred_selected_df, manual_selected_df, manual_pred_selected_df, \
-            similarity_match_df, cur_round, ticks
+            similarity_match_df, cur_round
         rollout_selected_df = rollout_data_df.loc[rollout_data_df[round_id_column] == cur_round]
         rollout_pred_selected_df = rollout_pred_df.loc[rollout_data_df[round_id_column] == cur_round]
 
