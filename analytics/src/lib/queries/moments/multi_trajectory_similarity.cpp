@@ -363,7 +363,7 @@ namespace csknow::multi_trajectory_similarity {
         file.createDataSet("/data/delta time", deltaTime);
         file.createDataSet("/data/delta distance", deltaTime);
         file.createDataSet("/data/start dtw matched indices", startDTWMatchedIndices);
-        file.createDataSet("/data/length dtw matched indices", startDTWMatchedIndices);
+        file.createDataSet("/data/length dtw matched indices", lengthDTWMatchedIndices);
         file.createDataSet("/extra/first matched index", firstMatchedIndex);
         file.createDataSet("/extra/second matched index", secondMatchedIndex);
 

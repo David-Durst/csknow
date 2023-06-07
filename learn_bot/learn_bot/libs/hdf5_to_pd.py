@@ -56,13 +56,13 @@ class HDF5Wrapper:
 
 
 def load_hdf5_to_pd(hdf5_path: Path, selector_df: Optional[pd.DataFrame] = None, cols_to_get: Optional[List] = None,
-                    rows_to_get: Optional[List[int]] = None):
+                    rows_to_get: Optional[List[int]] = None, root_key: str = 'data'):
     # get data as numpy arrays and column names
     #np_arrs: List[np.ndarray] = []
     #col_names: List[List[str]] = []
     partial_dfs: List[pd.DataFrame] = []
     with h5py.File(hdf5_path) as hdf5_file:
-        hdf5_data = hdf5_file['data']
+        hdf5_data = hdf5_file[root_key]
         for k in hdf5_data.keys():
             if cols_to_get is not None and k not in cols_to_get:
                 continue
