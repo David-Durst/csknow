@@ -37,6 +37,7 @@ namespace csknow::multi_trajectory_similarity {
     struct MultiTrajectory {
         vector<Trajectory> trajectories;
         int ctTrajectories, tTrajectories;
+        int64_t roundId;
 
         double distance(const csknow::feature_store::TeamFeatureStoreResult & traces) const;
         double fde(const csknow::feature_store::TeamFeatureStoreResult & curTraces, const MultiTrajectory & otherMT,
@@ -48,6 +49,8 @@ namespace csknow::multi_trajectory_similarity {
         size_t minEndTraceIndex() const;
         virtual double minTime(const csknow::feature_store::TeamFeatureStoreResult & traces) const;
         size_t maxTimeSteps() const;
+        size_t startTraceIndex() const;
+        size_t maxEndTraceIndex() const;
 
         virtual ~MultiTrajectory() = default;
     };
@@ -83,9 +86,12 @@ namespace csknow::multi_trajectory_similarity {
                                         CTAliveTAliveToAgentMappingOptions ctAliveTAliveToAgentMappingOptions);
     };
 
-    vector<MultiTrajectorySimilarityResult> computeMultiTrajectorySimilarityForAllPredicted(
-            const csknow::feature_store::TeamFeatureStoreResult & predictedTraces,
-            const csknow::feature_store::TeamFeatureStoreResult & groundTruthTraces);
+    struct TraceSimilarityResult {
+        vector<MultiTrajectorySimilarityResult> result;
+        TraceSimilarityResult(const csknow::feature_store::TeamFeatureStoreResult & predictedTraces,
+                              const csknow::feature_store::TeamFeatureStoreResult & groundTruthTraces);
+        void toHDF5(const string &filePath);
+    };
 }
 
 #endif //CSKNOW_MULTI_TRAJECTORY_SIMILARITY_H

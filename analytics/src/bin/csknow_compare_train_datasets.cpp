@@ -2,14 +2,8 @@
 // Created by durst on 6/2/23.
 //
 #include <iostream>
-#include <unistd.h>
 #include <map>
-#include <string>
-#include <sstream>
 #include <functional>
-#include <fstream>
-#include <iomanip>
-#include <ctime>
 #include "bots/analysis/feature_store_team.h"
 #include "queries/moments/multi_trajectory_similarity.h"
 
@@ -28,15 +22,15 @@ int main(int argc, char * argv[]) {
         return 1;
     }
 
-    string predictedPath = argv[1];
-    string groundTruthPath = argv[2];
+    string predictedPathStr = argv[1];
+    string groundTruthPathStr = argv[2];
 
     csknow::feature_store::TeamFeatureStoreResult predictedTraces(1, {}), groundTruthTraces(1, {});
-    predictedTraces.load(predictedPath);
-    groundTruthTraces.load(groundTruthPath);
+    predictedTraces.load(predictedPathStr);
+    groundTruthTraces.load(groundTruthPathStr);
 
-    vector<csknow::multi_trajectory_similarity::MultiTrajectorySimilarityResult> multiTrajectorySimilarityResults =
-            csknow::multi_trajectory_similarity::computeMultiTrajectorySimilarityForAllPredicted(predictedTraces,
-                                                                                                 groundTruthTraces);
-    int x = 1;
+    csknow::multi_trajectory_similarity::TraceSimilarityResult traceSimilarityResult(predictedTraces, groundTruthTraces);
+    fs::path predictedPath(predictedPathStr);
+    fs::path similarityResult = predictedPath.parent_path() / "pathSimilarity.hdf5";
+    traceSimilarityResult.toHDF5(similarityResult);
 }

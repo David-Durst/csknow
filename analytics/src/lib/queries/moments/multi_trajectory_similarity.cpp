@@ -153,12 +153,26 @@ namespace csknow::multi_trajectory_similarity {
         return maxTimeSteps;
     }
 
+    size_t MultiTrajectory::startTraceIndex() const {
+        return trajectories.front().startTraceIndex;
+    }
+
+    size_t MultiTrajectory::maxEndTraceIndex() const {
+        size_t maxEndTraceIndex = 0;
+        for (const auto & trajectory : trajectories) {
+            maxEndTraceIndex = std::max(maxEndTraceIndex, trajectory.endTraceIndex);
+        }
+        return maxEndTraceIndex;
+    }
+
     CutMultiTrajectories cutMultiTrajectory(MultiTrajectory mt) {
         CutMultiTrajectories result;
         result.preCutMT.tTrajectories = 0;
         result.preCutMT.ctTrajectories = 0;
+        result.preCutMT.roundId = mt.roundId;
         result.postCutMT.tTrajectories = 0;
         result.postCutMT.ctTrajectories = 0;
+        result.postCutMT.roundId = mt.roundId;
         size_t minEndTraceIndex = mt.minEndTraceIndex();
         for (const auto & trajectory : mt.trajectories) {
             if (trajectory.endTraceIndex == minEndTraceIndex) {
@@ -194,6 +208,7 @@ namespace csknow::multi_trajectory_similarity {
         trajectories = mt.trajectories;
         ctTrajectories = mt.ctTrajectories;
         tTrajectories = mt.tTrajectories;
+        roundId = mt.roundId;
         size_t minEndTraceIndex = mt.minEndTraceIndex();
         for (const auto & trajectory : mt.trajectories) {
             if (trajectory.endTraceIndex != minEndTraceIndex) {
@@ -291,6 +306,7 @@ namespace csknow::multi_trajectory_similarity {
             mt.trajectories = trajectories;
             mt.ctTrajectories = ctTrajectories;
             mt.tTrajectories = tTrajectories;
+            mt.roundId = traces.roundId[roundStartTraceIndex[roundIndex]];
             mts.push_back(mt);
         }
 
@@ -381,9 +397,8 @@ namespace csknow::multi_trajectory_similarity {
     }
 
 
-    vector<MultiTrajectorySimilarityResult> computeMultiTrajectorySimilarityForAllPredicted(
-            const csknow::feature_store::TeamFeatureStoreResult & predictedTraces,
-            const csknow::feature_store::TeamFeatureStoreResult & groundTruthTraces) {
+    TraceSimilarityResult::TraceSimilarityResult(const csknow::feature_store::TeamFeatureStoreResult & predictedTraces,
+                                                 const csknow::feature_store::TeamFeatureStoreResult & groundTruthTraces) {
         vector<MultiTrajectory> predictedMTs = createMTs(predictedTraces),
                                 groundTruthMTs = createMTs(groundTruthTraces);
 
@@ -397,12 +412,41 @@ namespace csknow::multi_trajectory_similarity {
 
         CTAliveTAliveToAgentMappingOptions ctAliveTAliveToAgentMappingOptions = generateAllPossibleMappings();
 
-        vector<MultiTrajectorySimilarityResult> result;
         result.reserve(predictedMTs.size());
         for (const auto & predictedMT : predictedMTs) {
             result.emplace_back(predictedMT, groundTruthMTs, predictedTraces, groundTruthTraces,
                                 ctAliveTAliveToAgentMappingOptions);
         }
-        return result;
+    }
+
+    void TraceSimilarityResult::toHDF5(const std::string &filePath) {
+        vector<int64_t> predictedRoundIds, bestFitGroundTruthRoundIds;
+        vector<size_t> predictedStartTraceIndex, predictedEndTraceIndex,
+            bestFitGroundTruthStartTraceIndex, bestFitGroundTruthEndTraceIndex;
+        vector<double> dtw, deltaTime, deltaDistance;
+
+        for (const auto & mtSimilarityResult : result) {
+            predictedRoundIds.push_back(mtSimilarityResult.predictedMT.roundId);
+            bestFitGroundTruthRoundIds.push_back(mtSimilarityResult.bestFitGroundTruthMT.roundId);
+            predictedStartTraceIndex.push_back(mtSimilarityResult.predictedMT.startTraceIndex());
+            predictedEndTraceIndex.push_back(mtSimilarityResult.predictedMT.maxEndTraceIndex());
+            bestFitGroundTruthStartTraceIndex.push_back(mtSimilarityResult.bestFitGroundTruthMT.startTraceIndex());
+            bestFitGroundTruthEndTraceIndex.push_back(mtSimilarityResult.bestFitGroundTruthMT.maxEndTraceIndex());
+            dtw.push_back(mtSimilarityResult.dtw);
+            deltaTime.push_back(mtSimilarityResult.deltaTime);
+            deltaDistance.push_back(mtSimilarityResult.deltaDistance);
+        }
+
+        HighFive::File file(filePath, HighFive::File::Overwrite);
+        file.createDataSet("/data/predicted round ids", predictedRoundIds);
+        file.createDataSet("/data/best fit ground truth round ids", bestFitGroundTruthRoundIds);
+        file.createDataSet("/data/predicted start trace index", predictedStartTraceIndex);
+        file.createDataSet("/data/predicted end trace index", predictedEndTraceIndex);
+        file.createDataSet("/data/best fit ground truth start trace index", bestFitGroundTruthStartTraceIndex);
+        file.createDataSet("/data/best fit ground truth end trace index", bestFitGroundTruthEndTraceIndex);
+        file.createDataSet("/data/dtw", dtw);
+        file.createDataSet("/data/delta time", deltaTime);
+        file.createDataSet("/data/delta distance", deltaTime);
+
     }
 }
