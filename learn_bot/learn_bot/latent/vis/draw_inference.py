@@ -120,7 +120,7 @@ def draw_all_players(data_series: pd.Series, pred_series: pd.Series, im_draw: Im
             pred_coord = pos_coord.get_grid_cell(max_pred_index, True)
             player_str = f'''{player_place_area_columns.player_id} pos {pos_coord.coords}, data {data_coord.coords} {data_coord.z_index}, pred {pred_coord.coords} {pred_coord.z_index}'''
             result += player_str + "\n"
-            print(player_str)
+            #print(player_str)
             if draw_max:
                 data_coord.draw_vis(im_draw, True)
                 pred_coord.draw_vis(im_draw, True)
