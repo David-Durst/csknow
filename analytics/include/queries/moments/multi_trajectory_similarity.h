@@ -20,10 +20,18 @@ namespace csknow::multi_trajectory_similarity {
         int playerColumnIndex;
 
         Vec3 getPos(const csknow::feature_store::TeamFeatureStoreResult & traces, size_t traceIndex) const;
+        Vec3 getPosRelative(const csknow::feature_store::TeamFeatureStoreResult & traces, size_t relativeTraceIndex) const;
         Vec3 startPos(const csknow::feature_store::TeamFeatureStoreResult & traces) const;
         Vec3 endPos(const csknow::feature_store::TeamFeatureStoreResult & traces) const;
         double distance(const csknow::feature_store::TeamFeatureStoreResult & traces) const;
         vector<Trajectory> cutTrajectory(size_t cutTraceIndex) const;
+    };
+
+    struct DTWMatrix {
+        vector<double> values;
+        size_t n, m;
+        DTWMatrix(size_t m, size_t n);
+        inline double & get(size_t i, size_t j);
     };
 
     struct MultiTrajectory {
@@ -34,8 +42,12 @@ namespace csknow::multi_trajectory_similarity {
         double fde(const csknow::feature_store::TeamFeatureStoreResult & curTraces, const MultiTrajectory & otherMT,
                    const csknow::feature_store::TeamFeatureStoreResult & otherTraces,
                    map<int, int> agentMapping) const;
+        double dtw(const csknow::feature_store::TeamFeatureStoreResult & curTraces, const MultiTrajectory & otherMT,
+                   const csknow::feature_store::TeamFeatureStoreResult & otherTraces,
+                   map<int, int> agentMapping) const;
         size_t minEndTraceIndex() const;
         virtual double minTime(const csknow::feature_store::TeamFeatureStoreResult & traces) const;
+        size_t maxTimeSteps() const;
 
         virtual ~MultiTrajectory() = default;
     };
@@ -57,21 +69,15 @@ namespace csknow::multi_trajectory_similarity {
 
     typedef map<int, int> AgentMapping;
 
-    struct DenseMultiTrajectorySimilarityResult {
-        DenseMultiTrajectory predictedDMT, bestFitGroundTruthDMT;
-        double fde, deltaTime, deltaDistance;
-        AgentMapping agentMapping;
-    };
-
-
     typedef map<int, map<int, vector<AgentMapping>>> CTAliveTAliveToAgentMappingOptions;
     CTAliveTAliveToAgentMappingOptions generateAllPossibleMappings();
 
     struct MultiTrajectorySimilarityResult {
-        vector<DenseMultiTrajectorySimilarityResult> resultPerDMT;
-        double sumFDE, sumAbsDeltaTime, sumAbsDeltaDistance;
+        MultiTrajectory predictedMT, bestFitGroundTruthMT;
+        double dtw, deltaTime, deltaDistance;
+        AgentMapping agentMapping;
 
-        MultiTrajectorySimilarityResult(MultiTrajectory predictedMT, vector<DenseMultiTrajectory> groundTruthDMTs,
+        MultiTrajectorySimilarityResult(const MultiTrajectory & predictedMT, const vector<MultiTrajectory> & groundTruthMTs,
                                         const csknow::feature_store::TeamFeatureStoreResult & predictedTraces,
                                         const csknow::feature_store::TeamFeatureStoreResult & groundTruthTraces,
                                         CTAliveTAliveToAgentMappingOptions ctAliveTAliveToAgentMappingOptions);
