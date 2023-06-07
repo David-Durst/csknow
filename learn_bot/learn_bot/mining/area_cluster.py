@@ -13,8 +13,6 @@ from PIL import Image, ImageDraw
 
 d2_top_left_x = -2476
 d2_top_left_y = 3239
-defaultCanvasSize = 700
-bigCanvasSize = 2048
 minimapWidth = 2048
 minimapHeight = 2048
 minimapScale = 4.4 * 1024 / minimapHeight

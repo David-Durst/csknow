@@ -2,9 +2,9 @@ from typing import Dict
 
 import pandas as pd
 
-from learn_bot.latent.vis.draw_inference import draw_all_players
 from learn_bot.libs.df_grouping import make_index_column
 from learn_bot.mining.area_cluster import *
+from learn_bot.latent.vis.draw_inference import draw_all_players, minimapWidth, minimapHeight
 import tkinter as tk
 from tkinter import ttk, font
 from PIL import Image, ImageDraw, ImageTk as itk
@@ -40,7 +40,7 @@ def vis_two(rollout_data_df: pd.DataFrame, rollout_pred_df: pd.DataFrame,
     img_frame = tk.Frame(window)
     img_frame.pack(pady=5)
     d2_img = Image.open(d2_radar_path)
-    d2_img = d2_img.resize((700, 700), Image.ANTIALIAS)
+    d2_img = d2_img.resize((minimapWidth, minimapHeight), Image.ANTIALIAS)
     rollout_d2_img_draw = d2_img.copy()
     rollout_d2_photo_img = itk.PhotoImage(rollout_d2_img_draw)
     rollout_img_label = tk.Label(img_frame, image=rollout_d2_photo_img)

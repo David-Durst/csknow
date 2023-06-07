@@ -14,8 +14,8 @@ player_width = 32
 
 d2_top_left_x = -2476
 d2_top_left_y = 3239
-minimapWidth = 700
-minimapHeight = 700
+minimapWidth = 1300
+minimapHeight = 1300
 minimapScale = 4.4 * 1024 / minimapHeight
 
 bbox_scale_factor = 2
