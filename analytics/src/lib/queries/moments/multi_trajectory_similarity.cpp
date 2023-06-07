@@ -44,18 +44,6 @@ namespace csknow::multi_trajectory_similarity {
         return result;
     }
 
-    vector<Trajectory> Trajectory::cutTrajectory(std::size_t cutTraceIndex) const {
-        if (cutTraceIndex <= startTraceIndex || cutTraceIndex >= endTraceIndex) {
-            return {*this};
-        }
-        else {
-            Trajectory firstHalf = *this, secondHalf = *this;
-            firstHalf.endTraceIndex = cutTraceIndex;
-            secondHalf.startTraceIndex = cutTraceIndex + 1;
-            return {firstHalf, secondHalf};
-        }
-    }
-
     double MultiTrajectory::distance(const csknow::feature_store::TeamFeatureStoreResult & traces) const {
         double result = 0.;
         for (const auto & trajectory : trajectories) {
@@ -78,26 +66,6 @@ namespace csknow::multi_trajectory_similarity {
         return result;
     }
 
-    /*
-     * int DTWDistance(s: array [1..n], t: array [1..m]) {
-    DTW := array [0..n, 0..m]
-
-    for i := 0 to n
-        for j := 0 to m
-            DTW[i, j] := infinity
-    DTW[0, 0] := 0
-
-    for i := 1 to n
-        for j := 1 to m
-            cost := d(s[i], t[j])
-            DTW[i, j] := cost + minimum(DTW[i-1, j  ],    // insertion
-                                        DTW[i  , j-1],    // deletion
-                                        DTW[i-1, j-1])    // match
-
-    return DTW[n, m]
-}D
-     */
-
     DTWMatrix::DTWMatrix(std::size_t n, std::size_t m) : values(n * m, std::numeric_limits<double>::infinity()),
         n(n), m(m) { }
 
@@ -111,21 +79,22 @@ namespace csknow::multi_trajectory_similarity {
         size_t curLength = maxTimeSteps();
         size_t otherLength = otherMT.maxTimeSteps();
 
-        DTWMatrix dtwMatrix(curLength, otherLength);
+        DTWMatrix dtwMatrix(curLength+1, otherLength+1);
         dtwMatrix.get(0, 0) = 0.;
 
-        for (size_t i = 1; i < curLength; i++) {
-            for (size_t j = 1; j < otherLength; j++) {
+        for (size_t i = 1; i <= curLength; i++) {
+            for (size_t j = 1; j <= otherLength; j++) {
                 double cost = 0;
                 for (const auto & [curAgentIndex, otherAgentIndex] : agentMapping) {
-                    cost += computeDistance(trajectories[curAgentIndex].getPosRelative(curTraces, i),
-                                            otherMT.trajectories[otherAgentIndex].getPosRelative(otherTraces, j));
+                    // indexing for matrix is offset by 1 to indexing for data as need 0,0 to be before first step
+                    cost += computeDistance(trajectories[curAgentIndex].getPosRelative(curTraces, i-1),
+                                            otherMT.trajectories[otherAgentIndex].getPosRelative(otherTraces, j-1));
                 }
                 dtwMatrix.get(i, j) = cost + std::min(dtwMatrix.get(i-1, j),
                                                       std::min(dtwMatrix.get(i, j-1), dtwMatrix.get(i-1, j-1)));
             }
-            result.cost += dtwMatrix.get(curLength - 1, otherLength - 1);
         }
+        result.cost = dtwMatrix.get(curLength - 1, otherLength - 1);
 
         size_t i = curLength - 1, j = otherLength - 1;
         while (i > 0 && j > 0) {
@@ -185,75 +154,6 @@ namespace csknow::multi_trajectory_similarity {
             maxEndTraceIndex = std::max(maxEndTraceIndex, trajectory.endTraceIndex);
         }
         return maxEndTraceIndex;
-    }
-
-    CutMultiTrajectories cutMultiTrajectory(MultiTrajectory mt) {
-        CutMultiTrajectories result;
-        result.preCutMT.tTrajectories = 0;
-        result.preCutMT.ctTrajectories = 0;
-        result.preCutMT.roundId = mt.roundId;
-        result.postCutMT.tTrajectories = 0;
-        result.postCutMT.ctTrajectories = 0;
-        result.postCutMT.roundId = mt.roundId;
-        size_t minEndTraceIndex = mt.minEndTraceIndex();
-        for (const auto & trajectory : mt.trajectories) {
-            if (trajectory.endTraceIndex == minEndTraceIndex) {
-                result.preCutMT.trajectories.push_back(trajectory);
-                if (trajectory.team == ENGINE_TEAM_T) {
-                    result.preCutMT.tTrajectories++;
-                }
-                else {
-                    result.preCutMT.ctTrajectories++;
-                }
-            }
-            else if (trajectory.endTraceIndex > minEndTraceIndex) {
-                vector<Trajectory> cutTrajectory = trajectory.cutTrajectory(minEndTraceIndex);
-                result.preCutMT.trajectories.push_back(cutTrajectory[0]);
-                result.postCutMT.trajectories.push_back(cutTrajectory[1]);
-                if (trajectory.team == ENGINE_TEAM_T) {
-                    result.preCutMT.tTrajectories++;
-                    result.postCutMT.tTrajectories++;
-                }
-                else {
-                    result.preCutMT.ctTrajectories++;
-                    result.postCutMT.ctTrajectories++;
-                }
-            }
-            else {
-                throw std::runtime_error("invalid min trace index computation");
-            }
-        }
-        return result;
-    }
-
-    DenseMultiTrajectory::DenseMultiTrajectory(csknow::multi_trajectory_similarity::MultiTrajectory mt) {
-        trajectories = mt.trajectories;
-        ctTrajectories = mt.ctTrajectories;
-        tTrajectories = mt.tTrajectories;
-        roundId = mt.roundId;
-        size_t minEndTraceIndex = mt.minEndTraceIndex();
-        for (const auto & trajectory : mt.trajectories) {
-            if (trajectory.endTraceIndex != minEndTraceIndex) {
-                throw std::runtime_error("dense multi trajectory not dense as trajectories end at different times");
-            }
-        }
-    }
-
-    double DenseMultiTrajectory::minTime(const csknow::feature_store::TeamFeatureStoreResult &traces) const {
-        return gameTicksToSeconds(tickRates,
-                                  traces.gameTickNumber[trajectories.front().endTraceIndex] -
-                                  traces.gameTickNumber[trajectories.front().startTraceIndex]);
-    }
-
-    vector<DenseMultiTrajectory> densifyMT(csknow::multi_trajectory_similarity::MultiTrajectory mt) {
-        vector<DenseMultiTrajectory> result;
-        MultiTrajectory curMT = mt;
-        while (!curMT.trajectories.empty()) {
-            CutMultiTrajectories cutMultiTrajectories = cutMultiTrajectory(curMT);
-            result.emplace_back(cutMultiTrajectories.preCutMT);
-            curMT = cutMultiTrajectories.postCutMT;
-        }
-        return result;
     }
 
     vector<MultiTrajectory> createMTs(const csknow::feature_store::TeamFeatureStoreResult & traces) {
