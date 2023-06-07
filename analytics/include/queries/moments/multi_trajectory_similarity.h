@@ -34,6 +34,11 @@ namespace csknow::multi_trajectory_similarity {
         inline double & get(size_t i, size_t j);
     };
 
+    struct DTWResult {
+        vector<pair<size_t, size_t>> matchedIndices;
+        double cost = 0.;
+    };
+
     struct MultiTrajectory {
         vector<Trajectory> trajectories;
         int ctTrajectories, tTrajectories;
@@ -43,9 +48,9 @@ namespace csknow::multi_trajectory_similarity {
         double fde(const csknow::feature_store::TeamFeatureStoreResult & curTraces, const MultiTrajectory & otherMT,
                    const csknow::feature_store::TeamFeatureStoreResult & otherTraces,
                    map<int, int> agentMapping) const;
-        double dtw(const csknow::feature_store::TeamFeatureStoreResult & curTraces, const MultiTrajectory & otherMT,
-                   const csknow::feature_store::TeamFeatureStoreResult & otherTraces,
-                   map<int, int> agentMapping) const;
+        DTWResult dtw(const csknow::feature_store::TeamFeatureStoreResult & curTraces, const MultiTrajectory & otherMT,
+                      const csknow::feature_store::TeamFeatureStoreResult & otherTraces,
+                      map<int, int> agentMapping) const;
         size_t minEndTraceIndex() const;
         virtual double minTime(const csknow::feature_store::TeamFeatureStoreResult & traces) const;
         size_t maxTimeSteps() const;
@@ -77,8 +82,9 @@ namespace csknow::multi_trajectory_similarity {
 
     struct MultiTrajectorySimilarityResult {
         MultiTrajectory predictedMT, bestFitGroundTruthMT;
-        double dtw, deltaTime, deltaDistance;
-        AgentMapping agentMapping;
+        DTWResult dtwResult;
+        double deltaTime, deltaDistance;
+        AgentMapping bestAgentMapping;
 
         MultiTrajectorySimilarityResult(const MultiTrajectory & predictedMT, const vector<MultiTrajectory> & groundTruthMTs,
                                         const csknow::feature_store::TeamFeatureStoreResult & predictedTraces,

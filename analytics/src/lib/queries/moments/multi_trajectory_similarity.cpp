@@ -103,27 +103,49 @@ namespace csknow::multi_trajectory_similarity {
 
     double &DTWMatrix::get(std::size_t i, std::size_t j) { return values[i*m + j]; }
 
-    double MultiTrajectory::dtw(const csknow::feature_store::TeamFeatureStoreResult & curTraces,
-                                const csknow::multi_trajectory_similarity::MultiTrajectory & otherMT,
-                                const csknow::feature_store::TeamFeatureStoreResult & otherTraces,
-                                map<int, int> agentMapping) const {
-        double result = 0.;
+    DTWResult MultiTrajectory::dtw(const csknow::feature_store::TeamFeatureStoreResult & curTraces,
+                                   const csknow::multi_trajectory_similarity::MultiTrajectory & otherMT,
+                                   const csknow::feature_store::TeamFeatureStoreResult & otherTraces,
+                                   map<int, int> agentMapping) const {
+        DTWResult result;
         size_t curLength = maxTimeSteps();
         size_t otherLength = otherMT.maxTimeSteps();
-        for (const auto & [curAgentIndex, otherAgentIndex] : agentMapping) {
-            DTWMatrix dtwMatrix(curLength, otherLength);
-            dtwMatrix.get(0, 0) = 0.;
 
-            for (size_t i = 1; i < curLength; i++) {
-                for (size_t j = 1; j < otherLength; j++) {
-                    double cost = computeDistance(trajectories[curAgentIndex].getPosRelative(curTraces, i),
-                                                  otherMT.trajectories[otherAgentIndex].getPosRelative(otherTraces, j));
-                    dtwMatrix.get(i, j) = cost + std::min(dtwMatrix.get(i-1, j),
-                                                          std::min(dtwMatrix.get(i, j-1), dtwMatrix.get(i-1, j-1)));
+        DTWMatrix dtwMatrix(curLength, otherLength);
+        dtwMatrix.get(0, 0) = 0.;
+
+        for (size_t i = 1; i < curLength; i++) {
+            for (size_t j = 1; j < otherLength; j++) {
+                double cost = 0;
+                for (const auto & [curAgentIndex, otherAgentIndex] : agentMapping) {
+                    cost += computeDistance(trajectories[curAgentIndex].getPosRelative(curTraces, i),
+                                            otherMT.trajectories[otherAgentIndex].getPosRelative(otherTraces, j));
                 }
+                dtwMatrix.get(i, j) = cost + std::min(dtwMatrix.get(i-1, j),
+                                                      std::min(dtwMatrix.get(i, j-1), dtwMatrix.get(i-1, j-1)));
             }
-            result += dtwMatrix.get(curLength - 1, otherLength - 1);
+            result.cost += dtwMatrix.get(curLength - 1, otherLength - 1);
         }
+
+        size_t i = curLength - 1, j = otherLength - 1;
+        while (i > 0 && j > 0) {
+            result.matchedIndices.push_back({i, j});
+            double priorI = dtwMatrix.get(i-1, j);
+            double priorJ = dtwMatrix.get(i, j-1);
+            double priorIJ = dtwMatrix.get(i-1, j-1);
+            if (priorI < priorJ && priorI < priorIJ) {
+                i--;
+            }
+            else if (priorJ < priorIJ) {
+                j--;
+            }
+            else {
+                i--;
+                j--;
+            }
+        }
+        std::reverse(result.matchedIndices.begin(), result.matchedIndices.end());
+
         return result;
     }
 
@@ -370,26 +392,20 @@ namespace csknow::multi_trajectory_similarity {
 
         // for each predicted DMT, find best ground truth DMT and add it's result to the sum
         this->predictedMT = predictedMT;
-        dtw = std::numeric_limits<double>::max();
+        dtwResult.cost = std::numeric_limits<double>::max();
         for (const auto & groundTruthMT : groundTruthMTs) {
             if (predictedMT.tTrajectories != groundTruthMT.tTrajectories ||
                 predictedMT.ctTrajectories != groundTruthMT.ctTrajectories) {
                 continue;
             }
-            double minDTWPerDMTPair = std::numeric_limits<double>::max();
-            AgentMapping bestMapping;
             for (const auto & agentMapping :
                 ctAliveTAliveToAgentMappingOptions[predictedMT.ctTrajectories][predictedMT.tTrajectories]) {
-                double curDTWPerDMTPair = predictedMT.dtw(predictedTraces, groundTruthMT, groundTruthTraces, agentMapping);
-                if (curDTWPerDMTPair < minDTWPerDMTPair) {
-                    minDTWPerDMTPair = curDTWPerDMTPair;
-                    bestMapping = agentMapping;
+                DTWResult curDTWResult = predictedMT.dtw(predictedTraces, groundTruthMT, groundTruthTraces, agentMapping);
+                if (curDTWResult.cost < dtwResult.cost) {
+                    dtwResult = curDTWResult;
+                    bestAgentMapping = agentMapping;
+                    bestFitGroundTruthMT = groundTruthMT;
                 }
-            }
-            if (minDTWPerDMTPair < dtw) {
-                bestFitGroundTruthMT = groundTruthMT;
-                dtw = minDTWPerDMTPair;
-                agentMapping = bestMapping;
             }
         }
         deltaTime = predictedMT.minTime(predictedTraces) - bestFitGroundTruthMT.minTime(groundTruthTraces);
@@ -423,7 +439,8 @@ namespace csknow::multi_trajectory_similarity {
         vector<int64_t> predictedRoundIds, bestFitGroundTruthRoundIds;
         vector<size_t> predictedStartTraceIndex, predictedEndTraceIndex,
             bestFitGroundTruthStartTraceIndex, bestFitGroundTruthEndTraceIndex;
-        vector<double> dtw, deltaTime, deltaDistance;
+        vector<double> dtwCost, deltaTime, deltaDistance;
+        vector<size_t> startDTWMatchedIndices, lengthDTWMatchedIndices, firstMatchedIndex, secondMatchedIndex;
 
         for (const auto & mtSimilarityResult : result) {
             predictedRoundIds.push_back(mtSimilarityResult.predictedMT.roundId);
@@ -432,9 +449,15 @@ namespace csknow::multi_trajectory_similarity {
             predictedEndTraceIndex.push_back(mtSimilarityResult.predictedMT.maxEndTraceIndex());
             bestFitGroundTruthStartTraceIndex.push_back(mtSimilarityResult.bestFitGroundTruthMT.startTraceIndex());
             bestFitGroundTruthEndTraceIndex.push_back(mtSimilarityResult.bestFitGroundTruthMT.maxEndTraceIndex());
-            dtw.push_back(mtSimilarityResult.dtw);
+            dtwCost.push_back(mtSimilarityResult.dtwResult.cost);
             deltaTime.push_back(mtSimilarityResult.deltaTime);
             deltaDistance.push_back(mtSimilarityResult.deltaDistance);
+            startDTWMatchedIndices.push_back(firstMatchedIndex.size());
+            for (const auto & matchedIndices : mtSimilarityResult.dtwResult.matchedIndices) {
+                firstMatchedIndex.push_back(matchedIndices.first);
+                secondMatchedIndex.push_back(matchedIndices.second);
+            }
+            lengthDTWMatchedIndices.push_back(firstMatchedIndex.size() - startDTWMatchedIndices.back());
         }
 
         HighFive::File file(filePath, HighFive::File::Overwrite);
@@ -444,9 +467,13 @@ namespace csknow::multi_trajectory_similarity {
         file.createDataSet("/data/predicted end trace index", predictedEndTraceIndex);
         file.createDataSet("/data/best fit ground truth start trace index", bestFitGroundTruthStartTraceIndex);
         file.createDataSet("/data/best fit ground truth end trace index", bestFitGroundTruthEndTraceIndex);
-        file.createDataSet("/data/dtw", dtw);
+        file.createDataSet("/data/dtw cost", dtwCost);
         file.createDataSet("/data/delta time", deltaTime);
         file.createDataSet("/data/delta distance", deltaTime);
+        file.createDataSet("/data/start dtw matched indices", startDTWMatchedIndices);
+        file.createDataSet("/data/length dtw matched indices", startDTWMatchedIndices);
+        file.createDataSet("/extra/first matched index", firstMatchedIndex);
+        file.createDataSet("/extra/second matched index", secondMatchedIndex);
 
     }
 }
