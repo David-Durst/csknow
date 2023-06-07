@@ -24,7 +24,6 @@ namespace csknow::multi_trajectory_similarity {
         Vec3 startPos(const csknow::feature_store::TeamFeatureStoreResult & traces) const;
         Vec3 endPos(const csknow::feature_store::TeamFeatureStoreResult & traces) const;
         double distance(const csknow::feature_store::TeamFeatureStoreResult & traces) const;
-        vector<Trajectory> cutTrajectory(size_t cutTraceIndex) const;
     };
 
     struct DTWMatrix {
@@ -51,7 +50,6 @@ namespace csknow::multi_trajectory_similarity {
         DTWResult dtw(const csknow::feature_store::TeamFeatureStoreResult & curTraces, const MultiTrajectory & otherMT,
                       const csknow::feature_store::TeamFeatureStoreResult & otherTraces,
                       map<int, int> agentMapping) const;
-        size_t minEndTraceIndex() const;
         virtual double minTime(const csknow::feature_store::TeamFeatureStoreResult & traces) const;
         size_t maxTimeSteps() const;
         size_t startTraceIndex() const;
@@ -59,19 +57,6 @@ namespace csknow::multi_trajectory_similarity {
 
         virtual ~MultiTrajectory() = default;
     };
-
-    struct CutMultiTrajectories {
-        MultiTrajectory preCutMT, postCutMT;
-    };
-    CutMultiTrajectories cutMultiTrajectory(MultiTrajectory mt);
-
-    struct DenseMultiTrajectory : MultiTrajectory {
-        DenseMultiTrajectory(MultiTrajectory mt);
-        DenseMultiTrajectory() { }
-        double minTime(const csknow::feature_store::TeamFeatureStoreResult & traces) const override;
-    };
-
-    vector<DenseMultiTrajectory> densifyMT(MultiTrajectory mt);
 
     vector<MultiTrajectory> createMTs(const csknow::feature_store::TeamFeatureStoreResult & traces);
 

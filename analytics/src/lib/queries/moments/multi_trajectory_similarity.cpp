@@ -118,14 +118,6 @@ namespace csknow::multi_trajectory_similarity {
         return result;
     }
 
-    size_t MultiTrajectory::minEndTraceIndex() const {
-        size_t minIndex = std::numeric_limits<size_t>::max();
-        for (const auto & trajectory : trajectories) {
-            minIndex = std::min(minIndex, trajectory.endTraceIndex);
-        }
-        return minIndex;
-    }
-
     double MultiTrajectory::minTime(const csknow::feature_store::TeamFeatureStoreResult &traces) const {
         double minTime = std::numeric_limits<double>::max();
         for (const auto & trajectory : trajectories) {
@@ -287,10 +279,7 @@ namespace csknow::multi_trajectory_similarity {
             const csknow::feature_store::TeamFeatureStoreResult &groundTruthTraces,
             CTAliveTAliveToAgentMappingOptions ctAliveTAliveToAgentMappingOptions) {
 
-        // convert multi-trajecotries into dense multi trajectories
-        //vector<DenseMultiTrajectory> predictedDMTs = densifyMT(predictedMT);
-
-        // for each predicted DMT, find best ground truth DMT and add it's result to the sum
+        // for each predicted MT, find best ground truth MT and add it's result to the sum
         this->predictedMT = predictedMT;
         dtwResult.cost = std::numeric_limits<double>::max();
         for (const auto & groundTruthMT : groundTruthMTs) {
@@ -317,14 +306,6 @@ namespace csknow::multi_trajectory_similarity {
                                                  const csknow::feature_store::TeamFeatureStoreResult & groundTruthTraces) {
         vector<MultiTrajectory> predictedMTs = createMTs(predictedTraces),
                                 groundTruthMTs = createMTs(groundTruthTraces);
-
-        /*
-        vector<DenseMultiTrajectory> groundTruthDMTs;
-        for (const auto & groundTruthMT : groundTruthMTs) {
-            vector<DenseMultiTrajectory> curDMTs = densifyMT(groundTruthMT);
-            groundTruthDMTs.insert(groundTruthDMTs.end(), curDMTs.begin(), curDMTs.end());
-        }
-         */
 
         CTAliveTAliveToAgentMappingOptions ctAliveTAliveToAgentMappingOptions = generateAllPossibleMappings();
 
