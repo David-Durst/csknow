@@ -186,7 +186,7 @@ def vis_two(rollout_data_df: pd.DataFrame, rollout_pred_df: pd.DataFrame,
         manual_selected_df = \
             manual_data_df.loc[manual_data_df[round_id_column] == rollout_to_manual_round_data.manual_round_id]
         manual_pred_selected_df = \
-            manual_pred_df.loc[manual_pred_df[round_id_column] == rollout_to_manual_round_data.manual_round_id]
+            manual_pred_df.loc[manual_data_df[round_id_column] == rollout_to_manual_round_data.manual_round_id]
         similarity_match_df = rollout_to_manual_round_data.similarity_match_df
 
         tick_slider.configure(to=len(similarity_match_df)-1)
