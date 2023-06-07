@@ -281,6 +281,9 @@ namespace csknow::multi_trajectory_similarity {
 
         // for each predicted MT, find best ground truth MT and add it's result to the sum
         this->predictedMT = predictedMT;
+        predictedMTName = predictedTraces.testName[predictedMT.startTraceIndex()] + "_rId_" +
+                std::to_string(predictedTraces.roundId[predictedMT.startTraceIndex()]) + "_rNum_" +
+                std::to_string(predictedTraces.roundNumber[predictedMT.startTraceIndex()]);
         dtwResult.cost = std::numeric_limits<double>::max();
         for (const auto & groundTruthMT : groundTruthMTs) {
             if (predictedMT.tTrajectories != groundTruthMT.tTrajectories ||
@@ -297,6 +300,9 @@ namespace csknow::multi_trajectory_similarity {
                 }
             }
         }
+        bestFitGroundTruthMTName = groundTruthTraces.testName[bestFitGroundTruthMT.startTraceIndex()] + "_rId_" +
+                std::to_string(groundTruthTraces.roundId[bestFitGroundTruthMT.startTraceIndex()]) + "_rNum_" +
+                std::to_string(groundTruthTraces.roundNumber[bestFitGroundTruthMT.startTraceIndex()]);
         deltaTime = predictedMT.minTime(predictedTraces) - bestFitGroundTruthMT.minTime(groundTruthTraces);
         deltaDistance = predictedMT.distance(predictedTraces) - bestFitGroundTruthMT.distance(groundTruthTraces);
     }
@@ -317,6 +323,7 @@ namespace csknow::multi_trajectory_similarity {
     }
 
     void TraceSimilarityResult::toHDF5(const std::string &filePath) {
+        vector<string> predictedNames, bestFitGroundTruthNames;
         vector<int64_t> predictedRoundIds, bestFitGroundTruthRoundIds;
         vector<size_t> predictedStartTraceIndex, predictedEndTraceIndex,
             bestFitGroundTruthStartTraceIndex, bestFitGroundTruthEndTraceIndex;
@@ -324,6 +331,8 @@ namespace csknow::multi_trajectory_similarity {
         vector<size_t> startDTWMatchedIndices, lengthDTWMatchedIndices, firstMatchedIndex, secondMatchedIndex;
 
         for (const auto & mtSimilarityResult : result) {
+            predictedNames.push_back(mtSimilarityResult.predictedMTName);
+            bestFitGroundTruthNames.push_back(mtSimilarityResult.bestFitGroundTruthMTName);
             predictedRoundIds.push_back(mtSimilarityResult.predictedMT.roundId);
             bestFitGroundTruthRoundIds.push_back(mtSimilarityResult.bestFitGroundTruthMT.roundId);
             predictedStartTraceIndex.push_back(mtSimilarityResult.predictedMT.startTraceIndex());
@@ -342,8 +351,10 @@ namespace csknow::multi_trajectory_similarity {
         }
 
         HighFive::File file(filePath, HighFive::File::Overwrite);
-        file.createDataSet("/data/predicted round ids", predictedRoundIds);
-        file.createDataSet("/data/best fit ground truth round ids", bestFitGroundTruthRoundIds);
+        file.createDataSet("/data/predicted name", predictedNames);
+        file.createDataSet("/data/best fit ground truth name", bestFitGroundTruthNames);
+        file.createDataSet("/data/predicted round id", predictedRoundIds);
+        file.createDataSet("/data/best fit ground truth round id", bestFitGroundTruthRoundIds);
         file.createDataSet("/data/predicted start trace index", predictedStartTraceIndex);
         file.createDataSet("/data/predicted end trace index", predictedEndTraceIndex);
         file.createDataSet("/data/best fit ground truth start trace index", bestFitGroundTruthStartTraceIndex);

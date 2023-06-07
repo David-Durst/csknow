@@ -67,6 +67,7 @@ namespace csknow::multi_trajectory_similarity {
 
     struct MultiTrajectorySimilarityResult {
         MultiTrajectory predictedMT, bestFitGroundTruthMT;
+        string predictedMTName, bestFitGroundTruthMTName;
         DTWResult dtwResult;
         double deltaTime, deltaDistance;
         AgentMapping bestAgentMapping;
