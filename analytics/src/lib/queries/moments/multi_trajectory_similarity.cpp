@@ -328,6 +328,7 @@ namespace csknow::multi_trajectory_similarity {
         vector<size_t> predictedStartTraceIndex, predictedEndTraceIndex,
             bestFitGroundTruthStartTraceIndex, bestFitGroundTruthEndTraceIndex;
         vector<double> dtwCost, deltaTime, deltaDistance;
+        vector<string> agentMapping;
         vector<size_t> startDTWMatchedIndices, lengthDTWMatchedIndices, firstMatchedIndex, secondMatchedIndex;
 
         for (const auto & mtSimilarityResult : result) {
@@ -342,6 +343,13 @@ namespace csknow::multi_trajectory_similarity {
             dtwCost.push_back(mtSimilarityResult.dtwResult.cost);
             deltaTime.push_back(mtSimilarityResult.deltaTime);
             deltaDistance.push_back(mtSimilarityResult.deltaDistance);
+            string mappingStr = "";
+            bool first = true;
+            for (const auto & [src, tgt] : mtSimilarityResult.bestAgentMapping) {
+                mappingStr += (!first ? "," : "") + std::to_string(src) + "_" + std::to_string(tgt);
+                first = false;
+            }
+            agentMapping.push_back(mappingStr);
             startDTWMatchedIndices.push_back(firstMatchedIndex.size());
             for (const auto & matchedIndices : mtSimilarityResult.dtwResult.matchedIndices) {
                 firstMatchedIndex.push_back(matchedIndices.first);
@@ -362,6 +370,7 @@ namespace csknow::multi_trajectory_similarity {
         file.createDataSet("/data/dtw cost", dtwCost);
         file.createDataSet("/data/delta time", deltaTime);
         file.createDataSet("/data/delta distance", deltaTime);
+        file.createDataSet("/data/agent mapping", agentMapping);
         file.createDataSet("/data/start dtw matched indices", startDTWMatchedIndices);
         file.createDataSet("/data/length dtw matched indices", lengthDTWMatchedIndices);
         file.createDataSet("/extra/first matched index", firstMatchedIndex);

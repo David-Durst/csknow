@@ -57,8 +57,7 @@ class VisMapCoordinate():
         new_grid_cell.coords.y += y_index * delta_pos_grid_cell_dim
         return new_grid_cell
 
-    def draw_vis(self, im_draw: ImageDraw, use_scale: bool, custom_color: Optional[Tuple] = None,
-                 draw_dot: bool = False):
+    def draw_vis(self, im_draw: ImageDraw, use_scale: bool, custom_color: Optional[Tuple] = None, rectangle = True):
         half_width = delta_pos_grid_cell_dim / 2
         if use_scale:
             if not self.is_player and not self.is_prediction:
@@ -83,22 +82,41 @@ class VisMapCoordinate():
             cur_color = "red"
         else:
             cur_color = "blue"
-        im_draw.rectangle([canvas_min_vec.x, canvas_min_vec.y, canvas_max_vec.x, canvas_max_vec.y], fill=cur_color)
+
+        # flip as csgo has different coordinates from pillow
+        if rectangle:
+            im_draw.rectangle([canvas_min_vec.x, canvas_max_vec.y, canvas_max_vec.x, canvas_min_vec.y], fill=cur_color)
+        else:
+            im_draw.ellipse([canvas_min_vec.x, canvas_max_vec.y, canvas_max_vec.x, canvas_min_vec.y], fill=cur_color)
 
 
 def draw_all_players(data_series: pd.Series, pred_series: pd.Series, im_draw: ImageDraw, draw_max: bool,
-                     players_to_draw: List[int]) -> str:
+                     players_to_draw: List[int], draw_only_pos: bool = False, player_to_color: Dict[int, Tuple] = {},
+                     rectangle = True) -> str:
     result = ""
+    # colors track by number of players drawn
+    player_drawn_index = 0
     for player_index in range(len(specific_player_place_area_columns)):
         if player_index not in players_to_draw:
             continue
         player_place_area_columns = specific_player_place_area_columns[player_index]
         if data_series[player_place_area_columns.player_id] != -1:
+            player_drawn_index += 1
             # draw player
             pos_coord = VisMapCoordinate(data_series[player_place_area_columns.pos[0]],
                                          data_series[player_place_area_columns.pos[1]],
                                          data_series[player_place_area_columns.pos[2]])
-            if draw_max:
+            if draw_only_pos:
+                custom_color = None
+                if player_drawn_index - 1 in player_to_color:
+                    custom_color = player_to_color[player_drawn_index - 1]
+                else:
+                    print("hi")
+                pos_coord.draw_vis(im_draw, True, custom_color=custom_color, rectangle=rectangle)
+                player_str = f'''{player_place_area_columns.player_id} pos {pos_coord.coords}'''
+                result += player_str + "\n"
+                continue
+            elif draw_max:
                 pos_coord.draw_vis(im_draw, True)
 
             # draw next step and predicted next step

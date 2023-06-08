@@ -9,6 +9,7 @@ best_fit_ground_truth_end_trace_index_col = 'best fit ground truth end trace ind
 dtw_cost_col = 'dtw cost'
 delta_time_col = 'delta time'
 delta_distance_col = 'delta distance'
+agent_mapping_col = 'agent mapping'
 start_dtw_matched_indices_col = 'start dtw matched indices'
 length_dtw_matched_inidices_col = 'length dtw matched indices'
 first_matched_index_col = 'first matched index'

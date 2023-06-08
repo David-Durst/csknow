@@ -59,9 +59,14 @@ def compare_trajectories():
         similarity_match_name = row[predicted_name_col].decode('utf-8') + "_vs_" + row[best_fit_ground_truth_name_col].decode('utf-8')
         similarity_match_df = similarity_match_index_df.iloc[row[start_dtw_matched_indices_col]:
                                                              row[start_dtw_matched_indices_col] + row[length_dtw_matched_inidices_col]]
+        agent_mapping_str = row[agent_mapping_col].decode('utf-8')
+        agent_mapping = {}
+        for agent_pair in agent_mapping_str.split(','):
+            agents = [int(agent) for agent in agent_pair.split('_')]
+            agent_mapping[int(agents[0])] = int(agents[1])
         rollout_to_manual_dict[row[predicted_round_id_col]] = \
             RolloutToManualRoundData(row[predicted_round_id_col], row[best_fit_ground_truth_round_id_col],
-                                     similarity_match_df)
+                                     similarity_match_df, agent_mapping)
         similarity_match_df.plot(first_matched_index_col, second_matched_index_col, title=similarity_match_name)
         plt.savefig(similarity_plots_path / (similarity_match_name + '.png'))
 

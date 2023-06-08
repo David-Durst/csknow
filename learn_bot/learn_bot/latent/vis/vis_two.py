@@ -9,6 +9,7 @@ import tkinter as tk
 from tkinter import ttk, font
 from PIL import Image, ImageDraw, ImageTk as itk
 from learn_bot.latent.analyze.comparison_column_names import *
+import matplotlib as mpl
 
 
 @dataclass
@@ -16,10 +17,12 @@ class RolloutToManualRoundData:
     rollout_round_id: int
     manual_round_id: int
     similarity_match_df: pd.DataFrame
+    agent_mapping: Dict[int, int]
 
 
 RolloutToManualDict = Dict[int, RolloutToManualRoundData]
 
+cmap = mpl.cm.get_cmap("Set3").colors
 
 def vis_two(rollout_data_df: pd.DataFrame, rollout_pred_df: pd.DataFrame,
             manual_data_df: pd.DataFrame, manual_pred_df: pd.DataFrame, rollout_to_manual_dict: RolloutToManualDict):
@@ -58,7 +61,9 @@ def vis_two(rollout_data_df: pd.DataFrame, rollout_pred_df: pd.DataFrame,
     manual_selected_df: pd.DataFrame = manual_data_df
     manual_pred_selected_df: pd.DataFrame = manual_pred_df
     similarity_match_df: Optional[pd.DataFrame] = None
+    rollout_to_manual_round_data: Optional[RolloutToManualRoundData] = None
     draw_max: bool = True
+    draw_overlap: bool = False
 
     def round_slider_changed(cur_round_index):
         nonlocal cur_round
@@ -81,7 +86,7 @@ def vis_two(rollout_data_df: pd.DataFrame, rollout_pred_df: pd.DataFrame,
 
     def tick_slider_changed(cur_similarity_tick_index_str):
         nonlocal cur_similarity_tick_index, d2_img, rollout_d2_img_draw, rollout_img_label, \
-            manual_d2_img_draw, manual_img_label, draw_max
+            manual_d2_img_draw, manual_img_label, draw_max, draw_overlap
         if len(rollout_selected_df) > 0:
             cur_similarity_tick_index = int(cur_similarity_tick_index_str)
 
@@ -115,21 +120,48 @@ def vis_two(rollout_data_df: pd.DataFrame, rollout_pred_df: pd.DataFrame,
                 players_to_draw = list(range(0, len(specific_player_place_area_columns)))
             else:
                 players_to_draw = [int(p) for p in players_to_draw_str.split(",")]
-            rollout_players_str = \
-                draw_all_players(cur_rollout_row, cur_rollout_pred_row, rollout_d2_img_draw, draw_max, players_to_draw)
-            manual_players_str = \
-                draw_all_players(cur_manual_row, cur_manual_pred_row, manual_d2_img_draw, draw_max, players_to_draw)
-            details_text_var.set(rollout_players_str + "\n" + manual_players_str)
 
-            rollout_d2_img_copy.alpha_composite(rollout_d2_overlay_im)
-            updated_rollout_d2_photo_img = itk.PhotoImage(rollout_d2_img_copy)
-            rollout_img_label.configure(image=updated_rollout_d2_photo_img)
-            rollout_img_label.image = updated_rollout_d2_photo_img
 
-            manual_d2_img_copy.alpha_composite(manual_d2_overlay_im)
-            updated_manual_d2_photo_img = itk.PhotoImage(manual_d2_img_copy)
-            manual_img_label.configure(image=updated_manual_d2_photo_img)
-            manual_img_label.image = updated_manual_d2_photo_img
+            rollout_colors = {}
+            manual_colors = {}
+            for src, tgt in rollout_to_manual_round_data.agent_mapping.items():
+                rollout_colors[src] = cmap[src]
+                manual_colors[tgt] = cmap[src]
+                rollout_colors[src] = (int(255 * rollout_colors[src][0]), int(255 * rollout_colors[src][1]),
+                                       int(255 * rollout_colors[src][2]))
+                manual_colors[tgt] = (int(255 * manual_colors[tgt][0]), int(255 * manual_colors[tgt][1]),
+                                      int(255 * manual_colors[tgt][2]))
+
+            if draw_overlap:
+                rollout_players_str = \
+                    draw_all_players(cur_rollout_row, cur_rollout_pred_row, rollout_d2_img_draw, draw_max, players_to_draw,
+                                     draw_only_pos=True, player_to_color=rollout_colors)
+                manual_players_str = \
+                    draw_all_players(cur_manual_row, cur_manual_pred_row, manual_d2_img_draw, draw_max, players_to_draw,
+                                     draw_only_pos=True, player_to_color=manual_colors, rectangle=False)
+            else:
+                rollout_players_str = \
+                    draw_all_players(cur_rollout_row, cur_rollout_pred_row, rollout_d2_img_draw, draw_max, players_to_draw)
+                manual_players_str = \
+                    draw_all_players(cur_manual_row, cur_manual_pred_row, manual_d2_img_draw, draw_max, players_to_draw)
+            details_text_var.set("rollout\n" + rollout_players_str + "\nmanual\n" + manual_players_str)
+
+            if draw_overlap:
+                rollout_d2_img_copy.alpha_composite(rollout_d2_overlay_im)
+                rollout_d2_img_copy.alpha_composite(manual_d2_overlay_im)
+                updated_rollout_d2_photo_img = itk.PhotoImage(rollout_d2_img_copy)
+                rollout_img_label.configure(image=updated_rollout_d2_photo_img)
+                rollout_img_label.image = updated_rollout_d2_photo_img
+            else:
+                rollout_d2_img_copy.alpha_composite(rollout_d2_overlay_im)
+                updated_rollout_d2_photo_img = itk.PhotoImage(rollout_d2_img_copy)
+                rollout_img_label.configure(image=updated_rollout_d2_photo_img)
+                rollout_img_label.image = updated_rollout_d2_photo_img
+
+                manual_d2_img_copy.alpha_composite(manual_d2_overlay_im)
+                updated_manual_d2_photo_img = itk.PhotoImage(manual_d2_img_copy)
+                manual_img_label.configure(image=updated_manual_d2_photo_img)
+                manual_img_label.image = updated_manual_d2_photo_img
 
     def step_back_clicked():
         nonlocal cur_similarity_tick_index
@@ -175,10 +207,20 @@ def vis_two(rollout_data_df: pd.DataFrame, rollout_pred_df: pd.DataFrame,
         draw_max = not draw_max
         tick_slider_changed(cur_similarity_tick_index)
 
+
+    def toggle_overlap_clicked():
+        nonlocal draw_overlap
+        draw_overlap = not draw_overlap
+        if draw_overlap:
+            manual_img_label.pack_forget()
+        else:
+            manual_img_label.pack(side="left")
+        tick_slider_changed(cur_similarity_tick_index)
+
     # state setters
     def change_round_dependent_data():
         nonlocal rollout_selected_df, rollout_pred_selected_df, manual_selected_df, manual_pred_selected_df, \
-            similarity_match_df, cur_round
+            similarity_match_df, cur_round, rollout_to_manual_round_data
         rollout_selected_df = rollout_data_df.loc[rollout_data_df[round_id_column] == cur_round]
         rollout_pred_selected_df = rollout_pred_df.loc[rollout_data_df[round_id_column] == cur_round]
 
@@ -266,6 +308,8 @@ def vis_two(rollout_data_df: pd.DataFrame, rollout_pred_df: pd.DataFrame,
     player_distributions_var = tk.StringVar(value="*")
     player_distributions_entry = tk.Entry(distribution_control_frame, width=30, textvariable=player_distributions_var)
     player_distributions_entry.pack(side="left")
+    overlap_toggle_button = tk.Button(distribution_control_frame, text="toggle overlap", command=toggle_overlap_clicked)
+    overlap_toggle_button.pack(side="left")
 
 
     details_frame = tk.Frame(window)
