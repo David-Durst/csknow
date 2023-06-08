@@ -369,7 +369,7 @@ namespace csknow::multi_trajectory_similarity {
         file.createDataSet("/data/best fit ground truth end trace index", bestFitGroundTruthEndTraceIndex);
         file.createDataSet("/data/dtw cost", dtwCost);
         file.createDataSet("/data/delta time", deltaTime);
-        file.createDataSet("/data/delta distance", deltaTime);
+        file.createDataSet("/data/delta distance", deltaDistance);
         file.createDataSet("/data/agent mapping", agentMapping);
         file.createDataSet("/data/start dtw matched indices", startDTWMatchedIndices);
         file.createDataSet("/data/length dtw matched indices", lengthDTWMatchedIndices);

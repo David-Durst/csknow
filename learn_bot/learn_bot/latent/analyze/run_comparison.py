@@ -52,6 +52,11 @@ def compare_trajectories():
 
     rollout_to_manual_dict: RolloutToManualDict = {}
     manual_indices_ranges: List[range] = []
+    pd.options.display.max_columns = None
+    pd.options.display.max_rows = None
+    pd.options.display.width = 1000
+    print(similarity_df.loc[:, [predicted_round_id_col, best_fit_ground_truth_round_id_col, dtw_cost_col,
+                                delta_distance_col, delta_time_col]])
     for idx, row in similarity_df.iterrows():
         manual_indices_ranges.append(range(row[best_fit_ground_truth_start_trace_index_col],
                                            row[best_fit_ground_truth_end_trace_index_col] + 1))
