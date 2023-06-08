@@ -110,8 +110,6 @@ def draw_all_players(data_series: pd.Series, pred_series: pd.Series, im_draw: Im
                 custom_color = None
                 if player_drawn_index - 1 in player_to_color:
                     custom_color = player_to_color[player_drawn_index - 1]
-                else:
-                    print("hi")
                 pos_coord.draw_vis(im_draw, True, custom_color=custom_color, rectangle=rectangle)
                 player_str = f'''{player_place_area_columns.player_id} pos {pos_coord.coords}'''
                 result += player_str + "\n"
