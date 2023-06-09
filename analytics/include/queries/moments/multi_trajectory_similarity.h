@@ -62,6 +62,7 @@ namespace csknow::multi_trajectory_similarity {
                       const csknow::feature_store::TeamFeatureStoreResult & otherTraces,
                       map<int, int> agentMapping, DTWStepOptions stepOptions) const;
         virtual double minTime(const csknow::feature_store::TeamFeatureStoreResult & traces) const;
+        virtual double maxTime(const csknow::feature_store::TeamFeatureStoreResult & traces) const;
         size_t maxTimeSteps() const;
         size_t startTraceIndex() const;
         size_t maxEndTraceIndex() const;
@@ -76,13 +77,27 @@ namespace csknow::multi_trajectory_similarity {
     typedef map<int, map<int, vector<AgentMapping>>> CTAliveTAliveToAgentMappingOptions;
     CTAliveTAliveToAgentMappingOptions generateAllPossibleMappings();
 
-    struct MultiTrajectorySimilarityResult {
-        MultiTrajectory predictedMT, unconstrainedDTWGroundTruthMT, slopeConstrainedDTWGroundTruthMT, adeGroundTruthMT;
-        string predictedMTNameName, unconstrainedDTWGroundTruthMTName, slopeConstrainedDTWGroundTruthMTName,
-            adeGroundTruthMTName;
-        DTWResult unconstrainedDTWResult, slopeConstrainedDTWResult;
+    struct MultiTrajectorySimilarityMetricData {
+        MultiTrajectory mt;
+        string name;
+        DTWResult dtwResult;
         double deltaTime, deltaDistance;
-        AgentMapping unconstrainedAgentMapping, slopeConstrainedDTWAgentMapping, adeAgentMapping;
+        AgentMapping agentMapping;
+
+    };
+
+    enum class MetricType {
+        UnconstrainedDTW = 0,
+        SlopeConstrainedDTW,
+        ADE
+    };
+
+    struct MultiTrajectorySimilarityResult {
+        MultiTrajectory predictedMT;
+        string predictedMTName;
+        MultiTrajectorySimilarityMetricData unconstrainedDTWData, slopeConstrainedDTWData, adeData;
+
+        const MultiTrajectorySimilarityMetricData & getDataByType(MetricType metricType) const;
 
         MultiTrajectorySimilarityResult(const MultiTrajectory & predictedMT, const vector<MultiTrajectory> & groundTruthMTs,
                                         const csknow::feature_store::TeamFeatureStoreResult & predictedTraces,
