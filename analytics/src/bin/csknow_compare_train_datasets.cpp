@@ -29,8 +29,12 @@ int main(int argc, char * argv[]) {
     predictedTraces.load(predictedPathStr);
     groundTruthTraces.load(groundTruthPathStr);
 
+    auto similarityStart = std::chrono::system_clock::now();
     csknow::multi_trajectory_similarity::TraceSimilarityResult traceSimilarityResult(predictedTraces, groundTruthTraces);
     fs::path predictedPath(predictedPathStr);
     fs::path similarityResult = predictedPath.parent_path() / "pathSimilarity.hdf5";
     traceSimilarityResult.toHDF5(similarityResult);
+    auto similarityEnd = std::chrono::system_clock::now();
+    std::chrono::duration<double> similarityTime = similarityEnd - similarityStart;
+    std::cout << "similarity time " << similarityTime.count() << std::endl;
 }

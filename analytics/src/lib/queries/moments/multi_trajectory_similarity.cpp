@@ -126,10 +126,7 @@ namespace csknow::multi_trajectory_similarity {
         dtwMatrix.get(0, 0) = 0.;
         for (size_t i = 1; i <= curLength; i++) {
             for (size_t j = 1; j <= otherLength; j++) {
-                if (i == 2 && j == 0) {
-                    std::cout << "dude" << std::endl;
-                }
-                double minStepOptionCost = std::numeric_limits<double>::max();
+                double minStepOptionCost = std::numeric_limits<double>::infinity();
                 for (size_t curStepOptionIndex = 0; curStepOptionIndex < stepOptions.options.size(); curStepOptionIndex++) {
                     double curStepOptionCost = 0;
                     const auto & stepOption = stepOptions.options[curStepOptionIndex];
@@ -150,45 +147,45 @@ namespace csknow::multi_trajectory_similarity {
                     }
                 }
                 dtwMatrix.get(i, j) = minStepOptionCost;
-                if (dtwMatrix.get(2, 0) != std::numeric_limits<double>::infinity()) {
-                    std::cout << "hi" << std::endl;
-                }
             }
         }
-        result.cost = dtwMatrix.get(curLength, otherLength) / static_cast<double>(curLength + otherLength);
-        dtwMatrix.print();
 
-        size_t i = dtwMatrix.n, j = dtwMatrix.m;
-        while (i > 0 && j > 0) {
-            result.matchedIndices.emplace_back(i, j);
-            double minStepOptionCost = std::numeric_limits<double>::max();
-            size_t minStepOptionIndex = 0;
-            for (size_t curStepOptionIndex = 0; curStepOptionIndex < stepOptions.options.size(); curStepOptionIndex++) {
-                const auto & component = stepOptions.options[curStepOptionIndex].front();
-                double curStepOptionCost;
-                if (component.iOffset > i || component.jOffset > j) {
-                    curStepOptionCost = std::numeric_limits<double>::infinity();
-                }
-                else {
-                    curStepOptionCost = dtwMatrix.get(i-component.iOffset, j-component.jOffset);
-                }
-                if (curStepOptionCost < minStepOptionCost) {
-                    minStepOptionCost = curStepOptionCost;
-                    minStepOptionIndex = curStepOptionIndex;
-                }
-            }
-            if (stepOptions.options[minStepOptionIndex].front().iOffset > i ||
-                stepOptions.options[minStepOptionIndex].front().jOffset > j) {
-                int x = 1;
-                std::cout << x << std::endl;
-            }
-            if (stepOptions.options[minStepOptionIndex].front().iOffset > i) {
-                i = 0;
-            }
-            i -= stepOptions.options[minStepOptionIndex].front().iOffset;
-            j -= stepOptions.options[minStepOptionIndex].front().jOffset;
+        //dtwMatrix.print();
+
+        if (std::isinf(dtwMatrix.get(curLength, otherLength))) {
+            result.cost = dtwMatrix.get(curLength, otherLength);
         }
-        std::reverse(result.matchedIndices.begin(), result.matchedIndices.end());
+        else {
+            result.cost = dtwMatrix.get(curLength, otherLength) / static_cast<double>(curLength + otherLength);
+
+            size_t i = dtwMatrix.n, j = dtwMatrix.m;
+            while (i > 0 && j > 0) {
+                result.matchedIndices.emplace_back(i, j);
+                double minStepOptionCost = std::numeric_limits<double>::infinity();
+                size_t minStepOptionIndex = 0;
+                for (size_t curStepOptionIndex = 0; curStepOptionIndex < stepOptions.options.size(); curStepOptionIndex++) {
+                    const auto & component = stepOptions.options[curStepOptionIndex].front();
+                    double curStepOptionCost;
+                    if (component.iOffset > i || component.jOffset > j) {
+                        curStepOptionCost = std::numeric_limits<double>::infinity();
+                    }
+                    else {
+                        curStepOptionCost = dtwMatrix.get(i-component.iOffset, j-component.jOffset);
+                    }
+                    if (curStepOptionCost < minStepOptionCost) {
+                        minStepOptionCost = curStepOptionCost;
+                        minStepOptionIndex = curStepOptionIndex;
+                    }
+                }
+                if (stepOptions.options[minStepOptionIndex].front().iOffset > i ||
+                    stepOptions.options[minStepOptionIndex].front().jOffset > j) {
+                    std::cout << "danger" << std::endl;
+                }
+                i -= stepOptions.options[minStepOptionIndex].front().iOffset;
+                j -= stepOptions.options[minStepOptionIndex].front().jOffset;
+            }
+            std::reverse(result.matchedIndices.begin(), result.matchedIndices.end());
+        }
         return result;
     }
 
@@ -372,13 +369,17 @@ namespace csknow::multi_trajectory_similarity {
         {{1, 0, 1}, {0, 0, 1}}
     }};
 
-    DTWStepOptions stopOptionsP2Symmetric {{
-        // just j
-        {{2, 3, 1}, {1, 2, 2}, {0, 1, 2}, {0, 0, 1}},
+    DTWStepOptions stopOptionsP1_2Symmetric {{
+        // 3x speed j
+        {{1, 3, 1}, {0, 2, 2}, {0, 1, 1}, {0, 0, 1}},
+        // 2x speed j
+        {{1, 2, 1}, {0, 1, 2}, {0, 0, 1}},
         // both i and j
         {{1, 1, 1}, {0, 0, 2}},
-        // just i
-        {{2, 3, 1}, {2, 1, 2}, {1, 0, 2}, {0, 0, 1}}
+        // 2x speed j
+        {{2, 1, 1}, {1, 0, 2}, {0, 0, 1}},
+        // 3x speed i
+        {{3, 1, 1}, {2, 0, 2}, {1, 0, 1}, {0, 0, 1}},
     }};
 
     MultiTrajectorySimilarityResult::MultiTrajectorySimilarityResult(
@@ -407,7 +408,7 @@ namespace csknow::multi_trajectory_similarity {
                     unconstrainedDTWData.mt = groundTruthMT;
                 }
                 DTWResult slopeConstrainedCurDTWResult = predictedMT.dtw(predictedTraces, groundTruthMT, groundTruthTraces,
-                                                                         agentMapping, stopOptionsP2Symmetric);
+                                                                         agentMapping, stopOptionsP1_2Symmetric);
                 if (slopeConstrainedCurDTWResult.cost < slopeConstrainedDTWData.dtwResult.cost) {
                     slopeConstrainedDTWData.dtwResult = slopeConstrainedCurDTWResult;
                     slopeConstrainedDTWData.agentMapping = agentMapping;
