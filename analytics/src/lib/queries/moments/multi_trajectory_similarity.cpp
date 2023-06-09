@@ -69,9 +69,19 @@ namespace csknow::multi_trajectory_similarity {
     DTWMatrix::DTWMatrix(std::size_t n, std::size_t m) : values((n + 1) * (m + 1), std::numeric_limits<double>::infinity()),
         n(n), m(m) { }
 
-    double &DTWMatrix::get(std::size_t i, std::size_t j) { return values[i*m + j]; }
+    double &DTWMatrix::get(std::size_t i, std::size_t j) { return values[i*(m + 1) + j]; }
 
-    double DTWMatrix::get(std::size_t i, std::size_t j) const { return values[i*m + j]; }
+    double DTWMatrix::get(std::size_t i, std::size_t j) const { return values[i*(m + 1) + j]; }
+
+    void DTWMatrix::print() const {
+        for (size_t i = 0; i < n+1; i++) {
+            for (size_t j = 0; j < m+1; j++) {
+                std::cout << get(i, j) << ",";
+            }
+            std::cout << std::endl;
+        }
+        std::cout << std::endl << std::endl;
+    }
 
     std::pair<size_t, double>
     DTWStepOptions::getMinComponent(const csknow::multi_trajectory_similarity::DTWMatrix &dtwMatrix, std::size_t i,
@@ -116,6 +126,9 @@ namespace csknow::multi_trajectory_similarity {
         dtwMatrix.get(0, 0) = 0.;
         for (size_t i = 1; i <= curLength; i++) {
             for (size_t j = 1; j <= otherLength; j++) {
+                if (i == 2 && j == 0) {
+                    std::cout << "dude" << std::endl;
+                }
                 double minStepOptionCost = std::numeric_limits<double>::max();
                 for (size_t curStepOptionIndex = 0; curStepOptionIndex < stepOptions.options.size(); curStepOptionIndex++) {
                     double curStepOptionCost = 0;
@@ -137,9 +150,13 @@ namespace csknow::multi_trajectory_similarity {
                     }
                 }
                 dtwMatrix.get(i, j) = minStepOptionCost;
+                if (dtwMatrix.get(2, 0) != std::numeric_limits<double>::infinity()) {
+                    std::cout << "hi" << std::endl;
+                }
             }
         }
-        result.cost = dtwMatrix.get(curLength - 1, otherLength - 1) / static_cast<double>(curLength + otherLength);
+        result.cost = dtwMatrix.get(curLength, otherLength) / static_cast<double>(curLength + otherLength);
+        dtwMatrix.print();
 
         size_t i = dtwMatrix.n, j = dtwMatrix.m;
         while (i > 0 && j > 0) {
@@ -159,6 +176,14 @@ namespace csknow::multi_trajectory_similarity {
                     minStepOptionCost = curStepOptionCost;
                     minStepOptionIndex = curStepOptionIndex;
                 }
+            }
+            if (stepOptions.options[minStepOptionIndex].front().iOffset > i ||
+                stepOptions.options[minStepOptionIndex].front().jOffset > j) {
+                int x = 1;
+                std::cout << x << std::endl;
+            }
+            if (stepOptions.options[minStepOptionIndex].front().iOffset > i) {
+                i = 0;
             }
             i -= stepOptions.options[minStepOptionIndex].front().iOffset;
             j -= stepOptions.options[minStepOptionIndex].front().jOffset;

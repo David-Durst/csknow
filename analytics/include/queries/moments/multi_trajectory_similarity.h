@@ -32,6 +32,7 @@ namespace csknow::multi_trajectory_similarity {
         DTWMatrix(size_t m, size_t n);
         inline double & get(size_t i, size_t j);
         inline double get(size_t i, size_t j) const;
+        void print() const;
     };
 
     struct DTWStepOptionComponent {
