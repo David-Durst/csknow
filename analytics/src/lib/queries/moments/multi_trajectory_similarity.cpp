@@ -83,24 +83,6 @@ namespace csknow::multi_trajectory_similarity {
         std::cout << std::endl << std::endl;
     }
 
-    std::pair<size_t, double>
-    DTWStepOptions::getMinComponent(const csknow::multi_trajectory_similarity::DTWMatrix &dtwMatrix, std::size_t i,
-                                   std::size_t j) {
-        double minStepOptionCost = std::numeric_limits<double>::max();
-        size_t minStepOptionIndex = 0;
-        for (size_t curStepOptionIndex = 0; curStepOptionIndex < options.size(); curStepOptionIndex++) {
-            double curStepOptionCost = 0;
-            for (const auto & component : options[curStepOptionIndex]) {
-                curStepOptionCost += component.weight * dtwMatrix.get(i-component.iOffset, j-component.jOffset);
-            }
-            if (curStepOptionCost < minStepOptionCost) {
-                minStepOptionCost = curStepOptionCost;
-                minStepOptionIndex = curStepOptionIndex;
-            }
-        }
-        return {minStepOptionIndex, minStepOptionCost};
-    }
-
     DTWResult MultiTrajectory::dtw(const csknow::feature_store::TeamFeatureStoreResult & curTraces,
                                    const csknow::multi_trajectory_similarity::MultiTrajectory & otherMT,
                                    const csknow::feature_store::TeamFeatureStoreResult & otherTraces,
@@ -177,14 +159,28 @@ namespace csknow::multi_trajectory_similarity {
                         minStepOptionIndex = curStepOptionIndex;
                     }
                 }
-                if (stepOptions.options[minStepOptionIndex].front().iOffset > i ||
-                    stepOptions.options[minStepOptionIndex].front().jOffset > j) {
-                    std::cout << "danger" << std::endl;
-                }
                 i -= stepOptions.options[minStepOptionIndex].front().iOffset;
                 j -= stepOptions.options[minStepOptionIndex].front().jOffset;
             }
             std::reverse(result.matchedIndices.begin(), result.matchedIndices.end());
+        }
+        return result;
+    }
+
+    double MultiTrajectory::percentileADE(const csknow::feature_store::TeamFeatureStoreResult &curTraces,
+                                          const csknow::multi_trajectory_similarity::MultiTrajectory &otherMT,
+                                          const csknow::feature_store::TeamFeatureStoreResult &otherTraces,
+                                          map<int, int> agentMapping) const {
+
+        size_t curLength = maxTimeSteps();
+        size_t otherLength = otherMT.maxTimeSteps();
+        double result = 0.;
+        for (const auto & percentile : percentiles) {
+            for (const auto & [curAgentIndex, otherAgentIndex] : agentMapping) {
+                result += computeDistance(
+                        trajectories[curAgentIndex].getPosRelative(curTraces, static_cast<size_t>(curLength * percentile)),
+                        otherMT.trajectories[otherAgentIndex].getPosRelative(otherTraces, static_cast<size_t>(otherLength * percentile)));
+            }
         }
         return result;
     }
@@ -391,8 +387,9 @@ namespace csknow::multi_trajectory_similarity {
         // for each predicted MT, find best ground truth MT and add it's result to the sum
         this->predictedMT = predictedMT;
         predictedMTName = getName(predictedMT, predictedTraces);
-        unconstrainedDTWData.dtwResult.cost = std::numeric_limits<double>::max();
-        slopeConstrainedDTWData.dtwResult.cost = std::numeric_limits<double>::max();
+        unconstrainedDTWData.dtwResult.cost = std::numeric_limits<double>::infinity();
+        slopeConstrainedDTWData.dtwResult.cost = std::numeric_limits<double>::infinity();
+        adeData.dtwResult.cost = std::numeric_limits<double>::infinity();
         for (const auto & groundTruthMT : groundTruthMTs) {
             if (predictedMT.tTrajectories != groundTruthMT.tTrajectories ||
                 predictedMT.ctTrajectories != groundTruthMT.ctTrajectories) {
@@ -414,6 +411,14 @@ namespace csknow::multi_trajectory_similarity {
                     slopeConstrainedDTWData.agentMapping = agentMapping;
                     slopeConstrainedDTWData.mt = groundTruthMT;
                 }
+                DTWResult adeCurResult = unconstrainedCurDTWResult;
+                adeCurResult.cost =  predictedMT.percentileADE(predictedTraces, groundTruthMT, groundTruthTraces,
+                                                               agentMapping);
+                if (adeCurResult.cost < adeData.dtwResult.cost) {
+                    adeData.dtwResult = adeCurResult;
+                    adeData.agentMapping = agentMapping;
+                    adeData.mt = groundTruthMT;
+                }
             }
         }
         unconstrainedDTWData.name = getName(unconstrainedDTWData.mt, groundTruthTraces);
@@ -422,6 +427,9 @@ namespace csknow::multi_trajectory_similarity {
         slopeConstrainedDTWData.name = getName(slopeConstrainedDTWData.mt, groundTruthTraces);
         slopeConstrainedDTWData.deltaTime = predictedMT.maxTime(predictedTraces) - slopeConstrainedDTWData.mt.maxTime(groundTruthTraces);
         slopeConstrainedDTWData.deltaDistance = predictedMT.distance(predictedTraces) - slopeConstrainedDTWData.mt.distance(groundTruthTraces);
+        adeData.name = getName(adeData.mt, groundTruthTraces);
+        adeData.deltaTime = predictedMT.maxTime(predictedTraces) - adeData.mt.maxTime(groundTruthTraces);
+        adeData.deltaDistance = predictedMT.distance(predictedTraces) - adeData.mt.distance(groundTruthTraces);
     }
 
 
@@ -462,7 +470,8 @@ namespace csknow::multi_trajectory_similarity {
         vector<size_t> startDTWMatchedIndices, lengthDTWMatchedIndices, firstMatchedIndex, secondMatchedIndex;
 
         for (const auto & mtSimilarityResult : result) {
-            for (const auto & metricType : {MetricType::UnconstrainedDTW, MetricType::SlopeConstrainedDTW}) {
+            for (const auto & metricType : {MetricType::UnconstrainedDTW, MetricType::SlopeConstrainedDTW,
+                                            MetricType::ADE}) {
                 const MultiTrajectorySimilarityMetricData & metricData = mtSimilarityResult.getDataByType(metricType);
                 predictedNames.push_back(mtSimilarityResult.predictedMTName);
                 bestFitGroundTruthNames.push_back(metricData.name);

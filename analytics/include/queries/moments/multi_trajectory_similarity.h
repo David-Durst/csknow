@@ -42,7 +42,6 @@ namespace csknow::multi_trajectory_similarity {
     struct DTWStepOptions {
         // oldest component comes first
         vector<vector<DTWStepOptionComponent>> options;
-        std::pair<size_t, double> getMinComponent(const DTWMatrix & dtwMatrix, size_t i, size_t j);
     };
 
     struct DTWResult {
@@ -50,6 +49,7 @@ namespace csknow::multi_trajectory_similarity {
         double cost = 0.;
     };
 
+    const vector<double> percentiles{0., 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.};
     struct MultiTrajectory {
         vector<Trajectory> trajectories;
         int ctTrajectories, tTrajectories;
@@ -62,6 +62,10 @@ namespace csknow::multi_trajectory_similarity {
         DTWResult dtw(const csknow::feature_store::TeamFeatureStoreResult & curTraces, const MultiTrajectory & otherMT,
                       const csknow::feature_store::TeamFeatureStoreResult & otherTraces,
                       map<int, int> agentMapping, DTWStepOptions stepOptions) const;
+        double percentileADE(const csknow::feature_store::TeamFeatureStoreResult & curTraces,
+                             const MultiTrajectory & otherMT,
+                             const csknow::feature_store::TeamFeatureStoreResult & otherTraces,
+                             map<int, int> agentMapping) const;
         virtual double minTime(const csknow::feature_store::TeamFeatureStoreResult & traces) const;
         virtual double maxTime(const csknow::feature_store::TeamFeatureStoreResult & traces) const;
         size_t maxTimeSteps() const;
