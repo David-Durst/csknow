@@ -66,10 +66,33 @@ namespace csknow::multi_trajectory_similarity {
         return result;
     }
 
-    DTWMatrix::DTWMatrix(std::size_t n, std::size_t m) : values(n * m, std::numeric_limits<double>::infinity()),
+    DTWMatrix::DTWMatrix(std::size_t n, std::size_t m) : values((n + 1) * (m + 1), std::numeric_limits<double>::infinity()),
         n(n), m(m) { }
 
     double &DTWMatrix::get(std::size_t i, std::size_t j) { return values[i*m + j]; }
+
+    vector<std::pair<size_t, size_t>> DTWMatrix::getMinCostPath() {
+        vector<std::pair<size_t, size_t>> result;
+        size_t i = n, j = m;
+        while (i > 0 && j > 0) {
+            result.push_back({i, j});
+            double priorI = get(i-1, j);
+            double priorJ = get(i, j-1);
+            double priorIJ = get(i-1, j-1);
+            if (priorI < priorJ && priorI < priorIJ) {
+                i--;
+            }
+            else if (priorJ < priorIJ) {
+                j--;
+            }
+            else {
+                i--;
+                j--;
+            }
+        }
+        std::reverse(result.begin(), result.end());
+        return result;
+    }
 
     DTWResult MultiTrajectory::dtw(const csknow::feature_store::TeamFeatureStoreResult & curTraces,
                                    const csknow::multi_trajectory_similarity::MultiTrajectory & otherMT,
@@ -79,7 +102,7 @@ namespace csknow::multi_trajectory_similarity {
         size_t curLength = maxTimeSteps();
         size_t otherLength = otherMT.maxTimeSteps();
 
-        DTWMatrix dtwMatrix(curLength+1, otherLength+1);
+        DTWMatrix dtwMatrix(curLength, otherLength);
         dtwMatrix.get(0, 0) = 0.;
 
         for (size_t i = 1; i <= curLength; i++) {
@@ -95,26 +118,7 @@ namespace csknow::multi_trajectory_similarity {
             }
         }
         result.cost = dtwMatrix.get(curLength - 1, otherLength - 1);
-
-        size_t i = curLength - 1, j = otherLength - 1;
-        while (i > 0 && j > 0) {
-            result.matchedIndices.push_back({i, j});
-            double priorI = dtwMatrix.get(i-1, j);
-            double priorJ = dtwMatrix.get(i, j-1);
-            double priorIJ = dtwMatrix.get(i-1, j-1);
-            if (priorI < priorJ && priorI < priorIJ) {
-                i--;
-            }
-            else if (priorJ < priorIJ) {
-                j--;
-            }
-            else {
-                i--;
-                j--;
-            }
-        }
-        std::reverse(result.matchedIndices.begin(), result.matchedIndices.end());
-
+        result.matchedIndices = dtwMatrix.getMinCostPath();
         return result;
     }
 

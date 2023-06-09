@@ -31,6 +31,8 @@ namespace csknow::multi_trajectory_similarity {
         size_t n, m;
         DTWMatrix(size_t m, size_t n);
         inline double & get(size_t i, size_t j);
+
+        vector<std::pair<size_t, size_t>> getMinCostPath();
     };
 
     struct DTWResult {
@@ -50,6 +52,9 @@ namespace csknow::multi_trajectory_similarity {
         DTWResult dtw(const csknow::feature_store::TeamFeatureStoreResult & curTraces, const MultiTrajectory & otherMT,
                       const csknow::feature_store::TeamFeatureStoreResult & otherTraces,
                       map<int, int> agentMapping) const;
+        DTWResult dtw(const csknow::feature_store::TeamFeatureStoreResult & curTraces, const MultiTrajectory & otherMT,
+                      const csknow::feature_store::TeamFeatureStoreResult & otherTraces,
+                      map<int, int> agentMapping, size_t windowSize) const;
         virtual double minTime(const csknow::feature_store::TeamFeatureStoreResult & traces) const;
         size_t maxTimeSteps() const;
         size_t startTraceIndex() const;
