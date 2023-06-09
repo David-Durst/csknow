@@ -31,8 +31,17 @@ namespace csknow::multi_trajectory_similarity {
         size_t n, m;
         DTWMatrix(size_t m, size_t n);
         inline double & get(size_t i, size_t j);
+        inline double get(size_t i, size_t j) const;
+    };
 
-        vector<std::pair<size_t, size_t>> getMinCostPath();
+    struct DTWStepOptionComponent {
+        size_t iOffset, jOffset, weight;
+    };
+
+    struct DTWStepOptions {
+        // oldest component comes first
+        vector<vector<DTWStepOptionComponent>> options;
+        std::pair<size_t, double> getMinComponent(const DTWMatrix & dtwMatrix, size_t i, size_t j);
     };
 
     struct DTWResult {
@@ -51,10 +60,7 @@ namespace csknow::multi_trajectory_similarity {
                    map<int, int> agentMapping) const;
         DTWResult dtw(const csknow::feature_store::TeamFeatureStoreResult & curTraces, const MultiTrajectory & otherMT,
                       const csknow::feature_store::TeamFeatureStoreResult & otherTraces,
-                      map<int, int> agentMapping) const;
-        DTWResult dtw(const csknow::feature_store::TeamFeatureStoreResult & curTraces, const MultiTrajectory & otherMT,
-                      const csknow::feature_store::TeamFeatureStoreResult & otherTraces,
-                      map<int, int> agentMapping, size_t windowSize) const;
+                      map<int, int> agentMapping, DTWStepOptions stepOptions) const;
         virtual double minTime(const csknow::feature_store::TeamFeatureStoreResult & traces) const;
         size_t maxTimeSteps() const;
         size_t startTraceIndex() const;
@@ -71,11 +77,12 @@ namespace csknow::multi_trajectory_similarity {
     CTAliveTAliveToAgentMappingOptions generateAllPossibleMappings();
 
     struct MultiTrajectorySimilarityResult {
-        MultiTrajectory predictedMT, bestFitGroundTruthMT;
-        string predictedMTName, bestFitGroundTruthMTName;
-        DTWResult dtwResult;
+        MultiTrajectory predictedMT, unconstrainedDTWGroundTruthMT, slopeConstrainedDTWGroundTruthMT, adeGroundTruthMT;
+        string predictedMTNameName, unconstrainedDTWGroundTruthMTName, slopeConstrainedDTWGroundTruthMTName,
+            adeGroundTruthMTName;
+        DTWResult unconstrainedDTWResult, slopeConstrainedDTWResult;
         double deltaTime, deltaDistance;
-        AgentMapping bestAgentMapping;
+        AgentMapping unconstrainedAgentMapping, slopeConstrainedDTWAgentMapping, adeAgentMapping;
 
         MultiTrajectorySimilarityResult(const MultiTrajectory & predictedMT, const vector<MultiTrajectory> & groundTruthMTs,
                                         const csknow::feature_store::TeamFeatureStoreResult & predictedTraces,

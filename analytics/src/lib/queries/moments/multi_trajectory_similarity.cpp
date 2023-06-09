@@ -71,54 +71,99 @@ namespace csknow::multi_trajectory_similarity {
 
     double &DTWMatrix::get(std::size_t i, std::size_t j) { return values[i*m + j]; }
 
-    vector<std::pair<size_t, size_t>> DTWMatrix::getMinCostPath() {
-        vector<std::pair<size_t, size_t>> result;
-        size_t i = n, j = m;
-        while (i > 0 && j > 0) {
-            result.push_back({i, j});
-            double priorI = get(i-1, j);
-            double priorJ = get(i, j-1);
-            double priorIJ = get(i-1, j-1);
-            if (priorI < priorJ && priorI < priorIJ) {
-                i--;
+    double DTWMatrix::get(std::size_t i, std::size_t j) const { return values[i*m + j]; }
+
+    std::pair<size_t, double>
+    DTWStepOptions::getMinComponent(const csknow::multi_trajectory_similarity::DTWMatrix &dtwMatrix, std::size_t i,
+                                   std::size_t j) {
+        double minStepOptionCost = std::numeric_limits<double>::max();
+        size_t minStepOptionIndex = 0;
+        for (size_t curStepOptionIndex = 0; curStepOptionIndex < options.size(); curStepOptionIndex++) {
+            double curStepOptionCost = 0;
+            for (const auto & component : options[curStepOptionIndex]) {
+                curStepOptionCost += component.weight * dtwMatrix.get(i-component.iOffset, j-component.jOffset);
             }
-            else if (priorJ < priorIJ) {
-                j--;
-            }
-            else {
-                i--;
-                j--;
+            if (curStepOptionCost < minStepOptionCost) {
+                minStepOptionCost = curStepOptionCost;
+                minStepOptionIndex = curStepOptionIndex;
             }
         }
-        std::reverse(result.begin(), result.end());
-        return result;
+        return {minStepOptionIndex, minStepOptionCost};
     }
 
     DTWResult MultiTrajectory::dtw(const csknow::feature_store::TeamFeatureStoreResult & curTraces,
                                    const csknow::multi_trajectory_similarity::MultiTrajectory & otherMT,
                                    const csknow::feature_store::TeamFeatureStoreResult & otherTraces,
-                                   map<int, int> agentMapping) const {
+                                   map<int, int> agentMapping, DTWStepOptions stepOptions) const {
         DTWResult result;
         size_t curLength = maxTimeSteps();
         size_t otherLength = otherMT.maxTimeSteps();
 
-        DTWMatrix dtwMatrix(curLength, otherLength);
-        dtwMatrix.get(0, 0) = 0.;
-
+        // compute distances once, will reuse them for jumps
+        DTWMatrix independentDTWMatrix(curLength, otherLength);
         for (size_t i = 1; i <= curLength; i++) {
             for (size_t j = 1; j <= otherLength; j++) {
-                double cost = 0;
                 for (const auto & [curAgentIndex, otherAgentIndex] : agentMapping) {
                     // indexing for matrix is offset by 1 to indexing for data as need 0,0 to be before first step
-                    cost += computeDistance(trajectories[curAgentIndex].getPosRelative(curTraces, i-1),
-                                            otherMT.trajectories[otherAgentIndex].getPosRelative(otherTraces, j-1));
+                    independentDTWMatrix.get(i, j) = computeDistance(
+                            trajectories[curAgentIndex].getPosRelative(curTraces, i - 1),
+                            otherMT.trajectories[otherAgentIndex].getPosRelative(otherTraces, j - 1));
                 }
-                dtwMatrix.get(i, j) = cost + std::min(dtwMatrix.get(i-1, j),
-                                                      std::min(dtwMatrix.get(i, j-1), dtwMatrix.get(i-1, j-1)));
             }
         }
-        result.cost = dtwMatrix.get(curLength - 1, otherLength - 1);
-        result.matchedIndices = dtwMatrix.getMinCostPath();
+
+        DTWMatrix dtwMatrix(curLength, otherLength);
+        dtwMatrix.get(0, 0) = 0.;
+        for (size_t i = 1; i <= curLength; i++) {
+            for (size_t j = 1; j <= otherLength; j++) {
+                double minStepOptionCost = std::numeric_limits<double>::max();
+                for (size_t curStepOptionIndex = 0; curStepOptionIndex < stepOptions.options.size(); curStepOptionIndex++) {
+                    double curStepOptionCost = 0;
+                    const auto & stepOption = stepOptions.options[curStepOptionIndex];
+                    for (size_t componentIndex = 0; componentIndex < stepOption.size(); componentIndex++) {
+                        const auto & component = stepOption[componentIndex];
+                        if (component.iOffset > i || component.jOffset > j) {
+                            curStepOptionCost = std::numeric_limits<double>::infinity();
+                        }
+                        else if (componentIndex > 0) {
+                            curStepOptionCost += component.weight * independentDTWMatrix.get(i-component.iOffset, j-component.jOffset);
+                        }
+                        else {
+                            curStepOptionCost += dtwMatrix.get(i-component.iOffset, j-component.jOffset);
+                        }
+                    }
+                    if (curStepOptionCost < minStepOptionCost) {
+                        minStepOptionCost = curStepOptionCost;
+                    }
+                }
+                dtwMatrix.get(i, j) = minStepOptionCost;
+            }
+        }
+        result.cost = dtwMatrix.get(curLength - 1, otherLength - 1) / static_cast<double>(curLength + otherLength);
+
+        size_t i = dtwMatrix.n, j = dtwMatrix.m;
+        while (i > 0 && j > 0) {
+            result.matchedIndices.emplace_back(i, j);
+            double minStepOptionCost = std::numeric_limits<double>::max();
+            size_t minStepOptionIndex = 0;
+            for (size_t curStepOptionIndex = 0; curStepOptionIndex < stepOptions.options.size(); curStepOptionIndex++) {
+                const auto & component = stepOptions.options[curStepOptionIndex].front();
+                double curStepOptionCost;
+                if (component.iOffset > i || component.jOffset > j) {
+                    curStepOptionCost = std::numeric_limits<double>::infinity();
+                }
+                else {
+                    curStepOptionCost = dtwMatrix.get(i-component.iOffset, j-component.jOffset);
+                }
+                if (curStepOptionCost < minStepOptionCost) {
+                    minStepOptionCost = curStepOptionCost;
+                    minStepOptionIndex = curStepOptionIndex;
+                }
+            }
+            i -= stepOptions.options[minStepOptionIndex].front().iOffset;
+            j -= stepOptions.options[minStepOptionIndex].front().jOffset;
+        }
+        std::reverse(result.matchedIndices.begin(), result.matchedIndices.end());
         return result;
     }
 
