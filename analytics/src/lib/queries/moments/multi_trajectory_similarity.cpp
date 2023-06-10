@@ -83,6 +83,53 @@ namespace csknow::multi_trajectory_similarity {
         std::cout << std::endl << std::endl;
     }
 
+    DTWResult MultiTrajectory::singleDTW(const csknow::feature_store::TeamFeatureStoreResult & curTraces, const MultiTrajectory & otherMT,
+                        const csknow::feature_store::TeamFeatureStoreResult & otherTraces,
+                        map<int, int> agentMapping, DTWStepOptions stepOptions) const {
+        DTWResult result;
+        size_t curLength = maxTimeSteps();
+        size_t otherLength = otherMT.maxTimeSteps();
+
+        DTWMatrix dtwMatrix(curLength, otherLength);
+        dtwMatrix.get(0, 0) = 0.;
+
+        for (size_t i = 1; i <= curLength; i++) {
+            for (size_t j = 1; j <= otherLength; j++) {
+                double cost = 0;
+                for (const auto & [curAgentIndex, otherAgentIndex] : agentMapping) {
+                    // indexing for matrix is offset by 1 to indexing for data as need 0,0 to be before first step
+                    cost += computeDistance(trajectories[curAgentIndex].getPosRelative(curTraces, i-1),
+                                            otherMT.trajectories[otherAgentIndex].getPosRelative(otherTraces, j-1));
+                }
+                dtwMatrix.get(i, j) = cost + std::min(dtwMatrix.get(i-1, j),
+                                                      std::min(dtwMatrix.get(i, j-1), dtwMatrix.get(i-1, j-1)));
+            }
+        }
+        result.cost = dtwMatrix.get(curLength, otherLength);
+        dtwMatrix.print();
+
+        size_t i = dtwMatrix.n, j = dtwMatrix.m;
+        while (i > 0 && j > 0) {
+            result.matchedIndices.push_back({i, j});
+            double priorI = dtwMatrix.get(i-1, j);
+            double priorJ = dtwMatrix.get(i, j-1);
+            double priorIJ = dtwMatrix.get(i-1, j-1);
+            if (priorI < priorJ && priorI < priorIJ) {
+                i--;
+            }
+            else if (priorJ < priorIJ) {
+                j--;
+            }
+            else {
+                i--;
+                j--;
+            }
+        }
+        std::reverse(result.matchedIndices.begin(), result.matchedIndices.end());
+
+        return result;
+    }
+
     DTWResult MultiTrajectory::dtw(const csknow::feature_store::TeamFeatureStoreResult & curTraces,
                                    const csknow::multi_trajectory_similarity::MultiTrajectory & otherMT,
                                    const csknow::feature_store::TeamFeatureStoreResult & otherTraces,
@@ -95,9 +142,10 @@ namespace csknow::multi_trajectory_similarity {
         DTWMatrix independentDTWMatrix(curLength, otherLength);
         for (size_t i = 1; i <= curLength; i++) {
             for (size_t j = 1; j <= otherLength; j++) {
+                independentDTWMatrix.get(i, j) = 0;
                 for (const auto & [curAgentIndex, otherAgentIndex] : agentMapping) {
                     // indexing for matrix is offset by 1 to indexing for data as need 0,0 to be before first step
-                    independentDTWMatrix.get(i, j) = computeDistance(
+                    independentDTWMatrix.get(i, j) += computeDistance(
                             trajectories[curAgentIndex].getPosRelative(curTraces, i - 1),
                             otherMT.trajectories[otherAgentIndex].getPosRelative(otherTraces, j - 1));
                 }
@@ -138,7 +186,7 @@ namespace csknow::multi_trajectory_similarity {
             result.cost = dtwMatrix.get(curLength, otherLength);
         }
         else {
-            result.cost = dtwMatrix.get(curLength, otherLength) / static_cast<double>(curLength + otherLength);
+            result.cost = dtwMatrix.get(curLength, otherLength);// / static_cast<double>(curLength + otherLength);
 
             size_t i = dtwMatrix.n, j = dtwMatrix.m;
             while (i > 0 && j > 0) {
@@ -360,7 +408,7 @@ namespace csknow::multi_trajectory_similarity {
         // just j
         {{0, 1, 1}, {0, 0, 1}},
         // both i and j
-        {{1, 1, 1}, {0, 0, 2}},
+        {{1, 1, 1}, {0, 0, 1}},
         // just i
         {{1, 0, 1}, {0, 0, 1}}
     }};
@@ -397,6 +445,9 @@ namespace csknow::multi_trajectory_similarity {
             }
             for (const auto & agentMapping :
                 ctAliveTAliveToAgentMappingOptions[predictedMT.ctTrajectories][predictedMT.tTrajectories]) {
+                //DTWResult tmp = predictedMT.singleDTW(predictedTraces, groundTruthMT, groundTruthTraces,
+                //                      agentMapping, stopOptionsP0Symmetric);
+                //std::cout << "new matrix" << std::endl;
                 DTWResult unconstrainedCurDTWResult = predictedMT.dtw(predictedTraces, groundTruthMT, groundTruthTraces,
                                                                       agentMapping, stopOptionsP0Symmetric);
                 if (unconstrainedCurDTWResult.cost < unconstrainedDTWData.dtwResult.cost) {

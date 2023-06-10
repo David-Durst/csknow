@@ -59,6 +59,9 @@ namespace csknow::multi_trajectory_similarity {
         double fde(const csknow::feature_store::TeamFeatureStoreResult & curTraces, const MultiTrajectory & otherMT,
                    const csknow::feature_store::TeamFeatureStoreResult & otherTraces,
                    map<int, int> agentMapping) const;
+        DTWResult singleDTW(const csknow::feature_store::TeamFeatureStoreResult & curTraces, const MultiTrajectory & otherMT,
+                            const csknow::feature_store::TeamFeatureStoreResult & otherTraces,
+                            map<int, int> agentMapping, DTWStepOptions stepOptions) const;
         DTWResult dtw(const csknow::feature_store::TeamFeatureStoreResult & curTraces, const MultiTrajectory & otherMT,
                       const csknow::feature_store::TeamFeatureStoreResult & otherTraces,
                       map<int, int> agentMapping, DTWStepOptions stepOptions) const;
