@@ -375,6 +375,7 @@ def vis_two(rollout_data_df: pd.DataFrame, rollout_pred_df: pd.DataFrame,
 
     # initial value settings
     round_slider_changed(0)
+    metric_slider_changed(0)
     tick_slider_changed(0)
 
     # Start the GUI
