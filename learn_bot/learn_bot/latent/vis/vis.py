@@ -72,6 +72,9 @@ def vis(all_data_df: pd.DataFrame, pred_df: pd.DataFrame):
         if len(selected_df) > 0:
             data_series = selected_df.loc[cur_index, :]
             pred_series = pred_selected_df.loc[cur_index, :]
+            other_state_text_var.set(f"Planted A {data_series[c4_plant_a_col]}, "
+                                     f"Planted B {data_series[c4_plant_b_col]}, "
+                                     f"Not Planted {data_series[c4_not_planted_col]}")
             players_to_draw_str = player_distributions_var.get()
             if players_to_draw_str == "*":
                 players_to_draw = list(range(0, len(specific_player_place_area_columns)))
@@ -223,6 +226,12 @@ def vis(all_data_df: pd.DataFrame, pred_df: pd.DataFrame):
     player_distributions_entry = tk.Entry(distribution_control_frame, width=30, textvariable=player_distributions_var)
     player_distributions_entry.pack(side="left")
 
+    other_state_frame = tk.Frame(window)
+    other_state_frame.pack(pady=5)
+
+    other_state_text_var = tk.StringVar()
+    other_state_label = tk.Label(other_state_frame, textvariable=other_state_text_var)
+    other_state_label.pack(side="left")
 
     details_frame = tk.Frame(window)
     details_frame.pack(pady=5)
