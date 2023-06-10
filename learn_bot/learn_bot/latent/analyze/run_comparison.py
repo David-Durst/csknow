@@ -55,13 +55,20 @@ def compare_trajectories():
     pd.options.display.max_columns = None
     pd.options.display.max_rows = None
     pd.options.display.width = 1000
-    print(similarity_df.loc[:, [predicted_round_id_col, best_fit_ground_truth_round_id_col, dtw_cost_col,
-                                delta_distance_col, delta_time_col]])
+    print(similarity_df.loc[:, [predicted_round_id_col, best_fit_ground_truth_round_id_col, metric_type_col,
+                                dtw_cost_col, delta_distance_col, delta_time_col]])
+    # multiple predicted rounds may match to same ground truth round, don't save them multiple times
+    manual_indices_ranges_set: set = set()
     for idx, row in similarity_df.iterrows():
-        manual_indices_ranges.append(range(row[best_fit_ground_truth_start_trace_index_col],
-                                           row[best_fit_ground_truth_end_trace_index_col] + 1))
+        ground_truth_trace_range = range(row[best_fit_ground_truth_start_trace_index_col],
+                                         row[best_fit_ground_truth_end_trace_index_col] + 1)
+        if ground_truth_trace_range not in manual_indices_ranges_set:
+            manual_indices_ranges.append(ground_truth_trace_range)
+            manual_indices_ranges_set.add(ground_truth_trace_range)
 
-        similarity_match_name = row[predicted_name_col].decode('utf-8') + "_vs_" + row[best_fit_ground_truth_name_col].decode('utf-8')
+        metric_type = row[metric_type_col].decode('utf-8')
+        similarity_match_name = f"{row[predicted_name_col].decode('utf-8')}_{metric_type}_vs_" \
+                                f"{row[best_fit_ground_truth_name_col].decode('utf-8')}"
         similarity_match_df = similarity_match_index_df.iloc[row[start_dtw_matched_indices_col]:
                                                              row[start_dtw_matched_indices_col] + row[length_dtw_matched_inidices_col]]
         agent_mapping_str = row[agent_mapping_col].decode('utf-8')
@@ -69,9 +76,11 @@ def compare_trajectories():
         for agent_pair in agent_mapping_str.split(','):
             agents = [int(agent) for agent in agent_pair.split('_')]
             agent_mapping[int(agents[0])] = int(agents[1])
-        rollout_to_manual_dict[row[predicted_round_id_col]] = \
+        if row[predicted_round_id_col] not in rollout_to_manual_dict:
+            rollout_to_manual_dict[row[predicted_round_id_col]] = {}
+        rollout_to_manual_dict[row[predicted_round_id_col]][metric_type] = \
             RolloutToManualRoundData(row[predicted_round_id_col], row[best_fit_ground_truth_round_id_col],
-                                     similarity_match_df, agent_mapping)
+                                     row, similarity_match_df, agent_mapping)
         similarity_match_df.plot(first_matched_index_col, second_matched_index_col, title=similarity_match_name)
         plt.savefig(similarity_plots_path / (similarity_match_name + '.png'))
 

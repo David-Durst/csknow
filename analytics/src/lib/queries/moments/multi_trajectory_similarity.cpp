@@ -182,7 +182,7 @@ namespace csknow::multi_trajectory_similarity {
                         otherMT.trajectories[otherAgentIndex].getPosRelative(otherTraces, static_cast<size_t>(otherLength * percentile)));
             }
         }
-        return result;
+        return result / static_cast<double>(2 * percentiles.size());
     }
 
     double MultiTrajectory::minTime(const csknow::feature_store::TeamFeatureStoreResult &traces) const {
@@ -459,9 +459,20 @@ namespace csknow::multi_trajectory_similarity {
         }
     }
 
+    string metricTypeToString(MetricType metricType) {
+        switch (metricType) {
+            case MetricType::UnconstrainedDTW:
+                return "Unconstrained DTW";
+            case MetricType::SlopeConstrainedDTW:
+                return "Slope Constrainted DTW";
+            default:
+                return "ADE";
+        }
+    }
+
     void TraceSimilarityResult::toHDF5(const std::string &filePath) {
         vector<string> predictedNames, bestFitGroundTruthNames;
-        vector<int> metricTypes;
+        vector<string> metricTypes;
         vector<int64_t> predictedRoundIds, bestFitGroundTruthRoundIds;
         vector<size_t> predictedStartTraceIndex, predictedEndTraceIndex,
             bestFitGroundTruthStartTraceIndex, bestFitGroundTruthEndTraceIndex;
@@ -475,7 +486,7 @@ namespace csknow::multi_trajectory_similarity {
                 const MultiTrajectorySimilarityMetricData & metricData = mtSimilarityResult.getDataByType(metricType);
                 predictedNames.push_back(mtSimilarityResult.predictedMTName);
                 bestFitGroundTruthNames.push_back(metricData.name);
-                metricTypes.push_back(enumAsInt(metricType));
+                metricTypes.push_back(metricTypeToString(metricType));
                 predictedRoundIds.push_back(mtSimilarityResult.predictedMT.roundId);
                 bestFitGroundTruthRoundIds.push_back(metricData.mt.roundId);
                 predictedStartTraceIndex.push_back(mtSimilarityResult.predictedMT.startTraceIndex());
@@ -504,7 +515,7 @@ namespace csknow::multi_trajectory_similarity {
         HighFive::File file(filePath, HighFive::File::Overwrite);
         file.createDataSet("/data/predicted name", predictedNames);
         file.createDataSet("/data/best fit ground truth name", bestFitGroundTruthNames);
-        file.createDataSet("/data/metric type", predictedNames);
+        file.createDataSet("/data/metric type", metricTypes);
         file.createDataSet("/data/predicted round id", predictedRoundIds);
         file.createDataSet("/data/best fit ground truth round id", bestFitGroundTruthRoundIds);
         file.createDataSet("/data/predicted start trace index", predictedStartTraceIndex);

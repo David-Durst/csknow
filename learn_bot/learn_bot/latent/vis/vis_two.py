@@ -16,11 +16,12 @@ import matplotlib as mpl
 class RolloutToManualRoundData:
     rollout_round_id: int
     manual_round_id: int
+    similarity_row: pd.Series
     similarity_match_df: pd.DataFrame
     agent_mapping: Dict[int, int]
 
 
-RolloutToManualDict = Dict[int, RolloutToManualRoundData]
+RolloutToManualDict = Dict[int, Dict[str, RolloutToManualRoundData]]
 
 cmap = mpl.cm.get_cmap("Set3").colors
 
@@ -55,6 +56,8 @@ def vis_two(rollout_data_df: pd.DataFrame, rollout_pred_df: pd.DataFrame,
 
     rounds = rollout_data_df.loc[:, round_id_column].unique().tolist()
     cur_round: int = -1
+    metric_types = ['Unconstrained DTW', 'Slope Constrainted DTW', 'ADE']
+    cur_metric_type: str = metric_types[0]
     cur_similarity_tick_index: int = -1
     rollout_selected_df: pd.DataFrame = rollout_data_df
     rollout_pred_selected_df: pd.DataFrame = rollout_pred_df
@@ -68,7 +71,7 @@ def vis_two(rollout_data_df: pd.DataFrame, rollout_pred_df: pd.DataFrame,
     def round_slider_changed(cur_round_index):
         nonlocal cur_round
         cur_round = rounds[int(cur_round_index)]
-        change_round_dependent_data()
+        change_round_metric_dependent_data()
 
     def round_back_clicked():
         cur_round_index = int(round_slider.get())
@@ -83,6 +86,29 @@ def vis_two(rollout_data_df: pd.DataFrame, rollout_pred_df: pd.DataFrame,
             cur_round_index += 1
             round_slider.set(cur_round_index)
             round_slider_changed(cur_round_index)
+
+    def metric_slider_changed(cur_metric_index):
+        nonlocal cur_metric_type
+        cur_metric_type = metric_types[int(cur_metric_index)]
+        change_round_metric_dependent_data()
+
+    def metric_back_clicked():
+        nonlocal cur_metric_type
+        cur_metric_index = int(metric_slider.get())
+        if cur_metric_index > 0:
+            cur_metric_index -= 1
+            cur_metric_type = metric_types[cur_metric_index]
+            metric_slider.set(cur_metric_index)
+            metric_slider_changed(cur_metric_index)
+
+    def metric_forward_clicked():
+        nonlocal cur_metric_type
+        cur_metric_index = int(metric_slider.get())
+        if cur_metric_index < len(metric_types) - 1:
+            cur_metric_index += 1
+            cur_metric_type = metric_types[cur_metric_index]
+            metric_slider.set(cur_metric_index)
+            metric_slider_changed(cur_metric_index)
 
     def tick_slider_changed(cur_similarity_tick_index_str):
         nonlocal cur_similarity_tick_index, d2_img, rollout_d2_img_draw, rollout_img_label, \
@@ -107,6 +133,7 @@ def vis_two(rollout_data_df: pd.DataFrame, rollout_pred_df: pd.DataFrame,
                                  f"Manual Tick Id: {cur_manual_tick_id}, Manual Game Tick ID: {cur_manual_game_tick_id}")
             round_id_text_var.set(f"Rollout Round ID: {int(cur_round)}, Rollout Round Number: {cur_rollout_row.loc['round number']}, "
                                   f"Manual Round ID: {int(cur_manual_round)}, Manual Round Number: {cur_manual_row.loc['round number']}")
+            metric_id_text_var.set(cur_metric_type)
 
             rollout_d2_img_copy = d2_img.copy().convert("RGBA")
             rollout_d2_overlay_im = Image.new("RGBA", rollout_d2_img_copy.size, (255, 255, 255, 0))
@@ -218,13 +245,13 @@ def vis_two(rollout_data_df: pd.DataFrame, rollout_pred_df: pd.DataFrame,
         tick_slider_changed(cur_similarity_tick_index)
 
     # state setters
-    def change_round_dependent_data():
+    def change_round_metric_dependent_data():
         nonlocal rollout_selected_df, rollout_pred_selected_df, manual_selected_df, manual_pred_selected_df, \
-            similarity_match_df, cur_round, rollout_to_manual_round_data
+            similarity_match_df, cur_round, cur_metric_type, rollout_to_manual_round_data
         rollout_selected_df = rollout_data_df.loc[rollout_data_df[round_id_column] == cur_round]
         rollout_pred_selected_df = rollout_pred_df.loc[rollout_data_df[round_id_column] == cur_round]
 
-        rollout_to_manual_round_data = rollout_to_manual_dict[cur_round]
+        rollout_to_manual_round_data = rollout_to_manual_dict[cur_round][cur_metric_type]
         manual_selected_df = \
             manual_data_df.loc[manual_data_df[round_id_column] == rollout_to_manual_round_data.manual_round_id]
         manual_pred_selected_df = \
@@ -240,7 +267,7 @@ def vis_two(rollout_data_df: pd.DataFrame, rollout_pred_df: pd.DataFrame,
     s.theme_use('alt')
     s.configure('Valid.TCombobox', fieldbackground='white')
     s.configure('Invalid.TCombobox', fieldbackground='#cfcfcf')
-    # creating engagement slider and label
+    # creating round slider and label
     round_id_frame = tk.Frame(window)
     round_id_frame.pack(pady=5)
     round_id_text_var = tk.StringVar()
@@ -266,6 +293,33 @@ def vis_two(rollout_data_df: pd.DataFrame, rollout_pred_df: pd.DataFrame,
     back_round_button.pack(side="left")
     forward_round_button = tk.Button(round_frame, text=">>", command=round_forward_clicked)
     forward_round_button.pack(side="left")
+
+    # creating metric slider and label
+    metric_id_frame = tk.Frame(window)
+    metric_id_frame.pack(pady=5)
+    metric_id_text_var = tk.StringVar()
+    metric_id_label = tk.Label(metric_id_frame, textvariable=metric_id_text_var)
+    metric_id_label.pack(side="left")
+
+    metric_frame = tk.Frame(window)
+    metric_frame.pack(pady=5)
+
+    metric_slider = tk.Scale(
+        metric_frame,
+        from_=0,
+        to=len(metric_types)-1,
+        orient='horizontal',
+        showvalue=0,
+        length=500,
+        command=metric_slider_changed
+    )
+    metric_slider.pack(side="left")
+
+    # round id stepper
+    back_metric_button = tk.Button(metric_frame, text="<<", command=metric_back_clicked)
+    back_metric_button.pack(side="left")
+    forward_metric_button = tk.Button(metric_frame, text=">>", command=metric_forward_clicked)
+    forward_metric_button.pack(side="left")
 
     # creating tick slider and label
     tick_id_frame = tk.Frame(window)
