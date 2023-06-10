@@ -83,53 +83,6 @@ namespace csknow::multi_trajectory_similarity {
         std::cout << std::endl << std::endl;
     }
 
-    DTWResult MultiTrajectory::singleDTW(const csknow::feature_store::TeamFeatureStoreResult & curTraces, const MultiTrajectory & otherMT,
-                        const csknow::feature_store::TeamFeatureStoreResult & otherTraces,
-                        map<int, int> agentMapping, DTWStepOptions stepOptions) const {
-        DTWResult result;
-        size_t curLength = maxTimeSteps();
-        size_t otherLength = otherMT.maxTimeSteps();
-
-        DTWMatrix dtwMatrix(curLength, otherLength);
-        dtwMatrix.get(0, 0) = 0.;
-
-        for (size_t i = 1; i <= curLength; i++) {
-            for (size_t j = 1; j <= otherLength; j++) {
-                double cost = 0;
-                for (const auto & [curAgentIndex, otherAgentIndex] : agentMapping) {
-                    // indexing for matrix is offset by 1 to indexing for data as need 0,0 to be before first step
-                    cost += computeDistance(trajectories[curAgentIndex].getPosRelative(curTraces, i-1),
-                                            otherMT.trajectories[otherAgentIndex].getPosRelative(otherTraces, j-1));
-                }
-                dtwMatrix.get(i, j) = cost + std::min(dtwMatrix.get(i-1, j),
-                                                      std::min(dtwMatrix.get(i, j-1), dtwMatrix.get(i-1, j-1)));
-            }
-        }
-        result.cost = dtwMatrix.get(curLength, otherLength);
-        dtwMatrix.print();
-
-        size_t i = dtwMatrix.n, j = dtwMatrix.m;
-        while (i > 0 && j > 0) {
-            result.matchedIndices.push_back({i, j});
-            double priorI = dtwMatrix.get(i-1, j);
-            double priorJ = dtwMatrix.get(i, j-1);
-            double priorIJ = dtwMatrix.get(i-1, j-1);
-            if (priorI < priorJ && priorI < priorIJ) {
-                i--;
-            }
-            else if (priorJ < priorIJ) {
-                j--;
-            }
-            else {
-                i--;
-                j--;
-            }
-        }
-        std::reverse(result.matchedIndices.begin(), result.matchedIndices.end());
-
-        return result;
-    }
-
     DTWResult MultiTrajectory::dtw(const csknow::feature_store::TeamFeatureStoreResult & curTraces,
                                    const csknow::multi_trajectory_similarity::MultiTrajectory & otherMT,
                                    const csknow::feature_store::TeamFeatureStoreResult & otherTraces,
@@ -186,7 +139,7 @@ namespace csknow::multi_trajectory_similarity {
             result.cost = dtwMatrix.get(curLength, otherLength);
         }
         else {
-            result.cost = dtwMatrix.get(curLength, otherLength);// / static_cast<double>(curLength + otherLength);
+            result.cost = dtwMatrix.get(curLength, otherLength) / static_cast<double>(curLength + otherLength);
 
             size_t i = dtwMatrix.n, j = dtwMatrix.m;
             while (i > 0 && j > 0) {
@@ -215,22 +168,45 @@ namespace csknow::multi_trajectory_similarity {
         return result;
     }
 
-    double MultiTrajectory::percentileADE(const csknow::feature_store::TeamFeatureStoreResult &curTraces,
-                                          const csknow::multi_trajectory_similarity::MultiTrajectory &otherMT,
-                                          const csknow::feature_store::TeamFeatureStoreResult &otherTraces,
-                                          map<int, int> agentMapping) const {
+    DTWResult MultiTrajectory::percentileADE(const csknow::feature_store::TeamFeatureStoreResult &curTraces,
+                                             const csknow::multi_trajectory_similarity::MultiTrajectory &otherMT,
+                                             const csknow::feature_store::TeamFeatureStoreResult &otherTraces,
+                                             map<int, int> agentMapping) const {
+        DTWResult result;
+        result.cost = 0;
 
         size_t curLength = maxTimeSteps();
         size_t otherLength = otherMT.maxTimeSteps();
-        double result = 0.;
+        vector<size_t> curPercentileIndices, otherPercentileIndices;
         for (const auto & percentile : percentiles) {
+            curPercentileIndices.push_back(static_cast<size_t>(curLength * percentile));
+            otherPercentileIndices.push_back(static_cast<size_t>(otherLength * percentile));
             for (const auto & [curAgentIndex, otherAgentIndex] : agentMapping) {
-                result += computeDistance(
-                        trajectories[curAgentIndex].getPosRelative(curTraces, static_cast<size_t>(curLength * percentile)),
-                        otherMT.trajectories[otherAgentIndex].getPosRelative(otherTraces, static_cast<size_t>(otherLength * percentile)));
+                result.cost += computeDistance(
+                        trajectories[curAgentIndex].getPosRelative(curTraces, curPercentileIndices.back()),
+                        otherMT.trajectories[otherAgentIndex].getPosRelative(otherTraces, otherPercentileIndices.back()));
             }
         }
-        return result / static_cast<double>(2 * percentiles.size());
+        result.cost /= static_cast<double>(2 * percentiles.size());
+
+        for (size_t percentileCounter = 1; percentileCounter < percentiles.size(); percentileCounter++) {
+            size_t curIndex = curPercentileIndices[percentileCounter - 1];
+            size_t otherIndex = otherPercentileIndices[percentileCounter - 1];
+            while (curIndex < curPercentileIndices[percentileCounter] ||
+                   otherIndex < otherPercentileIndices[percentileCounter]) {
+                result.matchedIndices.emplace_back(curIndex, otherIndex);
+                if (curIndex < curPercentileIndices[percentileCounter]) {
+                    curIndex++;
+                }
+                if (otherIndex < otherPercentileIndices[percentileCounter]) {
+                    otherIndex++;
+                }
+            }
+        }
+        // handle 100%, since above loop will end before adding that
+        result.matchedIndices.emplace_back(curPercentileIndices.back(), otherPercentileIndices.back());
+
+        return result;
     }
 
     double MultiTrajectory::minTime(const csknow::feature_store::TeamFeatureStoreResult &traces) const {
@@ -445,9 +421,6 @@ namespace csknow::multi_trajectory_similarity {
             }
             for (const auto & agentMapping :
                 ctAliveTAliveToAgentMappingOptions[predictedMT.ctTrajectories][predictedMT.tTrajectories]) {
-                //DTWResult tmp = predictedMT.singleDTW(predictedTraces, groundTruthMT, groundTruthTraces,
-                //                      agentMapping, stopOptionsP0Symmetric);
-                //std::cout << "new matrix" << std::endl;
                 DTWResult unconstrainedCurDTWResult = predictedMT.dtw(predictedTraces, groundTruthMT, groundTruthTraces,
                                                                       agentMapping, stopOptionsP0Symmetric);
                 if (unconstrainedCurDTWResult.cost < unconstrainedDTWData.dtwResult.cost) {
@@ -462,9 +435,8 @@ namespace csknow::multi_trajectory_similarity {
                     slopeConstrainedDTWData.agentMapping = agentMapping;
                     slopeConstrainedDTWData.mt = groundTruthMT;
                 }
-                DTWResult adeCurResult = unconstrainedCurDTWResult;
-                adeCurResult.cost =  predictedMT.percentileADE(predictedTraces, groundTruthMT, groundTruthTraces,
-                                                               agentMapping);
+                DTWResult adeCurResult = predictedMT.percentileADE(predictedTraces, groundTruthMT, groundTruthTraces,
+                                                                   agentMapping);
                 if (adeCurResult.cost < adeData.dtwResult.cost) {
                     adeData.dtwResult = adeCurResult;
                     adeData.agentMapping = agentMapping;
@@ -515,9 +487,9 @@ namespace csknow::multi_trajectory_similarity {
             case MetricType::UnconstrainedDTW:
                 return "Unconstrained DTW";
             case MetricType::SlopeConstrainedDTW:
-                return "Slope Constrainted DTW";
+                return "Slope Constrained DTW";
             default:
-                return "ADE";
+                return "Percentile ADE";
         }
     }
 
@@ -533,7 +505,7 @@ namespace csknow::multi_trajectory_similarity {
 
         for (const auto & mtSimilarityResult : result) {
             for (const auto & metricType : {MetricType::UnconstrainedDTW, MetricType::SlopeConstrainedDTW,
-                                            MetricType::ADE}) {
+                                            MetricType::PercentileADE}) {
                 const MultiTrajectorySimilarityMetricData & metricData = mtSimilarityResult.getDataByType(metricType);
                 predictedNames.push_back(mtSimilarityResult.predictedMTName);
                 bestFitGroundTruthNames.push_back(metricData.name);

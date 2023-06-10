@@ -59,16 +59,13 @@ namespace csknow::multi_trajectory_similarity {
         double fde(const csknow::feature_store::TeamFeatureStoreResult & curTraces, const MultiTrajectory & otherMT,
                    const csknow::feature_store::TeamFeatureStoreResult & otherTraces,
                    map<int, int> agentMapping) const;
-        DTWResult singleDTW(const csknow::feature_store::TeamFeatureStoreResult & curTraces, const MultiTrajectory & otherMT,
-                            const csknow::feature_store::TeamFeatureStoreResult & otherTraces,
-                            map<int, int> agentMapping, DTWStepOptions stepOptions) const;
         DTWResult dtw(const csknow::feature_store::TeamFeatureStoreResult & curTraces, const MultiTrajectory & otherMT,
                       const csknow::feature_store::TeamFeatureStoreResult & otherTraces,
                       map<int, int> agentMapping, DTWStepOptions stepOptions) const;
-        double percentileADE(const csknow::feature_store::TeamFeatureStoreResult & curTraces,
-                             const MultiTrajectory & otherMT,
-                             const csknow::feature_store::TeamFeatureStoreResult & otherTraces,
-                             map<int, int> agentMapping) const;
+        DTWResult percentileADE(const csknow::feature_store::TeamFeatureStoreResult & curTraces,
+                                const MultiTrajectory & otherMT,
+                                const csknow::feature_store::TeamFeatureStoreResult & otherTraces,
+                                map<int, int> agentMapping) const;
         virtual double minTime(const csknow::feature_store::TeamFeatureStoreResult & traces) const;
         virtual double maxTime(const csknow::feature_store::TeamFeatureStoreResult & traces) const;
         size_t maxTimeSteps() const;
@@ -97,7 +94,7 @@ namespace csknow::multi_trajectory_similarity {
     enum class MetricType {
         UnconstrainedDTW = 0,
         SlopeConstrainedDTW,
-        ADE
+        PercentileADE
     };
 
     struct MultiTrajectorySimilarityResult {

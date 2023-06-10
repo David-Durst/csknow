@@ -56,7 +56,7 @@ def vis_two(rollout_data_df: pd.DataFrame, rollout_pred_df: pd.DataFrame,
 
     rounds = rollout_data_df.loc[:, round_id_column].unique().tolist()
     cur_round: int = -1
-    metric_types = ['Unconstrained DTW', 'Slope Constrainted DTW', 'ADE']
+    metric_types = ['Unconstrained DTW', 'Slope Constrained DTW', 'Percentile ADE']
     cur_metric_type: str = metric_types[0]
     cur_similarity_tick_index: int = -1
     rollout_selected_df: pd.DataFrame = rollout_data_df
