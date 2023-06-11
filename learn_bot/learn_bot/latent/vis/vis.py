@@ -74,7 +74,8 @@ def vis(all_data_df: pd.DataFrame, pred_df: pd.DataFrame):
             pred_series = pred_selected_df.loc[cur_index, :]
             other_state_text_var.set(f"Planted A {data_series[c4_plant_a_col]}, "
                                      f"Planted B {data_series[c4_plant_b_col]}, "
-                                     f"Not Planted {data_series[c4_not_planted_col]}")
+                                     f"Not Planted {data_series[c4_not_planted_col]}, "
+                                     f"C4 Pos ({data_series[c4_pos_cols[0]]}, {data_series[c4_pos_cols[1]]}, {data_series[c4_pos_cols[2]]})")
             players_to_draw_str = player_distributions_var.get()
             if players_to_draw_str == "*":
                 players_to_draw = list(range(0, len(specific_player_place_area_columns)))

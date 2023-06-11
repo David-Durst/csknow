@@ -145,7 +145,7 @@ namespace csknow::formation_initializer {
             endBDefenseNavPlaces(findEndDefenseNavPlaces(mapMeshResult, false));
 
         for (size_t i = 0; i < initialConditions.size(); i++) {
-            const auto & initialCondition = initialConditions[i];
+            const auto & initialCondition = initialConditions[i % 4];
             vector<NeededBot> neededBots;
             for (const auto & aggressive : initialCondition.playerAggressive) {
                 neededBots.push_back({0, initialCondition.team,
