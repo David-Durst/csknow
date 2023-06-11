@@ -52,10 +52,22 @@ func ProcessTickData(localDemName string, idState *IDState) {
 		if gs.Bomb().Carrier != nil {
 			carrierId = playersTracker.getPlayerIdFromGameData(gs.Bomb().Carrier)
 		}
+
+		// c4 position can be wrong if teleport c4. get latest c4 pos on teleport
+		c4Pos := gs.Bomb().Position()
+		for _, entity := range gs.Entities() {
+			if entity.ServerClass().Name() == "CPlantedC4" {
+				if gs.Bomb().Carrier != nil {
+					println("planted c4 and carrier at same time")
+				}
+				c4Pos = entity.Position()
+			}
+		}
+
 		ticksTable.append(tickRow{
 			idState.nextTick, curRound, p.CurrentTime().Milliseconds(),
 			p.CurrentFrame(), gs.IngameTick(), carrierId,
-			gs.Bomb().Position().X, gs.Bomb().Position().Y, gs.Bomb().Position().Z,
+			c4Pos.X, c4Pos.Y, c4Pos.Z,
 		})
 
 		for _, player := range players {

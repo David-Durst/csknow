@@ -45,6 +45,7 @@ func main() {
 	shouldFilterRounds := !*manualDataFlag && !*botRetakesDataFlag && !*rolloutDataFlag
 	firstRun := true
 	if *localFlag {
+		*localDemName = filepath.Join(c.DemoDirectory, *localDemName)
 		d.ParseDemo(*localDemName, *localDemName, &startIDState, firstRun, c.Pro, shouldFilterRounds)
 		d.SaveOutputStateCSV(&startIDState)
 		os.Exit(0)
