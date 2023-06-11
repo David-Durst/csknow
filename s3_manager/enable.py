@@ -3,6 +3,7 @@ from typing import List
 import boto3
 from utils import *
 import s3fs
+import os
 
 
 def run(args: List[str]):
@@ -17,7 +18,7 @@ def run(args: List[str]):
     src = get_disabled_folder() / file_name
     dst = get_demos_folder() / file_name
     print(f'''moving {src} to {dst}''')
-    fs.mv(s3path_str(src, False), s3path_str(dst, False))
+    os.system(f"aws s3 mv s3://{s3path_str(src, False)} s3://{s3path_str(dst, False)}")
 
 
 if __name__ == "__main__":
