@@ -76,7 +76,7 @@ class HyperparameterOptions:
     weight_decay: float = 0.
     layers: int = 2
     heads: int = 4
-    noise_var: float = 1.
+    noise_var: float = 20.
 
     def __str__(self):
         return f"e_{self.num_epochs}_b_{self.batch_size}_lr_{self.learning_rate}_wd_{self.weight_decay}_l_{self.layers}_h_{self.heads}_n_{self.noise_var}"
