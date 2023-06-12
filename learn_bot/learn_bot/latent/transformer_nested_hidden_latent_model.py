@@ -165,8 +165,8 @@ class TransformerNestedHiddenLatentModel(nn.Module):
 
         if y is not None:
             y_encoded = self.encode_y(x_pos, x_non_pos, y, True)
-            transformed = self.transformer_model(x_encoded, y_encoded, tgt_mask=tgt_mask)
-                                                 #src_key_padding_mask=dead_gathered)#,
+            transformed = self.transformer_model(x_encoded, y_encoded, tgt_mask=tgt_mask,
+                                                 src_key_padding_mask=dead_gathered)#,
                                                  #tgt_key_padding_mask=dead_gathered)
             #transformed = transformed.masked_fill(torch.isnan(transformed), 0)
             latent = self.decoder(transformed)
@@ -175,7 +175,7 @@ class TransformerNestedHiddenLatentModel(nn.Module):
             y_nested = torch.zeros([x.shape[0], self.num_players, delta_pos_grid_num_cells], device=x.device.type)
             y_nested[:, :, 0] = 1.
             y = rearrange(y_nested, "b p d -> b (p d)")
-            memory = self.transformer_model.encoder(x_encoded)#, src_key_padding_mask=dead_gathered)
+            memory = self.transformer_model.encoder(x_encoded, src_key_padding_mask=dead_gathered)
             for i in range(self.num_players_per_team):
                 y_encoded = self.encode_y(x_pos, x_non_pos, y, False)
                 transformed = self.transformer_model.decoder(y_encoded, memory, tgt_mask=tgt_mask)
