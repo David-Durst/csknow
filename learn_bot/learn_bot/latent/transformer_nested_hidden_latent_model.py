@@ -50,6 +50,8 @@ class TransformerNestedHiddenLatentModel(nn.Module):
         ])
 
         self.num_players = len(players_columns)
+        self.num_dim = 3
+        self.num_time_steps = len(self.players_pos_columns) // self.num_dim // self.num_players
         assert self.num_players == outer_latent_size
         self.num_players_per_team = self.num_players // 2
 
@@ -67,7 +69,8 @@ class TransformerNestedHiddenLatentModel(nn.Module):
 
         # NERF code calls it positional embedder, but it's encoder since not learned
         self.positional_encoder, self.positional_encoder_out_dim = get_embedder()
-        self.columns_per_player = (len(self.players_non_pos_columns) // self.num_players) + self.positional_encoder_out_dim
+        self.columns_per_player = (len(self.players_non_pos_columns) // self.num_players) + \
+                                  (self.positional_encoder_out_dim * self.num_time_steps)
 
         self.encoder_model = nn.Sequential(
             nn.Linear(self.columns_per_player, self.internal_width),
@@ -127,13 +130,12 @@ class TransformerNestedHiddenLatentModel(nn.Module):
         y_per_player_shifted = torch.roll(y_per_player, 1, dims=1)
         y_per_player_shifted[:, 0] = 0
         if x_pos.device.type == CPU_DEVICE_STR:
-            y_pos = rearrange(compute_new_pos(x_pos, y_per_player_shifted, self.nav_data_cpu),
-                              "b (p d) -> b p d", d=3)
+            y_pos = compute_new_pos(x_pos, y_per_player_shifted, self.nav_data_cpu)
         else:
-            y_pos = rearrange(compute_new_pos(x_pos, y_per_player_shifted, self.nav_data_cuda),
-                              "b (p d) -> b p d", d=3)
+            y_pos = compute_new_pos(x_pos, y_per_player_shifted, self.nav_data_cuda)
         y_pos_encoded = self.encode_pos(y_pos)
-        y_gathered = torch.cat([y_pos_encoded, x_non_pos], -1)
+        y_pos_time_flattened = rearrange(y_pos_encoded, "b p t d -> b p (t d)")
+        y_gathered = torch.cat([y_pos_time_flattened, x_non_pos], -1)
         return self.encoder_model(y_gathered)
 
     def generate_tgt_mask(self, device: str) -> torch.Tensor:
@@ -152,10 +154,12 @@ class TransformerNestedHiddenLatentModel(nn.Module):
         return team_mask
 
     def forward(self, x, y=None):
-        x_pos = rearrange(x[:, self.players_pos_columns], "b (p d) -> b p d", p=self.num_players, d=3)
+        x_pos = rearrange(x[:, self.players_pos_columns], "b (p t d) -> b p t d", p=self.num_players,
+                          t=self.num_time_steps, d=self.num_dim)
         x_pos_encoded = self.encode_pos(x_pos)
         x_non_pos = rearrange(x[:, self.players_non_pos_columns], "b (p d) -> b p d", p=self.num_players)
-        x_gathered = torch.cat([x_pos_encoded, x_non_pos], -1)
+        x_pos_time_flattened = rearrange(x_pos_encoded, "b p t d -> b p (t d)")
+        x_gathered = torch.cat([x_pos_time_flattened, x_non_pos], -1)
         x_encoded = self.encoder_model(x_gathered)
 
         alive_gathered = x[:, self.alive_columns]

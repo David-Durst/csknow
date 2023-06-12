@@ -70,7 +70,7 @@ def compute_new_pos(input_pos_tensor: torch.tensor, pred_labels: torch.Tensor, n
                                     unscaled_pos_change)
 
     # apply to input pos
-    output_pos_tensor = input_pos_tensor + scaled_pos_change
+    output_pos_tensor = input_pos_tensor[:, :, 0, :] + scaled_pos_change
     output_pos_tensor[:, :, 2] += torch.where(z_jump_index == 2., max_jump_height, 0.)
     output_pos_tensor[:, :, 0] = output_pos_tensor[:, :, 0].clamp(min=nav_data.nav_region.min.x,
                                                                   max=nav_data.nav_region.max.x)
@@ -86,7 +86,9 @@ def compute_new_pos(input_pos_tensor: torch.tensor, pred_labels: torch.Tensor, n
                                            '(b p) o -> b p o', p=len(specific_player_place_area_columns))
     output_pos_tensor[:, :, 2] = torch.where(z_jump_index == 1,
                                              nav_above_below_per_player[:, :, 0], nav_above_below_per_player[:, :, 1])
-    return rearrange(output_pos_tensor, 'b p d -> b (p d)')
+    output_and_history_pos_tensor = torch.roll(input_pos_tensor, 1, 2)
+    output_and_history_pos_tensor[:, :, 0, :] = output_pos_tensor
+    return output_and_history_pos_tensor
 
 
 def delta_one_hot_max_to_index(pred: torch.Tensor) -> torch.Tensor:

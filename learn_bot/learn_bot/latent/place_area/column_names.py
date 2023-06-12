@@ -95,7 +95,7 @@ class PlayerPlaceAreaColumns:
         #return [self.distance_to_a_site, self.distance_to_b_site] + \
         #    flatten_list([self.pos, self.prior_pos, self.vel])
         #return flatten_list([self.pos, self.prior_pos, self.vel])
-        return flatten_list([self.pos])
+        return flatten_list([self.pos, self.prior_pos])
         #return flatten_list([self.aligned_pos])
 
     def to_input_distribution_cat_list(self) -> list[list[str]]:
