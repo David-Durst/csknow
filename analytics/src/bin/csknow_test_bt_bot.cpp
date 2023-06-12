@@ -172,10 +172,10 @@ int main(int argc, char * argv[]) {
                     //finishedTests = learnedTeamworkDataGenerator.tick(tree, state);
                     //outDistributionDataGenerator.initialize(tree, state);
                     //finishedTests = outDistributionDataGenerator.tick(tree, state);
-                    //learnedAllDataGenerator.initialize(tree, state);
-                    //finishedTests = learnedAllDataGenerator.tick(tree, state);
-                    formationDataGenerator.initialize(tree, state);
-                    finishedTests = formationDataGenerator.tick(tree, state);
+                    learnedAllDataGenerator.initialize(tree, state);
+                    finishedTests = learnedAllDataGenerator.tick(tree, state);
+                    //formationDataGenerator.initialize(tree, state);
+                    //finishedTests = formationDataGenerator.tick(tree, state);
                 }
                 else {
                     roundScriptsRunner.initialize(tree, state);

@@ -81,8 +81,8 @@ if __name__ == "__main__":
     #all_data_df = all_data_df[all_data_df[test_success_col] == 1.]
     all_data_df = all_data_df.copy()
 
-    all_data_df = filter_region(all_data_df, AABB(Vec3(530., 1996., 0.), Vec3(1064., 2700., 0.)), True, False,
-                                [1, 2, 3])
+    #all_data_df = filter_region(all_data_df, AABB(Vec3(-580., 1740., 0.), Vec3(-280., 2088., 0.)), True, False,
+    #                            [1, 2, 3, 4])
 
     #for flip_column in [ColumnsToFlip(" CT 1", " CT 2")]:
     #    flip_column.apply_flip(all_data_df)
