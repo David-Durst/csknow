@@ -43,17 +43,19 @@ using std::string;
 using std::reference_wrapper;
 
 int main(int argc, char * argv[]) {
-    if (argc != 4) {
-        std::cout << "please call this code 3 arguments: " << std::endl;
+    if (argc != 4 && argc != 5) {
+        std::cout << "please call this code with 3 or 4 arguments: " << std::endl;
         std::cout << "1. path/to/local_data" << std::endl;
         std::cout << "2. path/to/nav_meshes" << std::endl;
         std::cout << "3. path/to/output/dir" << std::endl;
+        std::cout << "4. y to enable non-test plant rounds" << std::endl;
         return 1;
     }
 
     string dataPath = argv[1];
     string navPath = argv[2];
     string outputDir = argv[3];
+    bool enableNonTestPlantRounds = argc == 5;
 
     std::map<std::string, nav_mesh::nav_file> map_navs;
     //Figure out from where to where you'd like to find a path
@@ -240,10 +242,10 @@ int main(int argc, char * argv[]) {
     string behaviorTreeTeamFeatureStoreName = "behaviorTreeTeamFeatureStore";
     string behaviorTreeWindowFeatureStoreName = "behaviorTreeWindowFeatureStore";
     std::cout << "processing behaviorTreeLatentEvents" << std::endl;
+    keyRetakeEvents.enableNonTestPlantRounds = enableNonTestPlantRounds;
     csknow::behavior_tree_latent_states::BehaviorTreeLatentStates behaviorTreeLatentEvents(ticks, playerAtTick,
                                                                                            ordersResult.orders,
                                                                                            keyRetakeEvents);
-    behaviorTreeLatentEvents.featureStoreResult.disable = true;
     behaviorTreeLatentEvents.runQuery(navPath + "/de_dust2.nav", map_visPoints.at("de_dust2"), d2MeshResult,
                                       d2ReachableResult, d2DistanceToPlacesResult,
                                       nearestNavCellResult, d2AboveBelow,

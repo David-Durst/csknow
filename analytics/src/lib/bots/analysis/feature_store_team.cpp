@@ -134,9 +134,12 @@ namespace csknow::feature_store {
             const csknow::key_retake_events::KeyRetakeEvents & refKeyRetakeEvents = keyRetakeEvents->get();
             for (int64_t i = 0; i < static_cast<int64_t>(size); i++) {
                 int64_t roundIndex = refTicks.roundId[i];
-                if ((refKeyRetakeEvents.roundHasCompleteTest[roundIndex] || refKeyRetakeEvents.roundHasFailedTest[roundIndex]) &&
-                    refKeyRetakeEvents.testStartBeforeOrDuringThisTick[i] &&
-                    !refKeyRetakeEvents.testEndBeforeOrDuringThisTick[i]) {
+                bool testCondition = (refKeyRetakeEvents.roundHasCompleteTest[roundIndex] || refKeyRetakeEvents.roundHasFailedTest[roundIndex]) &&
+                        refKeyRetakeEvents.testStartBeforeOrDuringThisTick[i] && !refKeyRetakeEvents.testEndBeforeOrDuringThisTick[i];
+                bool nonTestCondition = refKeyRetakeEvents.enableNonTestPlantRounds && refKeyRetakeEvents.roundHasPlant[roundIndex] &&
+                        refKeyRetakeEvents.plantFinishedBeforeOrDuringThisTick[i] &&
+                        !(refKeyRetakeEvents.explosionBeforeOrDuringThisTick[i] || refKeyRetakeEvents.defusalFinishedBeforeOrDuringThisTick[i]);
+                if (testCondition || nonTestCondition) {
                     if (i % every_nth_row != 0) {
                         continue;
                     }

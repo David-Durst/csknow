@@ -20,5 +20,5 @@ cd ${script_dir}/../build
 cmake .. -DCMAKE_BUILD_TYPE=Release
 if make -j; then
     chmod a+x csknow_create_train_datasets
-    ${script_dir}/../build/csknow_create_train_datasets ${script_dir}/../../demo_parser/hdf5/big_train_data.hdf5 ${script_dir}/../nav ${script_dir}/../csv_outputs 
+    ${script_dir}/../build/csknow_create_train_datasets ${script_dir}/../../demo_parser/hdf5/big_train_data.hdf5 ${script_dir}/../nav ${script_dir}/../csv_outputs y
 fi
