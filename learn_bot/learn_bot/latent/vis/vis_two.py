@@ -145,9 +145,11 @@ def vis_two(rollout_data_df: pd.DataFrame, rollout_pred_df: pd.DataFrame,
 
             players_to_draw_str = player_distributions_var.get()
             if players_to_draw_str == "*":
-                players_to_draw = list(range(0, len(specific_player_place_area_columns)))
+                rollout_players_to_draw = list(range(0, len(specific_player_place_area_columns)))
+                manual_players_to_draw = rollout_players_to_draw
             else:
-                players_to_draw = [int(p) for p in players_to_draw_str.split(",")]
+                rollout_players_to_draw = [int(p) for p in players_to_draw_str.split(";")[0].split(",")]
+                manual_players_to_draw = [int(p) for p in players_to_draw_str.split(";")[1].split(",")]
 
 
             rollout_colors = {}
@@ -159,25 +161,25 @@ def vis_two(rollout_data_df: pd.DataFrame, rollout_pred_df: pd.DataFrame,
                                        int(255 * rollout_colors[src][2]))
                 manual_colors[tgt] = (int(255 * manual_colors[tgt][0]), int(255 * manual_colors[tgt][1]),
                                       int(255 * manual_colors[tgt][2]))
-            manual_players_to_draw = []
-            for p in players_to_draw:
-                if p in rollout_to_manual_round_data.agent_mapping:
-                    manual_players_to_draw.append(rollout_to_manual_round_data.agent_mapping[p])
 
             if draw_overlap:
                 rollout_players_str = \
-                    draw_all_players(cur_rollout_row, cur_rollout_pred_row, rollout_d2_img_draw, draw_max, players_to_draw,
-                                     draw_only_pos=True, player_to_color=rollout_colors)
+                    draw_all_players(cur_rollout_row, cur_rollout_pred_row, rollout_d2_img_draw, draw_max,
+                                     rollout_players_to_draw, draw_only_pos=True, player_to_color=rollout_colors)
                 manual_players_str = \
-                    draw_all_players(cur_manual_row, cur_manual_pred_row, manual_d2_img_draw, draw_max, manual_players_to_draw,
-                                     draw_only_pos=True, player_to_color=manual_colors, rectangle=False)
+                    draw_all_players(cur_manual_row, cur_manual_pred_row, manual_d2_img_draw, draw_max,
+                                     manual_players_to_draw, draw_only_pos=True, player_to_color=manual_colors,
+                                     rectangle=False)
                 draw_player_connection_lines(cur_rollout_row, cur_manual_row, manual_d2_img_draw,
-                                             rollout_to_manual_round_data.agent_mapping, players_to_draw, rollout_colors)
+                                             rollout_to_manual_round_data.agent_mapping, rollout_players_to_draw,
+                                             rollout_colors)
             else:
                 rollout_players_str = \
-                    draw_all_players(cur_rollout_row, cur_rollout_pred_row, rollout_d2_img_draw, draw_max, players_to_draw)
+                    draw_all_players(cur_rollout_row, cur_rollout_pred_row, rollout_d2_img_draw, draw_max,
+                                     rollout_players_to_draw)
                 manual_players_str = \
-                    draw_all_players(cur_manual_row, cur_manual_pred_row, manual_d2_img_draw, draw_max, manual_players_to_draw)
+                    draw_all_players(cur_manual_row, cur_manual_pred_row, manual_d2_img_draw, draw_max,
+                                     manual_players_to_draw)
             details_text_var.set("rollout\n" + rollout_players_str + "\nmanual\n" + manual_players_str)
 
             if draw_overlap:
