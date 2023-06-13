@@ -1,6 +1,7 @@
 import tkinter as tk
 from tkinter import ttk, font
 from typing import Tuple, Optional, List, Dict
+from math import sqrt, pow
 
 import pandas as pd
 from PIL import Image, ImageDraw, ImageTk as itk
@@ -171,4 +172,35 @@ def draw_all_players(data_series: pd.Series, pred_series: pd.Series, im_draw: Im
                             color = (0, int(255 * clamped_prob), int(255 * clamped_prob), 255)
                     xy_coord_to_sum_coord[xy_coord].draw_vis(im_draw, False, color)
     return result
+
+
+def draw_player_connection_lines(src_data_series: pd.Series, tgt_data_series, im_draw: ImageDraw,
+                                src_to_tgt_player_index: Dict[int, int], players_to_draw: List[int],
+                                src_player_to_color: Dict[int, Tuple]):
+    # colors track by number of players drawn
+    player_drawn_index = 0
+    for player_index in range(len(specific_player_place_area_columns)):
+        if player_index not in players_to_draw:
+            continue
+        player_place_area_columns = specific_player_place_area_columns[player_index]
+        if src_data_series[player_place_area_columns.player_id] != -1:
+            player_drawn_index += 1
+
+            src_pos_coord = VisMapCoordinate(src_data_series[player_place_area_columns.pos[0]],
+                                             src_data_series[player_place_area_columns.pos[1]],
+                                             src_data_series[player_place_area_columns.pos[2]])
+
+            tgt_player_index = src_to_tgt_player_index[player_index]
+            tgt_player_place_area_columns = specific_player_place_area_columns[tgt_player_index]
+            tgt_pos_coord = VisMapCoordinate(tgt_data_series[tgt_player_place_area_columns.pos[0]],
+                                             tgt_data_series[tgt_player_place_area_columns.pos[1]],
+                                             tgt_data_series[tgt_player_place_area_columns.pos[2]])
+            distance = sqrt(pow(src_pos_coord.coords.x - tgt_pos_coord.coords.x, 2) +
+                            pow(src_pos_coord.coords.y - tgt_pos_coord.coords.y, 2))
+
+            if distance > 200.:
+                src_canvas_coords = src_pos_coord.get_canvas_coordinates()
+                tgt_canvas_coords = tgt_pos_coord.get_canvas_coordinates()
+                im_draw.line([src_canvas_coords.x, src_canvas_coords.y, tgt_canvas_coords.x, tgt_canvas_coords.y],
+                             fill=src_player_to_color[player_index], width=5)
 

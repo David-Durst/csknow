@@ -4,7 +4,8 @@ import pandas as pd
 
 from learn_bot.libs.df_grouping import make_index_column
 from learn_bot.mining.area_cluster import *
-from learn_bot.latent.vis.draw_inference import draw_all_players, minimapWidth, minimapHeight
+from learn_bot.latent.vis.draw_inference import draw_all_players, minimapWidth, minimapHeight, \
+    draw_player_connection_lines
 import tkinter as tk
 from tkinter import ttk, font
 from PIL import Image, ImageDraw, ImageTk as itk
@@ -158,19 +159,25 @@ def vis_two(rollout_data_df: pd.DataFrame, rollout_pred_df: pd.DataFrame,
                                        int(255 * rollout_colors[src][2]))
                 manual_colors[tgt] = (int(255 * manual_colors[tgt][0]), int(255 * manual_colors[tgt][1]),
                                       int(255 * manual_colors[tgt][2]))
+            manual_players_to_draw = []
+            for p in players_to_draw:
+                if p in rollout_to_manual_round_data.agent_mapping:
+                    manual_players_to_draw.append(rollout_to_manual_round_data.agent_mapping[p])
 
             if draw_overlap:
                 rollout_players_str = \
                     draw_all_players(cur_rollout_row, cur_rollout_pred_row, rollout_d2_img_draw, draw_max, players_to_draw,
                                      draw_only_pos=True, player_to_color=rollout_colors)
                 manual_players_str = \
-                    draw_all_players(cur_manual_row, cur_manual_pred_row, manual_d2_img_draw, draw_max, players_to_draw,
+                    draw_all_players(cur_manual_row, cur_manual_pred_row, manual_d2_img_draw, draw_max, manual_players_to_draw,
                                      draw_only_pos=True, player_to_color=manual_colors, rectangle=False)
+                draw_player_connection_lines(cur_rollout_row, cur_manual_row, manual_d2_img_draw,
+                                             rollout_to_manual_round_data.agent_mapping, players_to_draw, rollout_colors)
             else:
                 rollout_players_str = \
                     draw_all_players(cur_rollout_row, cur_rollout_pred_row, rollout_d2_img_draw, draw_max, players_to_draw)
                 manual_players_str = \
-                    draw_all_players(cur_manual_row, cur_manual_pred_row, manual_d2_img_draw, draw_max, players_to_draw)
+                    draw_all_players(cur_manual_row, cur_manual_pred_row, manual_d2_img_draw, draw_max, manual_players_to_draw)
             details_text_var.set("rollout\n" + rollout_players_str + "\nmanual\n" + manual_players_str)
 
             if draw_overlap:
