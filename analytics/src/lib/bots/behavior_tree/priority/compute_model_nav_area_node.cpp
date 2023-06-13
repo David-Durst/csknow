@@ -152,10 +152,12 @@ namespace csknow::compute_nav_area {
                                  (csknow::feature_store::delta_pos_grid_num_cells_per_xy_dim / 2);
         modelNavData.deltaZVal = deltaPosOption / csknow::feature_store::delta_pos_grid_num_xy_cells_per_z_change;
 
+        /*
         if ((modelNavData.deltaXVal < 0 || modelNavData.deltaYVal < 0) && curClient.getFootPosForPlayer().x < 600 && curClient.getFootPosForPlayer().y > 1700) {
             int x = 1;
             (void) x;
         }
+         */
 
         AreaId priorTargetAreaId = curPriority.targetAreaId;
         //Vec3 priorTargetPos = curPriority.targetPos;
@@ -205,10 +207,10 @@ namespace csknow::compute_nav_area {
                 << " to cur target pos " << curPriority.targetPos.toString()
                 << " and prior unmodified target pos " << modelNavData.unmodifiedTargetPos.toString() << std::endl;
         }
-         */
         if (priorTargetAreaId == 6803 && curPriority.targetAreaId == 8802) {
             std::cout << "jumping" << std::endl;
         }
+         */
         modelNavData.unmodifiedTargetPos = curPriority.targetPos;
     }
 
