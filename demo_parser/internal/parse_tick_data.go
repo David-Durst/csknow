@@ -54,13 +54,15 @@ func ProcessTickData(localDemName string, idState *IDState) {
 		}
 
 		// c4 position can be wrong if teleport c4. get latest c4 pos on teleport
+		// only do this if not currently being carried.
+		// 2354548_135549_outsiders-vs-ence-m2-dust2_9c77e360-a7ad-11ec-8656-0a58a9feac02.dem has old plant c4 around
+		// when next round starts
 		c4Pos := gs.Bomb().Position()
-		for _, entity := range gs.Entities() {
-			if entity.ServerClass().Name() == "CPlantedC4" {
-				if gs.Bomb().Carrier != nil {
-					println("planted c4 and carrier at same time")
+		if gs.Bomb().Carrier == nil {
+			for _, entity := range gs.Entities() {
+				if entity.ServerClass().Name() == "CPlantedC4" {
+					c4Pos = entity.Position()
 				}
-				c4Pos = entity.Position()
 			}
 		}
 

@@ -115,8 +115,10 @@ func main() {
 				badKey := path.Join(badDemosS3FolderKey, path.Base(*obj.Key))
 				d.UploadFile(uploader, *localDemName, badKey)
 				demosToDelete = append(demosToDelete, *obj.Key)
+			} else {
+				// only finish first run if demo is valid
+				firstRun = false
 			}
-			firstRun = false
 		}
 
 		i++
