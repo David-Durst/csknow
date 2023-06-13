@@ -27,7 +27,7 @@ func addNewRound(idState *IDState, nextTickId RowIndex, roundsTable *table[round
 	idState.nextRound++
 }
 
-func ProcessStructure(unprocessedKey string, localDemName string, idState *IDState, gameType c.GameType) {
+func ProcessStructure(unprocessedKey string, localDemName string, idState *IDState, gameType c.GameType) bool {
 	curGameRow.id = idState.nextGame
 	// increment this locally as won't actually record ticks until after past processing sturcture
 	nextTickId := idState.nextTick
@@ -41,6 +41,12 @@ func ProcessStructure(unprocessedKey string, localDemName string, idState *IDSta
 	cfg.IgnoreErrBombsiteIndexNotFound = true
 	p := demoinfocs.NewParserWithConfig(f, cfg)
 	defer p.Close()
+
+	header, err := p.ParseHeader()
+	if err != nil || header.FrameRate() < 120 {
+		fmt.Printf("skipping %s as frame rate is %f\n", localDemName, header.FrameRate())
+		return false
+	}
 
 	p.RegisterEventHandler(func(e events.RoundStart) {
 		// for now, adding all rounds, so can examine again garbage at end of match
@@ -141,6 +147,7 @@ func ProcessStructure(unprocessedKey string, localDemName string, idState *IDSta
 		fmt.Printf("Error in parsing. T score %d, CT score %d, progress: %f, error:\n %s\n",
 			p.GameState().TeamTerrorists().Score(), p.GameState().TeamCounterTerrorists().Score(), p.Progress(), err.Error())
 	}
+	return true
 }
 
 // period is regulation, OT 0, OT 1, etc

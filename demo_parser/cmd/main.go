@@ -70,6 +70,7 @@ func main() {
 	}
 	dataS3FolderKey := path.Join(d.DemosS3KeyPrefixSuffix, dataName)
 	demosS3FolderKey := path.Join(dataS3FolderKey, d.DemosS3KeyPrefixSuffix)
+	badDemosS3FolderKey := path.Join(dataS3FolderKey, d.BadDemosS3KeyPrefixSuffix)
 	hdf5S3FolderKey := path.Join(dataS3FolderKey, d.HDF5KeySuffix)
 
 	// get local data folder ready
@@ -92,6 +93,8 @@ func main() {
 	svc := s3.New(sess)
 
 	downloader := s3manager.NewDownloader(sess)
+	uploader := s3manager.NewUploader(sess)
+	var demosToDelete []string
 
 	i := 0
 	svc.ListObjectsV2Pages(&s3.ListObjectsV2Input{
@@ -108,13 +111,21 @@ func main() {
 			fmt.Printf("handling S3 demo: %s\n", path.Join(d.BucketName, *obj.Key))
 			*localDemName = filepath.Join(c.DemoDirectory, filepath.Base(*obj.Key))
 			d.DownloadDemo(downloader, *obj.Key, *localDemName)
-			d.ParseDemo(*obj.Key, *localDemName, &startIDState, firstRun, c.Pro, shouldFilterRounds)
+			if !d.ParseDemo(*obj.Key, *localDemName, &startIDState, firstRun, c.Pro, shouldFilterRounds) {
+				badKey := path.Join(badDemosS3FolderKey, path.Base(*obj.Key))
+				d.UploadFile(uploader, *localDemName, badKey)
+				demosToDelete = append(demosToDelete, *obj.Key)
+			}
 			firstRun = false
 		}
 
 		i++
 		return true
 	})
+
+	for _, demoToDelete := range demosToDelete {
+		d.DeleteFile(svc, demoToDelete)
+	}
 
 	currentPath, err := os.Getwd()
 	if err != nil {
@@ -133,7 +144,6 @@ func main() {
 	fmt.Println(string(out))
 
 	if *uploadFlag {
-		uploader := s3manager.NewUploader(sess)
 		hdf5S3CurrentKey := path.Join(dataS3FolderKey, hdf5FileName)
 		t := time.Now()
 		hdf5S3TemporalKey := path.Join(hdf5S3FolderKey, t.Format("2006_01_02_15_04_05_")+hdf5FileName)

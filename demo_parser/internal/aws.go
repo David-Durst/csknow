@@ -10,6 +10,7 @@ import (
 
 const BucketName = "csknow"
 const DemosS3KeyPrefixSuffix = "demos"
+const BadDemosS3KeyPrefixSuffix = "bad"
 const HDF5KeySuffix = "hdf5"
 
 func DownloadDemo(downloader *s3manager.Downloader, fileKey string, localFileName string) {
@@ -46,6 +47,18 @@ func UploadFile(uploader *s3manager.Uploader, localPath string, s3Key string) {
 	})
 	if err != nil {
 		fmt.Errorf("Couldn't upload file" + localPath)
+		os.Exit(1)
+	}
+}
+
+func DeleteFile(svc *s3.S3, s3Key string) {
+	deleteObjectInput := &s3.DeleteObjectInput{
+		Bucket: aws.String(BucketName),
+		Key:    aws.String(s3Key),
+	}
+	_, err := svc.DeleteObject(deleteObjectInput)
+	if err != nil {
+		fmt.Errorf("Couldn't delete file" + s3Key)
 		os.Exit(1)
 	}
 }

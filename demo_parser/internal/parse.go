@@ -35,10 +35,12 @@ func InitTablesTrackers(localDemName string) {
 }
 
 func ParseDemo(unprocessedKey string, localDemName string, idState *IDState, firstRun bool, gameType c.GameType,
-	shouldFilterRounds bool) {
+	shouldFilterRounds bool) bool {
 	fmt.Printf("localDemName: %s\n", localDemName)
 	InitTablesTrackers(localDemName)
-	ProcessStructure(unprocessedKey, localDemName, idState, gameType)
+	if !ProcessStructure(unprocessedKey, localDemName, idState, gameType) {
+		return false
+	}
 	FixRounds()
 	FilterRounds(idState, shouldFilterRounds)
 	ProcessTickData(localDemName, idState)
@@ -46,6 +48,7 @@ func ParseDemo(unprocessedKey string, localDemName string, idState *IDState, fir
 	FlushStructure(firstRun)
 	// this data is big, so flush during run multiple times, close once after done demo
 	FlushTickData(true)
+	return true
 }
 
 /*
