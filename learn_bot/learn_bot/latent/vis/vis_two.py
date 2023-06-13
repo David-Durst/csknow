@@ -146,11 +146,23 @@ def vis_two(rollout_data_df: pd.DataFrame, rollout_pred_df: pd.DataFrame,
             players_to_draw_str = player_distributions_var.get()
             if players_to_draw_str == "*":
                 rollout_players_to_draw = list(range(0, len(specific_player_place_area_columns)))
-                manual_players_to_draw = rollout_players_to_draw
             else:
                 rollout_players_to_draw = [int(p) for p in players_to_draw_str.split(";")[0].split(",")]
-                manual_players_to_draw = [int(p) for p in players_to_draw_str.split(";")[1].split(",")]
 
+            rollout_players_active = []
+            manual_players_active = []
+            for player_index in range(len(specific_player_place_area_columns)):
+                if cur_rollout_row[specific_player_place_area_columns[player_index].player_id] != -1:
+                    rollout_players_active.append(player_index)
+                if cur_manual_row[specific_player_place_area_columns[player_index].player_id] != -1:
+                    manual_players_active.append(player_index)
+            player_index_mapping = {}
+            for src, tgt in rollout_to_manual_round_data.agent_mapping.items():
+                player_index_mapping[rollout_players_active[src]] = manual_players_active[tgt]
+            manual_players_to_draw = []
+            for p in rollout_players_to_draw:
+                if p in player_index_mapping:
+                    manual_players_to_draw.append(player_index_mapping[p])
 
             rollout_colors = {}
             manual_colors = {}
@@ -171,8 +183,7 @@ def vis_two(rollout_data_df: pd.DataFrame, rollout_pred_df: pd.DataFrame,
                                      manual_players_to_draw, draw_only_pos=True, player_to_color=manual_colors,
                                      rectangle=False)
                 draw_player_connection_lines(cur_rollout_row, cur_manual_row, manual_d2_img_draw,
-                                             rollout_to_manual_round_data.agent_mapping, rollout_players_to_draw,
-                                             rollout_colors)
+                                             player_index_mapping, rollout_players_to_draw, rollout_colors)
             else:
                 rollout_players_str = \
                     draw_all_players(cur_rollout_row, cur_rollout_pred_row, rollout_d2_img_draw, draw_max,

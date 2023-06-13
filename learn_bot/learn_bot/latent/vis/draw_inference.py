@@ -98,11 +98,13 @@ def draw_all_players(data_series: pd.Series, pred_series: pd.Series, im_draw: Im
     # colors track by number of players drawn
     player_drawn_index = 0
     for player_index in range(len(specific_player_place_area_columns)):
-        if player_index not in players_to_draw:
-            continue
         player_place_area_columns = specific_player_place_area_columns[player_index]
         if data_series[player_place_area_columns.player_id] != -1:
             player_drawn_index += 1
+
+            if player_index not in players_to_draw:
+                continue
+
             # draw player
             pos_coord = VisMapCoordinate(data_series[player_place_area_columns.pos[0]],
                                          data_series[player_place_area_columns.pos[1]],
@@ -180,11 +182,12 @@ def draw_player_connection_lines(src_data_series: pd.Series, tgt_data_series, im
     # colors track by number of players drawn
     player_drawn_index = 0
     for player_index in range(len(specific_player_place_area_columns)):
-        if player_index not in players_to_draw:
-            continue
         player_place_area_columns = specific_player_place_area_columns[player_index]
         if src_data_series[player_place_area_columns.player_id] != -1:
             player_drawn_index += 1
+
+            if player_index not in players_to_draw:
+                continue
 
             src_pos_coord = VisMapCoordinate(src_data_series[player_place_area_columns.pos[0]],
                                              src_data_series[player_place_area_columns.pos[1]],
