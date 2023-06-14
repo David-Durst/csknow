@@ -1,9 +1,13 @@
+from typing import Set
+
 from learn_bot.libs.df_grouping import make_index_column
 from learn_bot.mining.area_cluster import *
 from learn_bot.latent.vis.draw_inference import draw_all_players, minimapWidth, minimapHeight
 import tkinter as tk
 from tkinter import ttk, font
 from PIL import Image, ImageDraw, ImageTk as itk
+
+good_retake_rounds_path = Path(__file__).parent / 'good_retake_round_ids.txt'
 
 def vis(all_data_df: pd.DataFrame, pred_df: pd.DataFrame):
     make_index_column(all_data_df)
@@ -37,6 +41,7 @@ def vis(all_data_df: pd.DataFrame, pred_df: pd.DataFrame):
     selected_df: pd.DataFrame = all_data_df
     pred_selected_df: pd.DataFrame = pred_df
     draw_max: bool = True
+    good_retake_rounds: Set[int] = set()
 
     def round_slider_changed(cur_round_index):
         nonlocal cur_round
@@ -132,6 +137,14 @@ def vis(all_data_df: pd.DataFrame, pred_df: pd.DataFrame):
         draw_max = not draw_max
         tick_slider_changed(cur_tick_index)
 
+    def good_retake_clicked():
+        if good_retake_var.get():
+            good_retake_rounds.add(cur_round)
+        else:
+            good_retake_rounds.remove(cur_round)
+        with open(good_retake_rounds_path, "w") as f:
+            f.write(str(good_retake_rounds) + "\n")
+
     # state setters
     def change_round_dependent_data():
         nonlocal selected_df, pred_selected_df, cur_round, indices, ticks, game_ticks
@@ -144,6 +157,7 @@ def vis(all_data_df: pd.DataFrame, pred_df: pd.DataFrame):
         tick_slider.configure(to=len(ticks)-1)
         tick_slider.set(0)
         tick_slider_changed(0)
+        good_retake_var.set(cur_round in good_retake_rounds)
 
 
     s = ttk.Style()
@@ -226,6 +240,11 @@ def vis(all_data_df: pd.DataFrame, pred_df: pd.DataFrame):
     player_distributions_var = tk.StringVar(value="*")
     player_distributions_entry = tk.Entry(distribution_control_frame, width=30, textvariable=player_distributions_var)
     player_distributions_entry.pack(side="left")
+
+    good_retake_var = tk.BooleanVar(value=False)
+    good_retake_checkbutton = tk.Checkbutton(distribution_control_frame, text='Good Retake', variable=good_retake_var,
+                                             onvalue=True, offvalue=False, command=good_retake_clicked)
+    good_retake_checkbutton.pack(side="left")
 
     other_state_frame = tk.Frame(window)
     other_state_frame.pack(pady=5)
