@@ -76,7 +76,7 @@ if __name__ == "__main__":
     elif rollout_data:
         all_data_df = load_hdf5_to_pd(rollout_latent_team_hdf5_data_path)
     else:
-        all_data_df = load_hdf5_to_pd(latent_team_hdf5_data_path, rows_to_get=[i for i in range(20000)])
+        all_data_df = load_hdf5_to_pd(latent_team_hdf5_data_path)
     #all_data_df = all_data_df[all_data_df[test_success_col] == 1.]
     all_data_df = all_data_df.copy()
 
@@ -86,7 +86,7 @@ if __name__ == "__main__":
     #for flip_column in [ColumnsToFlip(" CT 1", " CT 2")]:
     #    flip_column.apply_flip(all_data_df)
 
-    if rollout_data:
+    if not manual_data:
         load_result = load_model_file_for_rollout(all_data_df, "delta_pos_checkpoint.pt")
     else:
         load_result = load_model_file(all_data_df, "delta_pos_checkpoint.pt")
