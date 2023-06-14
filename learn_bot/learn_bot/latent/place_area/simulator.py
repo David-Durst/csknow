@@ -103,7 +103,7 @@ def delta_pos_rollout(df: pd.DataFrame, dataset: LatentDataset, model: Transform
     return match_round_lengths(df, rollout_tensor, pred_tensor, round_lengths, cts)
 
 
-manual_data = True
+manual_data = False
 rollout_data = False
 
 if __name__ == "__main__":
@@ -115,8 +115,7 @@ if __name__ == "__main__":
     elif rollout_data:
         all_data_df = load_hdf5_to_pd(rollout_latent_team_hdf5_data_path)
     else:
-        all_data_df = load_hdf5_to_pd(latent_team_hdf5_data_path)
-        all_data_df = all_data_df[(all_data_df['valid'] == 1.) & (all_data_df['c4 status'] < 2)]
+        all_data_df = load_hdf5_to_pd(latent_team_hdf5_data_path, rows_to_get=[i for i in range(20000)])
     all_data_df = all_data_df.copy()
 
     load_result = load_model_file_for_rollout(all_data_df, "delta_pos_checkpoint.pt")

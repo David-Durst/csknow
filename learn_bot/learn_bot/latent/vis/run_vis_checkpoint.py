@@ -66,7 +66,7 @@ def load_model_file_for_rollout(all_data_df: pd.DataFrame, model_file_name: str)
     return TrainResult(all_data, all_data, all_data_df, all_data_df, column_transformers, model)
 
 
-manual_data = True
+manual_data = False
 rollout_data = False
 
 if __name__ == "__main__":
@@ -76,8 +76,7 @@ if __name__ == "__main__":
     elif rollout_data:
         all_data_df = load_hdf5_to_pd(rollout_latent_team_hdf5_data_path)
     else:
-        all_data_df = load_hdf5_to_pd(latent_team_hdf5_data_path)
-        all_data_df = all_data_df[(all_data_df['valid'] == 1.) & (all_data_df['c4 status'] < 2)]
+        all_data_df = load_hdf5_to_pd(latent_team_hdf5_data_path, rows_to_get=[i for i in range(20000)])
     #all_data_df = all_data_df[all_data_df[test_success_col] == 1.]
     all_data_df = all_data_df.copy()
 

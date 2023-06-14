@@ -343,7 +343,7 @@ manual_latent_team_hdf5_data_path = Path(__file__).parent / '..' / '..' / '..' /
 manual_rounds_data_path = Path(__file__).parent / '..' / '..' / '..' / 'analytics' / 'saved_datasets' / 'bot_sample_traces_5_10_23_ticks.csv'
 rollout_latent_team_hdf5_data_path = Path(__file__).parent / '..' / '..' / '..' / 'analytics' / 'rollout_outputs' / 'behaviorTreeTeamFeatureStore.hdf5'
 
-use_manual_data = True
+use_manual_data = False
 use_test_data = False
 
 def run_team_analysis():
@@ -352,6 +352,7 @@ def run_team_analysis():
     test_team_data = None
     if use_manual_data:
         team_data = HDF5Wrapper(manual_latent_team_hdf5_data_path, ['id', round_id_column, test_success_col])
+        team_data.limit(team_data.id_df[test_success_col] == 1.)
     elif use_test_data:
         base_data = load_hdf5_to_pd(manual_latent_team_hdf5_data_path, rows_to_get=[i for i in range(1)])
         team_data_df = create_left_right_train_data(base_data)
@@ -360,8 +361,7 @@ def run_team_analysis():
         test_team_data = PDWrapper('test', test_team_data_df, ['id', round_id_column, test_success_col])
         diff_train_test = False
     else:
-        team_data = load_hdf5_to_pd(latent_team_hdf5_data_path)
-    team_data.limit(team_data.id_df[test_success_col] == 1.)
+        team_data = HDF5Wrapper(latent_team_hdf5_data_path, ['id', round_id_column, test_success_col])
     hyperparameter_options = default_hyperparameter_options
     if len(sys.argv) > 1:
         hyperparameter_indices = [int(i) for i in sys.argv[1].split(",")]
