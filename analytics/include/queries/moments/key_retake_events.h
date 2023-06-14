@@ -21,6 +21,8 @@ namespace csknow::key_retake_events {
         vector<bool> plantFinishedBeforeOrDuringThisTick;
         vector<bool> defusalFinishedBeforeOrDuringThisTick;
         vector<bool> explosionBeforeOrDuringThisTick;
+        vector<bool> ctAlive;
+        vector<bool> tAlive;
         vector<bool> ctAliveAfterExplosion;
         vector<bool> tAliveAfterDefusal;
         // per tick data tracking test states

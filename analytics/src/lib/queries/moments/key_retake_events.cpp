@@ -14,6 +14,8 @@ namespace csknow::key_retake_events {
         plantFinishedBeforeOrDuringThisTick.resize(ticks.size, false);
         defusalFinishedBeforeOrDuringThisTick.resize(ticks.size, false);
         explosionBeforeOrDuringThisTick.resize(ticks.size, false);
+        ctAlive.resize(ticks.size, false);
+        tAlive.resize(ticks.size, false);
         ctAliveAfterExplosion.resize(ticks.size, false);
         tAliveAfterDefusal.resize(ticks.size, false);
         testStartBeforeOrDuringThisTick.resize(ticks.size, false);
@@ -152,18 +154,18 @@ namespace csknow::key_retake_events {
 
             for (int64_t tickIndex = rounds.ticksPerRound[roundIndex].maxId;
                  tickIndex >= rounds.ticksPerRound[roundIndex].minId; tickIndex--) {
-                bool ctAlive = false, tAlive = false;
+                bool ctAliveCurTick = false, tAliveCurTick = false;
                 for (int64_t patIndex = ticks.patPerTick[tickIndex].minId;
                      patIndex <= ticks.patPerTick[tickIndex].maxId; patIndex++) {
                     if (playerAtTick.isAlive[patIndex]) {
                         if (playerAtTick.team[patIndex] == ENGINE_TEAM_CT) {
-                            ctAlive = true;
+                            ctAliveCurTick = true;
                             if (firstPlantTick == tickIndex) {
                                 roundCTAliveOnPlant[roundIndex]++;
                             }
                         }
                         else if (playerAtTick.team[patIndex] == ENGINE_TEAM_T) {
-                            tAlive = true;
+                            tAliveCurTick = true;
                             if (firstPlantTick == tickIndex) {
                                 roundTAliveOnPlant[roundIndex]++;
                             }
@@ -171,10 +173,12 @@ namespace csknow::key_retake_events {
                     }
                 }
 
-                if (ctAlive && explosionBeforeOrDuringThisTick[tickIndex]) {
+                ctAlive[tickIndex] = ctAliveCurTick;
+                if (ctAliveCurTick && explosionBeforeOrDuringThisTick[tickIndex]) {
                     ctAliveAfterExplosion[tickIndex] = true;
                 }
-                if (tAlive && defusalFinishedBeforeOrDuringThisTick[tickIndex]) {
+                tAlive[tickIndex] = tAliveCurTick;
+                if (tAliveCurTick && defusalFinishedBeforeOrDuringThisTick[tickIndex]) {
                     tAliveAfterDefusal[tickIndex] = true;
                 }
 
