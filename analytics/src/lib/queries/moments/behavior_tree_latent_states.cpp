@@ -187,7 +187,7 @@ namespace csknow::behavior_tree_latent_states {
                     if (playerAtTick.isAlive[patIndex]) {
                         playerQueryNode->exec(curState, blackboard->playerToTreeThinkers[curPlayerId]);
 
-                        if (firingPlayers.find(curPlayerId) != firingPlayers.end()) {
+                        if (firingPlayers.find(curPlayerId) != firingPlayers.end() && !featureStoreResult.disable) {
                             featureStoreResult.fireCurTick[patIndex] = true;
                         }
 
