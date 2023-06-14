@@ -179,8 +179,8 @@ void Tree::tick(ServerState & state, const string & mapsPath) {
 
             }
 
-            featureStoreResult.commitPlayerRow(featureStoreResult.defaultBuffer);
-            inferenceManager.recordPlayerValues(featureStoreResult, client.csgoId);
+            //featureStoreResult.commitPlayerRow(featureStoreResult.defaultBuffer);
+            //inferenceManager.recordPlayerValues(featureStoreResult, client.csgoId);
             featureStoreResult.reinit();
         }
 
