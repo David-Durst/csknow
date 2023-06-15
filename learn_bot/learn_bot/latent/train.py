@@ -43,6 +43,7 @@ from typing import Optional
 
 checkpoints_path = Path(__file__).parent / 'checkpoints'
 plot_path = Path(__file__).parent / 'distributions'
+good_retake_rounds_path = Path(__file__).parent / 'vis' / 'good_retake_round_ids.txt'
 
 now = datetime.now()
 runs_path = Path(__file__).parent / 'runs' / now.strftime("%m_%d_%Y__%H_%M_%S")
@@ -70,7 +71,7 @@ class TrainType(Enum):
 
 @dataclass
 class HyperparameterOptions:
-    num_epochs: int = 200
+    num_epochs: int = 60
     batch_size: int = 512
     learning_rate: float = 4e-5
     weight_decay: float = 0.
@@ -136,8 +137,12 @@ class ColumnsToFlip:
             df[col2] = df[col1]
 
 
+total_epochs = 0
+
+
 def train(train_type: TrainType, all_data_hdf5: HDF5Wrapper, hyperparameter_options: HyperparameterOptions = default_hyperparameter_options,
-          diff_train_test=True, flip_columns: List[ColumnsToFlip] = [], force_test_hdf5: Optional[HDF5Wrapper] = None):
+          diff_train_test=True, flip_columns: List[ColumnsToFlip] = [], force_test_hdf5: Optional[HDF5Wrapper] = None,
+          load_model_path: Optional[Path] = None):
 
     run_checkpoints_path = checkpoints_path
     if hyperparameter_options != default_hyperparameter_options:
@@ -182,7 +187,11 @@ def train(train_type: TrainType, all_data_hdf5: HDF5Wrapper, hyperparameter_opti
         column_transformers = IOColumnTransformers(place_area_input_column_types, delta_pos_output_column_types,
                                                    train_hdf5.sample_df)
         model = TransformerNestedHiddenLatentModel(column_transformers, 2 * max_enemies, delta_pos_grid_num_cells,
-                                                   hyperparameter_options.layers, hyperparameter_options.heads).to(device)
+                                                   hyperparameter_options.layers, hyperparameter_options.heads)
+        if load_model_path:
+            model_file = torch.load(load_model_path)
+            model.load_state_dict(model_file['model_state_dict'])
+        model = model.to(device)
         input_column_types = place_area_input_column_types
         output_column_types = delta_pos_output_column_types
     else:
@@ -311,9 +320,10 @@ def train(train_type: TrainType, all_data_hdf5: HDF5Wrapper, hyperparameter_opti
 
     min_test_loss = float("inf")
     def train_and_test_SL(model, train_dataloader, test_dataloader, num_epochs):
+        global total_epochs
         nonlocal optimizer, min_test_loss
-        for epoch_num in range(num_epochs):
-            print(f"\nEpoch {epoch_num}\n" + f"-------------------------------")
+        for _ in range(num_epochs):
+            print(f"\nEpoch {total_epochs}\n" + f"-------------------------------")
             train_loss, train_accuracy = train_or_test_SL_epoch(train_dataloader, model, optimizer, True)
             with torch.no_grad():
                 test_loss, test_accuracy = train_or_test_SL_epoch(test_dataloader, model, None, False)
@@ -321,7 +331,8 @@ def train(train_type: TrainType, all_data_hdf5: HDF5Wrapper, hyperparameter_opti
             if cur_test_less_float < min_test_loss:
                 save_model()
                 min_test_loss = cur_test_less_float
-            save_tensorboard(train_loss, test_loss, train_accuracy, test_accuracy, epoch_num)
+            save_tensorboard(train_loss, test_loss, train_accuracy, test_accuracy, total_epochs)
+            total_epochs += 1
 
     train_hdf5.create_np_array(column_transformers)
     if not diff_train_test and force_test_hdf5:
@@ -349,10 +360,10 @@ manual_latent_team_hdf5_data_path = Path(__file__).parent / '..' / '..' / '..' /
 manual_rounds_data_path = Path(__file__).parent / '..' / '..' / '..' / 'analytics' / 'saved_datasets' / 'bot_sample_traces_5_10_23_ticks.csv'
 rollout_latent_team_hdf5_data_path = Path(__file__).parent / '..' / '..' / '..' / 'analytics' / 'rollout_outputs' / 'behaviorTreeTeamFeatureStore.hdf5'
 
-use_manual_data = False
+use_manual_data = True
 use_test_data = False
 
-def run_team_analysis():
+def run_single_training():
     read_start = time.time()
     diff_train_test = True
     test_team_data = None
@@ -379,6 +390,35 @@ def run_team_analysis():
                              #flip_columns=[ColumnsToFlip(" CT 0", " CT 1")])
 
 
+use_curriculum_training = True
+
+
+def run_curriculum_training():
+    bot_data = HDF5Wrapper(manual_latent_team_hdf5_data_path, ['id', round_id_column, test_success_col])
+    human_data = HDF5Wrapper(latent_team_hdf5_data_path, ['id', round_id_column, test_success_col])
+    with open(good_retake_rounds_path, "r") as f:
+        good_retake_rounds = eval(f.read())
+    human_data.limit(human_data.id_df[round_id_column].isin(good_retake_rounds))
+    hyperparameter_options = default_hyperparameter_options
+    if len(sys.argv) > 1:
+        hyperparameter_indices = [int(i) for i in sys.argv[1].split(",")]
+        for index in hyperparameter_indices:
+            hyperparameter_options = hyperparameter_option_range[index]
+            train(TrainType.DeltaPos, bot_data, hyperparameter_options)
+            #train(TrainType.DeltaPos, human_data, hyperparameter_options,
+            #      load_model_path=checkpoints_path / "delta_pos_checkpoint.pt")
+    else:
+        #train(TrainType.DeltaPos, bot_data, hyperparameter_options)
+        #train(TrainType.DeltaPos, bot_data, hyperparameter_options,
+        #      load_model_path=checkpoints_path / "delta_pos_checkpoint.pt")
+        train(TrainType.DeltaPos, human_data, hyperparameter_options,
+              load_model_path=checkpoints_path / "delta_pos_checkpoint.pt")
+
+
 if __name__ == "__main__":
-    run_team_analysis()
+    if use_curriculum_training:
+        run_curriculum_training()
+    else:
+        run_single_training()
+
 

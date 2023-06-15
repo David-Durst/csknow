@@ -1,13 +1,12 @@
 from typing import Set
 
+from learn_bot.latent.train import good_retake_rounds_path
 from learn_bot.libs.df_grouping import make_index_column
 from learn_bot.mining.area_cluster import *
 from learn_bot.latent.vis.draw_inference import draw_all_players, minimapWidth, minimapHeight
 import tkinter as tk
 from tkinter import ttk, font
 from PIL import Image, ImageDraw, ImageTk as itk
-
-good_retake_rounds_path = Path(__file__).parent / 'good_retake_round_ids.txt'
 
 def vis(all_data_df: pd.DataFrame, pred_df: pd.DataFrame):
     make_index_column(all_data_df)
