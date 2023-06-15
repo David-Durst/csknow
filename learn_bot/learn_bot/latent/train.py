@@ -408,7 +408,7 @@ def run_curriculum_training():
             #train(TrainType.DeltaPos, human_data, hyperparameter_options,
             #      load_model_path=checkpoints_path / "delta_pos_checkpoint.pt")
     else:
-        #train(TrainType.DeltaPos, bot_data, hyperparameter_options)
+        train(TrainType.DeltaPos, bot_data, hyperparameter_options)
         #train(TrainType.DeltaPos, bot_data, hyperparameter_options,
         #      load_model_path=checkpoints_path / "delta_pos_checkpoint.pt")
         train(TrainType.DeltaPos, human_data, hyperparameter_options,
