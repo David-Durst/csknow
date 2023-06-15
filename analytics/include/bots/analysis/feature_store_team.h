@@ -52,6 +52,7 @@ namespace csknow::feature_store {
 
         vector<int64_t> tickIdToInternalId;
         vector<int64_t> internalIdToTickId;
+        vector<int64_t> gameId;
         vector<int64_t> roundId;
         vector<int64_t> roundNumber;
         vector<int64_t> tickId;

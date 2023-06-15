@@ -84,7 +84,9 @@ class HyperparameterOptions:
 
 
 default_hyperparameter_options = HyperparameterOptions()
-hyperparameter_option_range = [HyperparameterOptions(layers=4, heads=8),
+hyperparameter_option_range = [HyperparameterOptions(weight_decay=0.1),
+                               HyperparameterOptions(weight_decay=1e-3),
+                               HyperparameterOptions(layers=4, heads=8),
                                HyperparameterOptions(batch_size=256),
                                HyperparameterOptions(num_epochs=1024),
                                HyperparameterOptions(num_epochs=2048),
@@ -394,7 +396,8 @@ use_curriculum_training = True
 
 
 def run_curriculum_training():
-    bot_data = HDF5Wrapper(manual_latent_team_hdf5_data_path, ['id', round_id_column, test_success_col])
+    global total_epochs
+    bot_data = HDF5Wrapper(manual_latent_team_hdf5_data_path, ['id', round_id_column, game_id_column, test_success_col])
     human_data = HDF5Wrapper(latent_team_hdf5_data_path, ['id', round_id_column, test_success_col])
     with open(good_retake_rounds_path, "r") as f:
         good_retake_rounds = eval(f.read())
@@ -403,14 +406,13 @@ def run_curriculum_training():
     if len(sys.argv) > 1:
         hyperparameter_indices = [int(i) for i in sys.argv[1].split(",")]
         for index in hyperparameter_indices:
+            total_epochs = 0
             hyperparameter_options = hyperparameter_option_range[index]
             train(TrainType.DeltaPos, bot_data, hyperparameter_options)
-            #train(TrainType.DeltaPos, human_data, hyperparameter_options,
-            #      load_model_path=checkpoints_path / "delta_pos_checkpoint.pt")
+            train(TrainType.DeltaPos, human_data, hyperparameter_options,
+                  load_model_path=checkpoints_path / "delta_pos_checkpoint.pt")
     else:
         train(TrainType.DeltaPos, bot_data, hyperparameter_options)
-        #train(TrainType.DeltaPos, bot_data, hyperparameter_options,
-        #      load_model_path=checkpoints_path / "delta_pos_checkpoint.pt")
         train(TrainType.DeltaPos, human_data, hyperparameter_options,
               load_model_path=checkpoints_path / "delta_pos_checkpoint.pt")
 

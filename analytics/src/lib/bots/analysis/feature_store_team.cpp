@@ -11,6 +11,7 @@
 
 namespace csknow::feature_store {
     void TeamFeatureStoreResult::init(size_t size) {
+        gameId.resize(size, INVALID_ID);
         roundId.resize(size, INVALID_ID);
         roundNumber.resize(size, INVALID_ID);
         tickId.resize(size, INVALID_ID);
@@ -169,6 +170,7 @@ namespace csknow::feature_store {
     
     void TeamFeatureStoreResult::reinit() {
         for (int64_t rowIndex = 0; rowIndex < size; rowIndex++) {
+            gameId[rowIndex] = INVALID_ID;
             roundId[rowIndex] = INVALID_ID;
             roundNumber[rowIndex] = INVALID_ID;
             tickId[rowIndex] = INVALID_ID;
@@ -784,7 +786,7 @@ namespace csknow::feature_store {
          */
 //#pragma omp parallel for
         for (int64_t roundIndex = 0; roundIndex < rounds.size; roundIndex++) {
-            //int64_t gameIndex = rounds.gameId[roundIndex];
+            int64_t gameIndex = rounds.gameId[roundIndex];
             TickRates tickRates = computeTickRates(games, rounds, roundIndex);
             CircularBuffer<int64_t> ticks1sFutureTracker(4), ticks2sFutureTracker(4), ticks6sFutureTracker(6),
                 // this one I add to every frame and remove when too far in the future, more accuracte
@@ -796,6 +798,7 @@ namespace csknow::feature_store {
                 if (tickIndex == INVALID_ID) {
                     continue;
                 }
+                gameId[tickIndex] = gameIndex;
                 gameTickNumber[tickIndex] = ticks.gameTickNumber[unmodifiedTickIndex];
                 roundNumber[tickIndex] = rounds.roundNumber[roundIndex];
                 freezeTimeEnded[tickIndex] = rounds.freezeTimeEnd[roundIndex] <= unmodifiedTickIndex;
@@ -897,6 +900,7 @@ namespace csknow::feature_store {
         //hdf5FlatCreateProps.add(HighFive::Deflate(6));
         //hdf5FlatCreateProps.add(HighFive::Chunking(roundId.size()));
 
+        file.createDataSet("/data/game id", gameId, hdf5FlatCreateProps);
         file.createDataSet("/data/round id", roundId, hdf5FlatCreateProps);
         file.createDataSet("/data/tick id", tickId, hdf5FlatCreateProps);
         file.createDataSet("/data/game tick number", gameTickNumber, hdf5FlatCreateProps);
