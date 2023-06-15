@@ -31,7 +31,7 @@ from learn_bot.latent.profiling import profile_latent_model
 from learn_bot.latent.transformer_nested_hidden_latent_model import TransformerNestedHiddenLatentModel
 from learn_bot.libs.hdf5_to_pd import load_hdf5_to_pd, HDF5Wrapper, PDWrapper
 from learn_bot.libs.io_transforms import CUDA_DEVICE_STR
-from learn_bot.latent.accuracy_and_loss import compute_loss, compute_accuracy, finish_accuracy, \
+from learn_bot.latent.accuracy_and_loss import compute_loss, compute_accuracy_and_delta_diff, finish_accuracy_and_delta_diff, \
     CPU_DEVICE_STR, LatentLosses
 from learn_bot.libs.plot_features import plot_untransformed_and_transformed
 from learn_bot.libs.df_grouping import train_test_split_by_col, make_index_column, TrainTestSplit, get_test_col_ids
@@ -228,6 +228,8 @@ def train(train_type: TrainType, all_data_hdf5: HDF5Wrapper, hyperparameter_opti
             model.eval()
         cumulative_loss = LatentLosses()
         accuracy = {}
+        delta_diff_xy = {}
+        delta_diff_xyz = {}
         valids_per_accuracy_column = {}
         #losses = []
         # bar = Bar('Processing', max=size)
@@ -271,17 +273,21 @@ def train(train_type: TrainType, all_data_hdf5: HDF5Wrapper, hyperparameter_opti
                     batch_loss.get_total_loss().backward()
                     optimizer.step()
 
-                compute_accuracy(pred, Y, accuracy, valids_per_accuracy_column, column_transformers)
+                compute_accuracy_and_delta_diff(pred, Y, accuracy, delta_diff_xy, delta_diff_xyz,
+                                                valids_per_accuracy_column, column_transformers)
                 pbar.update(1)
 
         cumulative_loss /= len(dataloader)
         for name in column_transformers.output_types.column_names():
             if name in valids_per_accuracy_column and valids_per_accuracy_column[name] > 0:
                 accuracy[name] = accuracy[name].item() / valids_per_accuracy_column[name].item()
-        accuracy_string = finish_accuracy(accuracy, valids_per_accuracy_column, column_transformers)
+                delta_diff_xy[name] = delta_diff_xy[name].item() / valids_per_accuracy_column[name].item()
+                delta_diff_xyz[name] = delta_diff_xyz[name].item() / valids_per_accuracy_column[name].item()
+        accuracy_string = finish_accuracy_and_delta_diff(accuracy, delta_diff_xy, delta_diff_xyz,
+                                                         valids_per_accuracy_column, column_transformers)
         train_test_str = "Train" if train else "Test"
         print(f"Epoch {train_test_str} Accuracy: {accuracy_string}, Transformed Avg Loss: {cumulative_loss.get_total_loss().item():>8f}")
-        return cumulative_loss, accuracy
+        return cumulative_loss, accuracy, delta_diff_xy, delta_diff_xyz
 
     def save_model():
         nonlocal train_type
@@ -312,13 +318,22 @@ def train(train_type: TrainType, all_data_hdf5: HDF5Wrapper, hyperparameter_opti
     cur_runs_path = path_append(runs_path, "_" + str(hyperparameter_options))
     writer = SummaryWriter(cur_runs_path)
     def save_tensorboard(train_loss: LatentLosses, test_loss: LatentLosses, train_accuracy: Dict, test_accuracy: Dict,
-                         epoch_num):
+                         train_delta_diff_xy: Dict, test_delta_diff_xy: Dict,
+                         train_delta_diff_xyz: Dict, test_delta_diff_xyz: Dict, epoch_num):
         train_loss.add_scalars(writer, 'train', epoch_num)
         test_loss.add_scalars(writer, 'test', epoch_num)
         for name, acc in train_accuracy.items():
             writer.add_scalar('train/acc/' + name, acc, epoch_num)
         for name, acc in test_accuracy.items():
             writer.add_scalar('test/acc/' + name, acc, epoch_num)
+        for name, delta in train_delta_diff_xy.items():
+            writer.add_scalar('train/delta_xy/' + name, delta, epoch_num)
+        for name, delta in test_delta_diff_xy.items():
+            writer.add_scalar('test/delta_xy/' + name, delta, epoch_num)
+        for name, delta_z in train_delta_diff_xyz.items():
+            writer.add_scalar('train/delta_xyz/' + name, delta_z, epoch_num)
+        for name, delta_z in test_delta_diff_xyz.items():
+            writer.add_scalar('test/delta_xyz/' + name, delta_z, epoch_num)
 
     min_test_loss = float("inf")
     def train_and_test_SL(model, train_dataloader, test_dataloader, num_epochs):
@@ -326,14 +341,18 @@ def train(train_type: TrainType, all_data_hdf5: HDF5Wrapper, hyperparameter_opti
         nonlocal optimizer, min_test_loss
         for _ in range(num_epochs):
             print(f"\nEpoch {total_epochs}\n" + f"-------------------------------")
-            train_loss, train_accuracy = train_or_test_SL_epoch(train_dataloader, model, optimizer, True)
+            train_loss, train_accuracy, train_delta_diff_xy, train_delta_diff_xyz = \
+                train_or_test_SL_epoch(train_dataloader, model, optimizer, True)
             with torch.no_grad():
-                test_loss, test_accuracy = train_or_test_SL_epoch(test_dataloader, model, None, False)
+                test_loss, test_accuracy, test_delta_diff_xy, test_delta_diff_xyz = \
+                    train_or_test_SL_epoch(test_dataloader, model, None, False)
             cur_test_less_float = test_loss.get_total_loss().item()
             if cur_test_less_float < min_test_loss:
                 save_model()
                 min_test_loss = cur_test_less_float
-            save_tensorboard(train_loss, test_loss, train_accuracy, test_accuracy, total_epochs)
+            save_tensorboard(train_loss, test_loss, train_accuracy, test_accuracy,
+                             train_delta_diff_xy, test_delta_diff_xy, train_delta_diff_xyz, test_delta_diff_xyz,
+                             total_epochs)
             total_epochs += 1
 
     train_hdf5.create_np_array(column_transformers)
@@ -342,8 +361,8 @@ def train(train_type: TrainType, all_data_hdf5: HDF5Wrapper, hyperparameter_opti
     train_data = LatentHDF5Dataset(train_hdf5, column_transformers)
     test_data = LatentHDF5Dataset(test_hdf5, column_transformers)
     batch_size = min(hyperparameter_options.batch_size, min(len(train_hdf5), len(test_hdf5)))
-    train_dataloader = DataLoader(train_data, batch_size=batch_size, num_workers=10, shuffle=True, pin_memory=True)
-    test_dataloader = DataLoader(test_data, batch_size=batch_size, num_workers=10, shuffle=True, pin_memory=True)
+    train_dataloader = DataLoader(train_data, batch_size=batch_size, num_workers=0, shuffle=True, pin_memory=True)
+    test_dataloader = DataLoader(test_data, batch_size=batch_size, num_workers=0, shuffle=True, pin_memory=True)
 
     print(f"num train examples: {len(train_data)}")
     print(f"num test examples: {len(test_data)}")
