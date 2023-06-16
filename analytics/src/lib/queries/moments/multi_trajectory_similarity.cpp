@@ -537,7 +537,7 @@ namespace csknow::multi_trajectory_similarity {
             for (const auto & metricType : {MetricType::UnconstrainedDTW, MetricType::SlopeConstrainedDTW,
                                             MetricType::PercentileADE}) {
                 const vector<MultiTrajectorySimilarityMetricData> & metricDataMatches = mtSimilarityResult.getDataByType(metricType);
-                for (size_t bestMatchId = 0; bestMatchId < num_similar_trajectory_matches; bestMatchId++) {
+                for (size_t bestMatchId = 0; bestMatchId < metricDataMatches.size(); bestMatchId++) {
                     const MultiTrajectorySimilarityMetricData & metricData = metricDataMatches[bestMatchId];
                     predictedNames.push_back(mtSimilarityResult.predictedMTName);
                     bestFitGroundTruthNames.push_back(metricData.name);
