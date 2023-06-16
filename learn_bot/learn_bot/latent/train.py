@@ -411,7 +411,7 @@ def run_single_training():
                              #flip_columns=[ColumnsToFlip(" CT 0", " CT 1")])
 
 
-use_curriculum_training = True
+use_curriculum_training = False
 
 
 def run_curriculum_training():

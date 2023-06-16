@@ -50,6 +50,7 @@ namespace csknow::multi_trajectory_similarity {
     };
 
     const vector<double> percentiles{0., 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.};
+    constexpr int num_similar_trajectory_matches = 5;
     struct MultiTrajectory {
         vector<Trajectory> trajectories;
         int ctTrajectories, tTrajectories;
@@ -100,20 +101,26 @@ namespace csknow::multi_trajectory_similarity {
     struct MultiTrajectorySimilarityResult {
         MultiTrajectory predictedMT;
         string predictedMTName;
-        MultiTrajectorySimilarityMetricData unconstrainedDTWData, slopeConstrainedDTWData, adeData;
+        vector<MultiTrajectorySimilarityMetricData> unconstrainedDTWDataMatches, slopeConstrainedDTWDataMatches,
+            adeDataMatches;
 
-        const MultiTrajectorySimilarityMetricData & getDataByType(MetricType metricType) const;
+        const vector<MultiTrajectorySimilarityMetricData> & getDataByType(MetricType metricType) const;
+
+        void filterTopDataMatches();
 
         MultiTrajectorySimilarityResult(const MultiTrajectory & predictedMT, const vector<MultiTrajectory> & groundTruthMTs,
                                         const csknow::feature_store::TeamFeatureStoreResult & predictedTraces,
                                         const csknow::feature_store::TeamFeatureStoreResult & groundTruthTraces,
-                                        CTAliveTAliveToAgentMappingOptions ctAliveTAliveToAgentMappingOptions);
+                                        CTAliveTAliveToAgentMappingOptions ctAliveTAliveToAgentMappingOptions,
+                                        std::optional<std::reference_wrapper<const set<int64_t>>> validGroundTruthRoundIds);
     };
 
     struct TraceSimilarityResult {
         vector<MultiTrajectorySimilarityResult> result;
         TraceSimilarityResult(const csknow::feature_store::TeamFeatureStoreResult & predictedTraces,
-                              const csknow::feature_store::TeamFeatureStoreResult & groundTruthTraces);
+                              const csknow::feature_store::TeamFeatureStoreResult & groundTruthTraces,
+                              std::optional<std::reference_wrapper<const set<int64_t>>> validPredictedRoundIds,
+                              std::optional<std::reference_wrapper<const set<int64_t>>> validGroundTruthRoundIds);
         void toHDF5(const string &filePath);
     };
 }

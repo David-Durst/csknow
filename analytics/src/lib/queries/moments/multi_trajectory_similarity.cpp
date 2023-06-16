@@ -406,58 +406,83 @@ namespace csknow::multi_trajectory_similarity {
             const MultiTrajectory & predictedMT, const vector<MultiTrajectory> & groundTruthMTs,
             const csknow::feature_store::TeamFeatureStoreResult &predictedTraces,
             const csknow::feature_store::TeamFeatureStoreResult &groundTruthTraces,
-            CTAliveTAliveToAgentMappingOptions ctAliveTAliveToAgentMappingOptions) {
+            CTAliveTAliveToAgentMappingOptions ctAliveTAliveToAgentMappingOptions,
+            std::optional<std::reference_wrapper<const set<int64_t>>> validGroundTruthRoundIds) {
 
         // for each predicted MT, find best ground truth MT and add it's result to the sum
         this->predictedMT = predictedMT;
         predictedMTName = getName(predictedMT, predictedTraces);
-        unconstrainedDTWData.dtwResult.cost = std::numeric_limits<double>::infinity();
-        slopeConstrainedDTWData.dtwResult.cost = std::numeric_limits<double>::infinity();
-        adeData.dtwResult.cost = std::numeric_limits<double>::infinity();
         for (const auto & groundTruthMT : groundTruthMTs) {
             if (predictedMT.tTrajectories != groundTruthMT.tTrajectories ||
                 predictedMT.ctTrajectories != groundTruthMT.ctTrajectories) {
                 continue;
             }
+            if (validGroundTruthRoundIds && validGroundTruthRoundIds.value().get().count(groundTruthMT.roundId) == 0) {
+                continue;
+            }
+            MultiTrajectorySimilarityMetricData bestUnconstrainedCurDTWData, bestSlopeConstrainedCurDTWData,
+                bestADECurData;
+            bestUnconstrainedCurDTWData.dtwResult.cost = std::numeric_limits<double>::infinity();
+            bestSlopeConstrainedCurDTWData.dtwResult.cost = std::numeric_limits<double>::infinity();
+            bestADECurData.dtwResult.cost = std::numeric_limits<double>::infinity();
             for (const auto & agentMapping :
                 ctAliveTAliveToAgentMappingOptions[predictedMT.ctTrajectories][predictedMT.tTrajectories]) {
                 DTWResult unconstrainedCurDTWResult = predictedMT.dtw(predictedTraces, groundTruthMT, groundTruthTraces,
                                                                       agentMapping, stopOptionsP0Symmetric);
-                if (unconstrainedCurDTWResult.cost < unconstrainedDTWData.dtwResult.cost) {
-                    unconstrainedDTWData.dtwResult = unconstrainedCurDTWResult;
-                    unconstrainedDTWData.agentMapping = agentMapping;
-                    unconstrainedDTWData.mt = groundTruthMT;
+                if (unconstrainedCurDTWResult.cost < bestUnconstrainedCurDTWData.dtwResult.cost) {
+                    bestUnconstrainedCurDTWData.dtwResult = unconstrainedCurDTWResult;
+                    bestUnconstrainedCurDTWData.agentMapping = agentMapping;
+                    bestUnconstrainedCurDTWData.mt = groundTruthMT;
                 }
                 DTWResult slopeConstrainedCurDTWResult = predictedMT.dtw(predictedTraces, groundTruthMT, groundTruthTraces,
                                                                          agentMapping, stopOptionsP1_2Symmetric);
-                if (slopeConstrainedCurDTWResult.cost < slopeConstrainedDTWData.dtwResult.cost) {
-                    slopeConstrainedDTWData.dtwResult = slopeConstrainedCurDTWResult;
-                    slopeConstrainedDTWData.agentMapping = agentMapping;
-                    slopeConstrainedDTWData.mt = groundTruthMT;
+                if (slopeConstrainedCurDTWResult.cost < bestSlopeConstrainedCurDTWData.dtwResult.cost) {
+                    bestSlopeConstrainedCurDTWData.dtwResult = slopeConstrainedCurDTWResult;
+                    bestSlopeConstrainedCurDTWData.agentMapping = agentMapping;
+                    bestSlopeConstrainedCurDTWData.mt = groundTruthMT;
                 }
                 DTWResult adeCurResult = predictedMT.percentileADE(predictedTraces, groundTruthMT, groundTruthTraces,
                                                                    agentMapping);
-                if (adeCurResult.cost < adeData.dtwResult.cost) {
-                    adeData.dtwResult = adeCurResult;
-                    adeData.agentMapping = agentMapping;
-                    adeData.mt = groundTruthMT;
+                if (adeCurResult.cost < bestADECurData.dtwResult.cost) {
+                    bestADECurData.dtwResult = adeCurResult;
+                    bestADECurData.agentMapping = agentMapping;
+                    bestADECurData.mt = groundTruthMT;
                 }
             }
+            unconstrainedDTWDataMatches.push_back(bestUnconstrainedCurDTWData);
+            slopeConstrainedDTWDataMatches.push_back(bestSlopeConstrainedCurDTWData);
+            adeDataMatches.push_back(bestADECurData);
+            if (unconstrainedDTWDataMatches.size() > 100) {
+                filterTopDataMatches();
+            }
         }
-        unconstrainedDTWData.name = getName(unconstrainedDTWData.mt, groundTruthTraces);
-        unconstrainedDTWData.deltaTime = predictedMT.maxTime(predictedTraces) - unconstrainedDTWData.mt.maxTime(groundTruthTraces);
-        unconstrainedDTWData.deltaDistance = predictedMT.distance(predictedTraces) - unconstrainedDTWData.mt.distance(groundTruthTraces);
-        slopeConstrainedDTWData.name = getName(slopeConstrainedDTWData.mt, groundTruthTraces);
-        slopeConstrainedDTWData.deltaTime = predictedMT.maxTime(predictedTraces) - slopeConstrainedDTWData.mt.maxTime(groundTruthTraces);
-        slopeConstrainedDTWData.deltaDistance = predictedMT.distance(predictedTraces) - slopeConstrainedDTWData.mt.distance(groundTruthTraces);
-        adeData.name = getName(adeData.mt, groundTruthTraces);
-        adeData.deltaTime = predictedMT.maxTime(predictedTraces) - adeData.mt.maxTime(groundTruthTraces);
-        adeData.deltaDistance = predictedMT.distance(predictedTraces) - adeData.mt.distance(groundTruthTraces);
+        filterTopDataMatches();
+        for (auto & unconstrainedDTWData : unconstrainedDTWDataMatches) {
+            unconstrainedDTWData.name = getName(unconstrainedDTWData.mt, groundTruthTraces);
+            unconstrainedDTWData.deltaTime =
+                    predictedMT.maxTime(predictedTraces) - unconstrainedDTWData.mt.maxTime(groundTruthTraces);
+            unconstrainedDTWData.deltaDistance =
+                    predictedMT.distance(predictedTraces) - unconstrainedDTWData.mt.distance(groundTruthTraces);
+        }
+        for (auto & slopeConstrainedDTWData : slopeConstrainedDTWDataMatches) {
+            slopeConstrainedDTWData.name = getName(slopeConstrainedDTWData.mt, groundTruthTraces);
+            slopeConstrainedDTWData.deltaTime =
+                    predictedMT.maxTime(predictedTraces) - slopeConstrainedDTWData.mt.maxTime(groundTruthTraces);
+            slopeConstrainedDTWData.deltaDistance =
+                    predictedMT.distance(predictedTraces) - slopeConstrainedDTWData.mt.distance(groundTruthTraces);
+        }
+        for (auto & adeData : adeDataMatches) {
+            adeData.name = getName(adeData.mt, groundTruthTraces);
+            adeData.deltaTime = predictedMT.maxTime(predictedTraces) - adeData.mt.maxTime(groundTruthTraces);
+            adeData.deltaDistance = predictedMT.distance(predictedTraces) - adeData.mt.distance(groundTruthTraces);
+        }
     }
 
 
     TraceSimilarityResult::TraceSimilarityResult(const csknow::feature_store::TeamFeatureStoreResult & predictedTraces,
-                                                 const csknow::feature_store::TeamFeatureStoreResult & groundTruthTraces) {
+                                                 const csknow::feature_store::TeamFeatureStoreResult & groundTruthTraces,
+                                                 std::optional<std::reference_wrapper<const set<int64_t>>> validPredictedRoundIds,
+                                                 std::optional<std::reference_wrapper<const set<int64_t>>> validGroundTruthRoundIds) {
         vector<MultiTrajectory> predictedMTs = createMTs(predictedTraces),
                                 groundTruthMTs = createMTs(groundTruthTraces);
 
@@ -465,21 +490,40 @@ namespace csknow::multi_trajectory_similarity {
 
         result.reserve(predictedMTs.size());
         for (const auto & predictedMT : predictedMTs) {
+            if (validPredictedRoundIds && validPredictedRoundIds.value().get().count(predictedMT.roundId) == 0) {
+                continue;
+            }
             result.emplace_back(predictedMT, groundTruthMTs, predictedTraces, groundTruthTraces,
-                                ctAliveTAliveToAgentMappingOptions);
+                                ctAliveTAliveToAgentMappingOptions, validGroundTruthRoundIds);
         }
     }
 
-    const MultiTrajectorySimilarityMetricData & MultiTrajectorySimilarityResult::getDataByType(
+    const vector<MultiTrajectorySimilarityMetricData> & MultiTrajectorySimilarityResult::getDataByType(
             csknow::multi_trajectory_similarity::MetricType metricType) const {
         switch (metricType) {
             case MetricType::UnconstrainedDTW:
-                return unconstrainedDTWData;
+                return unconstrainedDTWDataMatches;
             case MetricType::SlopeConstrainedDTW:
-                return slopeConstrainedDTWData;
+                return slopeConstrainedDTWDataMatches;
             default:
-                return adeData;
+                return adeDataMatches;
         }
+    }
+
+    bool multiTrajectorySimilarityMetricDataComparator(const MultiTrajectorySimilarityMetricData & a,
+                                                       const MultiTrajectorySimilarityMetricData & b) {
+        return a.dtwResult.cost < b.dtwResult.cost;
+    }
+
+    void MultiTrajectorySimilarityResult::filterTopDataMatches() {
+        std::sort(unconstrainedDTWDataMatches.begin(), unconstrainedDTWDataMatches.end(),
+                  multiTrajectorySimilarityMetricDataComparator);
+        unconstrainedDTWDataMatches.resize(num_similar_trajectory_matches);
+        std::sort(slopeConstrainedDTWDataMatches.begin(), slopeConstrainedDTWDataMatches.end(),
+                  multiTrajectorySimilarityMetricDataComparator);
+        slopeConstrainedDTWDataMatches.resize(num_similar_trajectory_matches);
+        std::sort(adeDataMatches.begin(), adeDataMatches.end(), multiTrajectorySimilarityMetricDataComparator);
+        adeDataMatches.resize(num_similar_trajectory_matches);
     }
 
     string metricTypeToString(MetricType metricType) {
@@ -497,7 +541,7 @@ namespace csknow::multi_trajectory_similarity {
         vector<string> predictedNames, bestFitGroundTruthNames;
         vector<string> metricTypes;
         vector<int64_t> predictedRoundIds, bestFitGroundTruthRoundIds;
-        vector<size_t> predictedStartTraceIndex, predictedEndTraceIndex,
+        vector<size_t> bestMatchIds, predictedStartTraceIndex, predictedEndTraceIndex,
             bestFitGroundTruthStartTraceIndex, bestFitGroundTruthEndTraceIndex;
         vector<double> dtwCost, deltaTime, deltaDistance;
         vector<string> agentMapping;
@@ -506,32 +550,36 @@ namespace csknow::multi_trajectory_similarity {
         for (const auto & mtSimilarityResult : result) {
             for (const auto & metricType : {MetricType::UnconstrainedDTW, MetricType::SlopeConstrainedDTW,
                                             MetricType::PercentileADE}) {
-                const MultiTrajectorySimilarityMetricData & metricData = mtSimilarityResult.getDataByType(metricType);
-                predictedNames.push_back(mtSimilarityResult.predictedMTName);
-                bestFitGroundTruthNames.push_back(metricData.name);
-                metricTypes.push_back(metricTypeToString(metricType));
-                predictedRoundIds.push_back(mtSimilarityResult.predictedMT.roundId);
-                bestFitGroundTruthRoundIds.push_back(metricData.mt.roundId);
-                predictedStartTraceIndex.push_back(mtSimilarityResult.predictedMT.startTraceIndex());
-                predictedEndTraceIndex.push_back(mtSimilarityResult.predictedMT.maxEndTraceIndex());
-                bestFitGroundTruthStartTraceIndex.push_back(metricData.mt.startTraceIndex());
-                bestFitGroundTruthEndTraceIndex.push_back(metricData.mt.maxEndTraceIndex());
-                dtwCost.push_back(metricData.dtwResult.cost);
-                deltaTime.push_back(metricData.deltaTime);
-                deltaDistance.push_back(metricData.deltaDistance);
-                string mappingStr = "";
-                bool first = true;
-                for (const auto & [src, tgt] : metricData.agentMapping) {
-                    mappingStr += (!first ? "," : "") + std::to_string(src) + "_" + std::to_string(tgt);
-                    first = false;
+                const vector<MultiTrajectorySimilarityMetricData> & metricDataMatches = mtSimilarityResult.getDataByType(metricType);
+                for (size_t bestMatchId = 0; bestMatchId < num_similar_trajectory_matches; bestMatchId++) {
+                    const MultiTrajectorySimilarityMetricData & metricData = metricDataMatches[bestMatchId];
+                    predictedNames.push_back(mtSimilarityResult.predictedMTName);
+                    bestFitGroundTruthNames.push_back(metricData.name);
+                    metricTypes.push_back(metricTypeToString(metricType));
+                    predictedRoundIds.push_back(mtSimilarityResult.predictedMT.roundId);
+                    bestFitGroundTruthRoundIds.push_back(metricData.mt.roundId);
+                    bestMatchIds.push_back(bestMatchId);
+                    predictedStartTraceIndex.push_back(mtSimilarityResult.predictedMT.startTraceIndex());
+                    predictedEndTraceIndex.push_back(mtSimilarityResult.predictedMT.maxEndTraceIndex());
+                    bestFitGroundTruthStartTraceIndex.push_back(metricData.mt.startTraceIndex());
+                    bestFitGroundTruthEndTraceIndex.push_back(metricData.mt.maxEndTraceIndex());
+                    dtwCost.push_back(metricData.dtwResult.cost);
+                    deltaTime.push_back(metricData.deltaTime);
+                    deltaDistance.push_back(metricData.deltaDistance);
+                    string mappingStr = "";
+                    bool first = true;
+                    for (const auto & [src, tgt] : metricData.agentMapping) {
+                        mappingStr += (!first ? "," : "") + std::to_string(src) + "_" + std::to_string(tgt);
+                        first = false;
+                    }
+                    agentMapping.push_back(mappingStr);
+                    startDTWMatchedIndices.push_back(firstMatchedIndex.size());
+                    for (const auto & matchedIndices : metricData.dtwResult.matchedIndices) {
+                        firstMatchedIndex.push_back(matchedIndices.first);
+                        secondMatchedIndex.push_back(matchedIndices.second);
+                    }
+                    lengthDTWMatchedIndices.push_back(firstMatchedIndex.size() - startDTWMatchedIndices.back());
                 }
-                agentMapping.push_back(mappingStr);
-                startDTWMatchedIndices.push_back(firstMatchedIndex.size());
-                for (const auto & matchedIndices : metricData.dtwResult.matchedIndices) {
-                    firstMatchedIndex.push_back(matchedIndices.first);
-                    secondMatchedIndex.push_back(matchedIndices.second);
-                }
-                lengthDTWMatchedIndices.push_back(firstMatchedIndex.size() - startDTWMatchedIndices.back());
             }
         }
 
@@ -541,6 +589,7 @@ namespace csknow::multi_trajectory_similarity {
         file.createDataSet("/data/metric type", metricTypes);
         file.createDataSet("/data/predicted round id", predictedRoundIds);
         file.createDataSet("/data/best fit ground truth round id", bestFitGroundTruthRoundIds);
+        file.createDataSet("/data/best match ids", bestMatchIds);
         file.createDataSet("/data/predicted start trace index", predictedStartTraceIndex);
         file.createDataSet("/data/predicted end trace index", predictedEndTraceIndex);
         file.createDataSet("/data/best fit ground truth start trace index", bestFitGroundTruthStartTraceIndex);
