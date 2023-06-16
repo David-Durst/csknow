@@ -71,12 +71,28 @@ void Tree::tick(ServerState & state, const string & mapsPath) {
         }
         for (const auto & areaId : blackboard->removedAreas) {
             size_t areaIndex = blackboard->navFile.m_area_ids_to_indices[areaId];
+            bool foundValidConnection = false;
             for (size_t j = 0; j < blackboard->navFile.connections_area_length[areaIndex]; j++) {
                 size_t conAreaIndex = blackboard->navFile.connections[blackboard->navFile.connections_area_start[areaIndex] + j];
                 AreaId conAreaId = blackboard->navFile.m_areas[conAreaIndex].get_id();
                 if (blackboard->removedAreaAlternatives.find(conAreaId) == blackboard->removedAreaAlternatives.end()) {
+                    foundValidConnection = true;
                     blackboard->removedAreaAlternatives[areaId] = conAreaId;
                     break;
+                }
+            }
+            // if not connected to anything valid, just get the nearest valid
+            if (!foundValidConnection) {
+                Vec3 curAreaCenter = getCenter(blackboard->mapMeshResult.coordinate[areaIndex]);
+                double minDistance = std::numeric_limits<double>::infinity();
+                for (size_t otherAreaIndex = 0; otherAreaIndex < blackboard->mapMeshResult.areaId.size(); otherAreaIndex++) {
+                    AABB otherAreaCoordinate = blackboard->mapMeshResult.coordinate[otherAreaIndex];
+                    double newDistance = computeDistance((curAreaCenter), getCenter(otherAreaCoordinate));
+                    AreaId otherAreaId = blackboard->mapMeshResult.areaId[otherAreaIndex];
+                    if (blackboard->removedAreaAlternatives.count(otherAreaId) == 0 && newDistance < minDistance) {
+                        blackboard->removedAreaAlternatives[areaId] = otherAreaId;
+                        minDistance = newDistance;
+                    }
                 }
             }
         }
