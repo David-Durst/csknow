@@ -61,7 +61,7 @@ int main(int argc, char * argv[]) {
     bool finishedTests = false;
     csknow::plant_states::PlantStatesResult plantStatesResult;
     plantStatesResult.load(savedDatasetsDir + "/plantStates.hdf5");
-    ScriptsRunner roundScriptsRunner(createRoundScripts(plantStatesResult, false), true);
+    ScriptsRunner roundScriptsRunner(createRoundScripts(plantStatesResult, true), true);
 
     ScriptsRunner learnedNavDataGenerator(csknow::tests::learned::createLearnedNavScripts(200, true), false);
     ScriptsRunner learnedHoldDataGenerator(csknow::tests::learned::createLearnedHoldScripts(200, true), false);

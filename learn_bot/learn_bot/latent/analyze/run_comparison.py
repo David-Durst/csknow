@@ -13,7 +13,7 @@ from learn_bot.latent.place_area.column_names import place_area_input_column_typ
     delta_pos_grid_num_cells
 from learn_bot.latent.transformer_nested_hidden_latent_model import TransformerNestedHiddenLatentModel
 from learn_bot.latent.vis.off_policy_inference import off_policy_inference
-from learn_bot.latent.vis.vis_two import vis_two, RolloutToManualDict, RolloutToManualRoundData
+from learn_bot.latent.vis.vis_two import vis_two, PredictedToGroundTruthDict, PredictedToGroundTruthRoundData
 from learn_bot.libs.df_grouping import make_index_column
 from learn_bot.latent.train import manual_latent_team_hdf5_data_path, rollout_latent_team_hdf5_data_path, \
     checkpoints_path, TrainResult
@@ -22,7 +22,7 @@ from learn_bot.libs.io_transforms import IOColumnTransformers, CUDA_DEVICE_STR
 from learn_bot.latent.analyze.comparison_column_names import *
 
 similarity_plots_path = Path(__file__).parent / 'similarity_plots'
-similiarity_hdf5_data_path = Path(__file__).parent / '..' / '..' / '..' / '..' / 'analytics' / 'rollout_outputs' / 'pathSimilarity.hdf5'
+similiarity_hdf5_data_path = Path(__file__).parent / '..' / '..' / '..' / '..' / 'analytics' / 'predicted_outputs' / 'pathSimilarity.hdf5'
 
 def load_model_file(all_data_df: pd.DataFrame, model_file_name: str) -> TrainResult:
     cur_checkpoints_path = checkpoints_path
@@ -42,29 +42,53 @@ def load_model_file(all_data_df: pd.DataFrame, model_file_name: str) -> TrainRes
 
     return TrainResult(all_data, all_data, all_data_df, all_data_df, column_transformers, model)
 
+bot_good_rounds = [4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 33, 35, 37, 39, 41, 43, 45, 47, 49, 51, 53, 55,
+                   57, 59, 61, 63, 65, 67, 69, 71, 73, 75, 78, 80, 82, 85, 87, 89, 91, 93, 95, 97, 99, 102, 104, 106, 108,
+                   110, 112, 114, 116, 118, 120, 122, 124, 126, 128, 130, 132, 134, 136, 138, 140, 142, 144, 146, 148,
+                   150, 154, 156, 158, 160, 162, 164, 166, 168, 170, 172, 174, 176, 178, 180, 182, 184, 186, 188, 190,
+                   192, 194, 196, 198, 200, 202, 204, 206, 208, 210, 212, 214, 216, 218, 220, 222, 224, 226, 228, 230,
+                   232, 234, 236, 238, 240, 242, 244, 246, 248, 250, 252, 254, 256, 258, 260, 262, 264, 266, 268, 270,
+                   272, 274, 276, 278, 280, 282, 284, 286, 288, 290, 292, 294, 296, 298, 300, 302, 304, 306, 308, 310,
+                   312, 314, 316, 318, 320, 322, 324, 326, 328, 330, 332, 334, 336, 338, 340, 342, 344, 346, 348, 350,
+                   352, 354, 356, 358, 360, 362, 364, 366, 368, 370, 372, 374, 376, 378, 380, 382, 384, 386, 388, 391,
+                   393, 396, 398, 400, 402, 404, 406, 408, 410, 412, 414, 416, 418, 420, 422, 424, 426, 428, 430, 432,
+                   434, 436, 438, 440, 442, 444, 446, 450, 452, 454, 456, 458, 460, 462, 464, 466, 468, 470, 472, 474,
+                   476, 478, 480, 482, 484, 486, 488, 490, 492, 494, 496, 498, 500, 502, 504, 506, 508, 510, 512, 514,
+                   516, 518, 520, 522, 524, 526, 528, 530, 532, 534, 537, 539]
+
+human_good_rounds = [512, 1, 4, 517, 520, 10, 15, 529, 534, 535, 25, 26, 27, 28, 541, 542, 544, 549, 38, 550, 552, 41, 42, 46, 558, 49, 566,
+                     567, 56, 571, 61, 64, 65, 577, 67, 581, 71, 583, 584, 586, 587, 589, 592, 85, 88, 90, 91, 603, 96, 609, 610, 99, 101,
+                     613, 615, 110, 111, 113, 626, 116, 629, 118, 122, 123, 124, 638, 127, 129, 641, 131, 133, 134, 135, 136, 137, 647, 139,
+                     140, 652, 655, 144, 656, 148, 153, 666, 158, 159, 670, 162, 165, 166, 167, 678, 176, 691, 181, 182, 185, 699, 190, 706,
+                     709, 199, 205, 207, 210, 217, 227, 234, 236, 237, 239, 242, 253, 255, 258, 261, 264, 269, 270, 276, 278, 280, 281, 299,
+                     302, 303, 306, 308, 313, 321, 324, 326, 331, 335, 337, 345, 346, 347, 349, 355, 358, 365, 373, 375, 377, 380, 384, 394,
+                     398, 408, 412, 422, 424, 427, 429, 431, 435, 439, 441, 442, 443, 451, 453, 456, 458, 461, 468, 479, 481, 484, 485, 488,
+                     500, 507, 508]
+
 
 def compare_trajectories():
     os.makedirs(similarity_plots_path, exist_ok=True)
     similarity_df = load_hdf5_to_pd(similiarity_hdf5_data_path)
     similarity_match_index_df = load_hdf5_to_pd(similiarity_hdf5_data_path, root_key='extra')
-    rollout_df = load_hdf5_to_pd(rollout_latent_team_hdf5_data_path).copy()
-    rollout_result = load_model_file(rollout_df, "delta_pos_checkpoint.pt")
 
-    rollout_to_manual_dict: RolloutToManualDict = {}
-    manual_indices_ranges: List[range] = []
+    predicted_df = load_hdf5_to_pd(rollout_latent_team_hdf5_data_path).copy()
+    predicted_result = load_model_file(predicted_df, "delta_pos_checkpoint.pt")
+
+    predicted_to_ground_truth_dict: PredictedToGroundTruthDict = {}
+    ground_truth_indices_ranges: List[range] = []
     pd.options.display.max_columns = None
     pd.options.display.max_rows = None
     pd.options.display.width = 1000
     print(similarity_df.loc[:, [predicted_round_id_col, best_fit_ground_truth_round_id_col, metric_type_col,
                                 dtw_cost_col, delta_distance_col, delta_time_col]])
     # multiple predicted rounds may match to same ground truth round, don't save them multiple times
-    manual_indices_ranges_set: set = set()
+    ground_truth_indices_ranges_set: set = set()
     for idx, row in similarity_df.iterrows():
         ground_truth_trace_range = range(row[best_fit_ground_truth_start_trace_index_col],
                                          row[best_fit_ground_truth_end_trace_index_col] + 1)
-        if ground_truth_trace_range not in manual_indices_ranges_set:
-            manual_indices_ranges.append(ground_truth_trace_range)
-            manual_indices_ranges_set.add(ground_truth_trace_range)
+        if ground_truth_trace_range not in ground_truth_indices_ranges_set:
+            ground_truth_indices_ranges.append(ground_truth_trace_range)
+            ground_truth_indices_ranges_set.add(ground_truth_trace_range)
 
         metric_type = row[metric_type_col].decode('utf-8')
         similarity_match_name = f"{row[predicted_name_col].decode('utf-8')}_{metric_type}_vs_" \
@@ -76,25 +100,25 @@ def compare_trajectories():
         for agent_pair in agent_mapping_str.split(','):
             agents = [int(agent) for agent in agent_pair.split('_')]
             agent_mapping[int(agents[0])] = int(agents[1])
-        if row[predicted_round_id_col] not in rollout_to_manual_dict:
-            rollout_to_manual_dict[row[predicted_round_id_col]] = {}
-        rollout_to_manual_dict[row[predicted_round_id_col]][metric_type] = \
-            RolloutToManualRoundData(row[predicted_round_id_col], row[best_fit_ground_truth_round_id_col],
+        if row[predicted_round_id_col] not in predicted_to_ground_truth_dict:
+            predicted_to_ground_truth_dict[row[predicted_round_id_col]] = {}
+        predicted_to_ground_truth_dict[row[predicted_round_id_col]][metric_type] = \
+            PredictedToGroundTruthRoundData(row[predicted_round_id_col], row[best_fit_ground_truth_round_id_col],
                                      row, similarity_match_df, agent_mapping)
         similarity_match_df.plot(first_matched_index_col, second_matched_index_col, title=similarity_match_name)
         plt.savefig(similarity_plots_path / (similarity_match_name + '.png'))
 
-    manual_indices_ranges = sorted(manual_indices_ranges, key=lambda r: r.start)
-    manual_indices = [i for r in manual_indices_ranges for i in r]
+    ground_truth_indices_ranges = sorted(ground_truth_indices_ranges, key=lambda r: r.start)
+    ground_truth_indices = [i for r in ground_truth_indices_ranges for i in r]
 
-    manual_df = load_hdf5_to_pd(manual_latent_team_hdf5_data_path, rows_to_get=manual_indices).copy()
-    manual_result = load_model_file(manual_df, "delta_pos_checkpoint.pt")
+    ground_truth_df = load_hdf5_to_pd(manual_latent_team_hdf5_data_path, rows_to_get=ground_truth_indices).copy()
+    ground_truth_result = load_model_file(ground_truth_df, "delta_pos_checkpoint.pt")
 
-    rollout_pred_pf = off_policy_inference(rollout_result.train_dataset, rollout_result.model,
-                                           rollout_result.column_transformers)
-    manual_pred_pf = off_policy_inference(manual_result.train_dataset, manual_result.model,
-                                          manual_result.column_transformers)
-    vis_two(rollout_df, rollout_pred_pf, manual_df, manual_pred_pf, rollout_to_manual_dict)
+    predicted_pred_pf = off_policy_inference(predicted_result.train_dataset, predicted_result.model,
+                                           predicted_result.column_transformers)
+    ground_truth_pred_pf = off_policy_inference(ground_truth_result.train_dataset, ground_truth_result.model,
+                                          ground_truth_result.column_transformers)
+    vis_two(predicted_df, predicted_pred_pf, ground_truth_df, ground_truth_pred_pf, predicted_to_ground_truth_dict)
 
 
 if __name__ == "__main__":

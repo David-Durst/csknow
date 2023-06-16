@@ -14,24 +14,24 @@ import matplotlib as mpl
 
 
 @dataclass
-class RolloutToManualRoundData:
-    rollout_round_id: int
-    manual_round_id: int
+class PredictedToGroundTruthRoundData:
+    predicted_round_id: int
+    ground_truth_round_id: int
     similarity_row: pd.Series
     similarity_match_df: pd.DataFrame
     agent_mapping: Dict[int, int]
 
 
-RolloutToManualDict = Dict[int, Dict[str, RolloutToManualRoundData]]
+PredictedToGroundTruthDict = Dict[int, Dict[str, PredictedToGroundTruthRoundData]]
 
 cmap = mpl.cm.get_cmap("Set3").colors
 
-def vis_two(rollout_data_df: pd.DataFrame, rollout_pred_df: pd.DataFrame,
-            manual_data_df: pd.DataFrame, manual_pred_df: pd.DataFrame, rollout_to_manual_dict: RolloutToManualDict):
-    make_index_column(rollout_data_df)
-    make_index_column(rollout_pred_df)
-    make_index_column(manual_data_df)
-    make_index_column(manual_pred_df)
+def vis_two(predicted_data_df: pd.DataFrame, predicted_pred_df: pd.DataFrame,
+            ground_truth_data_df: pd.DataFrame, ground_truth_pred_df: pd.DataFrame, predicted_to_ground_truth_dict: PredictedToGroundTruthDict):
+    make_index_column(predicted_data_df)
+    make_index_column(predicted_pred_df)
+    make_index_column(ground_truth_data_df)
+    make_index_column(ground_truth_pred_df)
 
     #This creates the main window of an application
     window = tk.Tk()
@@ -46,26 +46,26 @@ def vis_two(rollout_data_df: pd.DataFrame, rollout_pred_df: pd.DataFrame,
     img_frame.pack(pady=5)
     d2_img = Image.open(d2_radar_path)
     d2_img = d2_img.resize((minimapWidth, minimapHeight), Image.ANTIALIAS)
-    rollout_d2_img_draw = d2_img.copy()
-    rollout_d2_photo_img = itk.PhotoImage(rollout_d2_img_draw)
-    rollout_img_label = tk.Label(img_frame, image=rollout_d2_photo_img)
-    rollout_img_label.pack(side="left")
-    manual_d2_img_draw = d2_img.copy()
-    manual_d2_photo_img = itk.PhotoImage(manual_d2_img_draw)
-    manual_img_label = tk.Label(img_frame, image=manual_d2_photo_img)
-    manual_img_label.pack(side="left")
+    predicted_d2_img_draw = d2_img.copy()
+    predicted_d2_photo_img = itk.PhotoImage(predicted_d2_img_draw)
+    predicted_img_label = tk.Label(img_frame, image=predicted_d2_photo_img)
+    predicted_img_label.pack(side="left")
+    ground_truth_d2_img_draw = d2_img.copy()
+    ground_truth_d2_photo_img = itk.PhotoImage(ground_truth_d2_img_draw)
+    ground_truth_img_label = tk.Label(img_frame, image=ground_truth_d2_photo_img)
+    ground_truth_img_label.pack(side="left")
 
-    rounds = rollout_data_df.loc[:, round_id_column].unique().tolist()
+    rounds = predicted_data_df.loc[:, round_id_column].unique().tolist()
     cur_round: int = -1
     metric_types = ['Unconstrained DTW', 'Slope Constrained DTW', 'Percentile ADE']
     cur_metric_type: str = metric_types[0]
     cur_similarity_tick_index: int = -1
-    rollout_selected_df: pd.DataFrame = rollout_data_df
-    rollout_pred_selected_df: pd.DataFrame = rollout_pred_df
-    manual_selected_df: pd.DataFrame = manual_data_df
-    manual_pred_selected_df: pd.DataFrame = manual_pred_df
+    predicted_selected_df: pd.DataFrame = predicted_data_df
+    predicted_pred_selected_df: pd.DataFrame = predicted_pred_df
+    ground_truth_selected_df: pd.DataFrame = ground_truth_data_df
+    ground_truth_pred_selected_df: pd.DataFrame = ground_truth_pred_df
     similarity_match_df: Optional[pd.DataFrame] = None
-    rollout_to_manual_round_data: Optional[RolloutToManualRoundData] = None
+    predicted_to_ground_truth_round_data: Optional[PredictedToGroundTruthRoundData] = None
     draw_max: bool = True
     draw_overlap: bool = False
 
@@ -112,103 +112,103 @@ def vis_two(rollout_data_df: pd.DataFrame, rollout_pred_df: pd.DataFrame,
             metric_slider_changed(cur_metric_index)
 
     def tick_slider_changed(cur_similarity_tick_index_str):
-        nonlocal cur_similarity_tick_index, d2_img, rollout_d2_img_draw, rollout_img_label, \
-            manual_d2_img_draw, manual_img_label, draw_max, draw_overlap
-        if len(rollout_selected_df) > 0:
+        nonlocal cur_similarity_tick_index, d2_img, predicted_d2_img_draw, predicted_img_label, \
+            ground_truth_d2_img_draw, ground_truth_img_label, draw_max, draw_overlap
+        if len(predicted_selected_df) > 0:
             cur_similarity_tick_index = int(cur_similarity_tick_index_str)
 
-            cur_rollout_index = similarity_match_df.iloc[cur_similarity_tick_index].loc[first_matched_index_col]
-            cur_rollout_row = rollout_selected_df.iloc[cur_rollout_index]
-            cur_rollout_pred_row = rollout_pred_selected_df.iloc[cur_rollout_index]
-            cur_rollout_tick_id = cur_rollout_row.loc[tick_id_column]
-            cur_rollout_game_tick_id = cur_rollout_row.loc[tick_id_column]
+            cur_predicted_index = similarity_match_df.iloc[cur_similarity_tick_index].loc[first_matched_index_col]
+            cur_predicted_row = predicted_selected_df.iloc[cur_predicted_index]
+            cur_predicted_pred_row = predicted_pred_selected_df.iloc[cur_predicted_index]
+            cur_predicted_tick_id = cur_predicted_row.loc[tick_id_column]
+            cur_predicted_game_tick_id = cur_predicted_row.loc[tick_id_column]
 
-            cur_manual_index = similarity_match_df.iloc[cur_similarity_tick_index].loc[second_matched_index_col]
-            cur_manual_row = manual_selected_df.iloc[cur_manual_index]
-            cur_manual_pred_row = manual_pred_selected_df.iloc[cur_manual_index]
-            cur_manual_round = cur_manual_row.loc[round_id_column]
-            cur_manual_tick_id = cur_manual_row.loc[tick_id_column]
-            cur_manual_game_tick_id = cur_manual_row.loc[game_tick_number_column]
+            cur_ground_truth_index = similarity_match_df.iloc[cur_similarity_tick_index].loc[second_matched_index_col]
+            cur_ground_truth_row = ground_truth_selected_df.iloc[cur_ground_truth_index]
+            cur_ground_truth_pred_row = ground_truth_pred_selected_df.iloc[cur_ground_truth_index]
+            cur_ground_truth_round = cur_ground_truth_row.loc[round_id_column]
+            cur_ground_truth_tick_id = cur_ground_truth_row.loc[tick_id_column]
+            cur_ground_truth_game_tick_id = cur_ground_truth_row.loc[game_tick_number_column]
 
-            tick_id_text_var.set(f"Rollout Tick ID: {cur_rollout_tick_id}, Rollout Game Tick ID: {cur_rollout_game_tick_id}, "
-                                 f"Manual Tick Id: {cur_manual_tick_id}, Manual Game Tick ID: {cur_manual_game_tick_id}")
-            round_id_text_var.set(f"Rollout Round ID: {int(cur_round)}, Rollout Round Number: {cur_rollout_row.loc['round number']}, "
-                                  f"Manual Round ID: {int(cur_manual_round)}, Manual Round Number: {cur_manual_row.loc['round number']}")
+            tick_id_text_var.set(f"Predicted Tick ID: {cur_predicted_tick_id}, Predicted Game Tick ID: {cur_predicted_game_tick_id}, "
+                                 f"Ground Truth Tick Id: {cur_ground_truth_tick_id}, Ground Truth Game Tick ID: {cur_ground_truth_game_tick_id}")
+            round_id_text_var.set(f"Predicted Round ID: {int(cur_round)}, Predicted Round Number: {cur_predicted_row.loc['round number']}, "
+                                  f"Ground Truth Round ID: {int(cur_ground_truth_round)}, Ground Truth Round Number: {cur_ground_truth_row.loc['round number']}")
             metric_id_text_var.set(cur_metric_type)
 
-            rollout_d2_img_copy = d2_img.copy().convert("RGBA")
-            rollout_d2_overlay_im = Image.new("RGBA", rollout_d2_img_copy.size, (255, 255, 255, 0))
-            rollout_d2_img_draw = ImageDraw.Draw(rollout_d2_overlay_im)
-            manual_d2_img_copy = d2_img.copy().convert("RGBA")
-            manual_d2_overlay_im = Image.new("RGBA", manual_d2_img_copy.size, (255, 255, 255, 0))
-            manual_d2_img_draw = ImageDraw.Draw(manual_d2_overlay_im)
+            predicted_d2_img_copy = d2_img.copy().convert("RGBA")
+            predicted_d2_overlay_im = Image.new("RGBA", predicted_d2_img_copy.size, (255, 255, 255, 0))
+            predicted_d2_img_draw = ImageDraw.Draw(predicted_d2_overlay_im)
+            ground_truth_d2_img_copy = d2_img.copy().convert("RGBA")
+            ground_truth_d2_overlay_im = Image.new("RGBA", ground_truth_d2_img_copy.size, (255, 255, 255, 0))
+            ground_truth_d2_img_draw = ImageDraw.Draw(ground_truth_d2_overlay_im)
 
             players_to_draw_str = player_distributions_var.get()
             if players_to_draw_str == "*":
-                rollout_players_to_draw = list(range(0, len(specific_player_place_area_columns)))
+                predicted_players_to_draw = list(range(0, len(specific_player_place_area_columns)))
             else:
-                rollout_players_to_draw = [int(p) for p in players_to_draw_str.split(";")[0].split(",")]
+                predicted_players_to_draw = [int(p) for p in players_to_draw_str.split(";")[0].split(",")]
 
-            rollout_players_active = []
-            manual_players_active = []
+            predicted_players_active = []
+            ground_truth_players_active = []
             for player_index in range(len(specific_player_place_area_columns)):
-                if cur_rollout_row[specific_player_place_area_columns[player_index].player_id] != -1:
-                    rollout_players_active.append(player_index)
-                if cur_manual_row[specific_player_place_area_columns[player_index].player_id] != -1:
-                    manual_players_active.append(player_index)
+                if cur_predicted_row[specific_player_place_area_columns[player_index].player_id] != -1:
+                    predicted_players_active.append(player_index)
+                if cur_ground_truth_row[specific_player_place_area_columns[player_index].player_id] != -1:
+                    ground_truth_players_active.append(player_index)
             player_index_mapping = {}
-            for src, tgt in rollout_to_manual_round_data.agent_mapping.items():
-                player_index_mapping[rollout_players_active[src]] = manual_players_active[tgt]
-            manual_players_to_draw = []
-            for p in rollout_players_to_draw:
+            for src, tgt in predicted_to_ground_truth_round_data.agent_mapping.items():
+                player_index_mapping[predicted_players_active[src]] = ground_truth_players_active[tgt]
+            ground_truth_players_to_draw = []
+            for p in predicted_players_to_draw:
                 if p in player_index_mapping:
-                    manual_players_to_draw.append(player_index_mapping[p])
+                    ground_truth_players_to_draw.append(player_index_mapping[p])
 
-            rollout_colors = {}
-            manual_colors = {}
-            for src, tgt in rollout_to_manual_round_data.agent_mapping.items():
-                rollout_colors[src] = cmap[src]
-                manual_colors[tgt] = cmap[src]
-                rollout_colors[src] = (int(255 * rollout_colors[src][0]), int(255 * rollout_colors[src][1]),
-                                       int(255 * rollout_colors[src][2]))
-                manual_colors[tgt] = (int(255 * manual_colors[tgt][0]), int(255 * manual_colors[tgt][1]),
-                                      int(255 * manual_colors[tgt][2]))
+            predicted_colors = {}
+            ground_truth_colors = {}
+            for src, tgt in predicted_to_ground_truth_round_data.agent_mapping.items():
+                predicted_colors[src] = cmap[src]
+                ground_truth_colors[tgt] = cmap[src]
+                predicted_colors[src] = (int(255 * predicted_colors[src][0]), int(255 * predicted_colors[src][1]),
+                                       int(255 * predicted_colors[src][2]))
+                ground_truth_colors[tgt] = (int(255 * ground_truth_colors[tgt][0]), int(255 * ground_truth_colors[tgt][1]),
+                                      int(255 * ground_truth_colors[tgt][2]))
 
             if draw_overlap:
-                rollout_players_str = \
-                    draw_all_players(cur_rollout_row, cur_rollout_pred_row, rollout_d2_img_draw, draw_max,
-                                     rollout_players_to_draw, draw_only_pos=True, player_to_color=rollout_colors)
-                manual_players_str = \
-                    draw_all_players(cur_manual_row, cur_manual_pred_row, manual_d2_img_draw, draw_max,
-                                     manual_players_to_draw, draw_only_pos=True, player_to_color=manual_colors,
+                predicted_players_str = \
+                    draw_all_players(cur_predicted_row, cur_predicted_pred_row, predicted_d2_img_draw, draw_max,
+                                     predicted_players_to_draw, draw_only_pos=True, player_to_color=predicted_colors)
+                ground_truth_players_str = \
+                    draw_all_players(cur_ground_truth_row, cur_ground_truth_pred_row, ground_truth_d2_img_draw, draw_max,
+                                     ground_truth_players_to_draw, draw_only_pos=True, player_to_color=ground_truth_colors,
                                      rectangle=False)
-                draw_player_connection_lines(cur_rollout_row, cur_manual_row, manual_d2_img_draw,
-                                             player_index_mapping, rollout_players_to_draw, rollout_colors)
+                draw_player_connection_lines(cur_predicted_row, cur_ground_truth_row, ground_truth_d2_img_draw,
+                                             player_index_mapping, predicted_players_to_draw, predicted_colors)
             else:
-                rollout_players_str = \
-                    draw_all_players(cur_rollout_row, cur_rollout_pred_row, rollout_d2_img_draw, draw_max,
-                                     rollout_players_to_draw)
-                manual_players_str = \
-                    draw_all_players(cur_manual_row, cur_manual_pred_row, manual_d2_img_draw, draw_max,
-                                     manual_players_to_draw)
-            details_text_var.set("rollout\n" + rollout_players_str + "\nmanual\n" + manual_players_str)
+                predicted_players_str = \
+                    draw_all_players(cur_predicted_row, cur_predicted_pred_row, predicted_d2_img_draw, draw_max,
+                                     predicted_players_to_draw)
+                ground_truth_players_str = \
+                    draw_all_players(cur_ground_truth_row, cur_ground_truth_pred_row, ground_truth_d2_img_draw, draw_max,
+                                     ground_truth_players_to_draw)
+            details_text_var.set("predicted\n" + predicted_players_str + "\nground_truth\n" + ground_truth_players_str)
 
             if draw_overlap:
-                rollout_d2_img_copy.alpha_composite(rollout_d2_overlay_im)
-                rollout_d2_img_copy.alpha_composite(manual_d2_overlay_im)
-                updated_rollout_d2_photo_img = itk.PhotoImage(rollout_d2_img_copy)
-                rollout_img_label.configure(image=updated_rollout_d2_photo_img)
-                rollout_img_label.image = updated_rollout_d2_photo_img
+                predicted_d2_img_copy.alpha_composite(predicted_d2_overlay_im)
+                predicted_d2_img_copy.alpha_composite(ground_truth_d2_overlay_im)
+                updated_predicted_d2_photo_img = itk.PhotoImage(predicted_d2_img_copy)
+                predicted_img_label.configure(image=updated_predicted_d2_photo_img)
+                predicted_img_label.image = updated_predicted_d2_photo_img
             else:
-                rollout_d2_img_copy.alpha_composite(rollout_d2_overlay_im)
-                updated_rollout_d2_photo_img = itk.PhotoImage(rollout_d2_img_copy)
-                rollout_img_label.configure(image=updated_rollout_d2_photo_img)
-                rollout_img_label.image = updated_rollout_d2_photo_img
+                predicted_d2_img_copy.alpha_composite(predicted_d2_overlay_im)
+                updated_predicted_d2_photo_img = itk.PhotoImage(predicted_d2_img_copy)
+                predicted_img_label.configure(image=updated_predicted_d2_photo_img)
+                predicted_img_label.image = updated_predicted_d2_photo_img
 
-                manual_d2_img_copy.alpha_composite(manual_d2_overlay_im)
-                updated_manual_d2_photo_img = itk.PhotoImage(manual_d2_img_copy)
-                manual_img_label.configure(image=updated_manual_d2_photo_img)
-                manual_img_label.image = updated_manual_d2_photo_img
+                ground_truth_d2_img_copy.alpha_composite(ground_truth_d2_overlay_im)
+                updated_ground_truth_d2_photo_img = itk.PhotoImage(ground_truth_d2_img_copy)
+                ground_truth_img_label.configure(image=updated_ground_truth_d2_photo_img)
+                ground_truth_img_label.image = updated_ground_truth_d2_photo_img
 
     def step_back_clicked():
         nonlocal cur_similarity_tick_index
@@ -259,24 +259,24 @@ def vis_two(rollout_data_df: pd.DataFrame, rollout_pred_df: pd.DataFrame,
         nonlocal draw_overlap
         draw_overlap = not draw_overlap
         if draw_overlap:
-            manual_img_label.pack_forget()
+            ground_truth_img_label.pack_forget()
         else:
-            manual_img_label.pack(side="left")
+            ground_truth_img_label.pack(side="left")
         tick_slider_changed(cur_similarity_tick_index)
 
     # state setters
     def change_round_metric_dependent_data():
-        nonlocal rollout_selected_df, rollout_pred_selected_df, manual_selected_df, manual_pred_selected_df, \
-            similarity_match_df, cur_round, cur_metric_type, rollout_to_manual_round_data
-        rollout_selected_df = rollout_data_df.loc[rollout_data_df[round_id_column] == cur_round]
-        rollout_pred_selected_df = rollout_pred_df.loc[rollout_data_df[round_id_column] == cur_round]
+        nonlocal predicted_selected_df, predicted_pred_selected_df, ground_truth_selected_df, ground_truth_pred_selected_df, \
+            similarity_match_df, cur_round, cur_metric_type, predicted_to_ground_truth_round_data
+        predicted_selected_df = predicted_data_df.loc[predicted_data_df[round_id_column] == cur_round]
+        predicted_pred_selected_df = predicted_pred_df.loc[predicted_data_df[round_id_column] == cur_round]
 
-        rollout_to_manual_round_data = rollout_to_manual_dict[cur_round][cur_metric_type]
-        manual_selected_df = \
-            manual_data_df.loc[manual_data_df[round_id_column] == rollout_to_manual_round_data.manual_round_id]
-        manual_pred_selected_df = \
-            manual_pred_df.loc[manual_data_df[round_id_column] == rollout_to_manual_round_data.manual_round_id]
-        similarity_match_df = rollout_to_manual_round_data.similarity_match_df
+        predicted_to_ground_truth_round_data = predicted_to_ground_truth_dict[cur_round][cur_metric_type]
+        ground_truth_selected_df = \
+            ground_truth_data_df.loc[ground_truth_data_df[round_id_column] == predicted_to_ground_truth_round_data.ground_truth_round_id]
+        ground_truth_pred_selected_df = \
+            ground_truth_pred_df.loc[ground_truth_data_df[round_id_column] == predicted_to_ground_truth_round_data.ground_truth_round_id]
+        similarity_match_df = predicted_to_ground_truth_round_data.similarity_match_df
 
         tick_slider.configure(to=len(similarity_match_df)-1)
         tick_slider.set(0)
