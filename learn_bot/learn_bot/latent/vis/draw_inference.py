@@ -193,6 +193,8 @@ def draw_player_connection_lines(src_data_series: pd.Series, tgt_data_series, im
                                              src_data_series[player_place_area_columns.pos[1]],
                                              src_data_series[player_place_area_columns.pos[2]])
 
+            if player_index not in src_to_tgt_player_index:
+                continue
             tgt_player_index = src_to_tgt_player_index[player_index]
             tgt_player_place_area_columns = specific_player_place_area_columns[tgt_player_index]
             tgt_pos_coord = VisMapCoordinate(tgt_data_series[tgt_player_place_area_columns.pos[0]],

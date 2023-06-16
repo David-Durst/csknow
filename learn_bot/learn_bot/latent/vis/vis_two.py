@@ -149,6 +149,7 @@ def vis_two(predicted_data_df: pd.DataFrame, predicted_pred_df: pd.DataFrame,
             else:
                 predicted_players_to_draw = [int(p) for p in players_to_draw_str.split(";")[0].split(",")]
 
+            # need to update these so only change once per round, at start when all players alive
             predicted_players_active = []
             ground_truth_players_active = []
             for player_index in range(len(specific_player_place_area_columns)):
@@ -158,7 +159,9 @@ def vis_two(predicted_data_df: pd.DataFrame, predicted_pred_df: pd.DataFrame,
                     ground_truth_players_active.append(player_index)
             player_index_mapping = {}
             for src, tgt in predicted_to_ground_truth_round_data.agent_mapping.items():
-                player_index_mapping[predicted_players_active[src]] = ground_truth_players_active[tgt]
+                # can't do indexing this way, players_active is list, not map while src/tgt are index in list
+                if src in predicted_players_active and tgt in ground_truth_players_active:
+                    player_index_mapping[predicted_players_active[src]] = ground_truth_players_active[tgt]
             ground_truth_players_to_draw = []
             for p in predicted_players_to_draw:
                 if p in player_index_mapping:
