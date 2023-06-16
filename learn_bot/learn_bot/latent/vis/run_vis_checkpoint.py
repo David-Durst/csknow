@@ -14,7 +14,7 @@ from learn_bot.libs.hdf5_to_pd import load_hdf5_to_pd
 from learn_bot.libs.io_transforms import IOColumnTransformers, CUDA_DEVICE_STR
 from learn_bot.latent.transformer_nested_hidden_latent_model import TransformerNestedHiddenLatentModel
 from learn_bot.latent.train import checkpoints_path, TrainResult, manual_latent_team_hdf5_data_path, \
-    latent_team_hdf5_data_path, rollout_latent_team_hdf5_data_path, ColumnsToFlip
+    human_latent_team_hdf5_data_path, rollout_latent_team_hdf5_data_path, ColumnsToFlip
 from learn_bot.libs.df_grouping import make_index_column, train_test_split_by_col_ids
 from learn_bot.latent.vis.off_policy_inference import off_policy_inference
 from learn_bot.latent.vis.vis import vis
@@ -76,7 +76,7 @@ if __name__ == "__main__":
     elif rollout_data:
         all_data_df = load_hdf5_to_pd(rollout_latent_team_hdf5_data_path)
     else:
-        all_data_df = load_hdf5_to_pd(latent_team_hdf5_data_path)
+        all_data_df = load_hdf5_to_pd(human_latent_team_hdf5_data_path)
     #all_data_df = all_data_df[all_data_df[test_success_col] == 1.]
     all_data_df = all_data_df.copy()
 

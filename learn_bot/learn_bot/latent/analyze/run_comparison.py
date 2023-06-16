@@ -8,7 +8,7 @@ import pandas as pd
 import torch
 
 from learn_bot.latent.dataset import LatentDataset
-from learn_bot.latent.engagement.column_names import max_enemies
+from learn_bot.latent.engagement.column_names import max_enemies, round_id_column
 from learn_bot.latent.place_area.column_names import place_area_input_column_types, delta_pos_output_column_types, \
     delta_pos_grid_num_cells
 from learn_bot.latent.transformer_nested_hidden_latent_model import TransformerNestedHiddenLatentModel
@@ -16,13 +16,14 @@ from learn_bot.latent.vis.off_policy_inference import off_policy_inference
 from learn_bot.latent.vis.vis_two import vis_two, PredictedToGroundTruthDict, PredictedToGroundTruthRoundData
 from learn_bot.libs.df_grouping import make_index_column
 from learn_bot.latent.train import manual_latent_team_hdf5_data_path, rollout_latent_team_hdf5_data_path, \
-    checkpoints_path, TrainResult
-from learn_bot.libs.hdf5_to_pd import load_hdf5_to_pd
+    checkpoints_path, TrainResult, human_latent_team_hdf5_data_path, latent_id_cols
+from learn_bot.libs.hdf5_to_pd import load_hdf5_to_pd, HDF5Wrapper
 from learn_bot.libs.io_transforms import IOColumnTransformers, CUDA_DEVICE_STR
 from learn_bot.latent.analyze.comparison_column_names import *
 
 similarity_plots_path = Path(__file__).parent / 'similarity_plots'
-similiarity_hdf5_data_path = Path(__file__).parent / '..' / '..' / '..' / '..' / 'analytics' / 'predicted_outputs' / 'pathSimilarity.hdf5'
+similarity_hdf5_data_path = Path(__file__).parent / '..' / '..' / '..' / '..' / 'analytics' / 'rollout_outputs' / 'pathSimilarity.hdf5'
+bot_similarity_hdf5_data_path = Path(__file__).parent / '..' / '..' / '..' / '..' / 'analytics' / 'manual_outputs' / 'botTrajectorySimilarity.hdf5'
 
 def load_model_file(all_data_df: pd.DataFrame, model_file_name: str) -> TrainResult:
     cur_checkpoints_path = checkpoints_path
@@ -65,13 +66,33 @@ human_good_rounds = [512, 1, 4, 517, 520, 10, 15, 529, 534, 535, 25, 26, 27, 28,
                      398, 408, 412, 422, 424, 427, 429, 431, 435, 439, 441, 442, 443, 451, 453, 456, 458, 461, 468, 479, 481, 484, 485, 488,
                      500, 507, 508]
 
+#predicted_data_path = rollout_latent_team_hdf5_data_path
+predicted_data_path = manual_latent_team_hdf5_data_path
+#predicted_data_path = human_latent_team_hdf5_data_path
+#ground_truth_data_path = rollout_latent_team_hdf5_data_path
+ground_truth_data_path = manual_latent_team_hdf5_data_path
+#ground_truth_data_path = human_latent_team_hdf5_data_path
+limit_to_bot_good = True
+limit_to_human_good = False
+metric_cost_file_name = "bot_distribution"
+
 
 def compare_trajectories():
     os.makedirs(similarity_plots_path, exist_ok=True)
-    similarity_df = load_hdf5_to_pd(similiarity_hdf5_data_path)
-    similarity_match_index_df = load_hdf5_to_pd(similiarity_hdf5_data_path, root_key='extra')
+    similarity_df = load_hdf5_to_pd(bot_similarity_hdf5_data_path)
+    similarity_df = similarity_df[similarity_df[dtw_cost_col] != 0.]
+    similarity_match_index_df = load_hdf5_to_pd(bot_similarity_hdf5_data_path, root_key='extra')
 
-    predicted_df = load_hdf5_to_pd(rollout_latent_team_hdf5_data_path).copy()
+    if limit_to_bot_good:
+        predicted_hdf5_wrapper = HDF5Wrapper(predicted_data_path, latent_id_cols)
+        predicted_hdf5_wrapper.limit(predicted_hdf5_wrapper.id_df[round_id_column].isin(bot_good_rounds))
+        predicted_df = load_hdf5_to_pd(predicted_data_path, rows_to_get=list(predicted_hdf5_wrapper.id_df['id'])).copy()
+    elif limit_to_human_good:
+        predicted_hdf5_wrapper = HDF5Wrapper(predicted_data_path, latent_id_cols)
+        predicted_hdf5_wrapper.limit(predicted_hdf5_wrapper.id_df[round_id_column].isin(human_good_rounds))
+        predicted_df = load_hdf5_to_pd(predicted_data_path, rows_to_get=list(predicted_hdf5_wrapper.id_df['id'])).copy()
+    else:
+        predicted_df = load_hdf5_to_pd(predicted_data_path).copy()
     predicted_result = load_model_file(predicted_df, "delta_pos_checkpoint.pt")
 
     predicted_to_ground_truth_dict: PredictedToGroundTruthDict = {}
@@ -79,8 +100,26 @@ def compare_trajectories():
     pd.options.display.max_columns = None
     pd.options.display.max_rows = None
     pd.options.display.width = 1000
-    print(similarity_df.loc[:, [predicted_round_id_col, best_fit_ground_truth_round_id_col, metric_type_col,
-                                dtw_cost_col, delta_distance_col, delta_time_col]])
+    #print(similarity_df.loc[:, [predicted_round_id_col, best_fit_ground_truth_round_id_col, metric_type_col,
+    #                            dtw_cost_col, delta_distance_col, delta_time_col]])
+
+    # plot cost, distance, and time by metric type
+    metric_types = similarity_df[metric_type_col].unique().tolist()
+    metric_types_similarity_df = similarity_df.loc[:, [metric_type_col, dtw_cost_col, delta_distance_col, delta_time_col]]
+
+    fig = plt.figure(figsize=(12, 12), constrained_layout=True)
+    axs = fig.subplots(len(metric_types), 3, squeeze=False)
+    for i, metric_type in enumerate(metric_types):
+        metric_type_str = metric_type.decode('utf-8')
+        metric_type_similarity_df = metric_types_similarity_df[(similarity_df[metric_type_col] == metric_type)]
+        metric_type_similarity_df.hist(dtw_cost_col, ax=axs[i, 0])
+        axs[i, 0].set_title(metric_type_str + " DTW Cost")
+        metric_type_similarity_df.hist(delta_distance_col, ax=axs[i, 1])
+        axs[i, 1].set_title(metric_type_str + " Delta Distance")
+        metric_type_similarity_df.hist(delta_time_col, ax=axs[i, 2])
+        axs[i, 2].set_title(metric_type_str + " Delta Time")
+    plt.savefig(similarity_plots_path / (metric_cost_file_name + '.png'))
+
     # multiple predicted rounds may match to same ground truth round, don't save them multiple times
     ground_truth_indices_ranges_set: set = set()
     for idx, row in similarity_df.iterrows():
@@ -91,8 +130,6 @@ def compare_trajectories():
             ground_truth_indices_ranges_set.add(ground_truth_trace_range)
 
         metric_type = row[metric_type_col].decode('utf-8')
-        similarity_match_name = f"{row[predicted_name_col].decode('utf-8')}_{metric_type}_vs_" \
-                                f"{row[best_fit_ground_truth_name_col].decode('utf-8')}"
         similarity_match_df = similarity_match_index_df.iloc[row[start_dtw_matched_indices_col]:
                                                              row[start_dtw_matched_indices_col] + row[length_dtw_matched_inidices_col]]
         agent_mapping_str = row[agent_mapping_col].decode('utf-8')
@@ -105,8 +142,10 @@ def compare_trajectories():
         predicted_to_ground_truth_dict[row[predicted_round_id_col]][metric_type] = \
             PredictedToGroundTruthRoundData(row[predicted_round_id_col], row[best_fit_ground_truth_round_id_col],
                                      row, similarity_match_df, agent_mapping)
-        similarity_match_df.plot(first_matched_index_col, second_matched_index_col, title=similarity_match_name)
-        plt.savefig(similarity_plots_path / (similarity_match_name + '.png'))
+        #similarity_match_name = f"{row[predicted_name_col].decode('utf-8')}_{metric_type}_vs_" \
+        #                        f"{row[best_fit_ground_truth_name_col].decode('utf-8')}"
+        #similarity_match_df.plot(first_matched_index_col, second_matched_index_col, title=similarity_match_name)
+        #plt.savefig(similarity_plots_path / (similarity_match_name + '.png'))
 
     ground_truth_indices_ranges = sorted(ground_truth_indices_ranges, key=lambda r: r.start)
     ground_truth_indices = [i for r in ground_truth_indices_ranges for i in r]

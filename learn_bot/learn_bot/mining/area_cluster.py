@@ -3,7 +3,7 @@ from pathlib import Path
 import pandas as pd
 
 from learn_bot.latent.place_area.column_names import *
-from learn_bot.latent.train import latent_team_hdf5_data_path
+from learn_bot.latent.train import human_latent_team_hdf5_data_path
 from learn_bot.libs.hdf5_to_pd import load_hdf5_to_pd
 from sklearn.cluster import KMeans
 from learn_bot.libs.vec import Vec3
@@ -75,7 +75,7 @@ def cluster_one_team(team_data_df: pd.DataFrame, player_place_area_columns: List
 
 
 def area_cluster():
-    team_data_df = load_hdf5_to_pd(latent_team_hdf5_data_path)
+    team_data_df = load_hdf5_to_pd(human_latent_team_hdf5_data_path)
     team_data_df = team_data_df[(team_data_df['valid'] == 1.) & (team_data_df['c4 status'] < 2) &
                                 (team_data_df['retake save round tick'] == 0)]# & (team_data_df['round id'] == 14)]
     #print(team_data_df["distribution nearest place 0 T 0"].value_counts())

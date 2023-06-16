@@ -375,11 +375,12 @@ def train(train_type: TrainType, all_data_hdf5: HDF5Wrapper, hyperparameter_opti
     train_and_test_SL(model, train_dataloader, test_dataloader, hyperparameter_options.num_epochs)
 
 
-latent_team_hdf5_data_path = Path(__file__).parent / '..' / '..' / '..' / 'analytics' / 'csv_outputs' / 'behaviorTreeTeamFeatureStore.hdf5'
+human_latent_team_hdf5_data_path = Path(__file__).parent / '..' / '..' / '..' / 'analytics' / 'csv_outputs' / 'behaviorTreeTeamFeatureStore.hdf5'
 small_latent_team_hdf5_data_path = Path(__file__).parent / '..' / '..' / '..' / 'analytics' / 'csv_outputs' / 'smallBehaviorTreeTeamFeatureStore.parquet'
 manual_latent_team_hdf5_data_path = Path(__file__).parent / '..' / '..' / '..' / 'analytics' / 'manual_outputs' / 'behaviorTreeTeamFeatureStore.hdf5'
 manual_rounds_data_path = Path(__file__).parent / '..' / '..' / '..' / 'analytics' / 'saved_datasets' / 'bot_sample_traces_5_10_23_ticks.csv'
 rollout_latent_team_hdf5_data_path = Path(__file__).parent / '..' / '..' / '..' / 'analytics' / 'rollout_outputs' / 'behaviorTreeTeamFeatureStore.hdf5'
+latent_id_cols = ['id', round_id_column, test_success_col]
 
 use_manual_data = True
 use_test_data = False
@@ -399,7 +400,7 @@ def run_single_training():
         test_team_data = PDWrapper('test', test_team_data_df, ['id', round_id_column, test_success_col])
         diff_train_test = False
     else:
-        team_data = HDF5Wrapper(latent_team_hdf5_data_path, ['id', round_id_column, test_success_col])
+        team_data = HDF5Wrapper(human_latent_team_hdf5_data_path, ['id', round_id_column, test_success_col])
     hyperparameter_options = default_hyperparameter_options
     if len(sys.argv) > 1:
         hyperparameter_indices = [int(i) for i in sys.argv[1].split(",")]
@@ -417,7 +418,7 @@ use_curriculum_training = False
 def run_curriculum_training():
     global total_epochs
     bot_data = HDF5Wrapper(manual_latent_team_hdf5_data_path, ['id', round_id_column, game_id_column, test_success_col])
-    human_data = HDF5Wrapper(latent_team_hdf5_data_path, ['id', round_id_column, test_success_col])
+    human_data = HDF5Wrapper(human_latent_team_hdf5_data_path, ['id', round_id_column, test_success_col])
     with open(good_retake_rounds_path, "r") as f:
         good_retake_rounds = eval(f.read())
     human_data.limit(human_data.id_df[round_id_column].isin(good_retake_rounds))

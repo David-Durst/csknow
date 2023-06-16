@@ -13,7 +13,7 @@ from learn_bot.latent.place_area.pos_abs_delta_conversion import delta_pos_grid_
     delta_pos_grid_cell_dim, \
     delta_pos_grid_num_xy_cells_per_z_change, compute_new_pos, NavData
 from learn_bot.latent.train import manual_latent_team_hdf5_data_path, rollout_latent_team_hdf5_data_path, \
-    latent_team_hdf5_data_path
+    human_latent_team_hdf5_data_path
 from learn_bot.latent.transformer_nested_hidden_latent_model import *
 from learn_bot.latent.vis.run_vis_checkpoint import load_model_file_for_rollout
 from learn_bot.latent.vis.vis import vis
@@ -115,7 +115,7 @@ if __name__ == "__main__":
     elif rollout_data:
         all_data_df = load_hdf5_to_pd(rollout_latent_team_hdf5_data_path)
     else:
-        all_data_df = load_hdf5_to_pd(latent_team_hdf5_data_path, rows_to_get=[i for i in range(20000)])
+        all_data_df = load_hdf5_to_pd(human_latent_team_hdf5_data_path, rows_to_get=[i for i in range(20000)])
     all_data_df = all_data_df.copy()
 
     load_result = load_model_file_for_rollout(all_data_df, "delta_pos_checkpoint.pt")
