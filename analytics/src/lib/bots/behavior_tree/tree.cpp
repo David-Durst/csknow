@@ -63,6 +63,7 @@ void Tree::tick(ServerState & state, const string & mapsPath) {
                 8594, 8600, 8601, 8602, 8607, // boxes under cat to a
                 8966, 8967, 8970, 8969, 8968, // t spawn
                 //8973 // under hole inside B
+                3973, 3999, 4000, // out of bounds near b tunnels entrance from t
         };
         // get a connection for each area that isn't also invalid
         for (const auto & areaId : blackboard->removedAreas) {

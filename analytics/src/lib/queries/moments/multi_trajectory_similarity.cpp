@@ -264,28 +264,9 @@ namespace csknow::multi_trajectory_similarity {
         }
         roundEndTraceIndex.push_back(traces.roundId.size() - 1);
 
-        // filter to rounds where all player ids are present throughout round
-        vector<size_t> validRoundIndexes;
-        for (size_t roundIndex = 0; roundIndex < roundEndTraceIndex.size(); roundIndex++) {
-            set<size_t> startPlayerIds, endPlayerIds;
-            for (size_t playerColumnIndex = 0; playerColumnIndex < csknow::feature_store::maxEnemies; playerColumnIndex++) {
-                startPlayerIds.insert(traces.columnCTData[playerColumnIndex].playerId[roundStartTraceIndex[roundIndex]]);
-                startPlayerIds.insert(traces.columnTData[playerColumnIndex].playerId[roundStartTraceIndex[roundIndex]]);
-                endPlayerIds.insert(traces.columnCTData[playerColumnIndex].playerId[roundEndTraceIndex[roundIndex]]);
-                endPlayerIds.insert(traces.columnTData[playerColumnIndex].playerId[roundEndTraceIndex[roundIndex]]);
-            }
-            if (startPlayerIds != endPlayerIds) {
-                std::cout << "skipping round " << roundIndex << " as start/end player ids don't match" << std::endl;
-                continue;
-            }
-            else {
-                validRoundIndexes.push_back(roundIndex);
-            }
-        }
-
         // for each round create a multi-trajectory with a trajectory for each player from start until not alive
         vector<MultiTrajectory> mts;
-        for (const auto & roundIndex : validRoundIndexes) {
+        for (size_t roundIndex = 0; roundIndex < roundEndTraceIndex.size(); roundIndex++) {
             vector<Trajectory> trajectories;
             int ctTrajectories = 0;
             int tTrajectories = 0;
@@ -450,7 +431,9 @@ namespace csknow::multi_trajectory_similarity {
                 }
             }
             unconstrainedDTWDataMatches.push_back(bestUnconstrainedCurDTWData);
-            slopeConstrainedDTWDataMatches.push_back(bestSlopeConstrainedCurDTWData);
+            if (bestSlopeConstrainedCurDTWData.dtwResult.cost < std::numeric_limits<double>::infinity()) {
+                slopeConstrainedDTWDataMatches.push_back(bestSlopeConstrainedCurDTWData);
+            }
             adeDataMatches.push_back(bestADECurData);
             if (unconstrainedDTWDataMatches.size() > 100) {
                 filterTopDataMatches();
@@ -493,6 +476,7 @@ namespace csknow::multi_trajectory_similarity {
             if (validPredictedRoundIds && validPredictedRoundIds.value().get().count(predictedMT.roundId) == 0) {
                 continue;
             }
+            std::cout << "processing " << predictedMT.roundId << std::endl;
             result.emplace_back(predictedMT, groundTruthMTs, predictedTraces, groundTruthTraces,
                                 ctAliveTAliveToAgentMappingOptions, validGroundTruthRoundIds);
         }
@@ -518,12 +502,14 @@ namespace csknow::multi_trajectory_similarity {
     void MultiTrajectorySimilarityResult::filterTopDataMatches() {
         std::sort(unconstrainedDTWDataMatches.begin(), unconstrainedDTWDataMatches.end(),
                   multiTrajectorySimilarityMetricDataComparator);
-        unconstrainedDTWDataMatches.resize(num_similar_trajectory_matches);
+        unconstrainedDTWDataMatches.resize(std::min(num_similar_trajectory_matches,
+                                                    unconstrainedDTWDataMatches.size()));
         std::sort(slopeConstrainedDTWDataMatches.begin(), slopeConstrainedDTWDataMatches.end(),
                   multiTrajectorySimilarityMetricDataComparator);
-        slopeConstrainedDTWDataMatches.resize(num_similar_trajectory_matches);
+        slopeConstrainedDTWDataMatches.resize(std::min(num_similar_trajectory_matches,
+                                                       slopeConstrainedDTWDataMatches.size()));
         std::sort(adeDataMatches.begin(), adeDataMatches.end(), multiTrajectorySimilarityMetricDataComparator);
-        adeDataMatches.resize(num_similar_trajectory_matches);
+        adeDataMatches.resize(std::min(num_similar_trajectory_matches, adeDataMatches.size()));
     }
 
     string metricTypeToString(MetricType metricType) {

@@ -50,7 +50,7 @@ namespace csknow::multi_trajectory_similarity {
     };
 
     const vector<double> percentiles{0., 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.};
-    constexpr int num_similar_trajectory_matches = 5;
+    constexpr size_t num_similar_trajectory_matches = 6;
     struct MultiTrajectory {
         vector<Trajectory> trajectories;
         int ctTrajectories, tTrajectories;

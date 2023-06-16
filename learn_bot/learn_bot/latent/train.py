@@ -389,7 +389,7 @@ def run_single_training():
     diff_train_test = True
     test_team_data = None
     if use_manual_data:
-        team_data = HDF5Wrapper(manual_latent_team_hdf5_data_path, ['id', round_id_column, test_success_col])
+        team_data = HDF5Wrapper(manual_latent_team_hdf5_data_path, ['id', round_id_column, game_id_column, test_success_col])
         team_data.limit(team_data.id_df[test_success_col] == 1.)
     elif use_test_data:
         base_data = load_hdf5_to_pd(manual_latent_team_hdf5_data_path, rows_to_get=[i for i in range(1)])
