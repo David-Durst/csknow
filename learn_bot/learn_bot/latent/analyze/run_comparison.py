@@ -75,7 +75,8 @@ ground_truth_data_path = manual_latent_team_hdf5_data_path
 #ground_truth_data_path = human_latent_team_hdf5_data_path
 limit_to_bot_good = True
 limit_to_human_good = False
-metric_cost_file_name = "bot_distribution"
+metric_cost_file_name = "hand_crafted_bot_vs_hand_crafted_bot_distribution"
+metric_cost_title = "Hand-Crafted Bot vs Han-Crafted Bot Distribution"
 
 
 def compare_trajectories():
@@ -109,6 +110,7 @@ def compare_trajectories():
     metric_types_similarity_df = similarity_df.loc[:, [metric_type_col, dtw_cost_col, delta_distance_col, delta_time_col]]
 
     fig = plt.figure(figsize=(12, 12), constrained_layout=True)
+    fig.suptitle(metric_cost_title)
     axs = fig.subplots(len(metric_types), 3, squeeze=False)
     for i, metric_type in enumerate(metric_types):
         metric_type_str = metric_type.decode('utf-8')

@@ -111,9 +111,15 @@ def vis_two(predicted_data_df: pd.DataFrame, predicted_pred_df: pd.DataFrame,
             metric_slider.set(cur_metric_index)
             metric_slider_changed(cur_metric_index)
 
+    predicted_players_active = []
+    ground_truth_players_active = []
+    player_index_mapping = {}
+    ground_truth_players_to_draw = []
+
     def tick_slider_changed(cur_similarity_tick_index_str):
         nonlocal cur_similarity_tick_index, d2_img, predicted_d2_img_draw, predicted_img_label, \
-            ground_truth_d2_img_draw, ground_truth_img_label, draw_max, draw_overlap
+            ground_truth_d2_img_draw, ground_truth_img_label, draw_max, draw_overlap, \
+            predicted_players_active, ground_truth_players_active, player_index_mapping, ground_truth_players_to_draw
         if len(predicted_selected_df) > 0:
             cur_similarity_tick_index = int(cur_similarity_tick_index_str)
 
@@ -150,32 +156,36 @@ def vis_two(predicted_data_df: pd.DataFrame, predicted_pred_df: pd.DataFrame,
                 predicted_players_to_draw = [int(p) for p in players_to_draw_str.split(";")[0].split(",")]
 
             # need to update these so only change once per round, at start when all players alive
-            predicted_players_active = []
-            ground_truth_players_active = []
-            for player_index in range(len(specific_player_place_area_columns)):
-                if cur_predicted_row[specific_player_place_area_columns[player_index].player_id] != -1:
-                    predicted_players_active.append(player_index)
-                if cur_ground_truth_row[specific_player_place_area_columns[player_index].player_id] != -1:
-                    ground_truth_players_active.append(player_index)
-            player_index_mapping = {}
-            for src, tgt in predicted_to_ground_truth_round_data.agent_mapping.items():
-                # can't do indexing this way, players_active is list, not map while src/tgt are index in list
-                if src in predicted_players_active and tgt in ground_truth_players_active:
+            # converting agent mapping (which is monotonically increasing from 0) to column index, which has
+            # dead players interspersed
+            if cur_similarity_tick_index == 0:
+                predicted_players_active = []
+                ground_truth_players_active = []
+                for player_index in range(len(specific_player_place_area_columns)):
+                    if cur_predicted_row[specific_player_place_area_columns[player_index].player_id] != -1:
+                        predicted_players_active.append(player_index)
+                    if cur_ground_truth_row[specific_player_place_area_columns[player_index].player_id] != -1:
+                        ground_truth_players_active.append(player_index)
+                player_index_mapping = {}
+                for src, tgt in predicted_to_ground_truth_round_data.agent_mapping.items():
                     player_index_mapping[predicted_players_active[src]] = ground_truth_players_active[tgt]
-            ground_truth_players_to_draw = []
-            for p in predicted_players_to_draw:
-                if p in player_index_mapping:
-                    ground_truth_players_to_draw.append(player_index_mapping[p])
+                ground_truth_players_to_draw = []
+                for p in predicted_players_to_draw:
+                    if p in player_index_mapping:
+                        ground_truth_players_to_draw.append(player_index_mapping[p])
 
             predicted_colors = {}
             ground_truth_colors = {}
-            for src, tgt in predicted_to_ground_truth_round_data.agent_mapping.items():
-                predicted_colors[src] = cmap[src]
-                ground_truth_colors[tgt] = cmap[src]
-                predicted_colors[src] = (int(255 * predicted_colors[src][0]), int(255 * predicted_colors[src][1]),
-                                       int(255 * predicted_colors[src][2]))
-                ground_truth_colors[tgt] = (int(255 * ground_truth_colors[tgt][0]), int(255 * ground_truth_colors[tgt][1]),
-                                      int(255 * ground_truth_colors[tgt][2]))
+            for predicted_agent_num, ground_truth_agent_num in predicted_to_ground_truth_round_data.agent_mapping.items():
+                predicted_column_index = predicted_players_active[predicted_agent_num]
+                ground_truth_column_index = ground_truth_players_active[ground_truth_agent_num]
+                predicted_color = cmap[predicted_column_index]
+                predicted_colors[predicted_column_index] = (int(255 * predicted_color[0]), int(255 * predicted_color[1]),
+                                                            int(255 * predicted_color[2]))
+                ground_truth_color = cmap[predicted_column_index]
+                ground_truth_colors[ground_truth_column_index] = (int(255 * ground_truth_color[0]),
+                                                                  int(255 * ground_truth_color[1]),
+                                                                  int(255 * ground_truth_color[2]))
 
             if draw_overlap:
                 predicted_players_str = \

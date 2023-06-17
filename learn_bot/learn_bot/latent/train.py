@@ -74,7 +74,7 @@ class HyperparameterOptions:
     num_epochs: int = 60
     batch_size: int = 512
     learning_rate: float = 4e-5
-    weight_decay: float = 0.01
+    weight_decay: float = 0.
     layers: int = 2
     heads: int = 4
     noise_var: float = 20.
