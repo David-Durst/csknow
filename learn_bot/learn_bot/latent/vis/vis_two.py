@@ -22,7 +22,7 @@ class PredictedToGroundTruthRoundData:
     agent_mapping: Dict[int, int]
 
 
-PredictedToGroundTruthDict = Dict[int, Dict[str, PredictedToGroundTruthRoundData]]
+PredictedToGroundTruthDict = Dict[int, Dict[str, List[PredictedToGroundTruthRoundData]]]
 
 cmap = mpl.cm.get_cmap("Set3").colors
 

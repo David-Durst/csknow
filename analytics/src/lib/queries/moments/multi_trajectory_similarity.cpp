@@ -3,6 +3,8 @@
 //
 
 #include "queries/moments/multi_trajectory_similarity.h"
+#include "file_helpers.h"
+#include <atomic>
 
 namespace csknow::multi_trajectory_similarity {
     // assume everything is at 128 tick
@@ -471,14 +473,18 @@ namespace csknow::multi_trajectory_similarity {
 
         CTAliveTAliveToAgentMappingOptions ctAliveTAliveToAgentMappingOptions = generateAllPossibleMappings();
 
-        result.reserve(predictedMTs.size());
-        for (const auto & predictedMT : predictedMTs) {
+        std::atomic<size_t> predictedMTsProcessed = 0;
+        result.resize(predictedMTs.size());
+#pragma omp parallel for
+        for (size_t i = 0; i < predictedMTs.size(); i++) {
+            const auto & predictedMT = predictedMTs[i];
             if (validPredictedRoundIds && validPredictedRoundIds.value().get().count(predictedMT.roundId) == 0) {
                 continue;
             }
-            std::cout << "processing " << predictedMT.roundId << std::endl;
-            result.emplace_back(predictedMT, groundTruthMTs, predictedTraces, groundTruthTraces,
-                                ctAliveTAliveToAgentMappingOptions, validGroundTruthRoundIds);
+            result[i] = MultiTrajectorySimilarityResult(predictedMT, groundTruthMTs, predictedTraces, groundTruthTraces,
+                                                        ctAliveTAliveToAgentMappingOptions, validGroundTruthRoundIds);
+            predictedMTsProcessed++;
+            printProgress(predictedMTsProcessed, predictedMTs.size());
         }
     }
 

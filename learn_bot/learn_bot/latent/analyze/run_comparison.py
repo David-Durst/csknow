@@ -22,8 +22,9 @@ from learn_bot.libs.io_transforms import IOColumnTransformers, CUDA_DEVICE_STR
 from learn_bot.latent.analyze.comparison_column_names import *
 
 similarity_plots_path = Path(__file__).parent / 'similarity_plots'
-similarity_hdf5_data_path = Path(__file__).parent / '..' / '..' / '..' / '..' / 'analytics' / 'rollout_outputs' / 'pathSimilarity.hdf5'
-bot_similarity_hdf5_data_path = Path(__file__).parent / '..' / '..' / '..' / '..' / 'analytics' / 'manual_outputs' / 'botTrajectorySimilarity.hdf5'
+hand_crafted_bot_vs_hand_crafted_bot_similarity_hdf5_data_path = Path(__file__).parent / '..' / '..' / '..' / '..' / 'analytics' / 'manual_outputs' / 'botTrajectorySimilarity.hdf5'
+time_vs_hand_crafted_bot_similarity_hdf5_data_path = Path(__file__).parent / '..' / '..' / '..' / '..' / 'analytics' / 'manual_outputs' / 'learnedTimeBotTrajectorySimilarity.hdf5'
+human_vs_human_similarity_hdf5_data_path = Path(__file__).parent / '..' / '..' / '..' / '..' / 'analytics' / 'csv_outputs' / 'humanTrajectorySimilarity.hdf5'
 
 def load_model_file(all_data_df: pd.DataFrame, model_file_name: str) -> TrainResult:
     cur_checkpoints_path = checkpoints_path
@@ -76,13 +77,16 @@ limit_to_bot_good = True
 limit_to_human_good = False
 metric_cost_file_name = "hand_crafted_bot_vs_hand_crafted_bot_distribution"
 metric_cost_title = "Hand-Crafted Bot vs Han-Crafted Bot Distribution"
+#metric_cost_file_name = "human_vs_human_distribution"
+#metric_cost_title = "Human vs Human Distribution"
 
 
 def compare_trajectories():
     os.makedirs(similarity_plots_path, exist_ok=True)
-    similarity_df = load_hdf5_to_pd(bot_similarity_hdf5_data_path)
+    similarity_hdf5_data_path = hand_crafted_bot_vs_hand_crafted_bot_similarity_hdf5_data_path
+    similarity_df = load_hdf5_to_pd(similarity_hdf5_data_path)
     similarity_df = similarity_df[similarity_df[dtw_cost_col] != 0.]
-    similarity_match_index_df = load_hdf5_to_pd(bot_similarity_hdf5_data_path, root_key='extra')
+    similarity_match_index_df = load_hdf5_to_pd(similarity_hdf5_data_path, root_key='extra')
 
     if limit_to_bot_good:
         predicted_hdf5_wrapper = HDF5Wrapper(predicted_data_path, latent_id_cols)
@@ -141,9 +145,11 @@ def compare_trajectories():
             agent_mapping[int(agents[0])] = int(agents[1])
         if row[predicted_round_id_col] not in predicted_to_ground_truth_dict:
             predicted_to_ground_truth_dict[row[predicted_round_id_col]] = {}
-        predicted_to_ground_truth_dict[row[predicted_round_id_col]][metric_type] = \
+        if metric_type not in predicted_to_ground_truth_dict[row[predicted_round_id_col]]:
+            predicted_to_ground_truth_dict[row[predicted_round_id_col]][metric_type] = []
+        predicted_to_ground_truth_dict[row[predicted_round_id_col]][metric_type].append(
             PredictedToGroundTruthRoundData(row[predicted_round_id_col], row[best_fit_ground_truth_round_id_col],
-                                     row, similarity_match_df, agent_mapping)
+                                            row, similarity_match_df, agent_mapping))
         #similarity_match_name = f"{row[predicted_name_col].decode('utf-8')}_{metric_type}_vs_" \
         #                        f"{row[best_fit_ground_truth_name_col].decode('utf-8')}"
         #similarity_match_df.plot(first_matched_index_col, second_matched_index_col, title=similarity_match_name)

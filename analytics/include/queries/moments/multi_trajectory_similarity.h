@@ -113,6 +113,7 @@ namespace csknow::multi_trajectory_similarity {
                                         const csknow::feature_store::TeamFeatureStoreResult & groundTruthTraces,
                                         CTAliveTAliveToAgentMappingOptions ctAliveTAliveToAgentMappingOptions,
                                         std::optional<std::reference_wrapper<const set<int64_t>>> validGroundTruthRoundIds);
+        MultiTrajectorySimilarityResult() { }
     };
 
     struct TraceSimilarityResult {
