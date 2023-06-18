@@ -24,7 +24,8 @@ from learn_bot.latent.analyze.comparison_column_names import *
 
 similarity_plots_path = Path(__file__).parent / 'similarity_plots'
 hand_crafted_bot_vs_hand_crafted_bot_similarity_hdf5_data_path = Path(__file__).parent / '..' / '..' / '..' / '..' / 'analytics' / 'manual_outputs' / 'botTrajectorySimilarity.hdf5'
-time_vs_hand_crafted_bot_similarity_hdf5_data_path = Path(__file__).parent / '..' / '..' / '..' / '..' / 'analytics' / 'manual_outputs' / 'learnedTimeBotTrajectorySimilarity.hdf5'
+time_vs_hand_crafted_bot_similarity_hdf5_data_path = Path(__file__).parent / '..' / '..' / '..' / '..' / 'analytics' / 'rollout_outputs' / 'learnedTimeBotTrajectorySimilarity.hdf5'
+no_time_vs_hand_crafted_bot_similarity_hdf5_data_path = Path(__file__).parent / '..' / '..' / '..' / '..' / 'analytics' / 'rollout_outputs' / 'learnedNoTimeNoWeightDecayBotTrajectorySimilarity.hdf5'
 human_vs_human_similarity_hdf5_data_path = Path(__file__).parent / '..' / '..' / '..' / '..' / 'analytics' / 'csv_outputs' / 'humanTrajectorySimilarity.hdf5'
 
 def load_model_file(all_data_df: pd.DataFrame, model_file_name: str) -> TrainResult:
@@ -68,23 +69,27 @@ human_good_rounds = [512, 1, 4, 517, 520, 10, 15, 529, 534, 535, 25, 26, 27, 28,
                      398, 408, 412, 422, 424, 427, 429, 431, 435, 439, 441, 442, 443, 451, 453, 456, 458, 461, 468, 479, 481, 484, 485, 488,
                      500, 507, 508]
 
-#predicted_data_path = rollout_latent_team_hdf5_data_path
-predicted_data_path = manual_latent_team_hdf5_data_path
+predicted_data_path = rollout_latent_team_hdf5_data_path
+#predicted_data_path = manual_latent_team_hdf5_data_path
 #predicted_data_path = human_latent_team_hdf5_data_path
 #ground_truth_data_path = rollout_latent_team_hdf5_data_path
 ground_truth_data_path = manual_latent_team_hdf5_data_path
 #ground_truth_data_path = human_latent_team_hdf5_data_path
-limit_to_bot_good = True
+limit_to_bot_good = False
 limit_to_human_good = False
-metric_cost_file_name = "hand_crafted_bot_vs_hand_crafted_bot_distribution"
-metric_cost_title = "Hand-Crafted Bot vs Han-Crafted Bot Distribution"
+#metric_cost_file_name = "hand_crafted_bot_vs_hand_crafted_bot_distribution"
+#metric_cost_title = "Hand-Crafted Bot vs Hand-Crafted Bot Distribution"
+#metric_cost_file_name = "learned_time_bot_vs_hand_crafted_bot_distribution"
+#metric_cost_title = "Learned Time Bot vs Hand-Crafted Bot Distribution"
+metric_cost_file_name = "learned_no_time_no_weight_decay_bot_vs_hand_crafted_bot_distribution"
+metric_cost_title = "Learned No Time No Weight Decay Bot vs Hand-Crafted Bot Distribution"
 #metric_cost_file_name = "human_vs_human_distribution"
 #metric_cost_title = "Human vs Human Distribution"
 
 
 def compare_trajectories():
     os.makedirs(similarity_plots_path, exist_ok=True)
-    similarity_hdf5_data_path = hand_crafted_bot_vs_hand_crafted_bot_similarity_hdf5_data_path
+    similarity_hdf5_data_path = no_time_vs_hand_crafted_bot_similarity_hdf5_data_path
     similarity_df = load_hdf5_to_pd(similarity_hdf5_data_path)
     similarity_df = similarity_df[similarity_df[dtw_cost_col] != 0.]
     similarity_match_index_df = load_hdf5_to_pd(similarity_hdf5_data_path, root_key='extra')
@@ -171,7 +176,7 @@ def compare_trajectories():
     ground_truth_indices_ranges = sorted(ground_truth_indices_ranges, key=lambda r: r.start)
     ground_truth_indices = [i for r in ground_truth_indices_ranges for i in r]
 
-    ground_truth_df = load_hdf5_to_pd(manual_latent_team_hdf5_data_path)
+    ground_truth_df = load_hdf5_to_pd(ground_truth_data_path)
     ground_truth_df = ground_truth_df.iloc[ground_truth_indices, :]
     ground_truth_result = load_model_file(ground_truth_df, "delta_pos_checkpoint.pt")
     end_ground_truth_load_time = time.perf_counter()
