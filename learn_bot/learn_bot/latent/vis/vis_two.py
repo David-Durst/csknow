@@ -59,6 +59,8 @@ def vis_two(predicted_data_df: pd.DataFrame, predicted_pred_df: pd.DataFrame,
     cur_round: int = -1
     metric_types = ['Unconstrained DTW', 'Slope Constrained DTW', 'Percentile ADE']
     cur_metric_type: str = metric_types[0]
+    cur_round_match_id: int = -1
+    num_round_matches: int = 5
     cur_similarity_tick_index: int = -1
     predicted_selected_df: pd.DataFrame = predicted_data_df
     predicted_pred_selected_df: pd.DataFrame = predicted_pred_df
@@ -70,9 +72,11 @@ def vis_two(predicted_data_df: pd.DataFrame, predicted_pred_df: pd.DataFrame,
     draw_overlap: bool = False
 
     def round_slider_changed(cur_round_index):
-        nonlocal cur_round
+        nonlocal cur_round, num_round_matches
         cur_round = rounds[int(cur_round_index)]
-        change_round_metric_dependent_data()
+        num_round_matches = len(predicted_to_ground_truth_dict[cur_round][cur_metric_type])
+        round_match_slider.configure(to=num_round_matches - 1)
+        round_match_slider_changed(0)
 
     def round_back_clicked():
         cur_round_index = int(round_slider.get())
@@ -110,6 +114,27 @@ def vis_two(predicted_data_df: pd.DataFrame, predicted_pred_df: pd.DataFrame,
             cur_metric_type = metric_types[cur_metric_index]
             metric_slider.set(cur_metric_index)
             metric_slider_changed(cur_metric_index)
+
+    def round_match_slider_changed(cur_round_match_index):
+        nonlocal cur_round_match_id
+        cur_round_match_id = int(cur_round_match_index)
+        change_round_metric_dependent_data()
+
+    def round_match_back_clicked():
+        nonlocal cur_round_match_id
+        cur_round_match_id = int(round_match_slider.get())
+        if cur_round_match_id > 0:
+            cur_round_match_id -= 1
+            round_match_slider.set(cur_round_match_id)
+            round_match_slider_changed(cur_round_match_id)
+
+    def round_match_forward_clicked():
+        nonlocal cur_round_match_id
+        cur_round_match_id = int(round_match_slider.get())
+        if cur_round_match_id < num_round_matches - 1:
+            cur_round_match_id += 1
+            round_match_slider.set(cur_round_match_id)
+            round_match_slider_changed(cur_round_match_id)
 
     predicted_players_active = []
     ground_truth_players_active = []
@@ -284,11 +309,14 @@ def vis_two(predicted_data_df: pd.DataFrame, predicted_pred_df: pd.DataFrame,
         predicted_selected_df = predicted_data_df.loc[predicted_data_df[round_id_column] == cur_round]
         predicted_pred_selected_df = predicted_pred_df.loc[predicted_data_df[round_id_column] == cur_round]
 
-        predicted_to_ground_truth_round_data = predicted_to_ground_truth_dict[cur_round][cur_metric_type]
+        predicted_to_ground_truth_round_data = \
+            predicted_to_ground_truth_dict[cur_round][cur_metric_type][cur_round_match_id]
         ground_truth_selected_df = \
-            ground_truth_data_df.loc[ground_truth_data_df[round_id_column] == predicted_to_ground_truth_round_data.ground_truth_round_id]
+            ground_truth_data_df.loc[ground_truth_data_df[round_id_column] ==
+                                     predicted_to_ground_truth_round_data.ground_truth_round_id]
         ground_truth_pred_selected_df = \
-            ground_truth_pred_df.loc[ground_truth_data_df[round_id_column] == predicted_to_ground_truth_round_data.ground_truth_round_id]
+            ground_truth_pred_df.loc[ground_truth_data_df[round_id_column] ==
+                                     predicted_to_ground_truth_round_data.ground_truth_round_id]
         similarity_match_df = predicted_to_ground_truth_round_data.similarity_match_df
 
         tick_slider.configure(to=len(similarity_match_df)-1)
@@ -348,11 +376,38 @@ def vis_two(predicted_data_df: pd.DataFrame, predicted_pred_df: pd.DataFrame,
     )
     metric_slider.pack(side="left")
 
-    # round id stepper
+    # metric id stepper
     back_metric_button = tk.Button(metric_frame, text="<<", command=metric_back_clicked)
     back_metric_button.pack(side="left")
     forward_metric_button = tk.Button(metric_frame, text=">>", command=metric_forward_clicked)
     forward_metric_button.pack(side="left")
+
+    # creating round_match number slider and label
+    round_match_id_frame = tk.Frame(window)
+    round_match_id_frame.pack(pady=5)
+    round_match_id_text_var = tk.StringVar()
+    round_match_id_label = tk.Label(round_match_id_frame, textvariable=round_match_id_text_var)
+    round_match_id_label.pack(side="left")
+
+    round_match_frame = tk.Frame(window)
+    round_match_frame.pack(pady=5)
+
+    round_match_slider = tk.Scale(
+        round_match_frame,
+        from_=0,
+        to=10,
+        orient='horizontal',
+        showvalue=0,
+        length=500,
+        command=round_match_slider_changed
+    )
+    round_match_slider.pack(side="left")
+
+    # round_match id stepper
+    back_round_match_button = tk.Button(round_match_frame, text="<<", command=round_match_back_clicked)
+    back_round_match_button.pack(side="left")
+    forward_round_match_button = tk.Button(round_match_frame, text=">>", command=round_match_forward_clicked)
+    forward_round_match_button.pack(side="left")
 
     # creating tick slider and label
     tick_id_frame = tk.Frame(window)

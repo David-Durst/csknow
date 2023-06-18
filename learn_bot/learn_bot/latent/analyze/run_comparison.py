@@ -6,6 +6,7 @@ from typing import List
 import matplotlib.pyplot as plt
 import pandas as pd
 import torch
+import time
 
 from learn_bot.latent.dataset import LatentDataset
 from learn_bot.latent.engagement.column_names import max_enemies, round_id_column
@@ -88,6 +89,7 @@ def compare_trajectories():
     similarity_df = similarity_df[similarity_df[dtw_cost_col] != 0.]
     similarity_match_index_df = load_hdf5_to_pd(similarity_hdf5_data_path, root_key='extra')
 
+    start_predicted_load_time = time.perf_counter()
     if limit_to_bot_good:
         predicted_hdf5_wrapper = HDF5Wrapper(predicted_data_path, latent_id_cols)
         predicted_hdf5_wrapper.limit(predicted_hdf5_wrapper.id_df[round_id_column].isin(bot_good_rounds))
@@ -99,7 +101,10 @@ def compare_trajectories():
     else:
         predicted_df = load_hdf5_to_pd(predicted_data_path).copy()
     predicted_result = load_model_file(predicted_df, "delta_pos_checkpoint.pt")
+    end_predicted_load_time = time.perf_counter()
+    print(f"predicted load time {end_predicted_load_time - start_predicted_load_time: 0.4f}")
 
+    start_similarity_plot_time = time.perf_counter()
     predicted_to_ground_truth_dict: PredictedToGroundTruthDict = {}
     ground_truth_indices_ranges: List[range] = []
     pd.options.display.max_columns = None
@@ -125,8 +130,11 @@ def compare_trajectories():
         metric_type_similarity_df.hist(delta_time_col, ax=axs[i, 2])
         axs[i, 2].set_title(metric_type_str + " Delta Time")
     plt.savefig(similarity_plots_path / (metric_cost_file_name + '.png'))
+    end_similarity_plot_time = time.perf_counter()
+    print(f"similarity plot time {end_similarity_plot_time - start_similarity_plot_time: 0.4f}")
 
     # multiple predicted rounds may match to same ground truth round, don't save them multiple times
+    start_predicted_to_ground_truth_time = time.perf_counter()
     ground_truth_indices_ranges_set: set = set()
     for idx, row in similarity_df.iterrows():
         ground_truth_trace_range = range(row[best_fit_ground_truth_start_trace_index_col],
@@ -154,12 +162,17 @@ def compare_trajectories():
         #                        f"{row[best_fit_ground_truth_name_col].decode('utf-8')}"
         #similarity_match_df.plot(first_matched_index_col, second_matched_index_col, title=similarity_match_name)
         #plt.savefig(similarity_plots_path / (similarity_match_name + '.png'))
+    end_predicted_to_ground_truth_time = time.perf_counter()
+    print(f"predicted to ground truth time {end_predicted_to_ground_truth_time - start_predicted_to_ground_truth_time: 0.4f}")
 
+    start_ground_truth_load_time = time.perf_counter()
     ground_truth_indices_ranges = sorted(ground_truth_indices_ranges, key=lambda r: r.start)
     ground_truth_indices = [i for r in ground_truth_indices_ranges for i in r]
 
     ground_truth_df = load_hdf5_to_pd(manual_latent_team_hdf5_data_path, rows_to_get=ground_truth_indices).copy()
     ground_truth_result = load_model_file(ground_truth_df, "delta_pos_checkpoint.pt")
+    end_ground_truth_load_time = time.perf_counter()
+    print(f"ground truth load time {end_ground_truth_load_time - start_ground_truth_load_time: 0.4f}")
 
     predicted_pred_pf = off_policy_inference(predicted_result.train_dataset, predicted_result.model,
                                            predicted_result.column_transformers)
