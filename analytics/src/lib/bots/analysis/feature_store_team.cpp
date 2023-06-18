@@ -136,6 +136,7 @@ namespace csknow::feature_store {
             for (int64_t i = 0; i < static_cast<int64_t>(size); i++) {
                 int64_t roundIndex = refTicks.roundId[i];
                 bool testCondition = (refKeyRetakeEvents.roundHasCompleteTest[roundIndex] || refKeyRetakeEvents.roundHasFailedTest[roundIndex]) &&
+                        (refKeyRetakeEvents.tAlive[i] || refKeyRetakeEvents.ctAlive[i]) &&
                         refKeyRetakeEvents.testStartBeforeOrDuringThisTick[i] && !refKeyRetakeEvents.testEndBeforeOrDuringThisTick[i];
                 bool nonTestCondition = refKeyRetakeEvents.enableNonTestPlantRounds && refKeyRetakeEvents.roundHasPlant[roundIndex] &&
                         refKeyRetakeEvents.plantFinishedBeforeOrDuringThisTick[i] && refKeyRetakeEvents.ctAlive[i] && refKeyRetakeEvents.tAlive[i] &&
