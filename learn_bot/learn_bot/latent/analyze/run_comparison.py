@@ -93,13 +93,15 @@ def compare_trajectories():
     if limit_to_bot_good:
         predicted_hdf5_wrapper = HDF5Wrapper(predicted_data_path, latent_id_cols)
         predicted_hdf5_wrapper.limit(predicted_hdf5_wrapper.id_df[round_id_column].isin(bot_good_rounds))
-        predicted_df = load_hdf5_to_pd(predicted_data_path, rows_to_get=list(predicted_hdf5_wrapper.id_df['id'])).copy()
+        predicted_df = load_hdf5_to_pd(predicted_data_path)
+        predicted_df = predicted_df.iloc[predicted_hdf5_wrapper.id_df['id'], :]
     elif limit_to_human_good:
         predicted_hdf5_wrapper = HDF5Wrapper(predicted_data_path, latent_id_cols)
         predicted_hdf5_wrapper.limit(predicted_hdf5_wrapper.id_df[round_id_column].isin(human_good_rounds))
-        predicted_df = load_hdf5_to_pd(predicted_data_path, rows_to_get=list(predicted_hdf5_wrapper.id_df['id'])).copy()
+        predicted_df = load_hdf5_to_pd(predicted_data_path)
+        predicted_df = predicted_df.iloc[predicted_hdf5_wrapper.id_df['id'], :]
     else:
-        predicted_df = load_hdf5_to_pd(predicted_data_path).copy()
+        predicted_df = load_hdf5_to_pd(predicted_data_path)
     predicted_result = load_model_file(predicted_df, "delta_pos_checkpoint.pt")
     end_predicted_load_time = time.perf_counter()
     print(f"predicted load time {end_predicted_load_time - start_predicted_load_time: 0.4f}")
@@ -169,7 +171,8 @@ def compare_trajectories():
     ground_truth_indices_ranges = sorted(ground_truth_indices_ranges, key=lambda r: r.start)
     ground_truth_indices = [i for r in ground_truth_indices_ranges for i in r]
 
-    ground_truth_df = load_hdf5_to_pd(manual_latent_team_hdf5_data_path, rows_to_get=ground_truth_indices).copy()
+    ground_truth_df = load_hdf5_to_pd(manual_latent_team_hdf5_data_path)
+    ground_truth_df = ground_truth_df.iloc[ground_truth_indices, :]
     ground_truth_result = load_model_file(ground_truth_df, "delta_pos_checkpoint.pt")
     end_ground_truth_load_time = time.perf_counter()
     print(f"ground truth load time {end_ground_truth_load_time - start_ground_truth_load_time: 0.4f}")
