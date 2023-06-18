@@ -166,6 +166,10 @@ def vis_two(predicted_data_df: pd.DataFrame, predicted_pred_df: pd.DataFrame,
             round_id_text_var.set(f"Predicted Round ID: {int(cur_round)}, Predicted Round Number: {cur_predicted_row.loc['round number']}, "
                                   f"Ground Truth Round ID: {int(cur_ground_truth_round)}, Ground Truth Round Number: {cur_ground_truth_row.loc['round number']}")
             metric_id_text_var.set(cur_metric_type)
+            round_match_id_text_var.set(f"Round Match {cur_round_match_id} / {num_round_matches - 1}, "
+                                        f"DTW/ADE Cost {predicted_to_ground_truth_round_data.similarity_row[dtw_cost_col]: .2f}, "
+                                        f"Delta Time {predicted_to_ground_truth_round_data.similarity_row[delta_time_col]: .2f}, "
+                                        f"Delta Distance {predicted_to_ground_truth_round_data.similarity_row[delta_distance_col]: .2f}")
 
             predicted_d2_img_copy = d2_img.copy().convert("RGBA")
             predicted_d2_overlay_im = Image.new("RGBA", predicted_d2_img_copy.size, (255, 255, 255, 0))
