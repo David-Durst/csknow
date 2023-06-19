@@ -80,7 +80,11 @@ class TransformerNestedHiddenLatentModel(nn.Module):
         self.columns_per_player_time_step = (len(self.players_non_pos_columns) // self.num_players) + \
                                             self.spatial_positional_encoder_out_dim
 
-        self.temporal_positional_encoder = Summer(PositionalEncoding1D(self.internal_width))
+        # positional encoding library doesn't play well with torchscript, so I'll just make the
+        # encoding matrices upfront and add them during inference
+        temporal_positional_encoder = PositionalEncoding1D(self.internal_width)
+        self.temporal_positional_encoding = \
+            temporal_positional_encoder(torch.zeros([self.num_players, self.num_time_steps, self.internal_width]))
 
         self.embedding_model = nn.Sequential(
             nn.Linear(self.columns_per_player_time_step, self.internal_width),
@@ -93,8 +97,9 @@ class TransformerNestedHiddenLatentModel(nn.Module):
         self.nav_data_cpu = NavData(CPU_DEVICE_STR)
         self.nav_data_cuda = NavData(CUDA_DEVICE_STR)
 
+        temporal_transformer_encoder_layer = nn.TransformerEncoderLayer(d_model=self.internal_width, nhead=num_heads, batch_first=True)
+        self.temporal_transformer_encoder = nn.TransformerEncoder(temporal_transformer_encoder_layer, num_layers=num_layers, enable_nested_tensor=False)
         transformer_encoder_layer = nn.TransformerEncoderLayer(d_model=self.internal_width, nhead=num_heads, batch_first=True)
-        self.temporal_transformer_encoder = nn.TransformerEncoder(transformer_encoder_layer, num_layers=num_layers, enable_nested_tensor=False)
         transformer_encoder = nn.TransformerEncoder(transformer_encoder_layer, num_layers=num_layers, enable_nested_tensor=False)
         self.transformer_model = nn.Transformer(d_model=self.internal_width, nhead=num_heads,
                                                 num_encoder_layers=num_layers, num_decoder_layers=num_layers,
@@ -181,7 +186,9 @@ class TransformerNestedHiddenLatentModel(nn.Module):
 
         if self.num_time_steps > 1:
             x_batch_player_flattened = rearrange(x_embedded, "b p t d -> (b p) t d")
-            x_temporal_encoded_batch_player_flattened = self.temporal_positional_encoder(x_batch_player_flattened)
+            batch_temporal_positional_encoding = self.temporal_positional_encoding.repeat([x.shape[0], 1, 1]) \
+                .to(x.device.type)
+            x_temporal_encoded_batch_player_flattened = x_batch_player_flattened + batch_temporal_positional_encoding
             x_temporal_encoded_player_time_flattened = rearrange(x_temporal_encoded_batch_player_flattened,
                                                                  "(b p) t d -> b (p t) d", p=self.num_players,
                                                                  t=self.num_time_steps)
