@@ -3,6 +3,7 @@ import sys
 from pathlib import Path
 from typing import List
 
+from dataclasses import dataclass
 import matplotlib.pyplot as plt
 import pandas as pd
 import torch
@@ -30,8 +31,8 @@ human_vs_human_similarity_hdf5_data_path = Path(__file__).parent / '..' / '..' /
 
 def load_model_file(all_data_df: pd.DataFrame, model_file_name: str) -> TrainResult:
     cur_checkpoints_path = checkpoints_path
-    if len(sys.argv) > 1:
-        cur_checkpoints_path = cur_checkpoints_path / sys.argv[1]
+    if len(sys.argv) > 2:
+        cur_checkpoints_path = cur_checkpoints_path / sys.argv[2]
     model_file = torch.load(cur_checkpoints_path / model_file_name)
 
     make_index_column(all_data_df)
@@ -69,44 +70,117 @@ human_good_rounds = [512, 1, 4, 517, 520, 10, 15, 529, 534, 535, 25, 26, 27, 28,
                      398, 408, 412, 422, 424, 427, 429, 431, 435, 439, 441, 442, 443, 451, 453, 456, 458, 461, 468, 479, 481, 484, 485, 488,
                      500, 507, 508]
 
-predicted_data_path = rollout_latent_team_hdf5_data_path
+#predicted_data_path = rollout_latent_team_hdf5_data_path
 #predicted_data_path = manual_latent_team_hdf5_data_path
 #predicted_data_path = human_latent_team_hdf5_data_path
 #ground_truth_data_path = rollout_latent_team_hdf5_data_path
-ground_truth_data_path = manual_latent_team_hdf5_data_path
+#ground_truth_data_path = manual_latent_team_hdf5_data_path
 #ground_truth_data_path = human_latent_team_hdf5_data_path
-limit_to_bot_good = False
-limit_to_human_good = False
+#limit_to_bot_good = False
+#limit_to_human_good = False
 #metric_cost_file_name = "hand_crafted_bot_vs_hand_crafted_bot_distribution"
 #metric_cost_title = "Hand-Crafted Bot vs Hand-Crafted Bot Distribution"
-metric_cost_file_name = "learned_time_bot_vs_hand_crafted_bot_distribution"
-metric_cost_title = "Learned Time Bot vs Hand-Crafted Bot Distribution"
+#metric_cost_file_name = "learned_time_bot_vs_hand_crafted_bot_distribution"
+#metric_cost_title = "Learned Time Bot vs Hand-Crafted Bot Distribution"
 #metric_cost_file_name = "learned_no_time_no_weight_decay_bot_vs_hand_crafted_bot_distribution"
 #metric_cost_title = "Learned No Time No Weight Decay Bot vs Hand-Crafted Bot Distribution"
 #metric_cost_file_name = "human_vs_human_distribution"
 #metric_cost_title = "Human vs Human Distribution"
 
 
+@dataclass
+class ComparisonConfig:
+    similarity_data_path: Path
+    predicted_data_path: Path
+    ground_truth_data_path: Path
+    limit_predicted_df_to_bot_good: bool
+    limit_predicted_df_to_human_good: bool
+    metric_cost_file_name: str
+    metric_cost_title: str
+
+
+hand_crafted_bot_vs_hand_crafted_bot_config = ComparisonConfig(
+    hand_crafted_bot_vs_hand_crafted_bot_similarity_hdf5_data_path,
+    manual_latent_team_hdf5_data_path,
+    manual_latent_team_hdf5_data_path,
+    True,
+    False,
+    "hand_crafted_bot_vs_hand_crafted_bot_distribution",
+    "Hand-Crafted Bot vs Hand-Crafted Bot Distribution"
+)
+
+
+learned_time_bot_vs_hand_crafted_bot_config = ComparisonConfig(
+    time_vs_hand_crafted_bot_similarity_hdf5_data_path,
+    rollout_latent_team_hdf5_data_path,
+    manual_latent_team_hdf5_data_path,
+    False,
+    False,
+    "learned_time_bot_vs_hand_crafted_bot_distribution",
+    "Learned Time Bot vs Hand-Crafted Bot Distribution"
+)
+
+learned_no_time_bot_vs_hand_crafted_bot_config = ComparisonConfig(
+    no_time_vs_hand_crafted_bot_similarity_hdf5_data_path,
+    rollout_latent_team_hdf5_data_path,
+    manual_latent_team_hdf5_data_path,
+    False,
+    False,
+    "learned_no_time_no_weight_decay_bot_vs_hand_crafted_bot_distribution",
+    "Learned No Time No Weight Decay Bot vs Hand-Crafted Bot Distribution"
+)
+
+human_vs_human_config = ComparisonConfig(
+    human_vs_human_similarity_hdf5_data_path,
+    rollout_latent_team_hdf5_data_path,
+    manual_latent_team_hdf5_data_path,
+    False,
+    True,
+    "human_vs_human_distribution",
+    "Human vs Human Distribution"
+)
+
+
+def generate_bins(min_bin_start: int, max_bin_end: int, bin_width: int) -> List[int]:
+    return [b for b in range(min_bin_start, max_bin_end + bin_width, bin_width)]
+
+
+dtw_cost_bins = generate_bins(0, 15000, 1000)
+delta_distance_bins = generate_bins(-20000, 20000, 2500)
+delta_time_bins = generate_bins(-40, 40, 5)
+
+just_plot_summaries = True
+
+
 def compare_trajectories():
+    config_case = int(sys.argv[1])
+    if config_case == 0:
+        config = hand_crafted_bot_vs_hand_crafted_bot_config
+    elif config_case == 1:
+        config = learned_time_bot_vs_hand_crafted_bot_config
+    elif config_case == 2:
+        config = learned_no_time_bot_vs_hand_crafted_bot_config
+    elif config_case == 3:
+        config = human_vs_human_config
+
     os.makedirs(similarity_plots_path, exist_ok=True)
-    similarity_hdf5_data_path = time_vs_hand_crafted_bot_similarity_hdf5_data_path
-    similarity_df = load_hdf5_to_pd(similarity_hdf5_data_path)
+    similarity_df = load_hdf5_to_pd(config.similarity_data_path)
     similarity_df = similarity_df[similarity_df[dtw_cost_col] != 0.]
-    similarity_match_index_df = load_hdf5_to_pd(similarity_hdf5_data_path, root_key='extra')
+    similarity_match_index_df = load_hdf5_to_pd(config.similarity_data_path, root_key='extra')
 
     start_predicted_load_time = time.perf_counter()
-    if limit_to_bot_good:
-        predicted_hdf5_wrapper = HDF5Wrapper(predicted_data_path, latent_id_cols)
+    if config.limit_predicted_df_to_bot_good:
+        predicted_hdf5_wrapper = HDF5Wrapper(config.predicted_data_path, latent_id_cols)
         predicted_hdf5_wrapper.limit(predicted_hdf5_wrapper.id_df[round_id_column].isin(bot_good_rounds))
-        predicted_df = load_hdf5_to_pd(predicted_data_path)
+        predicted_df = load_hdf5_to_pd(config.predicted_data_path)
         predicted_df = predicted_df.iloc[predicted_hdf5_wrapper.id_df['id'], :]
-    elif limit_to_human_good:
-        predicted_hdf5_wrapper = HDF5Wrapper(predicted_data_path, latent_id_cols)
+    elif config.limit_predicted_df_to_human_good:
+        predicted_hdf5_wrapper = HDF5Wrapper(config.predicted_data_path, latent_id_cols)
         predicted_hdf5_wrapper.limit(predicted_hdf5_wrapper.id_df[round_id_column].isin(human_good_rounds))
-        predicted_df = load_hdf5_to_pd(predicted_data_path)
+        predicted_df = load_hdf5_to_pd(config.predicted_data_path)
         predicted_df = predicted_df.iloc[predicted_hdf5_wrapper.id_df['id'], :]
     else:
-        predicted_df = load_hdf5_to_pd(predicted_data_path)
+        predicted_df = load_hdf5_to_pd(config.predicted_data_path)
     predicted_result = load_model_file(predicted_df, "delta_pos_checkpoint.pt")
     end_predicted_load_time = time.perf_counter()
     print(f"predicted load time {end_predicted_load_time - start_predicted_load_time: 0.4f}")
@@ -125,20 +199,27 @@ def compare_trajectories():
     metric_types_similarity_df = similarity_df.loc[:, [metric_type_col, dtw_cost_col, delta_distance_col, delta_time_col]]
 
     fig = plt.figure(figsize=(12, 12), constrained_layout=True)
-    fig.suptitle(metric_cost_title)
+    fig.suptitle(config.metric_cost_title)
     axs = fig.subplots(len(metric_types), 3, squeeze=False)
     for i, metric_type in enumerate(metric_types):
         metric_type_str = metric_type.decode('utf-8')
         metric_type_similarity_df = metric_types_similarity_df[(similarity_df[metric_type_col] == metric_type)]
-        metric_type_similarity_df.hist(dtw_cost_col, ax=axs[i, 0])
+        metric_type_similarity_df.hist(dtw_cost_col, bins=dtw_cost_bins, ax=axs[i, 0])
         axs[i, 0].set_title(metric_type_str + " DTW Cost")
-        metric_type_similarity_df.hist(delta_distance_col, ax=axs[i, 1])
+        axs[i, 0].set_ylim(0, 800)
+        metric_type_similarity_df.hist(delta_distance_col, bins=delta_distance_bins, ax=axs[i, 1])
         axs[i, 1].set_title(metric_type_str + " Delta Distance")
-        metric_type_similarity_df.hist(delta_time_col, ax=axs[i, 2])
+        axs[i, 1].set_ylim(0, 800)
+        axs[i, 1].ticklabel_format(axis='y', style='sci')
+        metric_type_similarity_df.hist(delta_time_col, bins=delta_time_bins, ax=axs[i, 2])
         axs[i, 2].set_title(metric_type_str + " Delta Time")
-    plt.savefig(similarity_plots_path / (metric_cost_file_name + '.png'))
+        axs[i, 2].set_ylim(0, 800)
+    plt.savefig(similarity_plots_path / (config.metric_cost_file_name + '.png'))
     end_similarity_plot_time = time.perf_counter()
     print(f"similarity plot time {end_similarity_plot_time - start_similarity_plot_time: 0.4f}")
+
+    if just_plot_summaries:
+        exit(0)
 
     # multiple predicted rounds may match to same ground truth round, don't save them multiple times
     start_predicted_to_ground_truth_time = time.perf_counter()
@@ -176,7 +257,7 @@ def compare_trajectories():
     ground_truth_indices_ranges = sorted(ground_truth_indices_ranges, key=lambda r: r.start)
     ground_truth_indices = [i for r in ground_truth_indices_ranges for i in r]
 
-    ground_truth_df = load_hdf5_to_pd(ground_truth_data_path)
+    ground_truth_df = load_hdf5_to_pd(config.ground_truth_data_path)
     ground_truth_df = ground_truth_df.iloc[ground_truth_indices, :]
     ground_truth_result = load_model_file(ground_truth_df, "delta_pos_checkpoint.pt")
     end_ground_truth_load_time = time.perf_counter()
