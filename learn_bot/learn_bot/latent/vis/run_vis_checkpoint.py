@@ -66,7 +66,7 @@ def load_model_file_for_rollout(all_data_df: pd.DataFrame, model_file_name: str)
     return TrainResult(all_data, all_data, all_data_df, all_data_df, column_transformers, model)
 
 
-manual_data = True
+manual_data = False
 rollout_data = False
 
 if __name__ == "__main__":
