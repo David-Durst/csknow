@@ -79,17 +79,17 @@ limit_to_bot_good = False
 limit_to_human_good = False
 #metric_cost_file_name = "hand_crafted_bot_vs_hand_crafted_bot_distribution"
 #metric_cost_title = "Hand-Crafted Bot vs Hand-Crafted Bot Distribution"
-#metric_cost_file_name = "learned_time_bot_vs_hand_crafted_bot_distribution"
-#metric_cost_title = "Learned Time Bot vs Hand-Crafted Bot Distribution"
-metric_cost_file_name = "learned_no_time_no_weight_decay_bot_vs_hand_crafted_bot_distribution"
-metric_cost_title = "Learned No Time No Weight Decay Bot vs Hand-Crafted Bot Distribution"
+metric_cost_file_name = "learned_time_bot_vs_hand_crafted_bot_distribution"
+metric_cost_title = "Learned Time Bot vs Hand-Crafted Bot Distribution"
+#metric_cost_file_name = "learned_no_time_no_weight_decay_bot_vs_hand_crafted_bot_distribution"
+#metric_cost_title = "Learned No Time No Weight Decay Bot vs Hand-Crafted Bot Distribution"
 #metric_cost_file_name = "human_vs_human_distribution"
 #metric_cost_title = "Human vs Human Distribution"
 
 
 def compare_trajectories():
     os.makedirs(similarity_plots_path, exist_ok=True)
-    similarity_hdf5_data_path = no_time_vs_hand_crafted_bot_similarity_hdf5_data_path
+    similarity_hdf5_data_path = time_vs_hand_crafted_bot_similarity_hdf5_data_path
     similarity_df = load_hdf5_to_pd(similarity_hdf5_data_path)
     similarity_df = similarity_df[similarity_df[dtw_cost_col] != 0.]
     similarity_match_index_df = load_hdf5_to_pd(similarity_hdf5_data_path, root_key='extra')

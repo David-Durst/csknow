@@ -44,6 +44,7 @@ class NavData:
 
 
 # 130 units per half second (rounded up), 12.8 ticks per second
+max_speed_per_half_second = 130.
 max_run_speed_per_tick = 130. / (12.8 / 2)
 max_jump_height = 65.
 nav_step_size = 10.

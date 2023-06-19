@@ -7,7 +7,7 @@ from learn_bot.latent.engagement.column_names import max_enemies
 from learn_bot.latent.order.column_names import team_strs, player_team_str, flatten_list
 from learn_bot.latent.place_area.column_names import specific_player_place_area_columns, delta_pos_grid_num_cells
 from learn_bot.latent.place_area.pos_abs_delta_conversion import compute_new_pos, NavData, \
-    delta_one_hot_max_to_index, delta_one_hot_prob_to_index
+    delta_one_hot_max_to_index, delta_one_hot_prob_to_index, max_speed_per_half_second
 from learn_bot.libs.io_transforms import IOColumnTransformers, CUDA_DEVICE_STR, CPU_DEVICE_STR
 from learn_bot.libs.positional_encoding import *
 from einops import rearrange
@@ -105,10 +105,13 @@ class TransformerNestedHiddenLatentModel(nn.Module):
     def encode_pos(self, pos: torch.tensor):
         # https://arxiv.org/pdf/2003.08934.pdf
         # 5.1 - everything is normalized -1 to 1
+        pos_scaled = torch.zeros_like(pos)
         if pos.device.type == CUDA_DEVICE_STR:
-            pos_scaled = (pos - self.d2_min_gpu) / (self.d2_max_gpu - self.d2_min_gpu)
+            pos_scaled[:, :, 0] = (pos[:, :, 0] - self.d2_min_gpu) / (self.d2_max_gpu - self.d2_min_gpu)
         else:
-            pos_scaled = (pos - self.d2_min_cpu) / (self.d2_max_cpu - self.d2_min_cpu)
+            pos_scaled[:, :, 0] = (pos[:, :, 0] - self.d2_min_cpu) / (self.d2_max_cpu - self.d2_min_cpu)
+        if self.num_time_steps > 1:
+            pos_scaled[:, :, 1:] = (pos[:, :, 1:] - max_speed_per_half_second) / (2 * max_speed_per_half_second)
         pos_scaled = torch.clamp(pos_scaled, 0, 1)
         pos_scaled = (pos_scaled * 2) - 1
 
@@ -156,6 +159,9 @@ class TransformerNestedHiddenLatentModel(nn.Module):
     def forward(self, x, y=None):
         x_pos = rearrange(x[:, self.players_pos_columns], "b (p t d) -> b p t d", p=self.num_players,
                           t=self.num_time_steps, d=self.num_dim)
+        if self.num_time_steps > 1:
+            x_pos_lagged = torch.roll(x_pos, 1, 2)
+            x_pos[:, :, 1:] = x_pos_lagged[:, :, 1:] - x_pos[:, :, 1:]
         x_pos_encoded = self.encode_pos(x_pos)
         x_non_pos = rearrange(x[:, self.players_non_pos_columns], "b (p d) -> b p d", p=self.num_players)
         x_pos_time_flattened = rearrange(x_pos_encoded, "b p t d -> b p (t d)")
