@@ -79,8 +79,8 @@ class HyperparameterOptions:
     heads: int = 4
     noise_var: float = 20.
 
-    def __str__(self):
-        return f"e_{self.num_epochs}_b_{self.batch_size}_lr_{self.learning_rate}_wd_{self.weight_decay}_l_{self.layers}_h_{self.heads}_n_{self.noise_var}"
+    def to_str(self, model: TransformerNestedHiddenLatentModel):
+        return f"e_{self.num_epochs}_b_{self.batch_size}_lr_{self.learning_rate}_wd_{self.weight_decay}_l_{self.layers}_h_{self.heads}_n_{self.noise_var}_t_{model.num_time_steps}"
 
 
 default_hyperparameter_options = HyperparameterOptions()
@@ -146,12 +146,6 @@ def train(train_type: TrainType, all_data_hdf5: HDF5Wrapper, hyperparameter_opti
           diff_train_test=True, flip_columns: List[ColumnsToFlip] = [], force_test_hdf5: Optional[HDF5Wrapper] = None,
           load_model_path: Optional[Path] = None):
 
-    run_checkpoints_path = checkpoints_path
-    if hyperparameter_options != default_hyperparameter_options:
-        run_checkpoints_path = run_checkpoints_path / str(hyperparameter_options)
-        run_checkpoints_path.mkdir(parents=True, exist_ok=True)
-
-
     if diff_train_test:
         train_test_split = train_test_split_by_col(all_data_hdf5.id_df, round_id_column)
         train_hdf5 = all_data_hdf5.clone()
@@ -209,6 +203,11 @@ def train(train_type: TrainType, all_data_hdf5: HDF5Wrapper, hyperparameter_opti
     print("params by layer")
     for param_layer in params:
         print(param_layer.shape)
+
+    run_checkpoints_path = checkpoints_path
+    if hyperparameter_options != default_hyperparameter_options:
+        run_checkpoints_path = run_checkpoints_path / hyperparameter_options.to_str(model)
+        run_checkpoints_path.mkdir(parents=True, exist_ok=True)
 
     # define losses
     optimizer = torch.optim.Adam(model.parameters(), lr=hyperparameter_options.learning_rate,
@@ -315,7 +314,7 @@ def train(train_type: TrainType, all_data_hdf5: HDF5Wrapper, hyperparameter_opti
                     f.write(test_group_ids_str)
             model.to(device)
 
-    cur_runs_path = path_append(runs_path, "_" + str(hyperparameter_options))
+    cur_runs_path = path_append(runs_path, "_" + hyperparameter_options.to_str(model))
     writer = SummaryWriter(cur_runs_path)
     def save_tensorboard(train_loss: LatentLosses, test_loss: LatentLosses, train_accuracy: Dict, test_accuracy: Dict,
                          train_delta_diff_xy: Dict, test_delta_diff_xy: Dict,
