@@ -1,4 +1,5 @@
 # https://pytorch.org/tutorials/beginner/basics/quickstart_tutorial.html
+import os
 from enum import Enum
 from typing import Dict
 import sys
@@ -300,10 +301,13 @@ def train(train_type: TrainType, primary_data_hdf5: HDF5Wrapper, hyperparameter_
         print(f"Epoch {train_test_str} Accuracy: {accuracy_string}, Transformed Avg Loss: {cumulative_loss.get_total_loss().item():>8f}")
         return cumulative_loss, accuracy, delta_diff_xy, delta_diff_xyz
 
-    def save_model():
+    def save_model(not_best: bool, iter: int):
         nonlocal train_type
-        if train_type == TrainType.DeltaPos:
-            model_path = run_checkpoints_path / 'delta_pos_checkpoint.pt'
+        save_path = run_checkpoints_path
+        if not_best:
+            save_path = run_checkpoints_path / 'not_best' / str(iter)
+            os.makedirs(save_path, exist_ok=True)
+        model_path = save_path / 'delta_pos_checkpoint.pt'
         torch.save({
             'train_group_ids': train_group_ids,
             'model_state_dict': model.state_dict(),
@@ -321,8 +325,8 @@ def train(train_type: TrainType, primary_data_hdf5: HDF5Wrapper, hyperparameter_
             #  torch.jit.script(tmp_model)
             test_group_ids_str = ",".join([str(round_id) for round_id in test_group_ids])
             if train_type == TrainType.DeltaPos:
-                script_model.save(run_checkpoints_path / 'delta_pos_script_model.pt')
-                with open(run_checkpoints_path / 'delta_pos_test_round_ids.csv', 'w+') as f:
+                script_model.save(save_path / 'delta_pos_script_model.pt')
+                with open(save_path / 'delta_pos_test_round_ids.csv', 'w+') as f:
                     f.write(test_group_ids_str)
             model.to(device)
 
@@ -359,8 +363,10 @@ def train(train_type: TrainType, primary_data_hdf5: HDF5Wrapper, hyperparameter_
                     train_or_test_SL_epoch(test_dataloader, model, None, False)
             cur_test_less_float = test_loss.get_total_loss().item()
             if cur_test_less_float < min_test_loss:
-                save_model()
+                save_model(False, total_epochs)
                 min_test_loss = cur_test_less_float
+            if (total_epochs + 1) % 10 == 0:
+                save_model(True, total_epochs)
             save_tensorboard(train_loss, test_loss, train_accuracy, test_accuracy,
                              train_delta_diff_xy, test_delta_diff_xy, train_delta_diff_xyz, test_delta_diff_xyz,
                              total_epochs)
