@@ -6,8 +6,11 @@ from typing import List
 from dataclasses import dataclass
 import matplotlib.pyplot as plt
 import pandas as pd
+import numpy as np
 import torch
 import time
+
+from matplotlib.ticker import PercentFormatter
 
 from learn_bot.latent.dataset import LatentDataset
 from learn_bot.latent.engagement.column_names import max_enemies, round_id_column
@@ -145,6 +148,12 @@ def generate_bins(min_bin_start: int, max_bin_end: int, bin_width: int) -> List[
     return [b for b in range(min_bin_start, max_bin_end + bin_width, bin_width)]
 
 
+def plot_hist(ax: plt.Axes, data: pd.Series, bins: List[int]):
+    ax.hist(data.values, bins=bins, weights=np.ones(len(data)) / len(data))
+    ax.grid(visible=True)
+    #ax.yaxis.set_major_formatter(PercentFormatter(1))
+
+
 dtw_cost_bins = generate_bins(0, 15000, 1000)
 delta_distance_bins = generate_bins(-20000, 20000, 2500)
 delta_time_bins = generate_bins(-40, 40, 5)
@@ -198,25 +207,25 @@ def compare_trajectories():
     metric_types = similarity_df[metric_type_col].unique().tolist()
     metric_types_similarity_df = similarity_df.loc[:, [metric_type_col, dtw_cost_col, delta_distance_col, delta_time_col]]
 
-    fig = plt.figure(figsize=(12, 12), constrained_layout=True)
+    fig = plt.figure(figsize=(15, 15), constrained_layout=True)
     fig.suptitle(config.metric_cost_title)
     axs = fig.subplots(len(metric_types), 3, squeeze=False)
     for i, metric_type in enumerate(metric_types):
         metric_type_str = metric_type.decode('utf-8')
         metric_type_similarity_df = metric_types_similarity_df[(similarity_df[metric_type_col] == metric_type)]
-        metric_type_similarity_df.hist(dtw_cost_col, bins=dtw_cost_bins, ax=axs[i, 0])
+        plot_hist(axs[i, 0], metric_type_similarity_df[dtw_cost_col], dtw_cost_bins)
         axs[i, 0].set_title(metric_type_str + " DTW Cost")
-        axs[i, 0].set_ylim(0, 800)
-        axs[i, 0].text(5000, 300, metric_types_similarity_df[dtw_cost_col].describe().to_string())
-        metric_type_similarity_df.hist(delta_distance_col, bins=delta_distance_bins, ax=axs[i, 1])
+        axs[i, 0].set_ylim(0., 0.6)
+        axs[i, 0].text(5000, 0.4, metric_type_similarity_df[dtw_cost_col].describe().to_string())
+        plot_hist(axs[i, 1], metric_type_similarity_df[delta_distance_col], delta_distance_bins)
         axs[i, 1].set_title(metric_type_str + " Delta Distance")
-        axs[i, 1].set_ylim(0, 800)
-        axs[i, 1].ticklabel_format(axis='y', style='sci')
-        axs[i, 1].text(0, 300, metric_types_similarity_df[delta_distance_col].describe().to_string())
-        metric_type_similarity_df.hist(delta_time_col, bins=delta_time_bins, ax=axs[i, 2])
+        axs[i, 1].set_ylim(0., 0.6)
+        #axs[i, 1].ticklabel_format(axis='x', style='sci')
+        axs[i, 1].text(0, 0.4, metric_type_similarity_df[delta_distance_col].describe().to_string())
+        plot_hist(axs[i, 2], metric_type_similarity_df[delta_time_col], delta_time_bins)
         axs[i, 2].set_title(metric_type_str + " Delta Time")
-        axs[i, 2].set_ylim(0, 800)
-        axs[i, 2].text(0, 300, metric_types_similarity_df[delta_time_col].describe().to_string())
+        axs[i, 2].set_ylim(0., 0.6)
+        axs[i, 2].text(0, 0.4, metric_type_similarity_df[delta_time_col].describe().to_string())
     plt.savefig(similarity_plots_path / (config.metric_cost_file_name + '.png'))
     end_similarity_plot_time = time.perf_counter()
     print(f"similarity plot time {end_similarity_plot_time - start_similarity_plot_time: 0.4f}")
