@@ -135,8 +135,8 @@ learned_no_time_bot_vs_hand_crafted_bot_config = ComparisonConfig(
 
 human_vs_human_config = ComparisonConfig(
     human_vs_human_similarity_hdf5_data_path,
-    rollout_latent_team_hdf5_data_path,
-    manual_latent_team_hdf5_data_path,
+    human_latent_team_hdf5_data_path,
+    human_latent_team_hdf5_data_path,
     False,
     True,
     "human_vs_human_distribution",
@@ -158,7 +158,7 @@ dtw_cost_bins = generate_bins(0, 15000, 1000)
 delta_distance_bins = generate_bins(-20000, 20000, 2500)
 delta_time_bins = generate_bins(-40, 40, 5)
 
-just_plot_summaries = True
+just_plot_summaries = False
 
 
 def compare_trajectories():
