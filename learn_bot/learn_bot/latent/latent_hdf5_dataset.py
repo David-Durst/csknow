@@ -26,3 +26,41 @@ class LatentHDF5Dataset(Dataset):
         x_tensor = torch.tensor(self.data_hdf5.get_input_data()[hdf5_id])
         y_tensor = torch.tensor(self.data_hdf5.get_output_data()[hdf5_id])
         return x_tensor, y_tensor
+
+
+class MultipleLatentHDF5Dataset(Dataset):
+    x_cols: List[str]
+    y_cols: List[str]
+    data_hdf5s: List[HDF5Wrapper]
+    hdf5s_starts: List[int]
+    hdf5s_cum_len: List[int]
+    total_len: int
+
+    def __init__(self, data_hdf5s: List[HDF5Wrapper], cts: IOColumnTransformers):
+        self.x_cols = cts.input_types.column_names_all_categorical_columns()
+        self.y_cols = cts.output_types.column_names_all_categorical_columns()
+        self.data_hdf5s = data_hdf5s
+        self.total_len = 0
+        self.hdf5s_starts = []
+        self.hdf5s_cum_len = []
+        for data_hdf5 in data_hdf5s:
+            self.hdf5s_starts.append(self.total_len)
+            self.total_len += len(data_hdf5)
+            self.hdf5s_cum_len.append(self.total_len)
+
+    def __len__(self):
+        return self.total_len
+
+    def __getitem__(self, idx):
+        # hdf5_index selects file, idx_in_hdf5 selects location in file
+        hdf5_index = 0
+        idx_in_hdf5 = 0
+        for i, cum_len in enumerate(self.hdf5s_cum_len):
+            if idx < cum_len:
+                hdf5_index = i
+                idx_in_hdf5 = idx - self.hdf5s_starts[i]
+                break
+        hdf5_id = self.data_hdf5s[hdf5_index].id_df.iloc[idx_in_hdf5].loc['id']
+        x_tensor = torch.tensor(self.data_hdf5s[hdf5_index].get_input_data()[hdf5_id])
+        y_tensor = torch.tensor(self.data_hdf5s[hdf5_index].get_output_data()[hdf5_id])
+        return x_tensor, y_tensor

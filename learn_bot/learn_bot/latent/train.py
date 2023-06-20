@@ -17,7 +17,7 @@ from learn_bot.latent.dataset import *
 from learn_bot.latent.engagement.column_names import round_id_column, engagement_input_column_types, engagement_output_column_types
 from learn_bot.latent.engagement.latent_to_distributions import get_engagement_target_distributions, num_target_options, \
     get_engagement_probability
-from learn_bot.latent.latent_hdf5_dataset import LatentHDF5Dataset
+from learn_bot.latent.latent_hdf5_dataset import LatentHDF5Dataset, MultipleLatentHDF5Dataset
 from learn_bot.latent.lstm_latent_model import LSTMLatentModel
 from learn_bot.latent.mlp_hidden_latent_model import MLPHiddenLatentModel
 from learn_bot.latent.mlp_latent_model import MLPLatentModel
@@ -142,27 +142,39 @@ class ColumnsToFlip:
 total_epochs = 0
 
 
-def train(train_type: TrainType, all_data_hdf5: HDF5Wrapper, hyperparameter_options: HyperparameterOptions = default_hyperparameter_options,
+def train(train_type: TrainType, primary_data_hdf5: HDF5Wrapper, hyperparameter_options: HyperparameterOptions = default_hyperparameter_options,
           diff_train_test=True, flip_columns: List[ColumnsToFlip] = [], force_test_hdf5: Optional[HDF5Wrapper] = None,
-          load_model_path: Optional[Path] = None):
+          load_model_path: Optional[Path] = None, secondary_data_hdf5: Optional[HDF5Wrapper] = None):
+
+    if not diff_train_test and secondary_data_hdf5:
+        print("must set diff_train_test if using secondary_data_hdf5")
+        exit(1)
 
     if diff_train_test:
-        train_test_split = train_test_split_by_col(all_data_hdf5.id_df, round_id_column)
-        train_hdf5 = all_data_hdf5.clone()
+        train_test_split = train_test_split_by_col(primary_data_hdf5.id_df, round_id_column)
+        train_hdf5 = primary_data_hdf5.clone()
         train_hdf5.limit(train_test_split.train_predicate)
         train_group_ids = train_test_split.train_group_ids
-        test_hdf5 = all_data_hdf5.clone()
+        test_hdf5 = primary_data_hdf5.clone()
         test_hdf5.limit(~train_test_split.train_predicate)
         test_group_ids = get_test_col_ids(train_test_split, round_id_column)
     else:
-        train_hdf5 = all_data_hdf5
-        train_group_ids = list(all_data_hdf5.id_df.loc[:, round_id_column].unique())
+        train_hdf5 = primary_data_hdf5
+        train_group_ids = list(primary_data_hdf5.id_df.loc[:, round_id_column].unique())
         if force_test_hdf5:
             test_hdf5 = force_test_hdf5
             test_group_ids = list(force_test_hdf5.id_df.loc[:, round_id_column].unique())
         else:
-            test_hdf5 = all_data_hdf5
+            test_hdf5 = primary_data_hdf5
             test_group_ids = train_group_ids
+    if secondary_data_hdf5:
+        secondary_train_test_split = train_test_split_by_col(secondary_data_hdf5.id_df, round_id_column)
+        secondary_train_hdf5 = secondary_data_hdf5.clone()
+        secondary_train_hdf5.limit(secondary_train_test_split.train_predicate)
+        secondary_train_group_ids = secondary_train_test_split.train_group_ids
+        secondary_test_hdf5 = secondary_data_hdf5.clone()
+        secondary_test_hdf5.limit(~secondary_train_test_split.train_predicate)
+        secondary_test_group_ids = get_test_col_ids(secondary_train_test_split, round_id_column)
 
     #if len(flip_columns) > 0:
     #    io_column_transform_df = all_data_df.copy(deep=True)
@@ -357,11 +369,16 @@ def train(train_type: TrainType, all_data_hdf5: HDF5Wrapper, hyperparameter_opti
     train_hdf5.create_np_array(column_transformers)
     if not diff_train_test and force_test_hdf5:
         test_hdf5.create_np_array(column_transformers)
-    train_data = LatentHDF5Dataset(train_hdf5, column_transformers)
-    test_data = LatentHDF5Dataset(test_hdf5, column_transformers)
+    if secondary_data_hdf5:
+        secondary_train_hdf5.create_np_array(column_transformers)
+        train_data = MultipleLatentHDF5Dataset([train_hdf5, secondary_train_hdf5], column_transformers)
+        test_data = MultipleLatentHDF5Dataset([test_hdf5, secondary_test_hdf5], column_transformers)
+    else:
+        train_data = LatentHDF5Dataset(train_hdf5, column_transformers)
+        test_data = LatentHDF5Dataset(test_hdf5, column_transformers)
     batch_size = min(hyperparameter_options.batch_size, min(len(train_hdf5), len(test_hdf5)))
-    train_dataloader = DataLoader(train_data, batch_size=batch_size, num_workers=10, shuffle=True, pin_memory=True)
-    test_dataloader = DataLoader(test_data, batch_size=batch_size, num_workers=10, shuffle=True, pin_memory=True)
+    train_dataloader = DataLoader(train_data, batch_size=batch_size, num_workers=0, shuffle=True, pin_memory=True)
+    test_dataloader = DataLoader(test_data, batch_size=batch_size, num_workers=0, shuffle=True, pin_memory=True)
 
     print(f"num train examples: {len(train_data)}")
     print(f"num test examples: {len(test_data)}")
@@ -411,7 +428,7 @@ def run_single_training():
                              #flip_columns=[ColumnsToFlip(" CT 0", " CT 1")])
 
 
-use_curriculum_training = False
+use_curriculum_training = True
 
 
 def run_curriculum_training():
@@ -431,9 +448,9 @@ def run_curriculum_training():
             train(TrainType.DeltaPos, human_data, hyperparameter_options,
                   load_model_path=checkpoints_path / "delta_pos_checkpoint.pt")
     else:
-        train(TrainType.DeltaPos, bot_data, hyperparameter_options)
-        train(TrainType.DeltaPos, human_data, hyperparameter_options,
-              load_model_path=checkpoints_path / "delta_pos_checkpoint.pt")
+        #train(TrainType.DeltaPos, bot_data, hyperparameter_options)
+        train(TrainType.DeltaPos, bot_data, hyperparameter_options,
+              load_model_path=checkpoints_path / "delta_pos_checkpoint.pt", secondary_data_hdf5=human_data)
 
 
 if __name__ == "__main__":
