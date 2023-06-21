@@ -476,7 +476,7 @@ def run_curriculum_training():
         #                                       load_model_path=just_bot_checkpoint_paths.last_not_best_path / "delta_pos_checkpoint.pt",
         #                                       secondary_data_hdf5=human_data)
         just_bot_hyperparameter_options = HyperparameterOptions(comment=bot_and_human_comment + "_no_train")
-        train(TrainType.DeltaPos, human_data, hyperparameter_options,
+        train(TrainType.DeltaPos, human_data, just_bot_hyperparameter_options,
               load_model_path=just_bot_checkpoint_paths.last_not_best_path / "delta_pos_checkpoint.pt",
               enable_training=False)
               #load_model_path=bot_and_human_checkpoint_paths.last_not_best_path / "delta_pos_checkpoint.pt")

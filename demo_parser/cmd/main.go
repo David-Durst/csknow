@@ -27,6 +27,14 @@ const botRetakesDataName = "bot_retakes_data"
 const manualDataName = "manual_data"
 const rolloutDataName = "rollout_data"
 
+const s3UploadScriptPath = "scripts/s3_cp.sh"
+
+func runCmd(cmd *exec.Cmd) error {
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	return cmd.Run()
+}
+
 func main() {
 	startIDState := d.DefaultIDState()
 
@@ -96,25 +104,6 @@ func main() {
 	uploader := s3manager.NewUploader(sess)
 	var demosToDelete []string
 
-	// tmp sta
-	x := aws.String(path.Join(d.BucketName, path.Join(dataS3FolderKey, dataName+".hdf5")))
-	print(x)
-	y := aws.String(d.BucketName)
-	print(y)
-	z := aws.String(path.Join(hdf5S3FolderKey, "6_20_23_tmp.hdf5"))
-	print(z)
-
-	tmpoutput, tmperror := svc.CopyObject(&s3.CopyObjectInput{
-		CopySource: aws.String(path.Join(d.BucketName, path.Join(dataS3FolderKey, dataName+".hdf5"))),
-		Bucket:     aws.String(d.BucketName),
-		Key:        aws.String(path.Join(hdf5S3FolderKey, "6_20_23_tmp.hdf5")),
-	})
-
-	print(tmpoutput)
-	print(tmperror)
-
-	// tmp end
-
 	i := 0
 	svc.ListObjectsV2Pages(&s3.ListObjectsV2Input{
 		Bucket: aws.String(d.BucketName),
@@ -157,22 +146,35 @@ func main() {
 	hdf5PathForConverter := filepath.Join(currentPath, c.HDF5Directory, hdf5FileName)
 	csvToHDF5Path := filepath.Join(currentPath, "..", "analytics", "scripts", "csv_to_hdf5.sh")
 	fmt.Println("executing " + csvToHDF5Path + " " + csvsPathForConverter + " " + hdf5PathForConverter)
-	out, err := exec.Command("/bin/bash", csvToHDF5Path, csvsPathForConverter, hdf5PathForConverter).Output()
+	csvToHDF5Cmd := exec.Command("/bin/bash", csvToHDF5Path, csvsPathForConverter, hdf5PathForConverter)
+	err = runCmd(csvToHDF5Cmd)
 	if err != nil {
-		log.Println(string(out))
 		log.Fatal(err)
 	}
-	fmt.Println(string(out))
 
 	if *uploadFlag {
 		hdf5S3CurrentKey := path.Join(dataS3FolderKey, hdf5FileName)
 		t := time.Now()
 		hdf5S3TemporalKey := path.Join(hdf5S3FolderKey, t.Format("2006_01_02_15_04_05_")+hdf5FileName)
-		d.UploadFile(uploader, hdf5PathForConverter, hdf5S3CurrentKey)
-		svc.CopyObject(&s3.CopyObjectInput{
-			CopySource: aws.String(path.Join(d.BucketName, hdf5S3CurrentKey)),
-			Bucket:     aws.String(d.BucketName),
-			Key:        aws.String(hdf5S3TemporalKey),
-		})
+		hdf5UploadCmd := exec.Command("/bin/bash", s3UploadScriptPath, hdf5PathForConverter,
+			"s3://csknow/"+hdf5S3CurrentKey)
+		err = runCmd(hdf5UploadCmd)
+		if err != nil {
+			log.Fatal(err)
+		}
+		hdf5CopyCmd := exec.Command("/bin/bash", s3UploadScriptPath, "s3://csknow/"+hdf5S3CurrentKey,
+			"s3://csknow/"+hdf5S3TemporalKey)
+		err = runCmd(hdf5CopyCmd)
+		if err != nil {
+			log.Fatal(err)
+		}
+		/*
+			d.UploadFile(uploader, hdf5PathForConverter, hdf5S3CurrentKey)
+			svc.CopyObject(&s3.CopyObjectInput{
+				CopySource: aws.String(path.Join(d.BucketName, hdf5S3CurrentKey)),
+				Bucket:     aws.String(d.BucketName),
+				Key:        aws.String(hdf5S3TemporalKey),
+			})
+		*/
 	}
 }
