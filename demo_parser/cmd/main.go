@@ -96,6 +96,25 @@ func main() {
 	uploader := s3manager.NewUploader(sess)
 	var demosToDelete []string
 
+	// tmp sta
+	x := aws.String(path.Join(d.BucketName, path.Join(dataS3FolderKey, dataName+".hdf5")))
+	print(x)
+	y := aws.String(d.BucketName)
+	print(y)
+	z := aws.String(path.Join(hdf5S3FolderKey, "6_20_23_tmp.hdf5"))
+	print(z)
+
+	tmpoutput, tmperror := svc.CopyObject(&s3.CopyObjectInput{
+		CopySource: aws.String(path.Join(d.BucketName, path.Join(dataS3FolderKey, dataName+".hdf5"))),
+		Bucket:     aws.String(d.BucketName),
+		Key:        aws.String(path.Join(hdf5S3FolderKey, "6_20_23_tmp.hdf5")),
+	})
+
+	print(tmpoutput)
+	print(tmperror)
+
+	// tmp end
+
 	i := 0
 	svc.ListObjectsV2Pages(&s3.ListObjectsV2Input{
 		Bucket: aws.String(d.BucketName),

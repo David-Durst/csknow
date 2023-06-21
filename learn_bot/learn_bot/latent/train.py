@@ -47,12 +47,8 @@ plot_path = Path(__file__).parent / 'distributions'
 good_retake_rounds_path = Path(__file__).parent / 'vis' / 'good_retake_round_ids.txt'
 
 now = datetime.now()
-runs_path = Path(__file__).parent / 'runs' / now.strftime("%m_%d_%Y__%H_%M_%S")
-
-
-def path_append(p: Path, suffix: str) -> Path:
-    return p.parent / (p.name + suffix)
-
+now_str = now.strftime("%m_%d_%Y__%H_%M_%S")
+runs_path = Path(__file__).parent / 'runs'
 
 time_model = False
 
@@ -79,9 +75,15 @@ class HyperparameterOptions:
     layers: int = 2
     heads: int = 4
     noise_var: float = 20.
+    comment: str = ""
 
     def to_str(self, model: TransformerNestedHiddenLatentModel):
-        return f"e_{self.num_epochs}_b_{self.batch_size}_lr_{self.learning_rate}_wd_{self.weight_decay}_l_{self.layers}_h_{self.heads}_n_{self.noise_var}_t_{model.num_time_steps}"
+        return f"{now_str}_e_{self.num_epochs}_b_{self.batch_size}_lr_{self.learning_rate}_wd_{self.weight_decay}_" \
+               f"l_{self.layers}_h_{self.heads}_n_{self.noise_var}_t_{model.num_time_steps}_" \
+               f"c_{self.comment}"
+
+    def get_checkpoints_path(self, model: TransformerNestedHiddenLatentModel) -> Path:
+        return checkpoints_path / self.to_str(model)
 
 
 default_hyperparameter_options = HyperparameterOptions()
@@ -142,10 +144,17 @@ class ColumnsToFlip:
 
 total_epochs = 0
 
+@dataclass
+class TrainCheckpointPaths:
+    last_not_best_path: Path
+    best_path: Path
+
 
 def train(train_type: TrainType, primary_data_hdf5: HDF5Wrapper, hyperparameter_options: HyperparameterOptions = default_hyperparameter_options,
           diff_train_test=True, flip_columns: List[ColumnsToFlip] = [], force_test_hdf5: Optional[HDF5Wrapper] = None,
-          load_model_path: Optional[Path] = None, secondary_data_hdf5: Optional[HDF5Wrapper] = None):
+          load_model_path: Optional[Path] = None, secondary_data_hdf5: Optional[HDF5Wrapper] = None,
+          enable_training: bool = True) -> TrainCheckpointPaths:
+    train_checkpoint_paths: TrainCheckpointPaths = TrainCheckpointPaths(Path("INVALID"), Path("INVALID"))
 
     if not diff_train_test and secondary_data_hdf5:
         print("must set diff_train_test if using secondary_data_hdf5")
@@ -217,10 +226,9 @@ def train(train_type: TrainType, primary_data_hdf5: HDF5Wrapper, hyperparameter_
     for param_layer in params:
         print(param_layer.shape)
 
-    run_checkpoints_path = checkpoints_path
-    if hyperparameter_options != default_hyperparameter_options:
-        run_checkpoints_path = run_checkpoints_path / hyperparameter_options.to_str(model)
-        run_checkpoints_path.mkdir(parents=True, exist_ok=True)
+    run_checkpoints_path = hyperparameter_options.get_checkpoints_path(model)
+    run_checkpoints_path.mkdir(parents=True, exist_ok=True)
+    train_checkpoint_paths.best_path = run_checkpoints_path
 
     # define losses
     optimizer = torch.optim.Adam(model.parameters(), lr=hyperparameter_options.learning_rate,
@@ -302,10 +310,11 @@ def train(train_type: TrainType, primary_data_hdf5: HDF5Wrapper, hyperparameter_
         return cumulative_loss, accuracy, delta_diff_xy, delta_diff_xyz
 
     def save_model(not_best: bool, iter: int):
-        nonlocal train_type
+        nonlocal train_type, train_checkpoint_paths
         save_path = run_checkpoints_path
         if not_best:
             save_path = run_checkpoints_path / 'not_best' / str(iter)
+            train_checkpoint_paths.last_not_best_path = save_path
             os.makedirs(save_path, exist_ok=True)
         model_path = save_path / 'delta_pos_checkpoint.pt'
         torch.save({
@@ -330,7 +339,7 @@ def train(train_type: TrainType, primary_data_hdf5: HDF5Wrapper, hyperparameter_
                     f.write(test_group_ids_str)
             model.to(device)
 
-    cur_runs_path = path_append(runs_path, "_" + hyperparameter_options.to_str(model))
+    cur_runs_path = runs_path / hyperparameter_options.to_str(model)
     writer = SummaryWriter(cur_runs_path)
     def save_tensorboard(train_loss: LatentLosses, test_loss: LatentLosses, train_accuracy: Dict, test_accuracy: Dict,
                          train_delta_diff_xy: Dict, test_delta_diff_xy: Dict,
@@ -357,7 +366,7 @@ def train(train_type: TrainType, primary_data_hdf5: HDF5Wrapper, hyperparameter_
         for _ in range(num_epochs):
             print(f"\nEpoch {total_epochs}\n" + f"-------------------------------")
             train_loss, train_accuracy, train_delta_diff_xy, train_delta_diff_xyz = \
-                train_or_test_SL_epoch(train_dataloader, model, optimizer, True)
+                train_or_test_SL_epoch(train_dataloader, model, optimizer, enable_training)
             with torch.no_grad():
                 test_loss, test_accuracy, test_delta_diff_xy, test_delta_diff_xyz = \
                     train_or_test_SL_epoch(test_dataloader, model, None, False)
@@ -395,6 +404,7 @@ def train(train_type: TrainType, primary_data_hdf5: HDF5Wrapper, hyperparameter_
         break
 
     train_and_test_SL(model, train_dataloader, test_dataloader, hyperparameter_options.num_epochs)
+    return train_checkpoint_paths
 
 
 human_latent_team_hdf5_data_path = Path(__file__).parent / '..' / '..' / '..' / 'analytics' / 'csv_outputs' / 'behaviorTreeTeamFeatureStore.hdf5'
@@ -436,6 +446,9 @@ def run_single_training():
 
 use_curriculum_training = True
 
+just_bot_comment = "just_bot"
+bot_and_human_comment = "bot_and_human"
+just_human_comment = "just_human"
 
 def run_curriculum_training():
     global total_epochs
@@ -446,6 +459,8 @@ def run_curriculum_training():
     human_data.limit(human_data.id_df[round_id_column].isin(good_retake_rounds))
     hyperparameter_options = default_hyperparameter_options
     if len(sys.argv) > 1:
+        # will fix this later, for now not going to support hyperparameter search with curriculum training
+        assert False
         hyperparameter_indices = [int(i) for i in sys.argv[1].split(",")]
         for index in hyperparameter_indices:
             total_epochs = 0
@@ -454,9 +469,17 @@ def run_curriculum_training():
             train(TrainType.DeltaPos, human_data, hyperparameter_options,
                   load_model_path=checkpoints_path / "delta_pos_checkpoint.pt")
     else:
-        #train(TrainType.DeltaPos, bot_data, hyperparameter_options)
-        train(TrainType.DeltaPos, bot_data, hyperparameter_options,
-              load_model_path=checkpoints_path / "delta_pos_checkpoint.pt", secondary_data_hdf5=human_data)
+        just_bot_hyperparameter_options = HyperparameterOptions(comment=just_bot_comment)
+        just_bot_checkpoint_paths = train(TrainType.DeltaPos, bot_data, just_bot_hyperparameter_options)
+        #bot_and_human_hyperparameter_options = HyperparameterOptions(comment=bot_and_human_comment)
+        #bot_and_human_checkpoint_paths = train(TrainType.DeltaPos, bot_data, bot_and_human_hyperparameter_options,
+        #                                       load_model_path=just_bot_checkpoint_paths.last_not_best_path / "delta_pos_checkpoint.pt",
+        #                                       secondary_data_hdf5=human_data)
+        just_bot_hyperparameter_options = HyperparameterOptions(comment=bot_and_human_comment + "_no_train")
+        train(TrainType.DeltaPos, human_data, hyperparameter_options,
+              load_model_path=just_bot_checkpoint_paths.last_not_best_path / "delta_pos_checkpoint.pt",
+              enable_training=False)
+              #load_model_path=bot_and_human_checkpoint_paths.last_not_best_path / "delta_pos_checkpoint.pt")
 
 
 if __name__ == "__main__":
