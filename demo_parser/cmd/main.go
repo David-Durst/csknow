@@ -26,6 +26,7 @@ const retakesDataName = "retakes_data"
 const botRetakesDataName = "bot_retakes_data"
 const manualDataName = "manual_data"
 const rolloutDataName = "rollout_data"
+const fullHumanDataName = "unprocessed2/pros"
 
 const s3UploadScriptPath = "scripts/s3_cp.sh"
 
@@ -44,9 +45,11 @@ func main() {
 	botRetakesDataFlag := flag.Bool("brd", false, "set if using retakes data")
 	manualDataFlag := flag.Bool("m", false, "set if using manual data")
 	rolloutDataFlag := flag.Bool("ro", false, "set if using rollout data")
-	uploadFlag := flag.Bool("u", true, "set to false if not uploading results to s3")
+	fullHumanDataFlag := flag.Bool("fh", false, "set if using full human data in unprocessed2")
+	uploadFlag := flag.Bool("u", false, "set to true if uploading results to s3")
 	// if running locally, skip the aws stuff and just return
 	localFlag := flag.Bool("l", false, "set for non-aws (aka local) runs")
+	deleteLocalDemFlag := flag.Bool("d", true, "set delete local copies of demos")
 	localDemName := flag.String("n", "local.dem", "set for demo's name on local file system")
 	flag.Parse()
 
@@ -78,7 +81,7 @@ func main() {
 	}
 	dataS3FolderKey := path.Join(d.DemosS3KeyPrefixSuffix, dataName)
 	demosS3FolderKey := path.Join(dataS3FolderKey, d.DemosS3KeyPrefixSuffix)
-	badDemosS3FolderKey := path.Join(dataS3FolderKey, d.BadDemosS3KeyPrefixSuffix)
+	//badDemosS3FolderKey := path.Join(dataS3FolderKey, d.BadDemosS3KeyPrefixSuffix)
 	hdf5S3FolderKey := path.Join(dataS3FolderKey, d.HDF5KeySuffix)
 
 	// get local data folder ready
@@ -101,10 +104,14 @@ func main() {
 	svc := s3.New(sess)
 
 	downloader := s3manager.NewDownloader(sess)
-	uploader := s3manager.NewUploader(sess)
-	var demosToDelete []string
+	/*
+		uploader := s3manager.NewUploader(sess)
+		var demosToDelete []string
+	*/
 
 	i := 0
+	validDemos := 0
+	totalDemos := 0
 	svc.ListObjectsV2Pages(&s3.ListObjectsV2Input{
 		Bucket: aws.String(d.BucketName),
 		Prefix: aws.String(demosS3FolderKey),
@@ -119,23 +126,40 @@ func main() {
 			fmt.Printf("handling S3 demo: %s\n", path.Join(d.BucketName, *obj.Key))
 			*localDemName = filepath.Join(c.DemoDirectory, filepath.Base(*obj.Key))
 			d.DownloadDemo(downloader, *obj.Key, *localDemName)
-			if !d.ParseDemo(*obj.Key, *localDemName, &startIDState, firstRun, c.Pro, shouldFilterRounds) {
-				badKey := path.Join(badDemosS3FolderKey, path.Base(*obj.Key))
-				d.UploadFile(uploader, *localDemName, badKey)
-				demosToDelete = append(demosToDelete, *obj.Key)
-			} else {
+			if d.ParseDemo(*obj.Key, *localDemName, &startIDState, firstRun, c.Pro, shouldFilterRounds) {
 				// only finish first run if demo is valid
 				firstRun = false
+				validDemos++
 			}
+			totalDemos++
+			if *deleteLocalDemFlag {
+				rmErr := os.Remove(*localDemName)
+				if rmErr != nil {
+					log.Fatal(rmErr)
+				}
+			}
+			/*
+				// reenable when want to deltete invalid demos
+				if !d.ParseDemo(*obj.Key, *localDemName, &startIDState, firstRun, c.Pro, shouldFilterRounds) {
+					badKey := path.Join(badDemosS3FolderKey, path.Base(*obj.Key))
+					d.UploadFile(uploader, *localDemName, badKey)
+					demosToDelete = append(demosToDelete, *obj.Key)
+				} else {
+					// only finish first run if demo is valid
+					firstRun = false
+				}
+			*/
 		}
 
 		i++
 		return true
 	})
 
-	for _, demoToDelete := range demosToDelete {
-		d.DeleteFile(svc, demoToDelete)
-	}
+	/*
+		for _, demoToDelete := range demosToDelete {
+			d.DeleteFile(svc, demoToDelete)
+		}
+	*/
 
 	currentPath, err := os.Getwd()
 	if err != nil {
@@ -177,4 +201,5 @@ func main() {
 			})
 		*/
 	}
+	fmt.Printf("%d valid demos / %d total demos\n", validDemos, totalDemos)
 }
