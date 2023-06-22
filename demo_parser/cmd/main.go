@@ -14,6 +14,7 @@ import (
 	"os/exec"
 	"path"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -22,13 +23,15 @@ var localDemName string
 
 const trainDataName = "train_data"
 const bigTrainDataName = "big_train_data"
+const allTrainDataName = "all_train_data"
 const retakesDataName = "retakes_data"
 const botRetakesDataName = "bot_retakes_data"
 const manualDataName = "manual_data"
 const rolloutDataName = "rollout_data"
-const fullHumanDataName = "unprocessed2/pros"
 
 const s3UploadScriptPath = "scripts/s3_cp.sh"
+
+const maxDemosPerHDF5 = 50
 
 func runCmd(cmd *exec.Cmd) error {
 	cmd.Stdout = os.Stdout
@@ -41,11 +44,11 @@ func main() {
 
 	trainDataFlag := flag.Bool("t", false, "set if using bot training data")
 	bigTrainDataFlag := flag.Bool("bt", false, "set if using big train data")
+	allTrainDataFlag := flag.Bool("at", false, "set if using all train data")
 	retakesDataFlag := flag.Bool("rd", false, "set if using retakes data")
 	botRetakesDataFlag := flag.Bool("brd", false, "set if using retakes data")
 	manualDataFlag := flag.Bool("m", false, "set if using manual data")
 	rolloutDataFlag := flag.Bool("ro", false, "set if using rollout data")
-	fullHumanDataFlag := flag.Bool("fh", false, "set if using full human data in unprocessed2")
 	uploadFlag := flag.Bool("u", false, "set to true if uploading results to s3")
 	// if running locally, skip the aws stuff and just return
 	localFlag := flag.Bool("l", false, "set for non-aws (aka local) runs")
@@ -67,6 +70,8 @@ func main() {
 		dataName = trainDataName
 	} else if *bigTrainDataFlag {
 		dataName = bigTrainDataName
+	} else if *allTrainDataFlag {
+		dataName = allTrainDataName
 	} else if *manualDataFlag {
 		dataName = manualDataName
 	} else if *retakesDataFlag {
@@ -112,6 +117,8 @@ func main() {
 	i := 0
 	validDemos := 0
 	totalDemos := 0
+	localDemosAsCSV := 0
+	numHDF5s := 0
 	svc.ListObjectsV2Pages(&s3.ListObjectsV2Input{
 		Bucket: aws.String(d.BucketName),
 		Prefix: aws.String(demosS3FolderKey),
@@ -130,6 +137,12 @@ func main() {
 				// only finish first run if demo is valid
 				firstRun = false
 				validDemos++
+				localDemosAsCSV++
+				if localDemosAsCSV >= maxDemosPerHDF5 {
+					covertCSVToHDF5(dataName, *uploadFlag, dataS3FolderKey, hdf5S3FolderKey, numHDF5s, false)
+					numHDF5s++
+					localDemosAsCSV = 0
+				}
 			}
 			totalDemos++
 			if *deleteLocalDemFlag {
@@ -161,12 +174,23 @@ func main() {
 		}
 	*/
 
+	covertCSVToHDF5(dataName, *uploadFlag, dataS3FolderKey, hdf5S3FolderKey, numHDF5s, true)
+	numHDF5s++
+	fmt.Printf("%d valid demos / %d total demos, %d hdf5s\n", validDemos, totalDemos, numHDF5s)
+}
+
+func covertCSVToHDF5(dataName string, uploadFlag bool, dataS3FolderKey string, hdf5S3FolderKey string, hdf5Index int,
+	finalWrite bool) {
 	currentPath, err := os.Getwd()
 	if err != nil {
 		log.Println(err)
 	}
 	csvsPathForConverter := filepath.Join(currentPath, c.TmpDir)
-	hdf5FileName := dataName + ".hdf5"
+	hdf5FileName := dataName
+	if finalWrite || hdf5Index > 0 {
+		hdf5FileName += "_" + strconv.Itoa(hdf5Index)
+	}
+	hdf5FileName += ".hdf5"
 	hdf5PathForConverter := filepath.Join(currentPath, c.HDF5Directory, hdf5FileName)
 	csvToHDF5Path := filepath.Join(currentPath, "..", "analytics", "scripts", "csv_to_hdf5.sh")
 	fmt.Println("executing " + csvToHDF5Path + " " + csvsPathForConverter + " " + hdf5PathForConverter)
@@ -176,7 +200,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	if *uploadFlag {
+	if uploadFlag {
 		hdf5S3CurrentKey := path.Join(dataS3FolderKey, hdf5FileName)
 		t := time.Now()
 		hdf5S3TemporalKey := path.Join(hdf5S3FolderKey, t.Format("2006_01_02_15_04_05_")+hdf5FileName)
@@ -201,5 +225,4 @@ func main() {
 			})
 		*/
 	}
-	fmt.Printf("%d valid demos / %d total demos\n", validDemos, totalDemos)
 }
