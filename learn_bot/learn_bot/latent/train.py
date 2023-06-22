@@ -365,8 +365,13 @@ def train(train_type: TrainType, primary_data_hdf5: HDF5Wrapper, hyperparameter_
         nonlocal optimizer, min_test_loss
         for _ in range(num_epochs):
             print(f"\nEpoch {total_epochs}\n" + f"-------------------------------")
-            train_loss, train_accuracy, train_delta_diff_xy, train_delta_diff_xyz = \
-                train_or_test_SL_epoch(train_dataloader, model, optimizer, enable_training)
+            if enable_training:
+                train_loss, train_accuracy, train_delta_diff_xy, train_delta_diff_xyz = \
+                    train_or_test_SL_epoch(train_dataloader, model, optimizer, True)
+            else:
+                with torch.no_grad():
+                    train_loss, train_accuracy, train_delta_diff_xy, train_delta_diff_xyz = \
+                        train_or_test_SL_epoch(train_dataloader, model, optimizer, False)
             with torch.no_grad():
                 test_loss, test_accuracy, test_delta_diff_xy, test_delta_diff_xyz = \
                     train_or_test_SL_epoch(test_dataloader, model, None, False)
@@ -475,10 +480,11 @@ def run_curriculum_training():
         #bot_and_human_checkpoint_paths = train(TrainType.DeltaPos, bot_data, bot_and_human_hyperparameter_options,
         #                                       load_model_path=just_bot_checkpoint_paths.last_not_best_path / "delta_pos_checkpoint.pt",
         #                                       secondary_data_hdf5=human_data)
-        just_bot_hyperparameter_options = HyperparameterOptions(comment=bot_and_human_comment + "_no_train")
+        just_bot_hyperparameter_options = HyperparameterOptions(comment=just_bot_comment + "_no_train")
         train(TrainType.DeltaPos, human_data, just_bot_hyperparameter_options,
-              load_model_path=just_bot_checkpoint_paths.last_not_best_path / "delta_pos_checkpoint.pt",
-              enable_training=False)
+              load_model_path=just_bot_checkpoint_paths.last_not_best_path / "delta_pos_checkpoint.pt")
+              #load_model_path=checkpoints_path / "06_21_2023__11_33_23_e_60_b_512_lr_4e-05_wd_0.0_l_2_h_4_n_20.0_t_5_c_just_bot/not_best/59" / "delta_pos_checkpoint.pt",
+              #enable_training=False)
               #load_model_path=bot_and_human_checkpoint_paths.last_not_best_path / "delta_pos_checkpoint.pt")
 
 
