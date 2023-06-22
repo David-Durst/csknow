@@ -31,7 +31,7 @@ const rolloutDataName = "rollout_data"
 
 const s3UploadScriptPath = "scripts/s3_cp.sh"
 
-const maxDemosPerHDF5 = 50
+const maxDemosPerHDF5 = 5 //50
 
 func runCmd(cmd *exec.Cmd) error {
 	cmd.Stdout = os.Stdout
@@ -89,18 +89,7 @@ func main() {
 	//badDemosS3FolderKey := path.Join(dataS3FolderKey, d.BadDemosS3KeyPrefixSuffix)
 	hdf5S3FolderKey := path.Join(dataS3FolderKey, d.HDF5KeySuffix)
 
-	// get local data folder ready
-	if _, err := os.Stat(c.TmpDir); err == nil {
-		rmErr := os.RemoveAll(c.TmpDir)
-		if rmErr != nil {
-			log.Println(rmErr)
-			return
-		}
-	}
-	_, cpErr := exec.Command("cp", "-r", c.TemplateTmpDir, c.TmpDir).Output()
-	if cpErr != nil {
-		log.Fatal(cpErr)
-	}
+	clearTmpCSVFolder()
 
 	sess := session.Must(session.NewSession(&aws.Config{
 		Region: aws.String("us-east-1")},
@@ -138,8 +127,9 @@ func main() {
 				firstRun = false
 				validDemos++
 				localDemosAsCSV++
-				if localDemosAsCSV >= maxDemosPerHDF5 {
+				if localDemosAsCSV >= maxDemosPerHDF5-1 {
 					covertCSVToHDF5(dataName, *uploadFlag, dataS3FolderKey, hdf5S3FolderKey, numHDF5s, false)
+					clearTmpCSVFolder()
 					numHDF5s++
 					localDemosAsCSV = 0
 				}
@@ -177,6 +167,19 @@ func main() {
 	covertCSVToHDF5(dataName, *uploadFlag, dataS3FolderKey, hdf5S3FolderKey, numHDF5s, true)
 	numHDF5s++
 	fmt.Printf("%d valid demos / %d total demos, %d hdf5s\n", validDemos, totalDemos, numHDF5s)
+}
+
+func clearTmpCSVFolder() {
+	if _, err := os.Stat(c.TmpDir); err == nil {
+		rmErr := os.RemoveAll(c.TmpDir)
+		if rmErr != nil {
+			log.Fatal(rmErr)
+		}
+	}
+	_, cpErr := exec.Command("cp", "-r", c.TemplateTmpDir, c.TmpDir).Output()
+	if cpErr != nil {
+		log.Fatal(cpErr)
+	}
 }
 
 func covertCSVToHDF5(dataName string, uploadFlag bool, dataS3FolderKey string, hdf5S3FolderKey string, hdf5Index int,
