@@ -261,12 +261,6 @@ func FilterRounds(idState *IDState, shouldFilterRounds bool) bool {
 		}
 	}
 	filteredRoundsTable.rows = filteredRoundsTable.rows[:newRoundIndex]
-
-	if filteredRoundsTable.len() < c.HalfRegulationRounds*2 {
-		fmt.Printf("skipping demo as only %d filtered rounds\n", filteredRoundsTable.len())
-		return false
-	}
-
 	var indices []periodIndices
 
 	// next, grab the first half
@@ -274,6 +268,11 @@ func FilterRounds(idState *IDState, shouldFilterRounds bool) bool {
 	// so not marked as warmup but is warmup
 	// only way I've come up with to remove these is to look for last first half
 	indices = append(indices, computePeriodIndices(defaultIndices, true, 0))
+
+	if indices[0].lastSecondHalfStartIndex == InvalidInt {
+		fmt.Printf("skipping demo as no valid second half start, only %d filtered rounds\n", filteredRoundsTable.len())
+		return false
+	}
 
 	for otNumber := 0; true; otNumber++ {
 		tmpIndices := computePeriodIndices(indices[len(indices)-1], false, otNumber)
