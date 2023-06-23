@@ -419,17 +419,24 @@ manual_rounds_data_path = Path(__file__).parent / '..' / '..' / '..' / 'analytic
 rollout_latent_team_hdf5_data_path = Path(__file__).parent / '..' / '..' / '..' / 'analytics' / 'rollout_outputs' / 'behaviorTreeTeamFeatureStore.hdf5'
 latent_id_cols = ['id', round_id_column, test_success_col]
 
-use_manual_data = True
+use_manual_data = False
 use_test_data = False
 
+just_test_comment = "just_test"
+just_bot_comment = "just_bot"
+bot_and_human_comment = "bot_and_human"
+just_human_comment = "just_human"
+curriculum_comment = "_curriculum"
+
 def run_single_training():
-    read_start = time.time()
     diff_train_test = True
     test_team_data = None
     if use_manual_data:
+        hyperparameter_comment = just_bot_comment
         team_data = HDF5Wrapper(manual_latent_team_hdf5_data_path, ['id', round_id_column, game_id_column, test_success_col])
         team_data.limit(team_data.id_df[test_success_col] == 1.)
     elif use_test_data:
+        hyperparameter_comment = just_test_comment
         base_data = load_hdf5_to_pd(manual_latent_team_hdf5_data_path, rows_to_get=[i for i in range(1)])
         team_data_df = create_left_right_train_data(base_data)
         team_data = PDWrapper('train', team_data_df, ['id', round_id_column, test_success_col])
@@ -437,23 +444,22 @@ def run_single_training():
         test_team_data = PDWrapper('test', test_team_data_df, ['id', round_id_column, test_success_col])
         diff_train_test = False
     else:
+        hyperparameter_comment = just_human_comment
         team_data = HDF5Wrapper(human_latent_team_hdf5_data_path, ['id', round_id_column, test_success_col])
-    hyperparameter_options = default_hyperparameter_options
     if len(sys.argv) > 1:
         hyperparameter_indices = [int(i) for i in sys.argv[1].split(",")]
         for index in hyperparameter_indices:
             hyperparameter_options = hyperparameter_option_range[index]
+            hyperparameter_options.comment = hyperparameter_comment
             train(TrainType.DeltaPos, team_data, hyperparameter_options, diff_train_test=diff_train_test)
     else:
-        train(TrainType.DeltaPos, team_data, diff_train_test=diff_train_test, force_test_hdf5=test_team_data)
+        hyperparameter_options = HyperparameterOptions(comment=hyperparameter_comment)
+        train(TrainType.DeltaPos, team_data, diff_train_test=diff_train_test, force_test_hdf5=test_team_data,
+              hyperparameter_options=hyperparameter_options)
                              #flip_columns=[ColumnsToFlip(" CT 0", " CT 1")])
 
 
-use_curriculum_training = True
-
-just_bot_comment = "just_bot"
-bot_and_human_comment = "bot_and_human"
-just_human_comment = "just_human"
+use_curriculum_training = False
 
 def run_curriculum_training():
     global total_epochs
@@ -474,14 +480,14 @@ def run_curriculum_training():
             train(TrainType.DeltaPos, human_data, hyperparameter_options,
                   load_model_path=checkpoints_path / "delta_pos_checkpoint.pt")
     else:
-        just_bot_hyperparameter_options = HyperparameterOptions(comment=just_bot_comment)
+        just_bot_hyperparameter_options = HyperparameterOptions(comment=just_bot_comment + curriculum_comment)
         just_bot_checkpoint_paths = train(TrainType.DeltaPos, bot_data, just_bot_hyperparameter_options)
         #bot_and_human_hyperparameter_options = HyperparameterOptions(comment=bot_and_human_comment)
         #bot_and_human_checkpoint_paths = train(TrainType.DeltaPos, bot_data, bot_and_human_hyperparameter_options,
         #                                       load_model_path=just_bot_checkpoint_paths.last_not_best_path / "delta_pos_checkpoint.pt",
         #                                       secondary_data_hdf5=human_data)
-        just_bot_hyperparameter_options = HyperparameterOptions(comment=just_bot_comment + "_no_train")
-        train(TrainType.DeltaPos, human_data, just_bot_hyperparameter_options,
+        just_human_hyperparameter_options = HyperparameterOptions(comment=just_human_comment + curriculum_comment + "_no_train")
+        train(TrainType.DeltaPos, human_data, just_human_hyperparameter_options,
               load_model_path=just_bot_checkpoint_paths.last_not_best_path / "delta_pos_checkpoint.pt")
               #load_model_path=checkpoints_path / "06_21_2023__11_33_23_e_60_b_512_lr_4e-05_wd_0.0_l_2_h_4_n_20.0_t_5_c_just_bot/not_best/59" / "delta_pos_checkpoint.pt",
               #enable_training=False)
