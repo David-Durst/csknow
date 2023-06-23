@@ -132,6 +132,8 @@ func main() {
 					clearTmpCSVFolder()
 					hdf5Index++
 					localDemosAsCSV = 0
+					// reset state on each hdf5 write
+					startIDState = d.DefaultIDState()
 				}
 			}
 			totalDemos++
