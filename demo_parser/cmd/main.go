@@ -31,7 +31,7 @@ const rolloutDataName = "rollout_data"
 
 const s3UploadScriptPath = "scripts/s3_cp.sh"
 
-const maxDemosPerHDF5 = 50
+const maxDemosPerHDF5 = 25
 
 func runCmd(cmd *exec.Cmd) error {
 	cmd.Stdout = os.Stdout
@@ -135,8 +135,6 @@ func main() {
 					// reset state on each hdf5 write
 					startIDState = d.DefaultIDState()
 				}
-			} else {
-				d.RemoveTablesTrackers(*localDemName)
 			}
 			totalDemos++
 			if *deleteLocalDemFlag {

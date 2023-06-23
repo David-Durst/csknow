@@ -63,11 +63,13 @@ func ParseDemo(unprocessedKey string, localDemName string, idState *IDState, fir
 	InitTablesTrackers(localDemName)
 	if !ProcessStructure(unprocessedKey, localDemName, idState, gameType) {
 		*idState = preDemoIdState
+		RemoveTablesTrackers(localDemName)
 		return false
 	}
 	FixRounds()
 	if !FilterRounds(idState, shouldFilterRounds) {
 		*idState = preDemoIdState
+		RemoveTablesTrackers(localDemName)
 		return false
 	}
 	ProcessTickData(localDemName, idState)
