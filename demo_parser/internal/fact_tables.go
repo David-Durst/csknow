@@ -73,6 +73,13 @@ func (t *table[T]) init(fileName string, header string) {
 	t.file.WriteString(header)
 }
 
+func (t *table[T]) remove(fileName string) {
+	err := os.Remove(filepath.Join(c.TmpDir, fileName))
+	if err != nil {
+		panic(err)
+	}
+}
+
 func (t *table[T]) tail() *T {
 	return &t.rows[len(t.rows)-1]
 }

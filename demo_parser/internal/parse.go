@@ -34,6 +34,27 @@ func InitTablesTrackers(localDemName string) {
 	grenadeTracker.init()
 }
 
+func RemoveTablesTrackers(localDemName string) {
+	localCSVName := filepath.Base(localDemName) + ".csv"
+	unfilteredRoundsTable.remove(getCSVFilePath(c.BaseUnfilteredRoundsName, localCSVName))
+	filteredRoundsTable.remove(getCSVFilePath(c.BaseFilteredRoundsName, localCSVName))
+	playersTable.remove(getCSVFilePath(c.BasePlayersName, localCSVName))
+	ticksTable.remove(getCSVFilePath(c.BaseTicksName, localCSVName))
+	playerAtTicksTable.remove(getCSVFilePath(c.BasePlayerAtTickName, localCSVName))
+	spottedTable.remove(getCSVFilePath(c.BaseSpottedName, localCSVName))
+	footstepTable.remove(getCSVFilePath(c.BaseFootstepName, localCSVName))
+	weaponFireTable.remove(getCSVFilePath(c.BaseWeaponFireName, localCSVName))
+	hurtTable.remove(getCSVFilePath(c.BaseHurtName, localCSVName))
+	killTable.remove(getCSVFilePath(c.BaseKillsName, localCSVName))
+	grenadeTable.remove(getCSVFilePath(c.BaseGrenadesName, localCSVName))
+	grenadeTrajectoryTable.remove(getCSVFilePath(c.BaseGrenadeTrajectoriesName, localCSVName))
+	playerFlashedTable.remove(getCSVFilePath(c.BasePlayerFlashedName, localCSVName))
+	plantTable.remove(getCSVFilePath(c.BasePlantsName, localCSVName))
+	defusalTable.remove(getCSVFilePath(c.BaseDefusalsName, localCSVName))
+	explosionTable.remove(getCSVFilePath(c.BaseExplosionsName, localCSVName))
+	sayTable.remove(getCSVFilePath(c.BaseSayName, localCSVName))
+}
+
 func ParseDemo(unprocessedKey string, localDemName string, idState *IDState, firstRun bool, gameType c.GameType,
 	shouldFilterRounds bool) bool {
 	fmt.Printf("localDemName: %s\n", localDemName)

@@ -135,6 +135,8 @@ func main() {
 					// reset state on each hdf5 write
 					startIDState = d.DefaultIDState()
 				}
+			} else {
+				d.RemoveTablesTrackers(*localDemName)
 			}
 			totalDemos++
 			if *deleteLocalDemFlag {
