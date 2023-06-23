@@ -4,6 +4,3 @@
 [submodule "analytics/external/HighFive"]
 	path = analytics/external/HighFive
 	url = git@github.com:BlueBrain/HighFive.git
-[submodule "analytics/external/NumCpp"]
-	path = analytics/external/NumCpp
-	url = git@github.com:dpilger26/NumCpp.git
