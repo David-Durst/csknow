@@ -135,7 +135,6 @@ func main() {
 					// reset state on each hdf5 write
 					startIDState = d.DefaultIDState()
 				}
-				fmt.Printf("%d valid demos / %d total demos, %d hdf5s\n", validDemos, totalDemos, hdf5Index)
 			}
 			totalDemos++
 			if *deleteLocalDemFlag {
@@ -155,6 +154,7 @@ func main() {
 					firstRun = false
 				}
 			*/
+			fmt.Printf("%d valid demos / %d total demos, %d hdf5s\n", validDemos, totalDemos, hdf5Index)
 		}
 
 		i++
