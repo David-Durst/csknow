@@ -37,12 +37,18 @@ func InitTablesTrackers(localDemName string) {
 func ParseDemo(unprocessedKey string, localDemName string, idState *IDState, firstRun bool, gameType c.GameType,
 	shouldFilterRounds bool) bool {
 	fmt.Printf("localDemName: %s\n", localDemName)
+	// if terminate early, reset idState
+	preDemoIdState := *idState
 	InitTablesTrackers(localDemName)
 	if !ProcessStructure(unprocessedKey, localDemName, idState, gameType) {
+		*idState = preDemoIdState
 		return false
 	}
 	FixRounds()
-	FilterRounds(idState, shouldFilterRounds)
+	if !FilterRounds(idState, shouldFilterRounds) {
+		*idState = preDemoIdState
+		return false
+	}
 	ProcessTickData(localDemName, idState)
 	// this only needs to be called once, so it always closes
 	FlushStructure(firstRun)

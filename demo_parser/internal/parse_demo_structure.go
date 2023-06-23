@@ -225,11 +225,12 @@ func FixRounds() {
 	}
 }
 
-func FilterRounds(idState *IDState, shouldFilterRounds bool) {
+func FilterRounds(idState *IDState, shouldFilterRounds bool) bool {
 	filteredRoundsTable.rows = make([]roundRow, unfilteredRoundsTable.len())
 	copy(filteredRoundsTable.rows, unfilteredRoundsTable.rows)
 	if filteredRoundsTable.len() == 0 {
-		return
+		fmt.Printf("FilterRounds terminating early but successfully with no filtered rounds\n")
+		return true
 	}
 	if !shouldFilterRounds {
 		// drop empty rounds at least
@@ -244,7 +245,7 @@ func FilterRounds(idState *IDState, shouldFilterRounds bool) {
 		for i := 0; i < filteredRoundsTable.len(); i++ {
 			filteredRoundsTable.rows[i].id = RowIndex(i)
 		}
-		return
+		return true
 	}
 
 	// save first id to continue based on, will need it since modifying table, possibly dropping first round
@@ -260,6 +261,12 @@ func FilterRounds(idState *IDState, shouldFilterRounds bool) {
 		}
 	}
 	filteredRoundsTable.rows = filteredRoundsTable.rows[:newRoundIndex]
+
+	if filteredRoundsTable.len() < c.HalfRegulationRounds*2 {
+		fmt.Printf("skipping demo as only %d filtered rounds\n", filteredRoundsTable.len())
+		return false
+	}
+
 	var indices []periodIndices
 
 	// next, grab the first half
@@ -301,6 +308,7 @@ func FilterRounds(idState *IDState, shouldFilterRounds bool) {
 		curRoundId++
 	}
 	idState.nextRound = curRoundId
+	return true
 }
 
 func FlushStructure(firstRun bool) {
