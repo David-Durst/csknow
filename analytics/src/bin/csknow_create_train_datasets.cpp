@@ -43,19 +43,24 @@ using std::string;
 using std::reference_wrapper;
 
 int main(int argc, char * argv[]) {
-    if (argc != 4 && argc != 5) {
-        std::cout << "please call this code with 3 or 4 arguments: " << std::endl;
+    if (argc != 4 && argc != 5 && argc != 6) {
+        std::cout << "please call this code with 3 or 4 or 5 arguments: " << std::endl;
         std::cout << "1. path/to/local_data" << std::endl;
         std::cout << "2. path/to/nav_meshes" << std::endl;
         std::cout << "3. path/to/output/dir" << std::endl;
         std::cout << "4. y to enable non-test plant rounds" << std::endl;
+        std::cout << "5. appendix for output name" << std::endl;
         return 1;
     }
 
     string dataPath = argv[1];
     string navPath = argv[2];
     string outputDir = argv[3];
-    bool enableNonTestPlantRounds = argc == 5;
+    bool enableNonTestPlantRounds = argc >= 5;
+    string outputNameAppendix = "";
+    if (argc == 6) {
+        outputNameAppendix = argv[5];
+    }
 
     std::map<std::string, nav_mesh::nav_file> map_navs;
     //Figure out from where to where you'd like to find a path
@@ -80,7 +85,7 @@ int main(int argc, char * argv[]) {
             map_visPoints.at(mapName).load(navPath, mapName, false, map_navs[mapName], true);
         }
     }
-    csknow::navigation::testNavImages(map_visPoints.at("de_dust2"), outputDir);
+    //csknow::navigation::testNavImages(map_visPoints.at("de_dust2"), outputDir);
 
     auto t = std::time(nullptr);
     auto tm = *std::localtime(&t);
@@ -325,7 +330,7 @@ int main(int argc, char * argv[]) {
             //{engagementAimName, engagementAimResult},
             //{latentEngagementAimName, latentEngagementAimResult},
             //{behaviorTreeFeatureStoreName, behaviorTreeLatentEvents.featureStoreResult},
-            {behaviorTreeTeamFeatureStoreName, behaviorTreeLatentEvents.featureStoreResult.teamFeatureStoreResult}
+            {behaviorTreeTeamFeatureStoreName + outputNameAppendix, behaviorTreeLatentEvents.featureStoreResult.teamFeatureStoreResult}
             //{trainingNavigationName, trainingNavigationResult},
     };
 
