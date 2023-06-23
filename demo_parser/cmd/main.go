@@ -31,7 +31,7 @@ const rolloutDataName = "rollout_data"
 
 const s3UploadScriptPath = "scripts/s3_cp.sh"
 
-const maxDemosPerHDF5 = 5 //50
+const maxDemosPerHDF5 = 50
 
 func runCmd(cmd *exec.Cmd) error {
 	cmd.Stdout = os.Stdout
@@ -107,7 +107,7 @@ func main() {
 	validDemos := 0
 	totalDemos := 0
 	localDemosAsCSV := 0
-	numHDF5s := 0
+	hdf5Index := 0
 	svc.ListObjectsV2Pages(&s3.ListObjectsV2Input{
 		Bucket: aws.String(d.BucketName),
 		Prefix: aws.String(demosS3FolderKey),
@@ -127,10 +127,10 @@ func main() {
 				firstRun = false
 				validDemos++
 				localDemosAsCSV++
-				if localDemosAsCSV >= maxDemosPerHDF5-1 {
-					covertCSVToHDF5(dataName, *uploadFlag, dataS3FolderKey, hdf5S3FolderKey, numHDF5s, false)
+				if localDemosAsCSV >= maxDemosPerHDF5 {
+					covertCSVToHDF5(dataName, *uploadFlag, dataS3FolderKey, hdf5S3FolderKey, hdf5Index, false)
 					clearTmpCSVFolder()
-					numHDF5s++
+					hdf5Index++
 					localDemosAsCSV = 0
 				}
 			}
@@ -164,9 +164,9 @@ func main() {
 		}
 	*/
 
-	covertCSVToHDF5(dataName, *uploadFlag, dataS3FolderKey, hdf5S3FolderKey, numHDF5s, true)
-	numHDF5s++
-	fmt.Printf("%d valid demos / %d total demos, %d hdf5s\n", validDemos, totalDemos, numHDF5s)
+	covertCSVToHDF5(dataName, *uploadFlag, dataS3FolderKey, hdf5S3FolderKey, hdf5Index, true)
+	hdf5Index++
+	fmt.Printf("%d valid demos / %d total demos, %d hdf5s\n", validDemos, totalDemos, hdf5Index)
 }
 
 func clearTmpCSVFolder() {
@@ -186,12 +186,17 @@ func covertCSVToHDF5(dataName string, uploadFlag bool, dataS3FolderKey string, h
 	finalWrite bool) {
 	currentPath, err := os.Getwd()
 	if err != nil {
-		log.Println(err)
+		log.Fatal(err)
 	}
 	csvsPathForConverter := filepath.Join(currentPath, c.TmpDir)
 	hdf5FileName := dataName
-	if finalWrite || hdf5Index > 0 {
-		hdf5FileName += "_" + strconv.Itoa(hdf5Index)
+	if !finalWrite || hdf5Index > 0 {
+		hdf5FolderName := filepath.Join(currentPath, c.HDF5Directory, hdf5FileName)
+		err = os.MkdirAll(hdf5FolderName, 0777)
+		if err != nil {
+			log.Fatal(err)
+		}
+		hdf5FileName = filepath.Join(hdf5FileName, strconv.Itoa(hdf5Index))
 	}
 	hdf5FileName += ".hdf5"
 	hdf5PathForConverter := filepath.Join(currentPath, c.HDF5Directory, hdf5FileName)
