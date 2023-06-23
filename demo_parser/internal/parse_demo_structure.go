@@ -10,6 +10,7 @@ import (
 	"path"
 	"path/filepath"
 	"sort"
+	"strings"
 )
 
 func addNewRound(idState *IDState, nextTickId RowIndex, roundsTable *table[roundRow]) {
@@ -133,8 +134,9 @@ func ProcessStructure(unprocessedKey string, localDemName string, idState *IDSta
 		})
 		for _, player := range players {
 			if !playersTracker.alreadyAddedPlayer(player) {
+				playerName := strings.ReplaceAll(player.Name, ",", "_")
 				playersTracker.addPlayer(
-					playerRow{idState.nextPlayer, curGameRow.id, player.Name,
+					playerRow{idState.nextPlayer, curGameRow.id, playerName,
 						player.SteamID64}, player)
 				idState.nextPlayer++
 			}
