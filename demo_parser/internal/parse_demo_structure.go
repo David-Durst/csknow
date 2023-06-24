@@ -162,6 +162,11 @@ type periodIndices struct {
 	lastSecondHalfEndIndex        int
 }
 
+func validPeriodIndices(pi periodIndices) bool {
+	return pi.lastFirstHalfStartIndex != InvalidInt && pi.lastFirstHalfEndIndex != InvalidInt &&
+		pi.lastSecondHalfStartIndex != InvalidInt && pi.lastSecondHalfEndIndex != InvalidInt
+}
+
 var defaultIndices periodIndices = periodIndices{
 	InvalidInt, InvalidInt, InvalidInt,
 	InvalidInt, InvalidInt, InvalidInt}
@@ -271,8 +276,8 @@ func FilterRounds(idState *IDState, shouldFilterRounds bool) bool {
 	// only way I've come up with to remove these is to look for last first half
 	indices = append(indices, computePeriodIndices(defaultIndices, true, 0))
 
-	if indices[0].lastFirstHalfStartIndex == InvalidInt || indices[0].lastSecondHalfStartIndex == InvalidInt {
-		fmt.Printf("skipping demo as no valid first or second half start, only %d filtered rounds\n",
+	if !validPeriodIndices(indices[0]) {
+		fmt.Printf("skipping demo as no valid regulation period indices, only %d filtered rounds\n",
 			filteredRoundsTable.len())
 		return false
 	}
@@ -289,6 +294,12 @@ func FilterRounds(idState *IDState, shouldFilterRounds bool) bool {
 	// merge periods and mark OT rounds
 	tmpRounds := make([]roundRow, 0)
 	for i := 0; i < len(indices); i++ {
+		// 2358784_143237_honoris-vs-anonymo-m2-dust2_bc0e8b54-338d-11ed-b4ce-0a58a9feac02.dem
+		// this demo drops the round end event for the end of first OT half
+		// rather than recovering a rare OT period, just drop any OT period with an invalid index
+		if !validPeriodIndices(indices[i]) {
+			continue
+		}
 		for j := indices[i].lastFirstHalfStartIndex; j <= indices[i].lastFirstHalfEndIndex; j++ {
 			if i > 0 {
 				filteredRoundsTable.rows[j].overtime = true
