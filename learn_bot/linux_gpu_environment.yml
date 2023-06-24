@@ -2,6 +2,7 @@ name: learn_bot
 channels:
   - pytorch
   - nvidia
+  - conda-forge
   - defaults
 dependencies:
   - _libgcc_mutex=0.1=main
@@ -27,9 +28,9 @@ dependencies:
   - brotlipy=0.7.0=py39h27cfd23_1003
   - bzip2=1.0.8=h7b6447c_0
   - c-ares=1.18.1=h7f8727e_0
-  - ca-certificates=2023.01.10=h06a4308_0
+  - ca-certificates=2023.5.7=hbcca054_0
   - cachetools=4.2.2=pyhd3eb1b0_0
-  - certifi=2022.12.7=py39h06a4308_0
+  - certifi=2023.5.7=pyhd8ed1ab_0
   - cffi=1.15.1=py39h5eee18b_3
   - charset-normalizer=2.0.4=pyhd3eb1b0_0
   - click=8.0.4=py39h06a4308_0
@@ -68,6 +69,7 @@ dependencies:
   - cuda-visual-tools=11.6.1=0
   - cycler=0.11.0=pyhd3eb1b0_0
   - dbus=1.13.18=hb2f20db_0
+  - einops=0.6.1=pyhd8ed1ab_0
   - expat=2.4.9=h6a678d5_0
   - ffmpeg=4.3=hf484d3e_0
   - flit-core=3.6.0=pyhd3eb1b0_0
@@ -235,4 +237,6 @@ dependencies:
   - zipp=3.11.0=py39h06a4308_0
   - zlib=1.2.13=h5eee18b_0
   - zstd=1.5.2=ha4553b6_0
+  - pip:
+      - positional-encodings==6.0.1
 prefix: /home/durst/miniconda3/envs/learn_bot
