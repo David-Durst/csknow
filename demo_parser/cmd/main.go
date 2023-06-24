@@ -134,6 +134,7 @@ func main() {
 					localDemosAsCSV = 0
 					// reset state on each hdf5 write
 					startIDState = d.DefaultIDState()
+					firstRun = true
 				}
 			}
 			totalDemos++
