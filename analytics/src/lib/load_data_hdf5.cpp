@@ -5,9 +5,12 @@
 #include "load_data.h"
 #include "hdf5_helpers.h"
 
-void ColStore::toHDF5(HighFive::File & file) {
+void ColStore::toHDF5(HighFive::File & file, bool compress) {
     HighFive::DataSetCreateProps hdf5CreateProps;
     if (!id.empty()) {
+        if (compress) {
+            hdf5CreateProps.add(HighFive::Deflate(1));
+        }
         hdf5CreateProps.add(HighFive::Chunking(id.size()));
     }
     file.createDataSet(hdf5Prefix + "id", id, hdf5CreateProps);
@@ -603,7 +606,7 @@ void saveDataHDF5(Equipment & equipment, GameTypes & gameTypes, HitGroups & hitG
     unfilteredRounds.toHDF5(file);
     filteredRounds.toHDF5(file);
     ticks.toHDF5(file);
-    playerAtTick.toHDF5(file);
+    playerAtTick.toHDF5(file, true);
     spotted.toHDF5(file);
     footstep.toHDF5(file);
     weaponFire.toHDF5(file);

@@ -61,7 +61,7 @@ public:
     virtual void toHDF5Inner(HighFive::File &, HighFive::DataSetCreateProps &) {
         throw std::runtime_error("HDFS saving not implemented for this query yet");
     }
-    void toHDF5(HighFive::File & file);
+    void toHDF5(HighFive::File & file, bool compress = false);
     virtual void fromHDF5Inner(HighFive::File &) {
         throw std::runtime_error("HDFS loading not implemented for this query yet");
     }
