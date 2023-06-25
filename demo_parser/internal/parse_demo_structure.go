@@ -148,6 +148,7 @@ func ProcessStructure(unprocessedKey string, localDemName string, idState *IDSta
 	if err != nil {
 		fmt.Printf("Error in parsing. T score %d, CT score %d, progress: %f, error:\n %s\n",
 			p.GameState().TeamTerrorists().Score(), p.GameState().TeamCounterTerrorists().Score(), p.Progress(), err.Error())
+		return false
 	}
 	return true
 }
