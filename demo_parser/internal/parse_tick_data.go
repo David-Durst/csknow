@@ -206,20 +206,27 @@ func ProcessTickData(localDemName string, idState *IDState) {
 	p.RegisterEventHandler(func(e events.PlayerHurt) {
 		curID := idState.nextPlayerHurt
 		idState.nextPlayerHurt++
+		weaponType := common.EqUnknown
+		if e.Weapon != nil {
+			weaponType = e.Weapon.Type
+		}
 		hurtTable.append(hurtRow{
 			curID, idState.nextTick, playersTracker.getPlayerIdFromGameData(e.Player),
-			playersTracker.getPlayerIdFromGameData(e.Attacker),
-			e.Weapon.Type, e.ArmorDamage, e.Armor,
-			e.HealthDamage, e.Health, e.HitGroup,
+			playersTracker.getPlayerIdFromGameData(e.Attacker), weaponType,
+			e.ArmorDamage, e.Armor, e.HealthDamage, e.Health, e.HitGroup,
 		})
 	})
 
 	p.RegisterEventHandler(func(e events.Kill) {
 		curID := idState.nextKill
 		idState.nextKill++
+		weaponType := common.EqUnknown
+		if e.Weapon != nil {
+			weaponType = e.Weapon.Type
+		}
 		killTable.append(killRow{
 			curID, idState.nextTick, playersTracker.getPlayerIdFromGameData(e.Killer),
-			playersTracker.getPlayerIdFromGameData(e.Victim), e.Weapon.Type,
+			playersTracker.getPlayerIdFromGameData(e.Victim), weaponType,
 			playersTracker.getPlayerIdFromGameData(e.Assister), e.IsHeadshot, e.IsWallBang(),
 			e.PenetratedObjects,
 		})
