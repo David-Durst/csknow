@@ -127,7 +127,9 @@ func main() {
 			}
 			fmt.Printf("handling S3 demo: %s\n", path.Join(d.BucketName, *obj.Key))
 			*localDemName = filepath.Join(c.DemoDirectory, filepath.Base(*obj.Key))
-			d.DownloadDemo(downloader, *obj.Key, *localDemName)
+			if _, err := os.Stat(*localDemName); err != nil {
+				d.DownloadDemo(downloader, *obj.Key, *localDemName)
+			}
 			if d.ParseDemo(*obj.Key, *localDemName, &startIDState, firstRun, c.Pro, shouldFilterRounds) {
 				// only finish first run if demo is valid
 				firstRun = false
