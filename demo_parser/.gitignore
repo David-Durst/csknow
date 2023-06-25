@@ -1,4 +1,6 @@
 *.dem
 *.csv
+demos
+hdf5
 demos/
 hdf5/
