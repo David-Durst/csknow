@@ -52,7 +52,7 @@ func main() {
 	uploadFlag := flag.Bool("u", false, "set to true if uploading results to s3")
 	// if running locally, skip the aws stuff and just return
 	localFlag := flag.Bool("l", false, "set for non-aws (aka local) runs")
-	deleteLocalDemFlag := flag.Bool("d", true, "set delete local copies of demos")
+	deleteLocalDemFlag := flag.Bool("d", false, "set delete local copies of demos")
 	localDemName := flag.String("n", "local.dem", "set for demo's name on local file system")
 	flag.Parse()
 
@@ -88,6 +88,12 @@ func main() {
 	demosS3FolderKey := path.Join(dataS3FolderKey, d.DemosS3KeyPrefixSuffix)
 	//badDemosS3FolderKey := path.Join(dataS3FolderKey, d.BadDemosS3KeyPrefixSuffix)
 	hdf5S3FolderKey := path.Join(dataS3FolderKey, d.HDF5KeySuffix)
+
+	// create demo directory if not exists
+	err := os.MkdirAll(c.DemoDirectory, 0777)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	clearTmpCSVFolder()
 
