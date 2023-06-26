@@ -8,7 +8,7 @@
 
 namespace strategy {
     NodeState CreateOrdersNode::exec(const ServerState &state, TreeThinker &treeThinker) {
-        if (state.mapName != "de_dust2") {
+        if (state.mapName.find("de_dust2") == std::string::npos) {
             playerNodeState[treeThinker.csgoId] = NodeState::Failure;
             return NodeState::Failure;
         }
