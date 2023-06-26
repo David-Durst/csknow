@@ -78,6 +78,10 @@ namespace csknow::behavior_tree_latent_states {
 #pragma omp parallel for
         for (int64_t roundIndex = 0; roundIndex < rounds.size; roundIndex++) {
             int threadNum = omp_get_thread_num();
+            // skip rounds not on de_dust2, occasionally this happens due to wrong demo collection
+            string mapName = games.mapName[rounds.gameId[roundIndex]];
+            bool mapValid = mapName.find("de_dust2") != std::string::npos ||
+                    mapName.find("DE_DUST2") != std::string::npos;
             tmpRoundIds[threadNum].push_back(roundIndex);
             tmpRoundStarts[threadNum].push_back(static_cast<int64_t>(tmpStartTickId[threadNum].size()));
             std::unique_ptr<Blackboard> blackboard =
@@ -96,7 +100,7 @@ namespace csknow::behavior_tree_latent_states {
 
             set<int64_t> curPlayers;
             for (int64_t tickIndex = rounds.ticksPerRound[roundIndex].minId;
-                 tickIndex <= rounds.ticksPerRound[roundIndex].maxId; tickIndex++) {
+                mapValid && tickIndex <= rounds.ticksPerRound[roundIndex].maxId; tickIndex++) {
 
                 // reset blackboard if new player joins
                 set<int64_t> newPlayers;
