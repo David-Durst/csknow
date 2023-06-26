@@ -8,7 +8,8 @@
 
 namespace strategy {
     NodeState CreateOrdersNode::exec(const ServerState &state, TreeThinker &treeThinker) {
-        if (state.mapName.find("de_dust2") == std::string::npos) {
+        // 2348721_120274_apeks-vs-sangal-m1-dust2_c3fd422a-b73c-11eb-a514-0a58a9feac02.dem has capitalized map name
+        if (state.mapName.find("de_dust2") == std::string::npos && state.mapName.find("DE_DUST2") == std::string::npos) {
             playerNodeState[treeThinker.csgoId] = NodeState::Failure;
             return NodeState::Failure;
         }
