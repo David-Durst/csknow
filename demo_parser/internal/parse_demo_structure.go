@@ -150,6 +150,10 @@ func ProcessStructure(unprocessedKey string, localDemName string, idState *IDSta
 			p.GameState().TeamTerrorists().Score(), p.GameState().TeamCounterTerrorists().Score(), p.Progress(), err.Error())
 		return false
 	}
+	if !strings.Contains(curGameRow.mapName, "de_dust2") && !strings.Contains(curGameRow.mapName, "DE_DUST2") {
+		fmt.Printf("skipping %s as map is %s\n", localDemName, curGameRow.mapName)
+		return false
+	}
 	return true
 }
 
