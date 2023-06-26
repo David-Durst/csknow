@@ -135,6 +135,9 @@ namespace csknow::feature_store {
             const csknow::key_retake_events::KeyRetakeEvents & refKeyRetakeEvents = keyRetakeEvents->get();
             for (int64_t i = 0; i < static_cast<int64_t>(size); i++) {
                 int64_t roundIndex = refTicks.roundId[i];
+                if (roundIndex == INVALID_ID) {
+                    continue;
+                }
                 bool testCondition = (refKeyRetakeEvents.roundHasCompleteTest[roundIndex] || refKeyRetakeEvents.roundHasFailedTest[roundIndex]) &&
                         (refKeyRetakeEvents.tAlive[i] || refKeyRetakeEvents.ctAlive[i]) &&
                         refKeyRetakeEvents.testStartBeforeOrDuringThisTick[i] && !refKeyRetakeEvents.testEndBeforeOrDuringThisTick[i];
