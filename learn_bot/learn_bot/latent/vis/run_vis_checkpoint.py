@@ -22,7 +22,10 @@ from learn_bot.libs.vec import Vec3
 
 
 def load_model_file(all_data_df: pd.DataFrame, model_file_name: str) -> TrainResult:
-    model_file = torch.load(checkpoints_path / model_file_name)
+    cur_checkpoints_path = checkpoints_path
+    if len(sys.argv) > 1:
+        cur_checkpoints_path = cur_checkpoints_path / sys.argv[1]
+    model_file = torch.load(cur_checkpoints_path / model_file_name)
 
     if model_file['diff_test_train']:
         train_test_split = train_test_split_by_col_ids(all_data_df, round_id_column, model_file['train_group_ids'])
