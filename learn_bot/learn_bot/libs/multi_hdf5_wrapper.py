@@ -30,6 +30,7 @@ class MultiHDF5Wrapper:
                 if hdf5_source.is_dir():
                     hdf5_files = hdf5_source.glob('*.hdf5')
                     for hdf5_file in hdf5_files:
+                        print(hdf5_file)
                         self.hdf5_wrappers.append(HDF5Wrapper(hdf5_file, id_cols))
                 elif hdf5_source.is_file() and hdf5_source.name.endswith('.hdf5'):
                     self.hdf5_wrappers.append(HDF5Wrapper(hdf5_source, id_cols))
@@ -74,7 +75,7 @@ class MultiHDF5Wrapper:
         test_hdf5_wrapper = hdf5_wrapper.clone()
         test_hdf5_wrapper.limit(~train_test_split.train_predicate)
         self.test_hdf5_wrappers.append(test_hdf5_wrapper)
-        self.test_group_ids[hdf5_wrapper.hdf5_path] = get_test_col_ids(train_test_split, round_id_column)
+        self.test_group_ids[hdf5_wrapper.hdf5_path] = get_test_col_ids(test_hdf5_wrapper.id_df, round_id_column)
 
     def create_np_arrays(self, cts: IOColumnTransformers):
         for hdf5_wrapper in self.hdf5_wrappers:

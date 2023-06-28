@@ -410,6 +410,7 @@ def run_single_training():
         # NEED WAY TO RESTRICT TO GOOD ROUNDS
     multi_hdf5_wrapper = MultiHDF5Wrapper(hdf5_sources, hdf5_id_columns, diff_train_test=diff_train_test,
                                           force_test_hdf5=test_team_data)
+    exit(0)
     if len(sys.argv) > 1:
         hyperparameter_indices = [int(i) for i in sys.argv[1].split(",")]
         for index in hyperparameter_indices:
