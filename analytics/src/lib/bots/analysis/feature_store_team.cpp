@@ -1017,5 +1017,6 @@ namespace csknow::feature_store {
                 }
             }
         }
+        size = static_cast<int64_t>(valid.size());
     }
 }

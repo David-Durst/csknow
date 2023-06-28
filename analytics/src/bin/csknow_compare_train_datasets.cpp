@@ -25,6 +25,7 @@ void loadTraces(vector<csknow::feature_store::TeamFeatureStoreResult> & traces, 
             if (filename.find(".hdf5") != string::npos) {
                 traces.emplace_back();
                 traces.back().load(entry.path());
+                std::cout << entry.path() << ", " << traces.back().size << ", " << traces.back().roundId.size() << std::endl;
             }
         }
     }
@@ -50,9 +51,10 @@ int main(int argc, char * argv[]) {
     set<int64_t> humanGoodRounds{512, 1, 4, 517, 520, 10, 15, 529, 534, 535, 25, 26, 27, 28, 541, 542, 544, 549, 38, 550, 552, 41, 42, 46, 558, 49, 566, 567, 56, 571, 61, 64, 65, 577, 67, 581, 71, 583, 584, 586, 587, 589, 592, 85, 88, 90, 91, 603, 96, 609, 610, 99, 101, 613, 615, 110, 111, 113, 626, 116, 629, 118, 122, 123, 124, 638, 127, 129, 641, 131, 133, 134, 135, 136, 137, 647, 139, 140, 652, 655, 144,     656, 148, 153, 666, 158, 159, 670, 162, 165, 166, 167, 678, 176, 691, 181, 182, 185, 699, 190, 706, 709, 199, 205, 207, 210, 217, 227, 234, 236, 237, 239, 242, 253, 255, 258, 261, 264, 269, 270, 276, 278, 280, 281, 299, 302, 303, 306, 308, 313, 321, 324, 326, 331, 335, 337, 345, 346, 347, 349, 355, 358, 365, 373, 375, 377, 380, 384, 394, 398, 408, 412, 422, 424, 427, 429, 431, 435, 439, 441, 442, 443, 451, 453, 456, 458, 461, 468, 479, 481, 484, 485, 488, 500, 507, 508};
 
     vector<csknow::feature_store::TeamFeatureStoreResult> predictedTraces, groundTruthTraces;
-    // if ends with hdf5, create 1, otherwise create many
-    predictedTraces.load(predictedPathStr);
-    groundTruthTraces.load(groundTruthPathStr);
+    loadTraces(predictedTraces, predictedPathStr);
+    if (predictedPathStr != groundTruthPathStr) {
+        loadTraces(groundTruthTraces, groundTruthPathStr);
+    }
 
     auto similarityStart = std::chrono::system_clock::now();
     std::optional<reference_wrapper<const set<int64_t>>> predictedGoodRoundIds, groundTruthGoodRoundIds;
@@ -68,9 +70,10 @@ int main(int argc, char * argv[]) {
     else if (groundTruthGoodRoundIdsType == 2) {
         groundTruthGoodRoundIds = humanGoodRounds;
     }
-    csknow::multi_trajectory_similarity::TraceSimilarityResult traceSimilarityResult(predictedTraces, groundTruthTraces,
-                                                                                     predictedGoodRoundIds,
-                                                                                     groundTruthGoodRoundIds);
+    csknow::multi_trajectory_similarity::TraceSimilarityResult
+    traceSimilarityResult(predictedTraces, predictedPathStr == groundTruthPathStr ? predictedTraces : groundTruthTraces,
+                          predictedGoodRoundIds, groundTruthGoodRoundIds);
+
     fs::path predictedPath(predictedPathStr);
     fs::path similarityResult = predictedPath.parent_path() / outputName;
     traceSimilarityResult.toHDF5(similarityResult);
