@@ -106,9 +106,11 @@ namespace csknow::feature_store {
 
 
         void setOrders(const std::vector<csknow::orders::QueryOrder> & orders);
+        TeamFeatureStoreResult();
         TeamFeatureStoreResult(size_t size, const std::vector<csknow::orders::QueryOrder> & orders,
                                std::optional<std::reference_wrapper<const Ticks>> ticks = std::nullopt,
                                std::optional<std::reference_wrapper<const csknow::key_retake_events::KeyRetakeEvents>> keyRetakeEvents = std::nullopt);
+        virtual ~TeamFeatureStoreResult() = default;
         void reinit();
         void commitTeamRow(FeatureStorePreCommitBuffer & buffer, DistanceToPlacesResult & distanceToPlaces,
                            const nav_mesh::nav_file & navFile,

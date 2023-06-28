@@ -2,6 +2,8 @@ from pathlib import Path
 from typing import List, Dict, Union, Optional
 from dataclasses import dataclass
 
+import pandas as pd
+
 from learn_bot.latent.engagement.column_names import round_id_column
 from learn_bot.libs.df_grouping import TrainTestSplit, train_test_split_by_col, get_test_col_ids, \
     train_test_split_by_col_ids
@@ -29,9 +31,12 @@ class MultiHDF5Wrapper:
             if isinstance(hdf5_source, Path):
                 if hdf5_source.is_dir():
                     hdf5_files = hdf5_source.glob('*.hdf5')
+                    # only need sample df from first file, rest can just be empty
+                    empty_like_first_sample_df: Optional[pd.DataFrame] = None
                     for hdf5_file in hdf5_files:
-                        print(hdf5_file)
-                        self.hdf5_wrappers.append(HDF5Wrapper(hdf5_file, id_cols))
+                        self.hdf5_wrappers.append(HDF5Wrapper(hdf5_file, id_cols, sample_df=empty_like_first_sample_df))
+                        if empty_like_first_sample_df is None:
+                            empty_like_first_sample_df = pd.DataFrame().reindex_like(self.hdf5_wrappers[0].sample_df)
                 elif hdf5_source.is_file() and hdf5_source.name.endswith('.hdf5'):
                     self.hdf5_wrappers.append(HDF5Wrapper(hdf5_source, id_cols))
             elif isinstance(hdf5_source, HDF5Wrapper):

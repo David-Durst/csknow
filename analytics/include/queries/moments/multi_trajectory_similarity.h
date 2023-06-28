@@ -52,31 +52,25 @@ namespace csknow::multi_trajectory_similarity {
     const vector<double> percentiles{0., 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.};
     constexpr size_t num_similar_trajectory_matches = 6;
     struct MultiTrajectory {
+        // the trace batch containing the data for this multi-trajectory
+        std::optional<std::reference_wrapper<const csknow::feature_store::TeamFeatureStoreResult>> traceBatch;
         vector<Trajectory> trajectories;
         int ctTrajectories, tTrajectories;
         int64_t roundId;
 
-        double distance(const csknow::feature_store::TeamFeatureStoreResult & traces) const;
-        double fde(const csknow::feature_store::TeamFeatureStoreResult & curTraces, const MultiTrajectory & otherMT,
-                   const csknow::feature_store::TeamFeatureStoreResult & otherTraces,
-                   map<int, int> agentMapping) const;
-        DTWResult dtw(const csknow::feature_store::TeamFeatureStoreResult & curTraces, const MultiTrajectory & otherMT,
-                      const csknow::feature_store::TeamFeatureStoreResult & otherTraces,
-                      map<int, int> agentMapping, DTWStepOptions stepOptions) const;
-        DTWResult percentileADE(const csknow::feature_store::TeamFeatureStoreResult & curTraces,
-                                const MultiTrajectory & otherMT,
-                                const csknow::feature_store::TeamFeatureStoreResult & otherTraces,
-                                map<int, int> agentMapping) const;
-        virtual double minTime(const csknow::feature_store::TeamFeatureStoreResult & traces) const;
-        virtual double maxTime(const csknow::feature_store::TeamFeatureStoreResult & traces) const;
+        double distance() const;
+        double fde(const MultiTrajectory & otherMT, map<int, int> agentMapping) const;
+        DTWResult dtw(const MultiTrajectory & otherMT, map<int, int> agentMapping, DTWStepOptions stepOptions) const;
+        DTWResult percentileADE(const MultiTrajectory & otherMT, map<int, int> agentMapping) const;
+        double minTime() const;
+        double maxTime() const;
         size_t maxTimeSteps() const;
         size_t startTraceIndex() const;
         size_t maxEndTraceIndex() const;
 
-        virtual ~MultiTrajectory() = default;
     };
 
-    vector<MultiTrajectory> createMTs(const csknow::feature_store::TeamFeatureStoreResult & traces);
+    void createMTs(const csknow::feature_store::TeamFeatureStoreResult & traces, vector<MultiTrajectory> & mts);
 
     typedef map<int, int> AgentMapping;
 
@@ -109,8 +103,6 @@ namespace csknow::multi_trajectory_similarity {
         void filterTopDataMatches();
 
         MultiTrajectorySimilarityResult(const MultiTrajectory & predictedMT, const vector<MultiTrajectory> & groundTruthMTs,
-                                        const csknow::feature_store::TeamFeatureStoreResult & predictedTraces,
-                                        const csknow::feature_store::TeamFeatureStoreResult & groundTruthTraces,
                                         CTAliveTAliveToAgentMappingOptions ctAliveTAliveToAgentMappingOptions,
                                         std::optional<std::reference_wrapper<const set<int64_t>>> validGroundTruthRoundIds);
         MultiTrajectorySimilarityResult() { }
@@ -118,8 +110,8 @@ namespace csknow::multi_trajectory_similarity {
 
     struct TraceSimilarityResult {
         vector<MultiTrajectorySimilarityResult> result;
-        TraceSimilarityResult(const csknow::feature_store::TeamFeatureStoreResult & predictedTraces,
-                              const csknow::feature_store::TeamFeatureStoreResult & groundTruthTraces,
+        TraceSimilarityResult(const vector<csknow::feature_store::TeamFeatureStoreResult> & predictedTraces,
+                              const vector<csknow::feature_store::TeamFeatureStoreResult> & groundTruthTraces,
                               std::optional<std::reference_wrapper<const set<int64_t>>> validPredictedRoundIds,
                               std::optional<std::reference_wrapper<const set<int64_t>>> validGroundTruthRoundIds);
         void toHDF5(const string &filePath);

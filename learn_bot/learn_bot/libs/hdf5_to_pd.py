@@ -2,11 +2,11 @@ import h5py
 import pandas as pd
 import numpy as np
 from pathlib import Path
-from typing import List, Optional
+from typing import List, Optional, Union
 
 
 def load_hdf5_to_pd(hdf5_path: Path, selector_df: Optional[pd.DataFrame] = None, cols_to_get: Optional[List] = None,
-                    rows_to_get: Optional[List[int]] = None, root_key: str = 'data'):
+                    rows_to_get: Optional[Union[List[int], int]] = None, root_key: str = 'data'):
     # get data as numpy arrays and column names
     #np_arrs: List[np.ndarray] = []
     #col_names: List[List[str]] = []
@@ -18,8 +18,10 @@ def load_hdf5_to_pd(hdf5_path: Path, selector_df: Optional[pd.DataFrame] = None,
                 continue
             if rows_to_get is None:
                 np_arr: np.ndarray = hdf5_data[k][...]
-            else:
+            elif isinstance(rows_to_get, List):
                 np_arr: np.ndarray = hdf5_data[k][rows_to_get]
+            else:
+                np_arr: np.ndarray = hdf5_data[k][:rows_to_get]
             col_names: List[str]
             if hdf5_data[k].attrs:
                 col_names = hdf5_data[k].attrs['column names'].split(',')

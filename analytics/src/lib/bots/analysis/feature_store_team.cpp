@@ -124,6 +124,8 @@ namespace csknow::feature_store {
         }
     }
 
+    TeamFeatureStoreResult::TeamFeatureStoreResult() : TeamFeatureStoreResult(1, {}) { }
+
     TeamFeatureStoreResult::TeamFeatureStoreResult(size_t size, const std::vector<csknow::orders::QueryOrder> & orders,
                                                    std::optional<std::reference_wrapper<const Ticks>> ticks,
                                                    std::optional<std::reference_wrapper<const csknow::key_retake_events::KeyRetakeEvents>> keyRetakeEvents) {

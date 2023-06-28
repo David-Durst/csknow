@@ -46,24 +46,22 @@ namespace csknow::multi_trajectory_similarity {
         return result;
     }
 
-    double MultiTrajectory::distance(const csknow::feature_store::TeamFeatureStoreResult & traces) const {
+    double MultiTrajectory::distance() const {
         double result = 0.;
         for (const auto & trajectory : trajectories) {
-            result += trajectory.distance(traces);
+            result += trajectory.distance(traceBatch->get());
         }
         return result;
     }
 
-    double MultiTrajectory::fde(const csknow::feature_store::TeamFeatureStoreResult & curTraces,
-                                const csknow::multi_trajectory_similarity::MultiTrajectory & otherMT,
-                                const csknow::feature_store::TeamFeatureStoreResult & otherTraces,
+    double MultiTrajectory::fde(const csknow::multi_trajectory_similarity::MultiTrajectory & otherMT,
                                 map<int, int> agentMapping) const {
         double result = 0.;
         for (const auto & [curAgentIndex, otherAgentIndex] : agentMapping) {
-            result += computeDistance(trajectories[curAgentIndex].startPos(curTraces),
-                                      otherMT.trajectories[otherAgentIndex].startPos(otherTraces));
-            result += computeDistance(trajectories[curAgentIndex].endPos(curTraces),
-                                      otherMT.trajectories[otherAgentIndex].endPos(otherTraces));
+            result += computeDistance(trajectories[curAgentIndex].startPos(traceBatch->get()),
+                                      otherMT.trajectories[otherAgentIndex].startPos(otherMT.traceBatch->get()));
+            result += computeDistance(trajectories[curAgentIndex].endPos(traceBatch->get()),
+                                      otherMT.trajectories[otherAgentIndex].endPos(otherMT.traceBatch->get()));
         }
         return result;
     }
@@ -85,9 +83,7 @@ namespace csknow::multi_trajectory_similarity {
         std::cout << std::endl << std::endl;
     }
 
-    DTWResult MultiTrajectory::dtw(const csknow::feature_store::TeamFeatureStoreResult & curTraces,
-                                   const csknow::multi_trajectory_similarity::MultiTrajectory & otherMT,
-                                   const csknow::feature_store::TeamFeatureStoreResult & otherTraces,
+    DTWResult MultiTrajectory::dtw(const csknow::multi_trajectory_similarity::MultiTrajectory & otherMT,
                                    map<int, int> agentMapping, DTWStepOptions stepOptions) const {
         DTWResult result;
         size_t curLength = maxTimeSteps();
@@ -101,8 +97,8 @@ namespace csknow::multi_trajectory_similarity {
                 for (const auto & [curAgentIndex, otherAgentIndex] : agentMapping) {
                     // indexing for matrix is offset by 1 to indexing for data as need 0,0 to be before first step
                     independentDTWMatrix.get(i, j) += computeDistance(
-                            trajectories[curAgentIndex].getPosRelative(curTraces, i - 1),
-                            otherMT.trajectories[otherAgentIndex].getPosRelative(otherTraces, j - 1));
+                            trajectories[curAgentIndex].getPosRelative(traceBatch->get(), i - 1),
+                            otherMT.trajectories[otherAgentIndex].getPosRelative(otherMT.traceBatch->get(), j - 1));
                 }
             }
         }
@@ -170,9 +166,7 @@ namespace csknow::multi_trajectory_similarity {
         return result;
     }
 
-    DTWResult MultiTrajectory::percentileADE(const csknow::feature_store::TeamFeatureStoreResult &curTraces,
-                                             const csknow::multi_trajectory_similarity::MultiTrajectory &otherMT,
-                                             const csknow::feature_store::TeamFeatureStoreResult &otherTraces,
+    DTWResult MultiTrajectory::percentileADE(const csknow::multi_trajectory_similarity::MultiTrajectory &otherMT,
                                              map<int, int> agentMapping) const {
         DTWResult result;
         result.cost = 0;
@@ -185,8 +179,9 @@ namespace csknow::multi_trajectory_similarity {
             otherPercentileIndices.push_back(static_cast<size_t>(otherLength * percentile));
             for (const auto & [curAgentIndex, otherAgentIndex] : agentMapping) {
                 result.cost += computeDistance(
-                        trajectories[curAgentIndex].getPosRelative(curTraces, curPercentileIndices.back()),
-                        otherMT.trajectories[otherAgentIndex].getPosRelative(otherTraces, otherPercentileIndices.back()));
+                        trajectories[curAgentIndex].getPosRelative(traceBatch->get(), curPercentileIndices.back()),
+                        otherMT.trajectories[otherAgentIndex].getPosRelative(otherMT.traceBatch->get(),
+                                                                             otherPercentileIndices.back()));
             }
         }
         result.cost /= static_cast<double>(2 * percentiles.size());
@@ -211,22 +206,22 @@ namespace csknow::multi_trajectory_similarity {
         return result;
     }
 
-    double MultiTrajectory::minTime(const csknow::feature_store::TeamFeatureStoreResult &traces) const {
+    double MultiTrajectory::minTime() const {
         double minTime = std::numeric_limits<double>::max();
         for (const auto & trajectory : trajectories) {
             minTime = std::min(minTime, gameTicksToSeconds(tickRates,
-                                                           traces.gameTickNumber[trajectory.endTraceIndex] -
-                                                           traces.gameTickNumber[trajectory.startTraceIndex]));
+                                                           traceBatch->get().gameTickNumber[trajectory.endTraceIndex] -
+                                                           traceBatch->get().gameTickNumber[trajectory.startTraceIndex]));
         }
         return minTime;
     }
 
-    double MultiTrajectory::maxTime(const csknow::feature_store::TeamFeatureStoreResult &traces) const {
+    double MultiTrajectory::maxTime() const {
         double maxTime = 0;
         for (const auto & trajectory : trajectories) {
             maxTime = std::max(maxTime, gameTicksToSeconds(tickRates,
-                                                           traces.gameTickNumber[trajectory.endTraceIndex] -
-                                                           traces.gameTickNumber[trajectory.startTraceIndex]));
+                                                           traceBatch->get().gameTickNumber[trajectory.endTraceIndex] -
+                                                           traceBatch->get().gameTickNumber[trajectory.startTraceIndex]));
         }
         return maxTime;
     }
@@ -251,7 +246,7 @@ namespace csknow::multi_trajectory_similarity {
         return maxEndTraceIndex;
     }
 
-    vector<MultiTrajectory> createMTs(const csknow::feature_store::TeamFeatureStoreResult & traces) {
+    void createMTs(const csknow::feature_store::TeamFeatureStoreResult & traces, vector<MultiTrajectory> & mts) {
         // get all round starts and ends
         int64_t priorRoundId = INVALID_ID;
         vector<size_t> roundStartTraceIndex, roundEndTraceIndex;
@@ -267,7 +262,6 @@ namespace csknow::multi_trajectory_similarity {
         roundEndTraceIndex.push_back(traces.roundId.size() - 1);
 
         // for each round create a multi-trajectory with a trajectory for each player from start until not alive
-        vector<MultiTrajectory> mts;
         for (size_t roundIndex = 0; roundIndex < roundEndTraceIndex.size(); roundIndex++) {
             vector<Trajectory> trajectories;
             int ctTrajectories = 0;
@@ -300,15 +294,9 @@ namespace csknow::multi_trajectory_similarity {
                     trajectories.push_back(curTrajectory);
                 }
             }
-            MultiTrajectory mt;
-            mt.trajectories = trajectories;
-            mt.ctTrajectories = ctTrajectories;
-            mt.tTrajectories = tTrajectories;
-            mt.roundId = traces.roundId[roundStartTraceIndex[roundIndex]];
-            mts.push_back(mt);
+            mts.push_back({traces, trajectories, ctTrajectories, tTrajectories,
+                           traces.roundId[roundStartTraceIndex[roundIndex]]});
         }
-
-        return mts;
     }
 
     struct PartialMapping{
@@ -357,7 +345,8 @@ namespace csknow::multi_trajectory_similarity {
         return ctAliveTAliveToAgentMapping;
     }
 
-    string getName(const MultiTrajectory & mt, const csknow::feature_store::TeamFeatureStoreResult traces) {
+    string getName(const MultiTrajectory & mt) {
+        const csknow::feature_store::TeamFeatureStoreResult & traces = mt.traceBatch->get();
         return traces.testName[mt.startTraceIndex()] + "_rId_" +
             std::to_string(traces.roundId[mt.startTraceIndex()]) +
             "_rNum_" + std::to_string(traces.roundNumber[mt.startTraceIndex()]);
@@ -387,14 +376,12 @@ namespace csknow::multi_trajectory_similarity {
 
     MultiTrajectorySimilarityResult::MultiTrajectorySimilarityResult(
             const MultiTrajectory & predictedMT, const vector<MultiTrajectory> & groundTruthMTs,
-            const csknow::feature_store::TeamFeatureStoreResult &predictedTraces,
-            const csknow::feature_store::TeamFeatureStoreResult &groundTruthTraces,
             CTAliveTAliveToAgentMappingOptions ctAliveTAliveToAgentMappingOptions,
             std::optional<std::reference_wrapper<const set<int64_t>>> validGroundTruthRoundIds) {
 
         // for each predicted MT, find best ground truth MT and add it's result to the sum
         this->predictedMT = predictedMT;
-        predictedMTName = getName(predictedMT, predictedTraces);
+        predictedMTName = getName(predictedMT);
         for (const auto & groundTruthMT : groundTruthMTs) {
             if (predictedMT.tTrajectories != groundTruthMT.tTrajectories ||
                 predictedMT.ctTrajectories != groundTruthMT.ctTrajectories) {
@@ -410,22 +397,21 @@ namespace csknow::multi_trajectory_similarity {
             bestADECurData.dtwResult.cost = std::numeric_limits<double>::infinity();
             for (const auto & agentMapping :
                 ctAliveTAliveToAgentMappingOptions[predictedMT.ctTrajectories][predictedMT.tTrajectories]) {
-                DTWResult unconstrainedCurDTWResult = predictedMT.dtw(predictedTraces, groundTruthMT, groundTruthTraces,
-                                                                      agentMapping, stopOptionsP0Symmetric);
+                DTWResult unconstrainedCurDTWResult = predictedMT.dtw(groundTruthMT, agentMapping,
+                                                                      stopOptionsP0Symmetric);
                 if (unconstrainedCurDTWResult.cost < bestUnconstrainedCurDTWData.dtwResult.cost) {
                     bestUnconstrainedCurDTWData.dtwResult = unconstrainedCurDTWResult;
                     bestUnconstrainedCurDTWData.agentMapping = agentMapping;
                     bestUnconstrainedCurDTWData.mt = groundTruthMT;
                 }
-                DTWResult slopeConstrainedCurDTWResult = predictedMT.dtw(predictedTraces, groundTruthMT, groundTruthTraces,
-                                                                         agentMapping, stopOptionsP1_2Symmetric);
+                DTWResult slopeConstrainedCurDTWResult = predictedMT.dtw(groundTruthMT, agentMapping,
+                                                                         stopOptionsP1_2Symmetric);
                 if (slopeConstrainedCurDTWResult.cost < bestSlopeConstrainedCurDTWData.dtwResult.cost) {
                     bestSlopeConstrainedCurDTWData.dtwResult = slopeConstrainedCurDTWResult;
                     bestSlopeConstrainedCurDTWData.agentMapping = agentMapping;
                     bestSlopeConstrainedCurDTWData.mt = groundTruthMT;
                 }
-                DTWResult adeCurResult = predictedMT.percentileADE(predictedTraces, groundTruthMT, groundTruthTraces,
-                                                                   agentMapping);
+                DTWResult adeCurResult = predictedMT.percentileADE(groundTruthMT, agentMapping);
                 if (adeCurResult.cost < bestADECurData.dtwResult.cost) {
                     bestADECurData.dtwResult = adeCurResult;
                     bestADECurData.agentMapping = agentMapping;
@@ -443,33 +429,34 @@ namespace csknow::multi_trajectory_similarity {
         }
         filterTopDataMatches();
         for (auto & unconstrainedDTWData : unconstrainedDTWDataMatches) {
-            unconstrainedDTWData.name = getName(unconstrainedDTWData.mt, groundTruthTraces);
-            unconstrainedDTWData.deltaTime =
-                    predictedMT.maxTime(predictedTraces) - unconstrainedDTWData.mt.maxTime(groundTruthTraces);
-            unconstrainedDTWData.deltaDistance =
-                    predictedMT.distance(predictedTraces) - unconstrainedDTWData.mt.distance(groundTruthTraces);
+            unconstrainedDTWData.name = getName(unconstrainedDTWData.mt);
+            unconstrainedDTWData.deltaTime = predictedMT.maxTime() - unconstrainedDTWData.mt.maxTime();
+            unconstrainedDTWData.deltaDistance = predictedMT.distance() - unconstrainedDTWData.mt.distance();
         }
         for (auto & slopeConstrainedDTWData : slopeConstrainedDTWDataMatches) {
-            slopeConstrainedDTWData.name = getName(slopeConstrainedDTWData.mt, groundTruthTraces);
-            slopeConstrainedDTWData.deltaTime =
-                    predictedMT.maxTime(predictedTraces) - slopeConstrainedDTWData.mt.maxTime(groundTruthTraces);
-            slopeConstrainedDTWData.deltaDistance =
-                    predictedMT.distance(predictedTraces) - slopeConstrainedDTWData.mt.distance(groundTruthTraces);
+            slopeConstrainedDTWData.name = getName(slopeConstrainedDTWData.mt);
+            slopeConstrainedDTWData.deltaTime = predictedMT.maxTime() - slopeConstrainedDTWData.mt.maxTime();
+            slopeConstrainedDTWData.deltaDistance = predictedMT.distance() - slopeConstrainedDTWData.mt.distance();
         }
         for (auto & adeData : adeDataMatches) {
-            adeData.name = getName(adeData.mt, groundTruthTraces);
-            adeData.deltaTime = predictedMT.maxTime(predictedTraces) - adeData.mt.maxTime(groundTruthTraces);
-            adeData.deltaDistance = predictedMT.distance(predictedTraces) - adeData.mt.distance(groundTruthTraces);
+            adeData.name = getName(adeData.mt);
+            adeData.deltaTime = predictedMT.maxTime() - adeData.mt.maxTime();
+            adeData.deltaDistance = predictedMT.distance() - adeData.mt.distance();
         }
     }
 
 
-    TraceSimilarityResult::TraceSimilarityResult(const csknow::feature_store::TeamFeatureStoreResult & predictedTraces,
-                                                 const csknow::feature_store::TeamFeatureStoreResult & groundTruthTraces,
+    TraceSimilarityResult::TraceSimilarityResult(const vector<csknow::feature_store::TeamFeatureStoreResult> & predictedTraces,
+                                                 const vector<csknow::feature_store::TeamFeatureStoreResult> & groundTruthTraces,
                                                  std::optional<std::reference_wrapper<const set<int64_t>>> validPredictedRoundIds,
                                                  std::optional<std::reference_wrapper<const set<int64_t>>> validGroundTruthRoundIds) {
-        vector<MultiTrajectory> predictedMTs = createMTs(predictedTraces),
-                                groundTruthMTs = createMTs(groundTruthTraces);
+        vector<MultiTrajectory> predictedMTs, groundTruthMTs;
+        for (const auto & predictedTraceBatch : predictedTraces) {
+            createMTs(predictedTraceBatch, predictedMTs);
+        }
+        for (const auto & groundTruthTraceBatch : groundTruthTraces) {
+            createMTs(groundTruthTraceBatch, groundTruthMTs);
+        }
 
         CTAliveTAliveToAgentMappingOptions ctAliveTAliveToAgentMappingOptions = generateAllPossibleMappings();
 
@@ -481,8 +468,8 @@ namespace csknow::multi_trajectory_similarity {
             if (validPredictedRoundIds && validPredictedRoundIds.value().get().count(predictedMT.roundId) == 0) {
                 continue;
             }
-            result[i] = MultiTrajectorySimilarityResult(predictedMT, groundTruthMTs, predictedTraces, groundTruthTraces,
-                                                        ctAliveTAliveToAgentMappingOptions, validGroundTruthRoundIds);
+            result[i] = MultiTrajectorySimilarityResult(predictedMT, groundTruthMTs, ctAliveTAliveToAgentMappingOptions,
+                                                        validGroundTruthRoundIds);
             predictedMTsProcessed++;
             printProgress(predictedMTsProcessed, predictedMTs.size());
         }

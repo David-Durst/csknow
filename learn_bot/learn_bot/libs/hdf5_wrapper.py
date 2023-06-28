@@ -26,7 +26,7 @@ class HDF5Wrapper:
         else:
             self.id_df = id_df
         if sample_df is None:
-            self.sample_df = load_hdf5_to_pd(hdf5_path, rows_to_get=[i for i in range(min(100, len(self.id_df)))])
+            self.sample_df = load_hdf5_to_pd(hdf5_path, rows_to_get=min(100, len(self.id_df)))
         else:
             self.sample_df = sample_df
 
