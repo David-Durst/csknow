@@ -11,31 +11,23 @@ from torch.utils.data import DataLoader
 
 from torch.utils.tensorboard import SummaryWriter
 
-from learn_bot.latent.aggression.column_names import aggression_input_column_types, aggression_output_column_types
-from learn_bot.latent.aggression.latent_to_distributions import get_aggression_distributions, num_aggression_options, \
-    get_aggression_probability
 from learn_bot.latent.dataset import *
 from learn_bot.latent.engagement.column_names import round_id_column, engagement_input_column_types, engagement_output_column_types
-from learn_bot.latent.engagement.latent_to_distributions import get_engagement_target_distributions, num_target_options, \
-    get_engagement_probability
 from learn_bot.latent.latent_hdf5_dataset import LatentHDF5Dataset, MultipleLatentHDF5Dataset
-from learn_bot.latent.lstm_latent_model import LSTMLatentModel
-from learn_bot.latent.mlp_hidden_latent_model import MLPHiddenLatentModel
-from learn_bot.latent.mlp_latent_model import MLPLatentModel
-from learn_bot.latent.mlp_nested_hidden_latent_model import MLPNestedHiddenLatentModel
 from learn_bot.latent.place_area.create_test_data import create_left_right_train_data, create_left_right_test_data
 from learn_bot.latent.place_area.pos_abs_delta_conversion import delta_pos_grid_num_cells
-from learn_bot.latent.order.latent_to_distributions import get_order_probability
 from learn_bot.latent.place_area.column_names import place_area_input_column_types, place_output_column_types, \
     num_places, area_grid_size, area_output_column_types, delta_pos_output_column_types, test_success_col
 from learn_bot.latent.profiling import profile_latent_model
 from learn_bot.latent.transformer_nested_hidden_latent_model import TransformerNestedHiddenLatentModel
-from learn_bot.libs.hdf5_to_pd import load_hdf5_to_pd, HDF5Wrapper, PDWrapper
+from learn_bot.libs.hdf5_to_pd import load_hdf5_to_pd
+from learn_bot.libs.hdf5_wrapper import HDF5Wrapper, PDWrapper
 from learn_bot.libs.io_transforms import CUDA_DEVICE_STR
 from learn_bot.latent.accuracy_and_loss import compute_loss, compute_accuracy_and_delta_diff, finish_accuracy_and_delta_diff, \
     CPU_DEVICE_STR, LatentLosses
 from learn_bot.libs.plot_features import plot_untransformed_and_transformed
 from learn_bot.libs.df_grouping import train_test_split_by_col, make_index_column, TrainTestSplit, get_test_col_ids
+from learn_bot.libs.multi_hdf5_wrapper import MultiHDF5Wrapper
 from tqdm import tqdm
 from dataclasses import dataclass
 from datetime import datetime
@@ -150,41 +142,10 @@ class TrainCheckpointPaths:
     best_path: Path
 
 
-def train(train_type: TrainType, primary_data_hdf5: HDF5Wrapper, hyperparameter_options: HyperparameterOptions = default_hyperparameter_options,
+def train(train_type: TrainType, multi_hdf5_wrapper: MultiHDF5Wrapper, hyperparameter_options: HyperparameterOptions = default_hyperparameter_options,
           diff_train_test=True, flip_columns: List[ColumnsToFlip] = [], force_test_hdf5: Optional[HDF5Wrapper] = None,
-          load_model_path: Optional[Path] = None, secondary_data_hdf5: Optional[HDF5Wrapper] = None,
-          enable_training: bool = True) -> TrainCheckpointPaths:
+          load_model_path: Optional[Path] = None, enable_training: bool = True) -> TrainCheckpointPaths:
     train_checkpoint_paths: TrainCheckpointPaths = TrainCheckpointPaths(Path("INVALID"), Path("INVALID"))
-
-    if not diff_train_test and secondary_data_hdf5:
-        print("must set diff_train_test if using secondary_data_hdf5")
-        exit(1)
-
-    if diff_train_test:
-        train_test_split = train_test_split_by_col(primary_data_hdf5.id_df, round_id_column)
-        train_hdf5 = primary_data_hdf5.clone()
-        train_hdf5.limit(train_test_split.train_predicate)
-        train_group_ids = train_test_split.train_group_ids
-        test_hdf5 = primary_data_hdf5.clone()
-        test_hdf5.limit(~train_test_split.train_predicate)
-        test_group_ids = get_test_col_ids(train_test_split, round_id_column)
-    else:
-        train_hdf5 = primary_data_hdf5
-        train_group_ids = list(primary_data_hdf5.id_df.loc[:, round_id_column].unique())
-        if force_test_hdf5:
-            test_hdf5 = force_test_hdf5
-            test_group_ids = list(force_test_hdf5.id_df.loc[:, round_id_column].unique())
-        else:
-            test_hdf5 = primary_data_hdf5
-            test_group_ids = train_group_ids
-    if secondary_data_hdf5:
-        secondary_train_test_split = train_test_split_by_col(secondary_data_hdf5.id_df, round_id_column)
-        secondary_train_hdf5 = secondary_data_hdf5.clone()
-        secondary_train_hdf5.limit(secondary_train_test_split.train_predicate)
-        secondary_train_group_ids = secondary_train_test_split.train_group_ids
-        secondary_test_hdf5 = secondary_data_hdf5.clone()
-        secondary_test_hdf5.limit(~secondary_train_test_split.train_predicate)
-        secondary_test_group_ids = get_test_col_ids(secondary_train_test_split, round_id_column)
 
     #if len(flip_columns) > 0:
     #    io_column_transform_df = all_data_df.copy(deep=True)
@@ -203,7 +164,7 @@ def train(train_type: TrainType, primary_data_hdf5: HDF5Wrapper, hyperparameter_
     # Define model
     if train_type == TrainType.DeltaPos:
         column_transformers = IOColumnTransformers(place_area_input_column_types, delta_pos_output_column_types,
-                                                   train_hdf5.sample_df)
+                                                   multi_hdf5_wrapper.train_hdf5_wrappers[0].sample_df)
         model = TransformerNestedHiddenLatentModel(column_transformers, 2 * max_enemies, delta_pos_grid_num_cells,
                                                    hyperparameter_options.layers, hyperparameter_options.heads)
         if load_model_path:
@@ -318,7 +279,7 @@ def train(train_type: TrainType, primary_data_hdf5: HDF5Wrapper, hyperparameter_
             os.makedirs(save_path, exist_ok=True)
         model_path = save_path / 'delta_pos_checkpoint.pt'
         torch.save({
-            'train_group_ids': train_group_ids,
+            'train_group_ids': ,
             'model_state_dict': model.state_dict(),
             'optimizer_state_dict': optimizer.state_dict(),
             'column_transformers': column_transformers,

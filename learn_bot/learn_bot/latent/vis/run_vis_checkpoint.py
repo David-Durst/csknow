@@ -6,11 +6,13 @@ import torch
 
 from learn_bot.latent.dataset import LatentDataset
 from learn_bot.latent.engagement.column_names import max_enemies
+from learn_bot.latent.latent_hdf5_dataset import LatentHDF5Dataset
 from learn_bot.latent.place_area.filter import filter_region
 from learn_bot.latent.place_area.pos_abs_delta_conversion import delta_pos_grid_num_cells, AABB
 from learn_bot.latent.place_area.column_names import round_id_column, place_area_input_column_types, \
     delta_pos_output_column_types, test_success_col
 from learn_bot.libs.hdf5_to_pd import load_hdf5_to_pd
+from learn_bot.libs.hdf5_wrapper import HDF5Wrapper
 from learn_bot.libs.io_transforms import IOColumnTransformers, CUDA_DEVICE_STR
 from learn_bot.latent.transformer_nested_hidden_latent_model import TransformerNestedHiddenLatentModel
 from learn_bot.latent.train import checkpoints_path, TrainResult, manual_latent_team_hdf5_data_path, \
@@ -21,7 +23,7 @@ from learn_bot.latent.vis.vis import vis
 from learn_bot.libs.vec import Vec3
 
 
-def load_model_file(all_data_df: pd.DataFrame, model_file_name: str) -> TrainResult:
+def load_model_file(hdf5_data: HDF5Wrapper, model_file_name: str) -> TrainResult:
     cur_checkpoints_path = checkpoints_path
     if len(sys.argv) > 1:
         cur_checkpoints_path = cur_checkpoints_path / sys.argv[1]
@@ -40,7 +42,7 @@ def load_model_file(all_data_df: pd.DataFrame, model_file_name: str) -> TrainRes
 
     column_transformers = IOColumnTransformers(place_area_input_column_types, delta_pos_output_column_types, train_df)
 
-    train_data = LatentDataset(train_df, model_file['column_transformers'])
+    train_data = LatentHDF5Dataset(train_df, model_file['column_transformers'])
     test_data = LatentDataset(test_df, model_file['column_transformers'])
 
     model = TransformerNestedHiddenLatentModel(model_file['column_transformers'], 2 * max_enemies, delta_pos_grid_num_cells, 2, 4)

@@ -8,6 +8,10 @@ import tkinter as tk
 from tkinter import ttk, font
 from PIL import Image, ImageDraw, ImageTk as itk
 
+
+class 
+
+
 def vis(all_data_df: pd.DataFrame, pred_df: pd.DataFrame):
     make_index_column(all_data_df)
     make_index_column(pred_df)

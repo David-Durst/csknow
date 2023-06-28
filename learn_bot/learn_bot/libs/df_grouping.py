@@ -27,6 +27,7 @@ def train_test_split_by_col(df: pd.DataFrame, group_col: str) -> TrainTestSplit:
 
 
 def train_test_split_by_col_ids(df: pd.DataFrame, group_col: str, col_ids: List[int]) -> TrainTestSplit:
+    # repeat a previous train test split given the ids from the prior split
     all_data_df_split_predicate = df[group_col].isin(col_ids)
     return TrainTestSplit(df[all_data_df_split_predicate], df[~all_data_df_split_predicate], col_ids, all_data_df_split_predicate)
 

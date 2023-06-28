@@ -2,7 +2,7 @@ import pandas as pd
 import torch
 from torch.utils.data import Dataset
 
-from learn_bot.libs.hdf5_to_pd import HDF5Wrapper
+from learn_bot.libs.hdf5_wrapper import HDF5Wrapper
 from learn_bot.libs.io_transforms import IOColumnTransformers
 from pathlib import Path
 from learn_bot.latent.order.column_names import *

@@ -22,7 +22,8 @@ from learn_bot.latent.vis.vis_two import vis_two, PredictedToGroundTruthDict, Pr
 from learn_bot.libs.df_grouping import make_index_column
 from learn_bot.latent.train import manual_latent_team_hdf5_data_path, rollout_latent_team_hdf5_data_path, \
     checkpoints_path, TrainResult, human_latent_team_hdf5_data_path, latent_id_cols
-from learn_bot.libs.hdf5_to_pd import load_hdf5_to_pd, HDF5Wrapper
+from learn_bot.libs.hdf5_to_pd import load_hdf5_to_pd
+from learn_bot.libs.hdf5_wrapper import HDF5Wrapper
 from learn_bot.libs.io_transforms import IOColumnTransformers, CUDA_DEVICE_STR
 from learn_bot.latent.analyze.comparison_column_names import *
 
