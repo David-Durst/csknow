@@ -17,7 +17,8 @@ from learn_bot.latent.latent_hdf5_dataset import LatentHDF5Dataset, MultipleLate
 from learn_bot.latent.place_area.create_test_data import create_left_right_train_data, create_left_right_test_data
 from learn_bot.latent.place_area.pos_abs_delta_conversion import delta_pos_grid_num_cells
 from learn_bot.latent.place_area.column_names import place_area_input_column_types, place_output_column_types, \
-    num_places, area_grid_size, area_output_column_types, delta_pos_output_column_types, test_success_col
+    num_places, area_grid_size, area_output_column_types, delta_pos_output_column_types, test_success_col, \
+    hdf5_id_columns
 from learn_bot.latent.profiling import profile_latent_model
 from learn_bot.latent.transformer_nested_hidden_latent_model import TransformerNestedHiddenLatentModel
 from learn_bot.libs.hdf5_to_pd import load_hdf5_to_pd
@@ -27,7 +28,7 @@ from learn_bot.latent.accuracy_and_loss import compute_loss, compute_accuracy_an
     CPU_DEVICE_STR, LatentLosses
 from learn_bot.libs.plot_features import plot_untransformed_and_transformed
 from learn_bot.libs.df_grouping import train_test_split_by_col, make_index_column, TrainTestSplit, get_test_col_ids
-from learn_bot.libs.multi_hdf5_wrapper import MultiHDF5Wrapper
+from learn_bot.libs.multi_hdf5_wrapper import MultiHDF5Wrapper, HDF5SourceOptions
 from tqdm import tqdm
 from dataclasses import dataclass
 from datetime import datetime
@@ -142,9 +143,10 @@ class TrainCheckpointPaths:
     best_path: Path
 
 
-def train(train_type: TrainType, multi_hdf5_wrapper: MultiHDF5Wrapper, hyperparameter_options: HyperparameterOptions = default_hyperparameter_options,
-          diff_train_test=True, flip_columns: List[ColumnsToFlip] = [], force_test_hdf5: Optional[HDF5Wrapper] = None,
-          load_model_path: Optional[Path] = None, enable_training: bool = True) -> TrainCheckpointPaths:
+def train(train_type: TrainType, multi_hdf5_wrapper: MultiHDF5Wrapper,
+          hyperparameter_options: HyperparameterOptions = default_hyperparameter_options,
+          diff_train_test=True, flip_columns: List[ColumnsToFlip] = [], load_model_path: Optional[Path] = None,
+          enable_training: bool = True) -> TrainCheckpointPaths:
     train_checkpoint_paths: TrainCheckpointPaths = TrainCheckpointPaths(Path("INVALID"), Path("INVALID"))
 
     #if len(flip_columns) > 0:
@@ -279,7 +281,7 @@ def train(train_type: TrainType, multi_hdf5_wrapper: MultiHDF5Wrapper, hyperpara
             os.makedirs(save_path, exist_ok=True)
         model_path = save_path / 'delta_pos_checkpoint.pt'
         torch.save({
-            'train_group_ids': ,
+            'train_test_splits': multi_hdf5_wrapper.train_test_splits,
             'model_state_dict': model.state_dict(),
             'optimizer_state_dict': optimizer.state_dict(),
             'column_transformers': column_transformers,
@@ -293,11 +295,11 @@ def train(train_type: TrainType, multi_hdf5_wrapper: MultiHDF5Wrapper, hyperpara
             #tmp_model.eval()
             #torch.jit.trace(tmp_model, torch.ones([64, 10, 512]))
             #  torch.jit.script(tmp_model)
-            test_group_ids_str = ",".join([str(round_id) for round_id in test_group_ids])
             if train_type == TrainType.DeltaPos:
                 script_model.save(save_path / 'delta_pos_script_model.pt')
                 with open(save_path / 'delta_pos_test_round_ids.csv', 'w+') as f:
-                    f.write(test_group_ids_str)
+                    for k, v in multi_hdf5_wrapper.test_group_ids:
+                        f.write(f'''{str(k)} : {','.join(map(str, v))}''')
             model.to(device)
 
     cur_runs_path = runs_path / hyperparameter_options.to_str(model)
@@ -347,17 +349,10 @@ def train(train_type: TrainType, multi_hdf5_wrapper: MultiHDF5Wrapper, hyperpara
                              total_epochs)
             total_epochs += 1
 
-    train_hdf5.create_np_array(column_transformers)
-    if not diff_train_test and force_test_hdf5:
-        test_hdf5.create_np_array(column_transformers)
-    if secondary_data_hdf5:
-        secondary_train_hdf5.create_np_array(column_transformers)
-        train_data = MultipleLatentHDF5Dataset([train_hdf5, secondary_train_hdf5], column_transformers)
-        test_data = MultipleLatentHDF5Dataset([test_hdf5, secondary_test_hdf5], column_transformers)
-    else:
-        train_data = LatentHDF5Dataset(train_hdf5, column_transformers)
-        test_data = LatentHDF5Dataset(test_hdf5, column_transformers)
-    batch_size = min(hyperparameter_options.batch_size, min(len(train_hdf5), len(test_hdf5)))
+    multi_hdf5_wrapper.create_np_arrays(column_transformers)
+    train_data = MultipleLatentHDF5Dataset(multi_hdf5_wrapper.train_hdf5_wrappers, column_transformers)
+    test_data = MultipleLatentHDF5Dataset(multi_hdf5_wrapper.test_hdf5_wrappers, column_transformers)
+    batch_size = min(hyperparameter_options.batch_size, min(len(train_data), len(test_data)))
     train_dataloader = DataLoader(train_data, batch_size=batch_size, num_workers=0, shuffle=True, pin_memory=True)
     test_dataloader = DataLoader(test_data, batch_size=batch_size, num_workers=0, shuffle=True, pin_memory=True)
 
@@ -373,6 +368,7 @@ def train(train_type: TrainType, multi_hdf5_wrapper: MultiHDF5Wrapper, hyperpara
     return train_checkpoint_paths
 
 
+all_train_latent_team_hdf5_dir_path = Path(__file__).parent / '..' / '..' / '..' / 'analytics' / 'all_train_outputs'
 human_latent_team_hdf5_data_path = Path(__file__).parent / '..' / '..' / '..' / 'analytics' / 'csv_outputs' / 'behaviorTreeTeamFeatureStore.hdf5'
 small_latent_team_hdf5_data_path = Path(__file__).parent / '..' / '..' / '..' / 'analytics' / 'csv_outputs' / 'smallBehaviorTreeTeamFeatureStore.parquet'
 manual_latent_team_hdf5_data_path = Path(__file__).parent / '..' / '..' / '..' / 'analytics' / 'manual_outputs' / 'behaviorTreeTeamFeatureStore.hdf5'
@@ -389,41 +385,50 @@ bot_and_human_comment = "bot_and_human"
 just_human_comment = "just_human"
 curriculum_comment = "_curriculum"
 
+
 def run_single_training():
     diff_train_test = True
     test_team_data = None
+    hdf5_sources: List[HDF5SourceOptions] = []
     if use_manual_data:
         hyperparameter_comment = just_bot_comment
-        team_data = HDF5Wrapper(manual_latent_team_hdf5_data_path, ['id', round_id_column, game_id_column, test_success_col])
+        team_data = HDF5Wrapper(manual_latent_team_hdf5_data_path, hdf5_id_columns)
         team_data.limit(team_data.id_df[test_success_col] == 1.)
+        hdf5_sources.append(team_data)
     elif use_test_data:
         hyperparameter_comment = just_test_comment
         base_data = load_hdf5_to_pd(manual_latent_team_hdf5_data_path, rows_to_get=[i for i in range(1)])
         team_data_df = create_left_right_train_data(base_data)
-        team_data = PDWrapper('train', team_data_df, ['id', round_id_column, test_success_col])
+        team_data = PDWrapper('train', team_data_df, hdf5_id_columns)
         test_team_data_df = create_left_right_test_data(base_data)
-        test_team_data = PDWrapper('test', test_team_data_df, ['id', round_id_column, test_success_col])
+        test_team_data = PDWrapper('test', test_team_data_df, hdf5_id_columns)
         diff_train_test = False
+        hdf5_sources.append(team_data)
     else:
         hyperparameter_comment = just_human_comment
-        team_data = HDF5Wrapper(human_latent_team_hdf5_data_path, ['id', round_id_column, test_success_col])
+        hdf5_sources.append(all_train_latent_team_hdf5_dir_path)
+        # NEED WAY TO RESTRICT TO GOOD ROUNDS
+    multi_hdf5_wrapper = MultiHDF5Wrapper(hdf5_sources, hdf5_id_columns, diff_train_test=diff_train_test,
+                                          force_test_hdf5=test_team_data)
     if len(sys.argv) > 1:
         hyperparameter_indices = [int(i) for i in sys.argv[1].split(",")]
         for index in hyperparameter_indices:
             hyperparameter_options = hyperparameter_option_range[index]
             hyperparameter_options.comment = hyperparameter_comment
-            train(TrainType.DeltaPos, team_data, hyperparameter_options, diff_train_test=diff_train_test)
+            train(TrainType.DeltaPos, multi_hdf5_wrapper, hyperparameter_options, diff_train_test=diff_train_test)
     else:
         hyperparameter_options = HyperparameterOptions(comment=hyperparameter_comment)
-        train(TrainType.DeltaPos, team_data, diff_train_test=diff_train_test, force_test_hdf5=test_team_data,
-              hyperparameter_options=hyperparameter_options)
+        train(TrainType.DeltaPos, multi_hdf5_wrapper, hyperparameter_options, diff_train_test=diff_train_test)
                              #flip_columns=[ColumnsToFlip(" CT 0", " CT 1")])
 
 
 use_curriculum_training = False
 
+
 def run_curriculum_training():
     global total_epochs
+    # leaving this in for now, but should replace this with better mixing
+    assert False
     bot_data = HDF5Wrapper(manual_latent_team_hdf5_data_path, ['id', round_id_column, game_id_column, test_success_col])
     human_data = HDF5Wrapper(human_latent_team_hdf5_data_path, ['id', round_id_column, test_success_col])
     with open(good_retake_rounds_path, "r") as f:

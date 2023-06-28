@@ -4,8 +4,6 @@ from dataclasses import dataclass
 
 @dataclass(frozen=True)
 class TrainTestSplit:
-    train_df: pd.DataFrame
-    test_df: pd.DataFrame
     train_group_ids: List[int]
     train_predicate: pd.Series
 
@@ -22,14 +20,13 @@ def train_test_split_by_col(df: pd.DataFrame, group_col: str) -> TrainTestSplit:
     # top 80% of engagements (summing by ticks per engagement to weight by ticks) are training data, rest are test
     top_80_pct_groups = random_sum_groups_df[random_sum_groups_df['id'] < 0.8 * len(df)].index.to_list()
     all_data_df_split_predicate = df[group_col].isin(top_80_pct_groups)
-    return TrainTestSplit(df[all_data_df_split_predicate], df[~all_data_df_split_predicate], top_80_pct_groups,
-                          all_data_df_split_predicate)
+    return TrainTestSplit(top_80_pct_groups, all_data_df_split_predicate)
 
 
 def train_test_split_by_col_ids(df: pd.DataFrame, group_col: str, col_ids: List[int]) -> TrainTestSplit:
     # repeat a previous train test split given the ids from the prior split
     all_data_df_split_predicate = df[group_col].isin(col_ids)
-    return TrainTestSplit(df[all_data_df_split_predicate], df[~all_data_df_split_predicate], col_ids, all_data_df_split_predicate)
+    return TrainTestSplit(col_ids, all_data_df_split_predicate)
 
 
 def get_test_col_ids(train_test_split: TrainTestSplit, group_col: str) -> List[int]:

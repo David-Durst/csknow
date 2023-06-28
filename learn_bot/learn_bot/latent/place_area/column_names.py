@@ -13,11 +13,11 @@ delta_pos_grid_num_cells = delta_pos_z_num_cells * \
 delta_pos_grid_num_cells_per_xy_dim = isqrt(int(delta_pos_grid_num_cells / delta_pos_z_num_cells))
 delta_pos_grid_num_xy_cells_per_z_change = delta_pos_grid_num_cells_per_xy_dim * delta_pos_grid_num_cells_per_xy_dim
 
-
-
 float_c4_cols = [] #[c4_distance_to_a_site_col, c4_distance_to_b_site_col] + c4_pos_cols + c4_ticks_since_plant
 
 test_success_col = 'test success'
+
+hdf5_id_columns = ['id', round_id_column, game_id_column, test_success_col]
 
 def get_player_distribution_nearest_place(player_index: int, place_index: int, team_str: str) -> str:
     return "distribution nearest place " + str(place_index) + " " + team_str + " " + str(player_index)
