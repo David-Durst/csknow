@@ -966,6 +966,7 @@ namespace csknow::feature_store {
 
     void TeamFeatureStoreResult::load(const std::string &filePath) {
         HighFive::File file(filePath, HighFive::File::ReadOnly);
+        fileName = std::filesystem::path(filePath).filename();
 
         roundId = file.getDataSet("/data/round id").read<std::vector<int64_t>>();
         roundNumber = file.getDataSet("/data/round number").read<std::vector<int64_t>>();

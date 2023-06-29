@@ -141,6 +141,7 @@ namespace csknow::feature_store {
                                   const nav_mesh::nav_file & navFile,
                                   const csknow::key_retake_events::KeyRetakeEvents & keyRetakeEvents);
         void toHDF5Inner(HighFive::File & file) override;
+        string fileName;
         void load(const std::string &filePath);
         /*
         void checkPossiblyBadValue() {

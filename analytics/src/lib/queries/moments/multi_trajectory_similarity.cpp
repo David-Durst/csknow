@@ -461,9 +461,10 @@ namespace csknow::multi_trajectory_similarity {
         CTAliveTAliveToAgentMappingOptions ctAliveTAliveToAgentMappingOptions = generateAllPossibleMappings();
 
         std::atomic<size_t> predictedMTsProcessed = 0;
-        result.resize(predictedMTs.size());
+        size_t totalSize = 50;
+        result.resize(totalSize/*predictedMTs.size()*/);
 #pragma omp parallel for
-        for (size_t i = 0; i < predictedMTs.size(); i++) {
+        for (size_t i = 0; i < totalSize/*predictedMTs.size()*/; i++) {
             const auto & predictedMT = predictedMTs[i];
             if (validPredictedRoundIds && validPredictedRoundIds.value().get().count(predictedMT.roundId) == 0) {
                 continue;
@@ -471,7 +472,7 @@ namespace csknow::multi_trajectory_similarity {
             result[i] = MultiTrajectorySimilarityResult(predictedMT, groundTruthMTs, ctAliveTAliveToAgentMappingOptions,
                                                         validGroundTruthRoundIds);
             predictedMTsProcessed++;
-            printProgress(predictedMTsProcessed, predictedMTs.size());
+            printProgress(predictedMTsProcessed, totalSize/*predictedMTs.size()*/);
         }
     }
 
@@ -519,6 +520,7 @@ namespace csknow::multi_trajectory_similarity {
     void TraceSimilarityResult::toHDF5(const std::string &filePath) {
         vector<string> predictedNames, bestFitGroundTruthNames;
         vector<string> metricTypes;
+        vector<string> predictedTraceBatch, bestFitGroundTruthTraceBatch;
         vector<int64_t> predictedRoundIds, bestFitGroundTruthRoundIds;
         vector<size_t> bestMatchIds, predictedStartTraceIndex, predictedEndTraceIndex,
             bestFitGroundTruthStartTraceIndex, bestFitGroundTruthEndTraceIndex;
@@ -535,6 +537,8 @@ namespace csknow::multi_trajectory_similarity {
                     predictedNames.push_back(mtSimilarityResult.predictedMTName);
                     bestFitGroundTruthNames.push_back(metricData.name);
                     metricTypes.push_back(metricTypeToString(metricType));
+                    predictedTraceBatch.push_back(mtSimilarityResult.predictedMT.traceBatch->get().fileName);
+                    bestFitGroundTruthTraceBatch.push_back(metricData.mt.traceBatch->get().fileName);
                     predictedRoundIds.push_back(mtSimilarityResult.predictedMT.roundId);
                     bestFitGroundTruthRoundIds.push_back(metricData.mt.roundId);
                     bestMatchIds.push_back(bestMatchId);
@@ -566,6 +570,8 @@ namespace csknow::multi_trajectory_similarity {
         file.createDataSet("/data/predicted name", predictedNames);
         file.createDataSet("/data/best fit ground truth name", bestFitGroundTruthNames);
         file.createDataSet("/data/metric type", metricTypes);
+        file.createDataSet("/data/predicted trace batch", predictedTraceBatch);
+        file.createDataSet("/data/best fit ground truth trace batch", bestFitGroundTruthTraceBatch);
         file.createDataSet("/data/predicted round id", predictedRoundIds);
         file.createDataSet("/data/best fit ground truth round id", bestFitGroundTruthRoundIds);
         file.createDataSet("/data/best match ids", bestMatchIds);
