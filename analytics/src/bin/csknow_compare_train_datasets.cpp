@@ -67,6 +67,10 @@ int main(int argc, char * argv[]) {
     if (predictedPathStr != groundTruthPathStr) {
         loadTraces(groundTruthTraces, groundTruthPathStr);
     }
+    fs::path logPath = predictedPathStr;
+    if (!is_directory(logPath)) {
+        logPath = logPath.parent_path();
+    }
 
     auto similarityStart = std::chrono::system_clock::now();
     std::optional<reference_wrapper<const set<int64_t>>> predictedGoodRoundIds, groundTruthGoodRoundIds;
@@ -85,7 +89,7 @@ int main(int argc, char * argv[]) {
     std::cout << "processing similarity" << std::endl;
     csknow::multi_trajectory_similarity::TraceSimilarityResult
     traceSimilarityResult(predictedTraces, predictedPathStr == groundTruthPathStr ? predictedTraces : groundTruthTraces,
-                          predictedGoodRoundIds, groundTruthGoodRoundIds);
+                          predictedGoodRoundIds, groundTruthGoodRoundIds, logPath);
 
     fs::path predictedPath(predictedPathStr);
     fs::path similarityResult = predictedPath.parent_path() / outputName;

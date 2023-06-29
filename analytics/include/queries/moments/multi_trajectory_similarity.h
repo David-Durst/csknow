@@ -11,6 +11,7 @@
 #include <unordered_map>
 #include <list>
 #include <map>
+#include <filesystem>
 #include "bots/analysis/feature_store_team.h"
 
 namespace csknow::multi_trajectory_similarity {
@@ -113,7 +114,8 @@ namespace csknow::multi_trajectory_similarity {
         TraceSimilarityResult(const vector<csknow::feature_store::TeamFeatureStoreResult> & predictedTraces,
                               const vector<csknow::feature_store::TeamFeatureStoreResult> & groundTruthTraces,
                               std::optional<std::reference_wrapper<const set<int64_t>>> validPredictedRoundIds,
-                              std::optional<std::reference_wrapper<const set<int64_t>>> validGroundTruthRoundIds);
+                              std::optional<std::reference_wrapper<const set<int64_t>>> validGroundTruthRoundIds,
+                              const std::filesystem::path & logPath);
         void toHDF5(const string &filePath);
     };
 }

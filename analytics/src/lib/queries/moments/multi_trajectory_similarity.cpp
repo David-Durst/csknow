@@ -5,6 +5,7 @@
 #include "queries/moments/multi_trajectory_similarity.h"
 #include "file_helpers.h"
 #include <atomic>
+#include <mutex>
 
 namespace csknow::multi_trajectory_similarity {
     // assume everything is at 128 tick
@@ -374,6 +375,8 @@ namespace csknow::multi_trajectory_similarity {
         {{3, 1, 1}, {2, 0, 2}, {1, 0, 1}, {0, 0, 1}},
     }};
 
+    constexpr bool useADEForMappingAlignment = true;
+
     MultiTrajectorySimilarityResult::MultiTrajectorySimilarityResult(
             const MultiTrajectory & predictedMT, const vector<MultiTrajectory> & groundTruthMTs,
             CTAliveTAliveToAgentMappingOptions ctAliveTAliveToAgentMappingOptions,
@@ -397,19 +400,22 @@ namespace csknow::multi_trajectory_similarity {
             bestADECurData.dtwResult.cost = std::numeric_limits<double>::infinity();
             for (const auto & agentMapping :
                 ctAliveTAliveToAgentMappingOptions[predictedMT.ctTrajectories][predictedMT.tTrajectories]) {
-                DTWResult unconstrainedCurDTWResult = predictedMT.dtw(groundTruthMT, agentMapping,
-                                                                      stopOptionsP0Symmetric);
-                if (unconstrainedCurDTWResult.cost < bestUnconstrainedCurDTWData.dtwResult.cost) {
-                    bestUnconstrainedCurDTWData.dtwResult = unconstrainedCurDTWResult;
-                    bestUnconstrainedCurDTWData.agentMapping = agentMapping;
-                    bestUnconstrainedCurDTWData.mt = groundTruthMT;
-                }
-                DTWResult slopeConstrainedCurDTWResult = predictedMT.dtw(groundTruthMT, agentMapping,
-                                                                         stopOptionsP1_2Symmetric);
-                if (slopeConstrainedCurDTWResult.cost < bestSlopeConstrainedCurDTWData.dtwResult.cost) {
-                    bestSlopeConstrainedCurDTWData.dtwResult = slopeConstrainedCurDTWResult;
-                    bestSlopeConstrainedCurDTWData.agentMapping = agentMapping;
-                    bestSlopeConstrainedCurDTWData.mt = groundTruthMT;
+                if (!useADEForMappingAlignment) {
+                    DTWResult unconstrainedCurDTWResult = predictedMT.dtw(groundTruthMT, agentMapping,
+                                                                          stopOptionsP0Symmetric);
+                    if (unconstrainedCurDTWResult.cost < bestUnconstrainedCurDTWData.dtwResult.cost) {
+                        bestUnconstrainedCurDTWData.dtwResult = unconstrainedCurDTWResult;
+                        bestUnconstrainedCurDTWData.agentMapping = agentMapping;
+                        bestUnconstrainedCurDTWData.mt = groundTruthMT;
+                    }
+                    DTWResult slopeConstrainedCurDTWResult = predictedMT.dtw(groundTruthMT, agentMapping,
+                                                                             stopOptionsP1_2Symmetric);
+                    if (slopeConstrainedCurDTWResult.cost < bestSlopeConstrainedCurDTWData.dtwResult.cost) {
+                        bestSlopeConstrainedCurDTWData.dtwResult = slopeConstrainedCurDTWResult;
+                        bestSlopeConstrainedCurDTWData.agentMapping = agentMapping;
+                        bestSlopeConstrainedCurDTWData.mt = groundTruthMT;
+                    }
+
                 }
                 DTWResult adeCurResult = predictedMT.percentileADE(groundTruthMT, agentMapping);
                 if (adeCurResult.cost < bestADECurData.dtwResult.cost) {
@@ -418,6 +424,20 @@ namespace csknow::multi_trajectory_similarity {
                     bestADECurData.mt = groundTruthMT;
                 }
             }
+
+            if (useADEForMappingAlignment) {
+                DTWResult unconstrainedCurDTWResult = predictedMT.dtw(groundTruthMT, bestADECurData.agentMapping,
+                                                                      stopOptionsP0Symmetric);
+                bestUnconstrainedCurDTWData.dtwResult = unconstrainedCurDTWResult;
+                bestUnconstrainedCurDTWData.agentMapping = bestADECurData.agentMapping;
+                bestUnconstrainedCurDTWData.mt = groundTruthMT;
+                DTWResult slopeConstrainedCurDTWResult = predictedMT.dtw(groundTruthMT, bestADECurData.agentMapping,
+                                                                         stopOptionsP1_2Symmetric);
+                bestSlopeConstrainedCurDTWData.dtwResult = slopeConstrainedCurDTWResult;
+                bestSlopeConstrainedCurDTWData.agentMapping = bestADECurData.agentMapping;
+                bestSlopeConstrainedCurDTWData.mt = groundTruthMT;
+            }
+
             unconstrainedDTWDataMatches.push_back(bestUnconstrainedCurDTWData);
             if (bestSlopeConstrainedCurDTWData.dtwResult.cost < std::numeric_limits<double>::infinity()) {
                 slopeConstrainedDTWDataMatches.push_back(bestSlopeConstrainedCurDTWData);
@@ -449,7 +469,8 @@ namespace csknow::multi_trajectory_similarity {
     TraceSimilarityResult::TraceSimilarityResult(const vector<csknow::feature_store::TeamFeatureStoreResult> & predictedTraces,
                                                  const vector<csknow::feature_store::TeamFeatureStoreResult> & groundTruthTraces,
                                                  std::optional<std::reference_wrapper<const set<int64_t>>> validPredictedRoundIds,
-                                                 std::optional<std::reference_wrapper<const set<int64_t>>> validGroundTruthRoundIds) {
+                                                 std::optional<std::reference_wrapper<const set<int64_t>>> validGroundTruthRoundIds,
+                                                 const std::filesystem::path & logPath) {
         vector<MultiTrajectory> predictedMTs, groundTruthMTs;
         for (const auto & predictedTraceBatch : predictedTraces) {
             createMTs(predictedTraceBatch, predictedMTs);
@@ -460,12 +481,44 @@ namespace csknow::multi_trajectory_similarity {
 
         CTAliveTAliveToAgentMappingOptions ctAliveTAliveToAgentMappingOptions = generateAllPossibleMappings();
 
+        std::mutex similarityMutex;
+        vector<bool> valid(omp_get_max_threads(), false);
+        vector<int> ctTrajectories(omp_get_max_threads(), 0);
+        vector<int> tTrajectories(omp_get_max_threads(), 0);
+        vector<int> totalTrajectories(omp_get_max_threads(), 0);
+        vector<int> mtIndex(omp_get_max_threads(), -1);
+        vector<CSKnowTime> timeAtStart(omp_get_max_threads());
+        std::fstream finishedFile (logPath / "finishedSimilarity.log", std::fstream::out);
+        finishedFile << "thread,mt index,runtime (s),num alive at start" << std::endl;
+        finishedFile.flush();
+
         std::atomic<size_t> predictedMTsProcessed = 0;
-        size_t totalSize = 50;
+        size_t totalSize = 250;
         result.resize(totalSize/*predictedMTs.size()*/);
 #pragma omp parallel for
         for (size_t i = 0; i < totalSize/*predictedMTs.size()*/; i++) {
             const auto & predictedMT = predictedMTs[i];
+
+            similarityMutex.lock();
+            valid[omp_get_thread_num()] = true;
+            ctTrajectories[omp_get_thread_num()] = predictedMT.ctTrajectories;
+            tTrajectories[omp_get_thread_num()] = predictedMT.tTrajectories;
+            totalTrajectories[omp_get_thread_num()] = predictedMT.tTrajectories + predictedMT.ctTrajectories;
+            mtIndex[omp_get_thread_num()] = i;
+            auto curTime = std::chrono::system_clock::now();
+            timeAtStart[omp_get_thread_num()] = curTime;
+            std::fstream logFile (logPath / "similarityState.log", std::fstream::out);
+            for (size_t j = 0; j < valid.size(); j++) {
+                if (valid[j]) {
+                    std::chrono::duration<double> runtime = curTime - timeAtStart[j];
+                    logFile << "thread: " << j << ", mt index: " << mtIndex[j] << ", runtime (s): " << runtime.count() <<
+                        ", ct trajectories: " << ctTrajectories[j] << ", t trajectories " << tTrajectories[j] <<
+                        ", total trajectories " << totalTrajectories[j] << std::endl;
+                }
+            }
+            logFile.close();
+            similarityMutex.unlock();
+
             if (validPredictedRoundIds && validPredictedRoundIds.value().get().count(predictedMT.roundId) == 0) {
                 continue;
             }
@@ -473,7 +526,17 @@ namespace csknow::multi_trajectory_similarity {
                                                         validGroundTruthRoundIds);
             predictedMTsProcessed++;
             printProgress(predictedMTsProcessed, totalSize/*predictedMTs.size()*/);
+
+            similarityMutex.lock();
+            valid[omp_get_thread_num()] = false;
+            int threadNum = omp_get_thread_num();
+            std::chrono::duration<double> endRuntime = std::chrono::system_clock::now() - timeAtStart[threadNum];
+            finishedFile << threadNum << "," << mtIndex[threadNum] << "," << endRuntime.count() << "," << ctTrajectories[threadNum]
+                << "," << tTrajectories[threadNum] << "," << totalTrajectories[threadNum] << std::endl;
+            finishedFile.flush();
+            similarityMutex.unlock();
         }
+        finishedFile.close();
     }
 
     const vector<MultiTrajectorySimilarityMetricData> & MultiTrajectorySimilarityResult::getDataByType(
