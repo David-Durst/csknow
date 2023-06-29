@@ -39,7 +39,7 @@ void printProgress(double progress) {
         else if (i == pos) std::cout << ">";
         else std::cout << " ";
     }
-    std::cout << "] " << int(progress * 100.0) << " %\r";
+    std::cout << "] " << std::fixed << std::setprecision(3) << progress * 100.0 << " %\r";
     std::cout.flush();
 }
 

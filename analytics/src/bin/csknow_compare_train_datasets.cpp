@@ -2,10 +2,12 @@
 // Created by durst on 6/2/23.
 //
 #include <iostream>
+#include <atomic>
 #include <map>
 #include <functional>
 #include "bots/analysis/feature_store_team.h"
 #include "queries/moments/multi_trajectory_similarity.h"
+#include "file_helpers.h"
 
 #include <filesystem>
 namespace fs = std::filesystem;
@@ -20,14 +22,24 @@ void loadTraces(vector<csknow::feature_store::TeamFeatureStoreResult> & traces, 
         traces.back().load(pathStr);
     }
     else {
+        vector<fs::path> hdf5Paths;
         for (const auto & entry : fs::directory_iterator(pathStr)) {
             string filename = entry.path().filename();
             if (filename.find(".hdf5") != string::npos) {
-                traces.emplace_back();
-                traces.back().load(entry.path());
-                std::cout << entry.path() << ", " << traces.back().size << ", " << traces.back().roundId.size() << std::endl;
+                hdf5Paths.push_back(entry.path());
             }
         }
+
+        traces.resize(hdf5Paths.size());
+        std::atomic<size_t> tracesLoaded = 0;
+        std::cout << "loading files" << std::endl;
+#pragma omp parallel for
+        for (size_t i = 0; i < hdf5Paths.size(); i++) {
+            traces[i].load(hdf5Paths[i]);
+            tracesLoaded++;
+            printProgress(tracesLoaded, traces.size());
+        }
+        std::cout << std::endl;
     }
 }
 
@@ -70,6 +82,7 @@ int main(int argc, char * argv[]) {
     else if (groundTruthGoodRoundIdsType == 2) {
         groundTruthGoodRoundIds = humanGoodRounds;
     }
+    std::cout << "processing similarity" << std::endl;
     csknow::multi_trajectory_similarity::TraceSimilarityResult
     traceSimilarityResult(predictedTraces, predictedPathStr == groundTruthPathStr ? predictedTraces : groundTruthTraces,
                           predictedGoodRoundIds, groundTruthGoodRoundIds);
