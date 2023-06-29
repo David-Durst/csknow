@@ -42,9 +42,11 @@ class HDF5Wrapper:
 
     def create_np_array(self, cts: IOColumnTransformers):
         HDF5Wrapper.input_data[self.hdf5_path] = load_hdf5_to_np_array(self.hdf5_path,
-                                                                       cts.input_types.column_names_all_categorical_columns())
+                                                                       cts.input_types.column_names_all_categorical_columns(),
+                                                                       True)
         HDF5Wrapper.output_data[self.hdf5_path] = load_hdf5_to_np_array(self.hdf5_path,
-                                                                        cts.output_types.column_names_all_categorical_columns())
+                                                                        cts.output_types.column_names_all_categorical_columns(),
+                                                                        False)
 
     def get_input_data(self) -> np.ndarray:
         return HDF5Wrapper.input_data[self.hdf5_path]
@@ -53,7 +55,7 @@ class HDF5Wrapper:
         return HDF5Wrapper.output_data[self.hdf5_path]
 
 
-def load_hdf5_to_np_array(hdf5_path: Path, cols_to_get: List[str]) -> np.ndarray:
+def load_hdf5_to_np_array(hdf5_path: Path, cols_to_get: List[str], cast_to_float: bool) -> np.ndarray:
     # get data as numpy arrays and column names
     #np_arrs: List[np.ndarray] = []
     #col_names: List[List[str]] = []
@@ -62,9 +64,10 @@ def load_hdf5_to_np_array(hdf5_path: Path, cols_to_get: List[str]) -> np.ndarray
         hdf5_data = hdf5_file['data']
         for i, k in enumerate(cols_to_get):
             np_arr: np.ndarray = hdf5_data[k][...]
-            np_arr = np_arr.astype(np.float32)
+            if cast_to_float:
+                np_arr = np_arr.astype(np.float32)
             if i == 0:
-                result = np.empty([len(cols_to_get), len(np_arr)], dtype=np.float32)
+                result = np.empty([len(cols_to_get), len(np_arr)], dtype=np_arr.dtype)
             result[i] = np_arr
     return result.transpose()
 
