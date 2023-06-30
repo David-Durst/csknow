@@ -221,8 +221,6 @@ def train(train_type: TrainType, multi_hdf5_wrapper: MultiHDF5Wrapper,
         batch_num = 0
         with tqdm(total=len(dataloader), disable=False) as pbar:
             for batch, (X, Y) in enumerate(dataloader):
-                if batch_num > 5000:
-                    break
                 batch_num += 1
                 if first_row is None:
                     first_row = X[0:1, :]
@@ -277,7 +275,7 @@ def train(train_type: TrainType, multi_hdf5_wrapper: MultiHDF5Wrapper,
         accuracy_string = finish_accuracy_and_delta_diff(accuracy, delta_diff_xy, delta_diff_xyz,
                                                          valids_per_accuracy_column, column_transformers)
         train_test_str = "Train" if train else "Test"
-        print(f"Epoch {train_test_str} Accuracy: {accuracy_string}, Transformed Avg Loss: {cumulative_loss.get_total_loss().item():>8f}")
+        print(f"Epoch {train_test_str} Accuracy: {accuracy_string}, Transformed Avg Loss: {cumulative_loss:>8f}")
         return cumulative_loss, accuracy, delta_diff_xy, delta_diff_xyz
 
     def save_model(not_best: bool, iter: int):
@@ -346,10 +344,9 @@ def train(train_type: TrainType, multi_hdf5_wrapper: MultiHDF5Wrapper,
             with torch.no_grad():
                 test_loss, test_accuracy, test_delta_diff_xy, test_delta_diff_xyz = \
                     train_or_test_SL_epoch(test_dataloader, model, None, False)
-            cur_test_less_float = test_loss.get_total_loss().item()
-            if cur_test_less_float < min_test_loss:
+            if test_loss < min_test_loss:
                 save_model(False, total_epochs)
-                min_test_loss = cur_test_less_float
+                min_test_loss = test_loss
             if (total_epochs + 1) % 10 == 0:
                 save_model(True, total_epochs)
             save_tensorboard(train_loss, test_loss, train_accuracy, test_accuracy,
