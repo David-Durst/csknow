@@ -492,6 +492,8 @@ namespace csknow::multi_trajectory_similarity {
         finishedFile << "thread,mt index,runtime (s),num alive at start" << std::endl;
         finishedFile.flush();
 
+        std::cout << "predictedMTs size: " << predictedMTs.size() << std::endl;
+
         std::atomic<size_t> predictedMTsProcessed = 0;
         size_t totalSize = 250;
         result.resize(totalSize/*predictedMTs.size()*/);

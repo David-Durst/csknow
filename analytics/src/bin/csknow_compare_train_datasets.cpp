@@ -25,7 +25,7 @@ void loadTraces(vector<csknow::feature_store::TeamFeatureStoreResult> & traces, 
         vector<fs::path> hdf5Paths;
         for (const auto & entry : fs::directory_iterator(pathStr)) {
             string filename = entry.path().filename();
-            if (filename.find(".hdf5") != string::npos) {
+            if (filename.find(".hdf5") != string::npos && filename.find("behaviorTreeTeamFeatureStore") != string::npos) {
                 hdf5Paths.push_back(entry.path());
             }
         }
