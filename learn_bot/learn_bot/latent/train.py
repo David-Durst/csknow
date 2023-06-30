@@ -304,7 +304,7 @@ def train(train_type: TrainType, multi_hdf5_wrapper: MultiHDF5Wrapper,
             if train_type == TrainType.DeltaPos:
                 script_model.save(save_path / 'delta_pos_script_model.pt')
                 with open(save_path / 'delta_pos_test_round_ids.csv', 'w+') as f:
-                    for k, v in multi_hdf5_wrapper.test_group_ids:
+                    for k, v in multi_hdf5_wrapper.test_group_ids.items():
                         f.write(f'''{str(k)} : {','.join(map(str, v))}''')
             model.to(device)
 
