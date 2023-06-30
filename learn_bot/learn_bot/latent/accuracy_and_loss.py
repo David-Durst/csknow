@@ -15,33 +15,10 @@ from torch import nn
 cross_entropy_loss_fn = nn.CrossEntropyLoss()
 
 
-class LatentLosses:
-    cat_loss: torch.Tensor
-
-    def __init__(self):
-        self.cat_loss = torch.zeros([1]).to(CUDA_DEVICE_STR)
-
-    def get_total_loss(self):
-        return self.cat_loss
-
-    def __iadd__(self, other):
-        self.cat_loss += other.cat_loss
-        return self
-
-    def __itruediv__(self, other):
-        self.cat_loss /= other
-        return self
-
-    def add_scalars(self, writer: SummaryWriter, prefix: str, total_epoch_num: int):
-        writer.add_scalar(prefix + '/loss/cat', self.cat_loss, total_epoch_num)
-        writer.add_scalar(prefix + '/loss/total', self.get_total_loss(), total_epoch_num)
-
-
 # https://discuss.pytorch.org/t/how-to-combine-multiple-criterions-to-a-loss-function/348/4
-def compute_loss(pred, Y, column_transformers: IOColumnTransformers):
+def compute_loss(pred, Y, column_transformers: IOColumnTransformers) -> torch.Tensor:
     pred_transformed = get_transformed_outputs(pred)
 
-    losses = LatentLosses()
 
     col_ranges = column_transformers.get_name_ranges(False, False, frozenset({ColumnTransformerType.CATEGORICAL_DISTRIBUTION}))
 
@@ -55,8 +32,9 @@ def compute_loss(pred, Y, column_transformers: IOColumnTransformers):
         loss = cross_entropy_loss_fn(valid_pred_transformed, valid_Y_transformed)
         if torch.isnan(loss).any():
             print('bad loss')
-        losses.cat_loss += loss
-    return losses
+        return loss
+    else:
+        torch.zeros([1]).to(CUDA_DEVICE_STR)
 
 
 def compute_accuracy_and_delta_diff(pred, Y, accuracy, delta_diff_xy, delta_diff_xyz, valids_per_accuracy_column,

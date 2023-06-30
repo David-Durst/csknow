@@ -25,7 +25,7 @@ from learn_bot.libs.hdf5_to_pd import load_hdf5_to_pd
 from learn_bot.libs.hdf5_wrapper import HDF5Wrapper, PDWrapper
 from learn_bot.libs.io_transforms import CUDA_DEVICE_STR
 from learn_bot.latent.accuracy_and_loss import compute_loss, compute_accuracy_and_delta_diff, finish_accuracy_and_delta_diff, \
-    CPU_DEVICE_STR, LatentLosses
+    CPU_DEVICE_STR
 from learn_bot.libs.plot_features import plot_untransformed_and_transformed
 from learn_bot.libs.df_grouping import train_test_split_by_col, make_index_column, TrainTestSplit, get_test_col_ids
 from learn_bot.libs.multi_hdf5_wrapper import MultiHDF5Wrapper, HDF5SourceOptions
@@ -34,6 +34,8 @@ from dataclasses import dataclass
 from datetime import datetime
 import time
 from typing import Optional
+
+from learn_bot.libs.profiling import display_top
 
 checkpoints_path = Path(__file__).parent / 'checkpoints'
 plot_path = Path(__file__).parent / 'distributions'
@@ -209,15 +211,19 @@ def train(train_type: TrainType, multi_hdf5_wrapper: MultiHDF5Wrapper,
             model.train()
         else:
             model.eval()
-        cumulative_loss = LatentLosses()
+        cumulative_loss = 0.
         accuracy = {}
         delta_diff_xy = {}
         delta_diff_xyz = {}
         valids_per_accuracy_column = {}
         #losses = []
         # bar = Bar('Processing', max=size)
+        batch_num = 0
         with tqdm(total=len(dataloader), disable=False) as pbar:
             for batch, (X, Y) in enumerate(dataloader):
+                if batch_num > 5000:
+                    break
+                batch_num += 1
                 if first_row is None:
                     first_row = X[0:1, :]
                 X, Y = X.to(device), Y.to(device)
@@ -248,13 +254,14 @@ def train(train_type: TrainType, multi_hdf5_wrapper: MultiHDF5Wrapper,
                     print('bad pred')
                     sys.exit(0)
                 batch_loss = compute_loss(pred, Y, column_transformers)
-                cumulative_loss += batch_loss
+                # uncomment here and below causes memory issues
+                cumulative_loss += batch_loss.item()
                 #losses.append(batch_loss.get_total_loss().tolist()[0])
 
                 # Backpropagation
                 if train:
                     optimizer.zero_grad()
-                    batch_loss.get_total_loss().backward()
+                    batch_loss.backward()
                     optimizer.step()
 
                 compute_accuracy_and_delta_diff(pred, Y, accuracy, delta_diff_xy, delta_diff_xyz,
@@ -305,11 +312,11 @@ def train(train_type: TrainType, multi_hdf5_wrapper: MultiHDF5Wrapper,
 
     cur_runs_path = runs_path / hyperparameter_options.to_str(model)
     writer = SummaryWriter(cur_runs_path)
-    def save_tensorboard(train_loss: LatentLosses, test_loss: LatentLosses, train_accuracy: Dict, test_accuracy: Dict,
+    def save_tensorboard(train_loss: float, test_loss: float, train_accuracy: Dict, test_accuracy: Dict,
                          train_delta_diff_xy: Dict, test_delta_diff_xy: Dict,
                          train_delta_diff_xyz: Dict, test_delta_diff_xyz: Dict, epoch_num):
-        train_loss.add_scalars(writer, 'train', epoch_num)
-        test_loss.add_scalars(writer, 'test', epoch_num)
+        writer.add_scalar('train/loss/total', train_loss, epoch_num)
+        writer.add_scalar('test/loss/total', test_loss, epoch_num)
         for name, acc in train_accuracy.items():
             writer.add_scalar('train/acc/' + name, acc, epoch_num)
         for name, acc in test_accuracy.items():
@@ -354,8 +361,8 @@ def train(train_type: TrainType, multi_hdf5_wrapper: MultiHDF5Wrapper,
     train_data = MultipleLatentHDF5Dataset(multi_hdf5_wrapper.train_hdf5_wrappers, column_transformers)
     test_data = MultipleLatentHDF5Dataset(multi_hdf5_wrapper.test_hdf5_wrappers, column_transformers)
     batch_size = min(hyperparameter_options.batch_size, min(len(train_data), len(test_data)))
-    train_dataloader = DataLoader(train_data, batch_size=batch_size, num_workers=0, shuffle=True, pin_memory=True)
-    test_dataloader = DataLoader(test_data, batch_size=batch_size, num_workers=0, shuffle=True, pin_memory=True)
+    train_dataloader = DataLoader(train_data, batch_size=batch_size, num_workers=10, shuffle=True, pin_memory=True)
+    test_dataloader = DataLoader(test_data, batch_size=batch_size, num_workers=10, shuffle=True, pin_memory=True)
 
     print(f"num train examples: {len(train_data)}")
     print(f"num test examples: {len(test_data)}")
