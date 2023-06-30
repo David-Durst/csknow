@@ -92,7 +92,8 @@ int main(int argc, char * argv[]) {
                           predictedGoodRoundIds, groundTruthGoodRoundIds, logPath);
 
     fs::path predictedPath(predictedPathStr);
-    fs::path similarityResult = predictedPath.parent_path() / outputName;
+    fs::path similarityResult = is_directory(predictedPath) ? (predictedPath / outputName) :
+                                                              (predictedPath.parent_path() / outputName);
     traceSimilarityResult.toHDF5(similarityResult);
     auto similarityEnd = std::chrono::system_clock::now();
     std::chrono::duration<double> similarityTime = similarityEnd - similarityStart;

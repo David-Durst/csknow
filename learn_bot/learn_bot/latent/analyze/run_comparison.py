@@ -32,6 +32,7 @@ hand_crafted_bot_vs_hand_crafted_bot_similarity_hdf5_data_path = Path(__file__).
 time_vs_hand_crafted_bot_similarity_hdf5_data_path = Path(__file__).parent / '..' / '..' / '..' / '..' / 'analytics' / 'rollout_outputs' / 'learnedTimeBotTrajectorySimilarity.hdf5'
 no_time_vs_hand_crafted_bot_similarity_hdf5_data_path = Path(__file__).parent / '..' / '..' / '..' / '..' / 'analytics' / 'rollout_outputs' / 'learnedNoTimeNoWeightDecayBotTrajectorySimilarity.hdf5'
 human_vs_human_similarity_hdf5_data_path = Path(__file__).parent / '..' / '..' / '..' / '..' / 'analytics' / 'csv_outputs' / 'humanTrajectorySimilarity.hdf5'
+all_human_vs_all_human_similarity_hdf5_data_path = Path(__file__).parent / '..' / '..' / '..' / '..' / 'analytics' / 'all_train_outputs' / 'humanTrajectorySimilarity.hdf5'
 
 def load_model_file(all_data_df: pd.DataFrame, model_file_name: str) -> TrainResult:
     cur_checkpoints_path = checkpoints_path
@@ -144,6 +145,16 @@ human_vs_human_config = ComparisonConfig(
     "Human vs Human Distribution"
 )
 
+all_human_vs_all_human_config = ComparisonConfig(
+    all_human_vs_all_human_similarity_hdf5_data_path,
+    human_latent_team_hdf5_data_path, # TODO: need to update this for multi hdf5 wrapper, then change these paths
+    human_latent_team_hdf5_data_path,
+    False,
+    False,
+    "all_human_vs_all_human_distribution",
+    "All Human vs All Human Distribution"
+)
+
 
 def generate_bins(min_bin_start: int, max_bin_end: int, bin_width: int) -> List[int]:
     return [b for b in range(min_bin_start, max_bin_end + bin_width, bin_width)]
@@ -159,7 +170,7 @@ dtw_cost_bins = generate_bins(0, 15000, 1000)
 delta_distance_bins = generate_bins(-20000, 20000, 2500)
 delta_time_bins = generate_bins(-40, 40, 5)
 
-just_plot_summaries = False
+just_plot_summaries = True
 
 
 def compare_trajectories():
@@ -172,6 +183,8 @@ def compare_trajectories():
         config = learned_no_time_bot_vs_hand_crafted_bot_config
     elif config_case == 3:
         config = human_vs_human_config
+    elif config_case == 4:
+        config = all_human_vs_all_human_config
 
     os.makedirs(similarity_plots_path, exist_ok=True)
     similarity_df = load_hdf5_to_pd(config.similarity_data_path)
@@ -201,6 +214,7 @@ def compare_trajectories():
     pd.options.display.max_columns = None
     pd.options.display.max_rows = None
     pd.options.display.width = 1000
+    pd.set_option('display.float_format', lambda x: '%.2f' % x)
     #print(similarity_df.loc[:, [predicted_round_id_col, best_fit_ground_truth_round_id_col, metric_type_col,
     #                            dtw_cost_col, delta_distance_col, delta_time_col]])
 
@@ -217,16 +231,15 @@ def compare_trajectories():
         plot_hist(axs[i, 0], metric_type_similarity_df[dtw_cost_col], dtw_cost_bins)
         axs[i, 0].set_title(metric_type_str + " DTW Cost")
         axs[i, 0].set_ylim(0., 0.6)
-        axs[i, 0].text(5000, 0.4, metric_type_similarity_df[dtw_cost_col].describe().to_string())
+        axs[i, 0].text(5000, 0.4, metric_type_similarity_df[dtw_cost_col].describe().to_string(), family='monospace')
         plot_hist(axs[i, 1], metric_type_similarity_df[delta_distance_col], delta_distance_bins)
         axs[i, 1].set_title(metric_type_str + " Delta Distance")
         axs[i, 1].set_ylim(0., 0.6)
-        #axs[i, 1].ticklabel_format(axis='x', style='sci')
-        axs[i, 1].text(0, 0.4, metric_type_similarity_df[delta_distance_col].describe().to_string())
+        axs[i, 1].text(0, 0.4, metric_type_similarity_df[delta_distance_col].describe().to_string(), family='monospace')
         plot_hist(axs[i, 2], metric_type_similarity_df[delta_time_col], delta_time_bins)
         axs[i, 2].set_title(metric_type_str + " Delta Time")
         axs[i, 2].set_ylim(0., 0.6)
-        axs[i, 2].text(0, 0.4, metric_type_similarity_df[delta_time_col].describe().to_string())
+        axs[i, 2].text(0, 0.4, metric_type_similarity_df[delta_time_col].describe().to_string(), family='monospace')
     plt.savefig(similarity_plots_path / (config.metric_cost_file_name + '.png'))
     end_similarity_plot_time = time.perf_counter()
     print(f"similarity plot time {end_similarity_plot_time - start_similarity_plot_time: 0.4f}")
