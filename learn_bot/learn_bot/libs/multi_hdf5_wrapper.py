@@ -30,7 +30,7 @@ class MultiHDF5Wrapper:
         for hdf5_source in hdf5_sources:
             if isinstance(hdf5_source, Path):
                 if hdf5_source.is_dir():
-                    hdf5_files = hdf5_source.glob('*.hdf5')
+                    hdf5_files = hdf5_source.glob('behaviorTreeTeamFeatureStore*.hdf5')
                     # only need sample df from first file, rest can just be empty
                     empty_like_first_sample_df: Optional[pd.DataFrame] = None
                     for hdf5_file in hdf5_files:
