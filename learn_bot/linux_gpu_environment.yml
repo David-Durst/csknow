@@ -1,8 +1,8 @@
 name: learn_bot
 channels:
   - pytorch
-  - nvidia
   - conda-forge
+  - nvidia
   - defaults
 dependencies:
   - _libgcc_mutex=0.1=main
@@ -28,9 +28,9 @@ dependencies:
   - brotlipy=0.7.0=py39h27cfd23_1003
   - bzip2=1.0.8=h7b6447c_0
   - c-ares=1.18.1=h7f8727e_0
-  - ca-certificates=2023.5.7=hbcca054_0
+  - ca-certificates=2023.05.30=h06a4308_0
   - cachetools=4.2.2=pyhd3eb1b0_0
-  - certifi=2023.5.7=pyhd8ed1ab_0
+  - certifi=2023.5.7=py39h06a4308_0
   - cffi=1.15.1=py39h5eee18b_3
   - charset-normalizer=2.0.4=pyhd3eb1b0_0
   - click=8.0.4=py39h06a4308_0
@@ -159,6 +159,7 @@ dependencies:
   - markupsafe=2.1.1=py39h7f8727e_0
   - matplotlib=3.6.2=py39h06a4308_0
   - matplotlib-base=3.6.2=py39h945d387_0
+  - memory_profiler=0.58.0=pyhd3eb1b0_0
   - mkl=2021.4.0=h06a4308_640
   - mkl-service=2.4.0=py39h7f8727e_0
   - mkl_fft=1.3.1=py39hd3c417c_0
@@ -175,7 +176,7 @@ dependencies:
   - numpy-base=1.23.5=py39h31eccc5_0
   - oauthlib=3.2.1=py39h06a4308_0
   - openh264=2.1.1=h4ff587b_0
-  - openssl=1.1.1t=h7f8727e_0
+  - openssl=1.1.1u=h7f8727e_0
   - orc=1.7.4=hb3bc3d3_1
   - packaging=22.0=py39h06a4308_0
   - pandas=1.5.2=py39h417a72b_0
@@ -185,6 +186,7 @@ dependencies:
   - ply=3.11=py39h06a4308_0
   - pooch=1.4.0=pyhd3eb1b0_0
   - protobuf=3.20.3=py39h6a678d5_0
+  - psutil=5.9.0=py39h5eee18b_0
   - pyarrow=11.0.0=py39h992f0b0_0
   - pyasn1=0.4.8=pyhd3eb1b0_0
   - pyasn1-modules=0.2.8=py_0
