@@ -86,7 +86,7 @@ class ColumnTypes:
     float_180_wrap_cols: List[str]
     categorical_distribution_cols: List[List[str]]
     categorical_distribution_cols_flattened: List[str]
-    categorical_distribution_first_sub_cols: List[List[str]]
+    categorical_distribution_first_sub_cols: List[str]
 
     def __init__(self, float_standard_cols: List[str] = [], float_delta_cols: List[DeltaColumn] = [],
                  float_180_angle_cols: List[str] = [], float_180_angle_delta_cols: List[DeltaColumn] = [],

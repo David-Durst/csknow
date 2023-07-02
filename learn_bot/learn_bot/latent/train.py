@@ -24,8 +24,9 @@ from learn_bot.latent.transformer_nested_hidden_latent_model import TransformerN
 from learn_bot.libs.hdf5_to_pd import load_hdf5_to_pd
 from learn_bot.libs.hdf5_wrapper import HDF5Wrapper, PDWrapper
 from learn_bot.libs.io_transforms import CUDA_DEVICE_STR
-from learn_bot.latent.accuracy_and_loss import compute_loss, compute_accuracy_and_delta_diff, finish_accuracy_and_delta_diff, \
-    CPU_DEVICE_STR
+from learn_bot.latent.accuracy_and_loss import compute_loss, compute_accuracy_and_delta_diff, \
+    finish_accuracy_and_delta_diff, \
+    CPU_DEVICE_STR, LatentLosses
 from learn_bot.libs.plot_features import plot_untransformed_and_transformed
 from learn_bot.libs.df_grouping import train_test_split_by_col, make_index_column, TrainTestSplit, get_test_col_ids
 from learn_bot.libs.multi_hdf5_wrapper import MultiHDF5Wrapper, HDF5SourceOptions
@@ -211,7 +212,7 @@ def train(train_type: TrainType, multi_hdf5_wrapper: MultiHDF5Wrapper,
             model.train()
         else:
             model.eval()
-        cumulative_loss = 0.
+        cumulative_loss = LatentLosses()
         accuracy = {}
         delta_diff_xy = {}
         delta_diff_xyz = {}
@@ -220,11 +221,11 @@ def train(train_type: TrainType, multi_hdf5_wrapper: MultiHDF5Wrapper,
         # bar = Bar('Processing', max=size)
         batch_num = 0
         with tqdm(total=len(dataloader), disable=False) as pbar:
-            for batch, (X, Y) in enumerate(dataloader):
+            for batch, (X, Y, duplicated_last) in enumerate(dataloader):
                 batch_num += 1
                 if first_row is None:
                     first_row = X[0:1, :]
-                X, Y = X.to(device), Y.to(device)
+                X, Y, duplicated_last = X.to(device), Y.to(device), duplicated_last.to(device)
                 Y = Y.float()
                 # XR = torch.randn_like(X, device=device)
                 # XR[:,0] = X[:,0]
@@ -251,27 +252,32 @@ def train(train_type: TrainType, multi_hdf5_wrapper: MultiHDF5Wrapper,
                     print(pred[0])
                     print('bad pred')
                     sys.exit(0)
-                batch_loss = compute_loss(pred, Y, column_transformers)
+                batch_loss = compute_loss(pred, Y, duplicated_last, model.num_players)
                 # uncomment here and below causes memory issues
-                cumulative_loss += batch_loss.item()
+                cumulative_loss += batch_loss
                 #losses.append(batch_loss.get_total_loss().tolist()[0])
 
                 # Backpropagation
                 if train:
                     optimizer.zero_grad()
-                    batch_loss.backward()
+                    batch_loss.get_total_loss().backward()
                     optimizer.step()
 
-                compute_accuracy_and_delta_diff(pred, Y, accuracy, delta_diff_xy, delta_diff_xyz,
-                                                valids_per_accuracy_column, column_transformers)
+                compute_accuracy_and_delta_diff(pred, Y, duplicated_last, accuracy, delta_diff_xy, delta_diff_xyz,
+                                                valids_per_accuracy_column, model.num_players, column_transformers)
                 pbar.update(1)
 
         cumulative_loss /= len(dataloader)
         for name in column_transformers.output_types.column_names():
             if name in valids_per_accuracy_column and valids_per_accuracy_column[name] > 0:
-                accuracy[name] = accuracy[name].item() / valids_per_accuracy_column[name].item()
-                delta_diff_xy[name] = delta_diff_xy[name].item() / valids_per_accuracy_column[name].item()
-                delta_diff_xyz[name] = delta_diff_xyz[name].item() / valids_per_accuracy_column[name].item()
+                # if nothing in the category, just make sure it isn't 0
+                # this is used for repeated columns
+                valids_per_accuracy_cur_column = valids_per_accuracy_column[name].item()
+                if valids_per_accuracy_cur_column == 0.:
+                    valids_per_accuracy_cur_column = 1.
+                accuracy[name] = accuracy[name].item() / valids_per_accuracy_cur_column
+                delta_diff_xy[name] = delta_diff_xy[name].item() / valids_per_accuracy_cur_column
+                delta_diff_xyz[name] = delta_diff_xyz[name].item() / valids_per_accuracy_cur_column
         accuracy_string = finish_accuracy_and_delta_diff(accuracy, delta_diff_xy, delta_diff_xyz,
                                                          valids_per_accuracy_column, column_transformers)
         train_test_str = "Train" if train else "Test"
@@ -310,11 +316,11 @@ def train(train_type: TrainType, multi_hdf5_wrapper: MultiHDF5Wrapper,
 
     cur_runs_path = runs_path / hyperparameter_options.to_str(model)
     writer = SummaryWriter(cur_runs_path)
-    def save_tensorboard(train_loss: float, test_loss: float, train_accuracy: Dict, test_accuracy: Dict,
+    def save_tensorboard(train_loss: LatentLosses, test_loss: LatentLosses, train_accuracy: Dict, test_accuracy: Dict,
                          train_delta_diff_xy: Dict, test_delta_diff_xy: Dict,
                          train_delta_diff_xyz: Dict, test_delta_diff_xyz: Dict, epoch_num):
-        writer.add_scalar('train/loss/total', train_loss, epoch_num)
-        writer.add_scalar('test/loss/total', test_loss, epoch_num)
+        train_loss.add_scalars(writer, 'train', epoch_num)
+        test_loss.add_scalars(writer, 'test', epoch_num)
         for name, acc in train_accuracy.items():
             writer.add_scalar('train/acc/' + name, acc, epoch_num)
         for name, acc in test_accuracy.items():
@@ -366,7 +372,7 @@ def train(train_type: TrainType, multi_hdf5_wrapper: MultiHDF5Wrapper,
     print(f"num train examples: {len(train_data)}")
     print(f"num test examples: {len(test_data)}")
 
-    for X, Y in train_dataloader:
+    for X, Y, _ in train_dataloader:
         print(f"Train shape of X: {X.shape} {X.dtype}")
         print(f"Train shape of Y: {Y.shape} {Y.dtype}")
         break
