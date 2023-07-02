@@ -278,9 +278,12 @@ def train(train_type: TrainType, multi_hdf5_wrapper: MultiHDF5Wrapper,
                 accuracy[name] = accuracy[name].item() / valids_per_accuracy_cur_column
                 delta_diff_xy[name] = delta_diff_xy[name].item() / valids_per_accuracy_cur_column
                 delta_diff_xyz[name] = delta_diff_xyz[name].item() / valids_per_accuracy_cur_column
-                accuracy[name + duplicated_name_str] = accuracy[name].item() / valids_per_accuracy_cur_column
-                delta_diff_xy[name + duplicated_name_str] = delta_diff_xy[name].item() / valids_per_accuracy_cur_column
-                delta_diff_xyz[name + duplicated_name_str] = delta_diff_xyz[name].item() / valids_per_accuracy_cur_column
+                accuracy[name + duplicated_name_str] = \
+                    accuracy[name + duplicated_name_str].item() / valids_per_accuracy_cur_column
+                delta_diff_xy[name + duplicated_name_str] = \
+                    delta_diff_xy[name + duplicated_name_str].item() / valids_per_accuracy_cur_column
+                delta_diff_xyz[name + duplicated_name_str] = \
+                    delta_diff_xyz[name + duplicated_name_str].item() / valids_per_accuracy_cur_column
         accuracy_string = finish_accuracy_and_delta_diff(accuracy, delta_diff_xy, delta_diff_xyz,
                                                          valids_per_accuracy_column, column_transformers)
         train_test_str = "Train" if train else "Test"
@@ -393,10 +396,11 @@ manual_rounds_data_path = Path(__file__).parent / '..' / '..' / '..' / 'analytic
 rollout_latent_team_hdf5_data_path = Path(__file__).parent / '..' / '..' / '..' / 'analytics' / 'rollout_outputs' / 'behaviorTreeTeamFeatureStore.hdf5'
 latent_id_cols = ['id', round_id_column, test_success_col]
 
-use_manual_data = False
+use_manual_data = True
 use_synthetic_data = False
-use_all_human_data = True
-add_manual_to_all_human_data = True
+use_all_human_data = False
+add_manual_to_all_human_data = False
+limit_manual_data_to_no_enemies_nav = True
 
 just_test_comment = "just_test"
 just_bot_comment = "just_bot"
@@ -416,7 +420,10 @@ def run_single_training():
     if use_manual_data:
         hyperparameter_comment = just_bot_comment
         manual_data = HDF5Wrapper(manual_latent_team_hdf5_data_path, hdf5_id_columns)
-        manual_data.limit(manual_data.id_df[test_success_col] == 1.)
+        if limit_manual_data_to_no_enemies_nav:
+            manual_data.limit((manual_data.id_df[test_success_col] == 1.) & (manual_data.id_df[game_id_column] == 1))
+        else:
+            manual_data.limit(manual_data.id_df[test_success_col] == 1.)
         hdf5_sources.append(manual_data)
     elif use_synthetic_data:
         hyperparameter_comment = just_test_comment
@@ -433,9 +440,12 @@ def run_single_training():
         # NEED WAY TO RESTRICT TO GOOD ROUNDS
         if add_manual_to_all_human_data:
             hyperparameter_comment = human_with_bot_nav_added_comment
-            team_data = HDF5Wrapper(manual_latent_team_hdf5_data_path, hdf5_id_columns)
-            team_data.limit((team_data.id_df[test_success_col] == 1.) & (team_data.id_df[game_id_column] == 1))
-            hdf5_sources.append(team_data)
+            manual_data = HDF5Wrapper(manual_latent_team_hdf5_data_path, hdf5_id_columns)
+            if limit_manual_data_to_no_enemies_nav:
+                manual_data.limit((manual_data.id_df[test_success_col] == 1.) & (manual_data.id_df[game_id_column] == 1))
+            else:
+                manual_data.limit(manual_data.id_df[test_success_col] == 1.)
+            hdf5_sources.append(manual_data)
             duplicate_last_hdf5_equal_to_rest = True
     else:
         hyperparameter_comment = just_human_comment + limited_comment + "_unfilitered"
