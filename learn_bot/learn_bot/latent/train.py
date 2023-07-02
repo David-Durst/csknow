@@ -278,12 +278,15 @@ def train(train_type: TrainType, multi_hdf5_wrapper: MultiHDF5Wrapper,
                 accuracy[name] = accuracy[name].item() / valids_per_accuracy_cur_column
                 delta_diff_xy[name] = delta_diff_xy[name].item() / valids_per_accuracy_cur_column
                 delta_diff_xyz[name] = delta_diff_xyz[name].item() / valids_per_accuracy_cur_column
+                duplicated_valids_per_accuracy_cur_column = valids_per_accuracy_column[name + duplicated_name_str].item()
+                if duplicated_valids_per_accuracy_cur_column == 0.:
+                    duplicated_valids_per_accuracy_cur_column = 1.
                 accuracy[name + duplicated_name_str] = \
-                    accuracy[name + duplicated_name_str].item() / valids_per_accuracy_cur_column
+                    accuracy[name + duplicated_name_str].item() / duplicated_valids_per_accuracy_cur_column
                 delta_diff_xy[name + duplicated_name_str] = \
-                    delta_diff_xy[name + duplicated_name_str].item() / valids_per_accuracy_cur_column
+                    delta_diff_xy[name + duplicated_name_str].item() / duplicated_valids_per_accuracy_cur_column
                 delta_diff_xyz[name + duplicated_name_str] = \
-                    delta_diff_xyz[name + duplicated_name_str].item() / valids_per_accuracy_cur_column
+                    delta_diff_xyz[name + duplicated_name_str].item() / duplicated_valids_per_accuracy_cur_column
         accuracy_string = finish_accuracy_and_delta_diff(accuracy, delta_diff_xy, delta_diff_xyz,
                                                          valids_per_accuracy_column, column_transformers)
         train_test_str = "Train" if train else "Test"

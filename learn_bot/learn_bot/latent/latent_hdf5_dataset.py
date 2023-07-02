@@ -52,7 +52,8 @@ class MultipleLatentHDF5Dataset(Dataset):
                 self.total_len += len(data_hdf5)
                 self.hdf5s_cum_len.append(self.total_len)
             else:
-                self.total_len *= 2
+                # handle cases where prior hdf5 have less elements than one to duplicate
+                self.total_len += max(self.total_len, len(data_hdf5))
                 self.hdf5s_cum_len.append(self.total_len)
 
     def __len__(self):
