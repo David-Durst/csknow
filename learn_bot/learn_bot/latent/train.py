@@ -396,10 +396,10 @@ manual_rounds_data_path = Path(__file__).parent / '..' / '..' / '..' / 'analytic
 rollout_latent_team_hdf5_data_path = Path(__file__).parent / '..' / '..' / '..' / 'analytics' / 'rollout_outputs' / 'behaviorTreeTeamFeatureStore.hdf5'
 latent_id_cols = ['id', round_id_column, test_success_col]
 
-use_manual_data = True
+use_manual_data = False
 use_synthetic_data = False
-use_all_human_data = False
-add_manual_to_all_human_data = False
+use_all_human_data = True
+add_manual_to_all_human_data = True
 limit_manual_data_to_no_enemies_nav = True
 
 just_test_comment = "just_test"

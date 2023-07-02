@@ -28,7 +28,7 @@ class LatentLosses:
         self.duplicate_last_cat_accumulator = 0.
 
     def get_total_loss(self):
-        return self.cat_loss + self.duplicate_last_cat_accumulator
+        return self.cat_loss + self.duplicate_last_cat_loss
 
     def get_accumulated_loss(self):
         return self.cat_accumulator + self.duplicate_last_cat_accumulator
