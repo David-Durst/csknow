@@ -355,8 +355,10 @@ def train(train_type: TrainType, multi_hdf5_wrapper: MultiHDF5Wrapper,
             total_epochs += 1
 
     multi_hdf5_wrapper.create_np_arrays(column_transformers)
-    train_data = MultipleLatentHDF5Dataset(multi_hdf5_wrapper.train_hdf5_wrappers, column_transformers)
-    test_data = MultipleLatentHDF5Dataset(multi_hdf5_wrapper.test_hdf5_wrappers, column_transformers)
+    train_data = MultipleLatentHDF5Dataset(multi_hdf5_wrapper.train_hdf5_wrappers, column_transformers,
+                                           multi_hdf5_wrapper.duplicate_last_hdf5_equal_to_rest)
+    test_data = MultipleLatentHDF5Dataset(multi_hdf5_wrapper.test_hdf5_wrappers, column_transformers,
+                                          multi_hdf5_wrapper.duplicate_last_hdf5_equal_to_rest)
     batch_size = min(hyperparameter_options.batch_size, min(len(train_data), len(test_data)))
     train_dataloader = DataLoader(train_data, batch_size=batch_size, num_workers=10, shuffle=True, pin_memory=True)
     test_dataloader = DataLoader(test_data, batch_size=batch_size, num_workers=10, shuffle=True, pin_memory=True)
@@ -382,39 +384,59 @@ rollout_latent_team_hdf5_data_path = Path(__file__).parent / '..' / '..' / '..' 
 latent_id_cols = ['id', round_id_column, test_success_col]
 
 use_manual_data = False
-use_test_data = False
+use_synthetic_data = False
+use_all_human_data = True
+add_manual_to_all_human_data = True
 
 just_test_comment = "just_test"
 just_bot_comment = "just_bot"
 bot_and_human_comment = "bot_and_human"
 just_human_comment = "just_human"
+all_comment = "_all"
+human_with_bot_nav_added_comment = "human_with_added_bot_nav"
+limited_comment = "_limited"
 curriculum_comment = "_curriculum"
 
 
 def run_single_training():
     diff_train_test = True
-    test_team_data = None
+    force_test_data = None
     hdf5_sources: List[HDF5SourceOptions] = []
+    duplicate_last_hdf5_equal_to_rest = False
     if use_manual_data:
         hyperparameter_comment = just_bot_comment
-        team_data = HDF5Wrapper(manual_latent_team_hdf5_data_path, hdf5_id_columns)
-        team_data.limit(team_data.id_df[test_success_col] == 1.)
-        hdf5_sources.append(team_data)
-    elif use_test_data:
+        manual_data = HDF5Wrapper(manual_latent_team_hdf5_data_path, hdf5_id_columns)
+        manual_data.limit(manual_data.id_df[test_success_col] == 1.)
+        hdf5_sources.append(manual_data)
+    elif use_synthetic_data:
         hyperparameter_comment = just_test_comment
         base_data = load_hdf5_to_pd(manual_latent_team_hdf5_data_path, rows_to_get=[i for i in range(1)])
-        team_data_df = create_left_right_train_data(base_data)
-        team_data = PDWrapper('train', team_data_df, hdf5_id_columns)
-        test_team_data_df = create_left_right_test_data(base_data)
-        test_team_data = PDWrapper('test', test_team_data_df, hdf5_id_columns)
+        synthetic_data_df = create_left_right_train_data(base_data)
+        synthetic_data = PDWrapper('train', synthetic_data_df, hdf5_id_columns)
+        force_test_data_df = create_left_right_test_data(base_data)
+        force_test_data = PDWrapper('test', force_test_data_df, hdf5_id_columns)
         diff_train_test = False
-        hdf5_sources.append(team_data)
-    else:
-        hyperparameter_comment = just_human_comment
+        hdf5_sources.append(synthetic_data)
+    elif use_all_human_data:
+        hyperparameter_comment = just_human_comment + all_comment
         hdf5_sources.append(all_train_latent_team_hdf5_dir_path)
         # NEED WAY TO RESTRICT TO GOOD ROUNDS
+        if add_manual_to_all_human_data:
+            hyperparameter_comment = human_with_bot_nav_added_comment
+            team_data = HDF5Wrapper(manual_latent_team_hdf5_data_path, hdf5_id_columns)
+            team_data.limit((team_data.id_df[test_success_col] == 1.) & (team_data.id_df[game_id_column] == 1))
+            hdf5_sources.append(team_data)
+            duplicate_last_hdf5_equal_to_rest = True
+    else:
+        hyperparameter_comment = just_human_comment + limited_comment + "_unfilitered"
+        human_data = HDF5Wrapper(human_latent_team_hdf5_data_path, ['id', round_id_column, test_success_col])
+        #with open(good_retake_rounds_path, "r") as f:
+        #    good_retake_rounds = eval(f.read())
+        #human_data.limit(human_data.id_df[round_id_column].isin(good_retake_rounds))
+        hdf5_sources.append(human_data)
     multi_hdf5_wrapper = MultiHDF5Wrapper(hdf5_sources, hdf5_id_columns, diff_train_test=diff_train_test,
-                                          force_test_hdf5=test_team_data)
+                                          force_test_hdf5=force_test_data,
+                                          duplicate_last_hdf5_equal_to_rest=duplicate_last_hdf5_equal_to_rest)
     if len(sys.argv) > 1:
         hyperparameter_indices = [int(i) for i in sys.argv[1].split(",")]
         for index in hyperparameter_indices:
@@ -435,6 +457,7 @@ def run_curriculum_training():
     # leaving this in for now, but should replace this with better mixing
     assert False
     bot_data = HDF5Wrapper(manual_latent_team_hdf5_data_path, ['id', round_id_column, game_id_column, test_success_col])
+    bot_data.limit(team_data.id_df[test_success_col] == 1.)
     human_data = HDF5Wrapper(human_latent_team_hdf5_data_path, ['id', round_id_column, test_success_col])
     with open(good_retake_rounds_path, "r") as f:
         good_retake_rounds = eval(f.read())

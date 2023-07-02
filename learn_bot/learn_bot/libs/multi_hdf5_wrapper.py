@@ -22,10 +22,12 @@ class MultiHDF5Wrapper:
     test_group_ids: Dict[Path, List[int]]
     # these are only valid if diff_train_test is true, otherwise no splits
     train_test_splits: Dict[Path, TrainTestSplit]
+    duplicate_last_hdf5_equal_to_rest: bool
 
     # each source is a path to an hdf5, a directory with hdf5, or an hdf5 wrapper
     def __init__(self, hdf5_sources: List[HDF5SourceOptions], id_cols: List[str], diff_train_test: bool,
-                 split_train_test_on_init: bool = True, force_test_hdf5: Optional[HDF5Wrapper] = None):
+                 split_train_test_on_init: bool = True, force_test_hdf5: Optional[HDF5Wrapper] = None,
+                 duplicate_last_hdf5_equal_to_rest: bool = False):
         self.hdf5_wrappers = []
         for hdf5_source in hdf5_sources:
             if isinstance(hdf5_source, Path):
@@ -49,6 +51,7 @@ class MultiHDF5Wrapper:
         self.diff_train_test = diff_train_test
         if split_train_test_on_init:
             self.train_test_split_by_col(force_test_hdf5)
+        self.duplicate_last_hdf5_equal_to_rest = duplicate_last_hdf5_equal_to_rest
 
     def train_test_split_by_col(self, force_test_hdf5: Optional[HDF5Wrapper]):
         self.train_test_splits = {}

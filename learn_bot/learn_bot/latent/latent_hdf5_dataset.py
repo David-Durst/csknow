@@ -35,18 +35,25 @@ class MultipleLatentHDF5Dataset(Dataset):
     hdf5s_starts: List[int]
     hdf5s_cum_len: List[int]
     total_len: int
+    duplicate_last_equal_to_rest: bool
 
-    def __init__(self, data_hdf5s: List[HDF5Wrapper], cts: IOColumnTransformers):
+    def __init__(self, data_hdf5s: List[HDF5Wrapper], cts: IOColumnTransformers,
+                 duplicate_last_equal_to_rest: bool = False):
         self.x_cols = cts.input_types.column_names_all_categorical_columns()
         self.y_cols = cts.output_types.column_names_all_categorical_columns()
         self.data_hdf5s = data_hdf5s
         self.total_len = 0
         self.hdf5s_starts = []
         self.hdf5s_cum_len = []
-        for data_hdf5 in data_hdf5s:
+        self.duplicate_last_equal_to_rest = duplicate_last_equal_to_rest
+        for i, data_hdf5 in enumerate(data_hdf5s):
             self.hdf5s_starts.append(self.total_len)
-            self.total_len += len(data_hdf5)
-            self.hdf5s_cum_len.append(self.total_len)
+            if not duplicate_last_equal_to_rest or i < len(data_hdf5s) - 1:
+                self.total_len += len(data_hdf5)
+                self.hdf5s_cum_len.append(self.total_len)
+            else:
+                self.total_len *= 2
+                self.hdf5s_cum_len.append(self.total_len)
 
     def __len__(self):
         return self.total_len
@@ -59,8 +66,11 @@ class MultipleLatentHDF5Dataset(Dataset):
             if idx < cum_len:
                 hdf5_index = i
                 idx_in_hdf5 = idx - self.hdf5s_starts[i]
+                # this ensures wrap around when duplicating last
+                idx_in_hdf5 %= len(self.data_hdf5s[i])
                 break
         hdf5_id = self.data_hdf5s[hdf5_index].id_df.iloc[idx_in_hdf5].loc['id']
         x_tensor = torch.tensor(self.data_hdf5s[hdf5_index].get_input_data()[hdf5_id])
         y_tensor = torch.tensor(self.data_hdf5s[hdf5_index].get_output_data()[hdf5_id])
-        return x_tensor, y_tensor
+        return x_tensor, y_tensor, \
+            torch.tensor(self.duplicate_last_equal_to_rest and (hdf5_index == len(self.data_hdf5s) - 1))
