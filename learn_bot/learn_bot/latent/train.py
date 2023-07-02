@@ -26,7 +26,7 @@ from learn_bot.libs.hdf5_wrapper import HDF5Wrapper, PDWrapper
 from learn_bot.libs.io_transforms import CUDA_DEVICE_STR
 from learn_bot.latent.accuracy_and_loss import compute_loss, compute_accuracy_and_delta_diff, \
     finish_accuracy_and_delta_diff, \
-    CPU_DEVICE_STR, LatentLosses
+    CPU_DEVICE_STR, LatentLosses, duplicated_name_str
 from learn_bot.libs.plot_features import plot_untransformed_and_transformed
 from learn_bot.libs.df_grouping import train_test_split_by_col, make_index_column, TrainTestSplit, get_test_col_ids
 from learn_bot.libs.multi_hdf5_wrapper import MultiHDF5Wrapper, HDF5SourceOptions
@@ -278,10 +278,13 @@ def train(train_type: TrainType, multi_hdf5_wrapper: MultiHDF5Wrapper,
                 accuracy[name] = accuracy[name].item() / valids_per_accuracy_cur_column
                 delta_diff_xy[name] = delta_diff_xy[name].item() / valids_per_accuracy_cur_column
                 delta_diff_xyz[name] = delta_diff_xyz[name].item() / valids_per_accuracy_cur_column
+                accuracy[name + duplicated_name_str] = accuracy[name].item() / valids_per_accuracy_cur_column
+                delta_diff_xy[name + duplicated_name_str] = delta_diff_xy[name].item() / valids_per_accuracy_cur_column
+                delta_diff_xyz[name + duplicated_name_str] = delta_diff_xyz[name].item() / valids_per_accuracy_cur_column
         accuracy_string = finish_accuracy_and_delta_diff(accuracy, delta_diff_xy, delta_diff_xyz,
                                                          valids_per_accuracy_column, column_transformers)
         train_test_str = "Train" if train else "Test"
-        print(f"Epoch {train_test_str} Accuracy: {accuracy_string}, Transformed Avg Loss: {cumulative_loss:>8f}")
+        print(f"Epoch {train_test_str} Accuracy: {accuracy_string}, Transformed Avg Loss: {cumulative_loss.get_accumulated_loss():>8f}")
         return cumulative_loss, accuracy, delta_diff_xy, delta_diff_xyz
 
     def save_model(not_best: bool, iter: int):
@@ -350,9 +353,10 @@ def train(train_type: TrainType, multi_hdf5_wrapper: MultiHDF5Wrapper,
             with torch.no_grad():
                 test_loss, test_accuracy, test_delta_diff_xy, test_delta_diff_xyz = \
                     train_or_test_SL_epoch(test_dataloader, model, None, False)
-            if test_loss < min_test_loss:
+            cur_test_loss_float = test_loss.get_accumulated_loss()
+            if cur_test_loss_float < min_test_loss:
                 save_model(False, total_epochs)
-                min_test_loss = test_loss
+                min_test_loss = cur_test_loss_float
             if (total_epochs + 1) % 10 == 0:
                 save_model(True, total_epochs)
             save_tensorboard(train_loss, test_loss, train_accuracy, test_accuracy,
