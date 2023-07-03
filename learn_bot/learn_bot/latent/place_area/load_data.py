@@ -18,11 +18,11 @@ human_with_bot_nav_added_comment = "human_with_added_bot_nav"
 limited_comment = "_limited"
 curriculum_comment = "_curriculum"
 
-all_train_latent_team_hdf5_dir_path = Path(__file__).parent / '..' / '..' / '..' / 'analytics' / 'all_train_outputs'
-human_latent_team_hdf5_data_path = Path(__file__).parent / '..' / '..' / '..' / 'analytics' / 'csv_outputs' / 'behaviorTreeTeamFeatureStore.hdf5'
-small_latent_team_hdf5_data_path = Path(__file__).parent / '..' / '..' / '..' / 'analytics' / 'csv_outputs' / 'smallBehaviorTreeTeamFeatureStore.parquet'
-manual_latent_team_hdf5_data_path = Path(__file__).parent / '..' / '..' / '..' / 'analytics' / 'manual_outputs' / 'behaviorTreeTeamFeatureStore.hdf5'
-rollout_latent_team_hdf5_data_path = Path(__file__).parent / '..' / '..' / '..' / 'analytics' / 'rollout_outputs' / 'behaviorTreeTeamFeatureStore.hdf5'
+all_train_latent_team_hdf5_dir_path = Path(__file__).parent / '..' / '..' / '..' / '..' / 'analytics' / 'all_train_outputs'
+human_latent_team_hdf5_data_path = Path(__file__).parent / '..' / '..' / '..' / '..' / 'analytics' / 'csv_outputs' / 'behaviorTreeTeamFeatureStore.hdf5'
+small_latent_team_hdf5_data_path = Path(__file__).parent / '..' / '..' / '..' / '..' / 'analytics' / 'csv_outputs' / 'smallBehaviorTreeTeamFeatureStore.parquet'
+manual_latent_team_hdf5_data_path = Path(__file__).parent / '..' / '..' / '..' / '..' / 'analytics' / 'manual_outputs' / 'behaviorTreeTeamFeatureStore.hdf5'
+rollout_latent_team_hdf5_data_path = Path(__file__).parent / '..' / '..' / '..' / '..' / 'analytics' / 'rollout_outputs' / 'behaviorTreeTeamFeatureStore.hdf5'
 
 
 @dataclass
@@ -47,6 +47,7 @@ def load_data(use_manual_data: bool, use_rollout_data: bool, use_synthetic_data:
             manual_data.limit(manual_data.id_df[test_success_col] == 1.)
         hdf5_sources.append(manual_data)
     elif use_rollout_data:
+        dataset_comment = "rollout"
         rollout_data = HDF5Wrapper(rollout_latent_team_hdf5_data_path, hdf5_id_columns)
         diff_train_test = False
         hdf5_sources.append(rollout_data)

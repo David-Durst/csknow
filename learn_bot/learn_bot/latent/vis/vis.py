@@ -1,5 +1,6 @@
 from typing import Set
 
+from learn_bot.latent.load_model import LoadedModel
 from learn_bot.latent.train import good_retake_rounds_path
 from learn_bot.libs.df_grouping import make_index_column
 from learn_bot.mining.area_cluster import *
@@ -8,10 +9,12 @@ import tkinter as tk
 from tkinter import ttk, font
 from PIL import Image, ImageDraw, ImageTk as itk
 
-def vis(all_data_df: pd.DataFrame, pred_df: pd.DataFrame):
-    make_index_column(all_data_df)
-    make_index_column(pred_df)
 
+def get_rounds_for_cur_hdf5(loaded_model: LoadedModel) -> List[int]:
+    return loaded_model.cur_loaded_pd.loc[:, round_id_column].unique().tolist()
+
+
+def vis(loaded_model: LoadedModel):
     #This creates the main window of an application
     window = tk.Tk()
     window.title("Delta Position Model")
@@ -30,15 +33,15 @@ def vis(all_data_df: pd.DataFrame, pred_df: pd.DataFrame):
     img_label = tk.Label(img_frame, image=d2_photo_img)
     img_label.pack(side="left")
 
-    rounds = all_data_df.loc[:, round_id_column].unique().tolist()
+    rounds = get_rounds_for_cur_hdf5(loaded_model)
     indices = []
     ticks = []
     game_ticks = []
     cur_round: int = -1
     cur_tick: int = -1
     cur_tick_index: int = -1
-    selected_df: pd.DataFrame = all_data_df
-    pred_selected_df: pd.DataFrame = pred_df
+    selected_df: pd.DataFrame = loaded_model.cur_loaded_pd
+    pred_selected_df: pd.DataFrame = loaded_model.cur_inference_pd
     draw_max: bool = True
     good_retake_rounds: Set[int] = set()
 
@@ -147,8 +150,8 @@ def vis(all_data_df: pd.DataFrame, pred_df: pd.DataFrame):
     # state setters
     def change_round_dependent_data():
         nonlocal selected_df, pred_selected_df, cur_round, indices, ticks, game_ticks
-        selected_df = all_data_df.loc[all_data_df[round_id_column] == cur_round]
-        pred_selected_df = pred_df.loc[all_data_df[round_id_column] == cur_round]
+        selected_df = loaded_model.cur_loaded_pd.loc[loaded_model.cur_loaded_pd[round_id_column] == cur_round]
+        pred_selected_df = loaded_model.cur_inference_pd.loc[loaded_model.cur_loaded_pd[round_id_column] == cur_round]
 
         indices = selected_df.loc[:, 'index'].tolist()
         ticks = selected_df.loc[:, 'tick id'].tolist()
