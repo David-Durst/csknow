@@ -27,9 +27,9 @@ class LoadedModel:
     model: TransformerNestedHiddenLatentModel
     dataset: MultipleLatentHDF5Dataset
     cur_hdf5_index: int
-    cur_loaded_pd: pd.DataFrame
+    cur_loaded_df: pd.DataFrame
     cur_dataset: LatentDataset
-    cur_inference_pd: Optional[pd.DataFrame]
+    cur_inference_df: Optional[pd.DataFrame]
 
     def __init__(self, column_transformers: IOColumnTransformers, model: TransformerNestedHiddenLatentModel,
                  dataset: MultipleLatentHDF5Dataset):
@@ -39,11 +39,11 @@ class LoadedModel:
         self.cur_hdf5_index = 0
         self.load_cur_hdf5_as_pd()
         # this will be set later depending on if doing off policy or on policy inference
-        self.cur_inference_pd = None
+        self.cur_inference_df = None
 
     def load_cur_hdf5_as_pd(self):
-        self.cur_loaded_pd = load_hdf5_to_pd(self.dataset.data_hdf5s[self.cur_hdf5_index].hdf5_path)
-        self.cur_dataset = LatentDataset(self.cur_loaded_pd, self.column_transformers)
+        self.cur_loaded_df = load_hdf5_to_pd(self.dataset.data_hdf5s[self.cur_hdf5_index].hdf5_path)
+        self.cur_dataset = LatentDataset(self.cur_loaded_df, self.column_transformers)
 
 
 def load_model_file(loaded_data: LoadDataResult) -> LoadedModel:

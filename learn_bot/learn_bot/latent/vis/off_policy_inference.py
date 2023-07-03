@@ -27,6 +27,6 @@ def off_policy_inference(loaded_model: LoadedModel):
                     result_np = pred_untransformed.numpy()
                 pbar.update(1)
 
-    loaded_model.cur_inference_pd = loaded_model.column_transformers.get_untransformed_values_whole_pd(result_np, False)
+    loaded_model.cur_inference_df = loaded_model.column_transformers.get_untransformed_values_whole_pd(result_np, False)
 
 

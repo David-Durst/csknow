@@ -34,5 +34,4 @@ if __name__ == "__main__":
     #    flip_column.apply_flip(all_data_df)
 
     loaded_model = load_model_file(load_data_result)
-    off_policy_inference(loaded_model)
-    vis(loaded_model)
+    vis(loaded_model, off_policy_inference)

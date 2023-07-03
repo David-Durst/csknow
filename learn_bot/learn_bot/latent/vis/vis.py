@@ -1,8 +1,7 @@
-from typing import Set
+from typing import Set, Callable
 
 from learn_bot.latent.load_model import LoadedModel
 from learn_bot.latent.train import good_retake_rounds_path
-from learn_bot.latent.vis.off_policy_inference import off_policy_inference
 from learn_bot.libs.df_grouping import make_index_column
 from learn_bot.mining.area_cluster import *
 from learn_bot.latent.vis.draw_inference import draw_all_players, minimapWidth, minimapHeight
@@ -12,15 +11,16 @@ from PIL import Image, ImageDraw, ImageTk as itk
 
 
 def get_rounds_for_cur_hdf5(loaded_model: LoadedModel) -> List[int]:
-    return loaded_model.cur_loaded_pd.loc[:, round_id_column].unique().tolist()
+    return loaded_model.cur_loaded_df.loc[:, round_id_column].unique().tolist()
 
 
 def index_cur_hdf5(loaded_model: LoadedModel):
-    make_index_column(loaded_model.cur_loaded_pd)
-    make_index_column(loaded_model.cur_inference_pd)
+    make_index_column(loaded_model.cur_loaded_df)
+    make_index_column(loaded_model.cur_inference_df)
 
 
-def vis(loaded_model: LoadedModel):
+def vis(loaded_model: LoadedModel, inference_fn: Callable[[LoadedModel], None]):
+    inference_fn(loaded_model)
     index_cur_hdf5(loaded_model)
 
     #This creates the main window of an application
@@ -48,8 +48,8 @@ def vis(loaded_model: LoadedModel):
     cur_round: int = -1
     cur_tick: int = -1
     cur_tick_index: int = -1
-    selected_df: pd.DataFrame = loaded_model.cur_loaded_pd
-    pred_selected_df: pd.DataFrame = loaded_model.cur_inference_pd
+    selected_df: pd.DataFrame = loaded_model.cur_loaded_df
+    pred_selected_df: pd.DataFrame = loaded_model.cur_inference_df
     draw_max: bool = True
     good_retake_rounds: Set[int] = set()
 
@@ -57,7 +57,7 @@ def vis(loaded_model: LoadedModel):
         nonlocal rounds, cur_round
         loaded_model.cur_hdf5_index = int(new_hdf5_id_entry.get())
         loaded_model.load_cur_hdf5_as_pd()
-        off_policy_inference(loaded_model)
+        inference_fn(loaded_model)
         index_cur_hdf5(loaded_model)
         rounds = get_rounds_for_cur_hdf5(loaded_model)
         cur_round = rounds[0]
@@ -170,8 +170,8 @@ def vis(loaded_model: LoadedModel):
     # state setters
     def change_round_dependent_data():
         nonlocal selected_df, pred_selected_df, cur_round, indices, ticks, game_ticks
-        selected_df = loaded_model.cur_loaded_pd.loc[loaded_model.cur_loaded_pd[round_id_column] == cur_round]
-        pred_selected_df = loaded_model.cur_inference_pd.loc[loaded_model.cur_loaded_pd[round_id_column] == cur_round]
+        selected_df = loaded_model.cur_loaded_df.loc[loaded_model.cur_loaded_df[round_id_column] == cur_round]
+        pred_selected_df = loaded_model.cur_inference_df.loc[loaded_model.cur_loaded_df[round_id_column] == cur_round]
 
         indices = selected_df.loc[:, 'index'].tolist()
         ticks = selected_df.loc[:, 'tick id'].tolist()
