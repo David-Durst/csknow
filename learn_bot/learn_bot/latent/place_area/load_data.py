@@ -32,7 +32,7 @@ class LoadDataResult:
     multi_hdf5_wrapper: MultiHDF5Wrapper
 
 
-def load_data(use_manual_data: bool, use_synthetic_data: bool, use_all_human_data: bool,
+def load_data(use_manual_data: bool, use_rollout_data: bool, use_synthetic_data: bool, use_all_human_data: bool,
               add_manual_to_all_human_data: bool, limit_manual_data_to_no_enemies_nav: bool) -> LoadDataResult:
     diff_train_test = True
     force_test_data = None
@@ -46,6 +46,10 @@ def load_data(use_manual_data: bool, use_synthetic_data: bool, use_all_human_dat
         else:
             manual_data.limit(manual_data.id_df[test_success_col] == 1.)
         hdf5_sources.append(manual_data)
+    elif use_rollout_data:
+        rollout_data = HDF5Wrapper(rollout_latent_team_hdf5_data_path, hdf5_id_columns)
+        diff_train_test = False
+        hdf5_sources.append(rollout_data)
     elif use_synthetic_data:
         dataset_comment = just_test_comment
         base_data = load_hdf5_to_pd(manual_latent_team_hdf5_data_path, rows_to_get=[i for i in range(1)])

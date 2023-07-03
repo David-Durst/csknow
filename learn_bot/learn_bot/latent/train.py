@@ -393,8 +393,8 @@ limit_manual_data_to_no_enemies_nav = True
 
 
 def run_single_training():
-    load_data_result = load_data(use_manual_data, use_synthetic_data, use_all_human_data, add_manual_to_all_human_data,
-                                 limit_manual_data_to_no_enemies_nav)
+    load_data_result = load_data(use_manual_data, False, use_synthetic_data, use_all_human_data,
+                                 add_manual_to_all_human_data, limit_manual_data_to_no_enemies_nav)
     if len(sys.argv) > 1:
         hyperparameter_indices = [int(i) for i in sys.argv[1].split(",")]
         for index in hyperparameter_indices:
