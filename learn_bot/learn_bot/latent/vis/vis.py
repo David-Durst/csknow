@@ -2,6 +2,7 @@ from typing import Set
 
 from learn_bot.latent.load_model import LoadedModel
 from learn_bot.latent.train import good_retake_rounds_path
+from learn_bot.latent.vis.off_policy_inference import off_policy_inference
 from learn_bot.libs.df_grouping import make_index_column
 from learn_bot.mining.area_cluster import *
 from learn_bot.latent.vis.draw_inference import draw_all_players, minimapWidth, minimapHeight
@@ -52,6 +53,17 @@ def vis(loaded_model: LoadedModel):
     draw_max: bool = True
     good_retake_rounds: Set[int] = set()
 
+    def hdf5_id_update():
+        nonlocal rounds, cur_round
+        loaded_model.cur_hdf5_index = int(new_hdf5_id_entry.get())
+        loaded_model.load_cur_hdf5_as_pd()
+        off_policy_inference(loaded_model)
+        index_cur_hdf5(loaded_model)
+        rounds = get_rounds_for_cur_hdf5(loaded_model)
+        cur_round = rounds[0]
+        round_slider.set(0)
+        round_slider_changed(0)
+
     def round_slider_changed(cur_round_index):
         nonlocal cur_round
         cur_round = rounds[int(cur_round_index)]
@@ -77,6 +89,7 @@ def vis(loaded_model: LoadedModel):
         cur_index = indices[cur_tick_index]
         cur_tick = ticks[cur_tick_index]
         cur_game_tick = game_ticks[cur_tick_index]
+        hdf5_id_text_var.set(f"Cur HDF5 Id: {loaded_model.cur_hdf5_index}, ")
         tick_id_text_var.set("Tick ID: " + str(cur_tick))
         tick_game_id_text_var.set("Game Tick ID: " + str(cur_game_tick))
         round_id_text_var.set(f"Round ID: {int(cur_round)}, Round Number: {selected_df.loc[cur_index, 'round number']}")
@@ -173,7 +186,21 @@ def vis(loaded_model: LoadedModel):
     s.theme_use('alt')
     s.configure('Valid.TCombobox', fieldbackground='white')
     s.configure('Invalid.TCombobox', fieldbackground='#cfcfcf')
-    # creating engagement slider and label
+    # hdf5 id slider
+    hdf5_id_frame = tk.Frame(window)
+    hdf5_id_frame.pack(pady=5)
+    hdf5_id_text_var = tk.StringVar()
+    hdf5_id_label = tk.Label(hdf5_id_frame, textvariable=hdf5_id_text_var)
+    hdf5_id_label.pack(side="left")
+    new_hdf5_id_label = tk.Label(hdf5_id_frame, text="New HDF5 Id:")
+    new_hdf5_id_label.pack(side="left")
+    new_hdf5_id_var = tk.StringVar(value="")
+    new_hdf5_id_entry = tk.Entry(hdf5_id_frame, width=5, textvariable=new_hdf5_id_var)
+    new_hdf5_id_entry.pack(side="left")
+    update_hdf5_id_button = tk.Button(hdf5_id_frame, text="update hdf5 id", command=hdf5_id_update)
+    update_hdf5_id_button.pack(side="left")
+
+    # round id slider
     round_id_frame = tk.Frame(window)
     round_id_frame.pack(pady=5)
     round_id_text_var = tk.StringVar()
