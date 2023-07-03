@@ -3,7 +3,7 @@ from pathlib import Path
 import pandas as pd
 
 from learn_bot.latent.place_area.column_names import *
-from learn_bot.latent.train import human_latent_team_hdf5_data_path
+from learn_bot.latent.place_area.load_data import human_latent_team_hdf5_data_path
 from learn_bot.libs.hdf5_to_pd import load_hdf5_to_pd
 from sklearn.cluster import KMeans
 from learn_bot.libs.vec import Vec3

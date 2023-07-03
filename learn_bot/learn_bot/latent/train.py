@@ -4,7 +4,6 @@ from enum import Enum
 from typing import Dict
 import sys
 
-import pandas as pd
 import torch.optim
 from torch import nn
 from torch.utils.data import DataLoader
@@ -12,31 +11,24 @@ from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
 
 from learn_bot.latent.dataset import *
-from learn_bot.latent.engagement.column_names import round_id_column, engagement_input_column_types, engagement_output_column_types
-from learn_bot.latent.latent_hdf5_dataset import LatentHDF5Dataset, MultipleLatentHDF5Dataset
-from learn_bot.latent.place_area.create_test_data import create_left_right_train_data, create_left_right_test_data
+from learn_bot.latent.engagement.column_names import round_id_column
+from learn_bot.latent.latent_hdf5_dataset import MultipleLatentHDF5Dataset
+from learn_bot.latent.place_area.load_data import human_latent_team_hdf5_data_path, manual_latent_team_hdf5_data_path, \
+    load_data
 from learn_bot.latent.place_area.pos_abs_delta_conversion import delta_pos_grid_num_cells
-from learn_bot.latent.place_area.column_names import place_area_input_column_types, place_output_column_types, \
-    num_places, area_grid_size, area_output_column_types, delta_pos_output_column_types, test_success_col, \
-    hdf5_id_columns
+from learn_bot.latent.place_area.column_names import place_area_input_column_types, delta_pos_output_column_types, test_success_col
 from learn_bot.latent.profiling import profile_latent_model
 from learn_bot.latent.transformer_nested_hidden_latent_model import TransformerNestedHiddenLatentModel
-from learn_bot.libs.hdf5_to_pd import load_hdf5_to_pd
-from learn_bot.libs.hdf5_wrapper import HDF5Wrapper, PDWrapper
+from learn_bot.libs.hdf5_wrapper import HDF5Wrapper
 from learn_bot.libs.io_transforms import CUDA_DEVICE_STR
 from learn_bot.latent.accuracy_and_loss import compute_loss, compute_accuracy_and_delta_diff, \
     finish_accuracy_and_delta_diff, \
     CPU_DEVICE_STR, LatentLosses, duplicated_name_str
-from learn_bot.libs.plot_features import plot_untransformed_and_transformed
-from learn_bot.libs.df_grouping import train_test_split_by_col, make_index_column, TrainTestSplit, get_test_col_ids
-from learn_bot.libs.multi_hdf5_wrapper import MultiHDF5Wrapper, HDF5SourceOptions
+from learn_bot.libs.multi_hdf5_wrapper import MultiHDF5Wrapper
 from tqdm import tqdm
 from dataclasses import dataclass
 from datetime import datetime
-import time
 from typing import Optional
-
-from learn_bot.libs.profiling import display_top
 
 checkpoints_path = Path(__file__).parent / 'checkpoints'
 plot_path = Path(__file__).parent / 'distributions'
@@ -391,12 +383,6 @@ def train(train_type: TrainType, multi_hdf5_wrapper: MultiHDF5Wrapper,
     return train_checkpoint_paths
 
 
-all_train_latent_team_hdf5_dir_path = Path(__file__).parent / '..' / '..' / '..' / 'analytics' / 'all_train_outputs'
-human_latent_team_hdf5_data_path = Path(__file__).parent / '..' / '..' / '..' / 'analytics' / 'csv_outputs' / 'behaviorTreeTeamFeatureStore.hdf5'
-small_latent_team_hdf5_data_path = Path(__file__).parent / '..' / '..' / '..' / 'analytics' / 'csv_outputs' / 'smallBehaviorTreeTeamFeatureStore.parquet'
-manual_latent_team_hdf5_data_path = Path(__file__).parent / '..' / '..' / '..' / 'analytics' / 'manual_outputs' / 'behaviorTreeTeamFeatureStore.hdf5'
-manual_rounds_data_path = Path(__file__).parent / '..' / '..' / '..' / 'analytics' / 'saved_datasets' / 'bot_sample_traces_5_10_23_ticks.csv'
-rollout_latent_team_hdf5_data_path = Path(__file__).parent / '..' / '..' / '..' / 'analytics' / 'rollout_outputs' / 'behaviorTreeTeamFeatureStore.hdf5'
 latent_id_cols = ['id', round_id_column, test_success_col]
 
 use_manual_data = False
@@ -405,70 +391,21 @@ use_all_human_data = True
 add_manual_to_all_human_data = True
 limit_manual_data_to_no_enemies_nav = True
 
-just_test_comment = "just_test"
-just_bot_comment = "just_bot"
-bot_and_human_comment = "bot_and_human"
-just_human_comment = "just_human"
-all_comment = "_all"
-human_with_bot_nav_added_comment = "human_with_added_bot_nav"
-limited_comment = "_limited"
-curriculum_comment = "_curriculum"
-
 
 def run_single_training():
-    diff_train_test = True
-    force_test_data = None
-    hdf5_sources: List[HDF5SourceOptions] = []
-    duplicate_last_hdf5_equal_to_rest = False
-    if use_manual_data:
-        hyperparameter_comment = just_bot_comment
-        manual_data = HDF5Wrapper(manual_latent_team_hdf5_data_path, hdf5_id_columns)
-        if limit_manual_data_to_no_enemies_nav:
-            manual_data.limit((manual_data.id_df[test_success_col] == 1.) & (manual_data.id_df[game_id_column] == 1))
-        else:
-            manual_data.limit(manual_data.id_df[test_success_col] == 1.)
-        hdf5_sources.append(manual_data)
-    elif use_synthetic_data:
-        hyperparameter_comment = just_test_comment
-        base_data = load_hdf5_to_pd(manual_latent_team_hdf5_data_path, rows_to_get=[i for i in range(1)])
-        synthetic_data_df = create_left_right_train_data(base_data)
-        synthetic_data = PDWrapper('train', synthetic_data_df, hdf5_id_columns)
-        force_test_data_df = create_left_right_test_data(base_data)
-        force_test_data = PDWrapper('test', force_test_data_df, hdf5_id_columns)
-        diff_train_test = False
-        hdf5_sources.append(synthetic_data)
-    elif use_all_human_data:
-        hyperparameter_comment = just_human_comment + all_comment
-        hdf5_sources.append(all_train_latent_team_hdf5_dir_path)
-        # NEED WAY TO RESTRICT TO GOOD ROUNDS
-        if add_manual_to_all_human_data:
-            hyperparameter_comment = human_with_bot_nav_added_comment
-            manual_data = HDF5Wrapper(manual_latent_team_hdf5_data_path, hdf5_id_columns)
-            if limit_manual_data_to_no_enemies_nav:
-                manual_data.limit((manual_data.id_df[test_success_col] == 1.) & (manual_data.id_df[game_id_column] == 1))
-            else:
-                manual_data.limit(manual_data.id_df[test_success_col] == 1.)
-            hdf5_sources.append(manual_data)
-            duplicate_last_hdf5_equal_to_rest = True
-    else:
-        hyperparameter_comment = just_human_comment + limited_comment + "_unfilitered"
-        human_data = HDF5Wrapper(human_latent_team_hdf5_data_path, ['id', round_id_column, test_success_col])
-        #with open(good_retake_rounds_path, "r") as f:
-        #    good_retake_rounds = eval(f.read())
-        #human_data.limit(human_data.id_df[round_id_column].isin(good_retake_rounds))
-        hdf5_sources.append(human_data)
-    multi_hdf5_wrapper = MultiHDF5Wrapper(hdf5_sources, hdf5_id_columns, diff_train_test=diff_train_test,
-                                          force_test_hdf5=force_test_data,
-                                          duplicate_last_hdf5_equal_to_rest=duplicate_last_hdf5_equal_to_rest)
+    load_data_result = load_data(use_manual_data, use_synthetic_data, use_all_human_data, add_manual_to_all_human_data,
+                                 limit_manual_data_to_no_enemies_nav)
     if len(sys.argv) > 1:
         hyperparameter_indices = [int(i) for i in sys.argv[1].split(",")]
         for index in hyperparameter_indices:
             hyperparameter_options = hyperparameter_option_range[index]
-            hyperparameter_options.comment = hyperparameter_comment
-            train(TrainType.DeltaPos, multi_hdf5_wrapper, hyperparameter_options, diff_train_test=diff_train_test)
+            hyperparameter_options.comment = load_data_result.dataset_comment
+            train(TrainType.DeltaPos, load_data_result.multi_hdf5_wrapper, hyperparameter_options,
+                  diff_train_test=load_data_result.diff_train_test)
     else:
-        hyperparameter_options = HyperparameterOptions(comment=hyperparameter_comment)
-        train(TrainType.DeltaPos, multi_hdf5_wrapper, hyperparameter_options, diff_train_test=diff_train_test)
+        hyperparameter_options = HyperparameterOptions(comment=load_data_result.dataset_comment)
+        train(TrainType.DeltaPos, load_data_result.multi_hdf5_wrapper, hyperparameter_options,
+              diff_train_test=load_data_result.diff_train_test)
                              #flip_columns=[ColumnsToFlip(" CT 0", " CT 1")])
 
 

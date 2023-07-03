@@ -12,8 +12,8 @@ from learn_bot.latent.engagement.column_names import round_id_column, tick_id_co
 from learn_bot.latent.place_area.pos_abs_delta_conversion import delta_pos_grid_num_cells_per_xy_dim, \
     delta_pos_grid_cell_dim, \
     delta_pos_grid_num_xy_cells_per_z_change, compute_new_pos, NavData
-from learn_bot.latent.train import manual_latent_team_hdf5_data_path, rollout_latent_team_hdf5_data_path, \
-    human_latent_team_hdf5_data_path
+from learn_bot.latent.place_area.load_data import human_latent_team_hdf5_data_path, manual_latent_team_hdf5_data_path, \
+    rollout_latent_team_hdf5_data_path
 from learn_bot.latent.transformer_nested_hidden_latent_model import *
 from learn_bot.latent.vis.run_vis_checkpoint import load_model_file_for_rollout
 from learn_bot.latent.vis.vis import vis

@@ -15,8 +15,9 @@ from learn_bot.libs.hdf5_to_pd import load_hdf5_to_pd
 from learn_bot.libs.hdf5_wrapper import HDF5Wrapper
 from learn_bot.libs.io_transforms import IOColumnTransformers, CUDA_DEVICE_STR
 from learn_bot.latent.transformer_nested_hidden_latent_model import TransformerNestedHiddenLatentModel
-from learn_bot.latent.train import checkpoints_path, TrainResult, manual_latent_team_hdf5_data_path, \
-    human_latent_team_hdf5_data_path, rollout_latent_team_hdf5_data_path, ColumnsToFlip
+from learn_bot.latent.train import checkpoints_path, TrainResult, ColumnsToFlip
+from learn_bot.latent.place_area.load_data import human_latent_team_hdf5_data_path, manual_latent_team_hdf5_data_path, \
+    rollout_latent_team_hdf5_data_path
 from learn_bot.libs.df_grouping import make_index_column, train_test_split_by_col_ids
 from learn_bot.latent.vis.off_policy_inference import off_policy_inference
 from learn_bot.latent.vis.vis import vis
@@ -75,7 +76,11 @@ manual_data = False
 rollout_data = False
 
 if __name__ == "__main__":
+    if len(sys.argv) < 2:
+        raise Exception("must pass checkpoint folder name as argument, like "
+                        "07_02_2023__14_32_51_e_60_b_512_lr_4e-05_wd_0.0_l_2_h_4_n_20.0_t_5_c_human_with_added_bot_nav")
     if manual_data:
+        manual_data = HDF5Wrapper(manual_latent_team_hdf5_data_path, hdf5_id_columns)
         all_data_df = load_hdf5_to_pd(manual_latent_team_hdf5_data_path, rows_to_get=[i for i in range(20000)])
         #all_data_df = all_data_df[all_data_df['test name'] == b'LearnedGooseToCatScript']
     elif rollout_data:

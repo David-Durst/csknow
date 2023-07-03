@@ -10,7 +10,7 @@ from learn_bot.engagement_aim.analysis.fitts import test_name_col
 from learn_bot.latent.engagement.column_names import round_id_column
 from learn_bot.latent.place_area.column_names import test_success_col, specific_player_place_area_columns
 from learn_bot.libs.hdf5_to_pd import load_hdf5_to_pd
-from learn_bot.latent.train import manual_latent_team_hdf5_data_path, rollout_latent_team_hdf5_data_path
+from learn_bot.latent.place_area.load_data import manual_latent_team_hdf5_data_path, rollout_latent_team_hdf5_data_path
 from learn_bot.mining.area_cluster import d2_radar_path, Vec3, MapCoordinate
 import matplotlib as mpl
 import matplotlib.pyplot as plt
