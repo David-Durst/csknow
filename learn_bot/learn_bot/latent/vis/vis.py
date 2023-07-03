@@ -14,7 +14,14 @@ def get_rounds_for_cur_hdf5(loaded_model: LoadedModel) -> List[int]:
     return loaded_model.cur_loaded_pd.loc[:, round_id_column].unique().tolist()
 
 
+def index_cur_hdf5(loaded_model: LoadedModel):
+    make_index_column(loaded_model.cur_loaded_pd)
+    make_index_column(loaded_model.cur_inference_pd)
+
+
 def vis(loaded_model: LoadedModel):
+    index_cur_hdf5(loaded_model)
+
     #This creates the main window of an application
     window = tk.Tk()
     window.title("Delta Position Model")
