@@ -1,4 +1,4 @@
-from learn_bot.latent.analyze.run_comparison import *
+from learn_bot.latent.analyze.run_trajectory_comparison import *
 
 bot_similarity_hdf5_data_path = Path(__file__).parent / '..' / '..' / '..' / '..' / 'analytics' / 'manual_outputs' / \
                                  'botTrajectorySimilarity.hdf5'

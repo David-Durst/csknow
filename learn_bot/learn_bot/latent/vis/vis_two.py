@@ -18,8 +18,12 @@ class PredictedToGroundTruthRoundData:
     predicted_round_id: int
     ground_truth_round_id: int
     similarity_row: pd.Series
-    similarity_match_df: pd.DataFrame
     agent_mapping: Dict[int, int]
+
+    def get_similarity_match_index_df_subset(self, similarity_match_index_df: pd.DataFrame) -> pd.DataFrame:
+        return similarity_match_index_df.iloc[
+            self.similarity_row[start_dtw_matched_indices_col]:
+            self.similarity_row[start_dtw_matched_indices_col] + self.similarity_row[length_dtw_matched_inidices_col]]
 
 
 PredictedToGroundTruthDict = Dict[int, Dict[str, List[PredictedToGroundTruthRoundData]]]
@@ -302,8 +306,8 @@ def vis_two(predicted_data_df: pd.DataFrame,
 
     # state setters
     def change_round_metric_dependent_data():
-        nonlocal predicted_selected_df, ground_truth_selected_df, ground_truth_pred_selected_df, \
-            similarity_match_df, cur_round, cur_metric_type, predicted_to_ground_truth_round_data
+        nonlocal predicted_selected_df, ground_truth_selected_df, similarity_match_df, cur_round, cur_metric_type, \
+            predicted_to_ground_truth_round_data
         predicted_selected_df = predicted_data_df.loc[predicted_data_df[round_id_column] == cur_round]
 
         predicted_to_ground_truth_round_data = \
