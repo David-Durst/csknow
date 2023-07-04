@@ -87,7 +87,7 @@ class MultiHDF5Wrapper:
         self.test_hdf5_wrappers.append(test_hdf5_wrapper)
         self.test_group_ids[hdf5_wrapper.hdf5_path] = get_test_col_ids(test_hdf5_wrapper.id_df, round_id_column)
 
-    def create_np_arrays(self, cts: IOColumnTransformers):
+    def create_np_arrays(self, cts: IOColumnTransformers, load_output_data: bool = True):
         for hdf5_wrapper in self.hdf5_wrappers:
-            hdf5_wrapper.create_np_array(cts)
+            hdf5_wrapper.create_np_array(cts, load_output_data)
 

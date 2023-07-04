@@ -91,7 +91,7 @@ class VisMapCoordinate():
             im_draw.ellipse([canvas_min_vec.x, canvas_max_vec.y, canvas_max_vec.x, canvas_min_vec.y], fill=cur_color)
 
 
-def draw_all_players(data_series: pd.Series, pred_series: pd.Series, im_draw: ImageDraw, draw_max: bool,
+def draw_all_players(data_series: pd.Series, pred_series: Optional[pd.Series], im_draw: ImageDraw, draw_max: bool,
                      players_to_draw: List[int], draw_only_pos: bool = False, player_to_color: Dict[int, Tuple] = {},
                      rectangle = True) -> str:
     result = ""

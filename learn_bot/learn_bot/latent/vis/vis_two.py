@@ -26,12 +26,10 @@ PredictedToGroundTruthDict = Dict[int, Dict[str, List[PredictedToGroundTruthRoun
 
 cmap = mpl.cm.get_cmap("Set3").colors
 
-def vis_two(predicted_data_df: pd.DataFrame, predicted_pred_df: pd.DataFrame,
-            ground_truth_data_df: pd.DataFrame, ground_truth_pred_df: pd.DataFrame, predicted_to_ground_truth_dict: PredictedToGroundTruthDict):
+def vis_two(predicted_data_df: pd.DataFrame,
+            ground_truth_data_df: pd.DataFrame, predicted_to_ground_truth_dict: PredictedToGroundTruthDict):
     make_index_column(predicted_data_df)
-    make_index_column(predicted_pred_df)
     make_index_column(ground_truth_data_df)
-    make_index_column(ground_truth_pred_df)
 
     #This creates the main window of an application
     window = tk.Tk()
@@ -63,9 +61,7 @@ def vis_two(predicted_data_df: pd.DataFrame, predicted_pred_df: pd.DataFrame,
     num_round_matches: int = 5
     cur_similarity_tick_index: int = -1
     predicted_selected_df: pd.DataFrame = predicted_data_df
-    predicted_pred_selected_df: pd.DataFrame = predicted_pred_df
     ground_truth_selected_df: pd.DataFrame = ground_truth_data_df
-    ground_truth_pred_selected_df: pd.DataFrame = ground_truth_pred_df
     similarity_match_df: Optional[pd.DataFrame] = None
     predicted_to_ground_truth_round_data: Optional[PredictedToGroundTruthRoundData] = None
     draw_max: bool = True
@@ -150,13 +146,11 @@ def vis_two(predicted_data_df: pd.DataFrame, predicted_pred_df: pd.DataFrame,
 
             cur_predicted_index = similarity_match_df.iloc[cur_similarity_tick_index].loc[first_matched_index_col]
             cur_predicted_row = predicted_selected_df.iloc[cur_predicted_index]
-            cur_predicted_pred_row = predicted_pred_selected_df.iloc[cur_predicted_index]
             cur_predicted_tick_id = cur_predicted_row.loc[tick_id_column]
             cur_predicted_game_tick_id = cur_predicted_row.loc[tick_id_column]
 
             cur_ground_truth_index = similarity_match_df.iloc[cur_similarity_tick_index].loc[second_matched_index_col]
             cur_ground_truth_row = ground_truth_selected_df.iloc[cur_ground_truth_index]
-            cur_ground_truth_pred_row = ground_truth_pred_selected_df.iloc[cur_ground_truth_index]
             cur_ground_truth_round = cur_ground_truth_row.loc[round_id_column]
             cur_ground_truth_tick_id = cur_ground_truth_row.loc[tick_id_column]
             cur_ground_truth_game_tick_id = cur_ground_truth_row.loc[game_tick_number_column]
@@ -218,20 +212,20 @@ def vis_two(predicted_data_df: pd.DataFrame, predicted_pred_df: pd.DataFrame,
 
             if draw_overlap:
                 predicted_players_str = \
-                    draw_all_players(cur_predicted_row, cur_predicted_pred_row, predicted_d2_img_draw, draw_max,
+                    draw_all_players(cur_predicted_row, None, predicted_d2_img_draw, draw_max,
                                      predicted_players_to_draw, draw_only_pos=True, player_to_color=predicted_colors)
                 ground_truth_players_str = \
-                    draw_all_players(cur_ground_truth_row, cur_ground_truth_pred_row, ground_truth_d2_img_draw, draw_max,
+                    draw_all_players(cur_ground_truth_row, None, ground_truth_d2_img_draw, draw_max,
                                      ground_truth_players_to_draw, draw_only_pos=True, player_to_color=ground_truth_colors,
                                      rectangle=False)
                 draw_player_connection_lines(cur_predicted_row, cur_ground_truth_row, ground_truth_d2_img_draw,
                                              player_index_mapping, predicted_players_to_draw, predicted_colors)
             else:
                 predicted_players_str = \
-                    draw_all_players(cur_predicted_row, cur_predicted_pred_row, predicted_d2_img_draw, draw_max,
+                    draw_all_players(cur_predicted_row, None, predicted_d2_img_draw, draw_max,
                                      predicted_players_to_draw)
                 ground_truth_players_str = \
-                    draw_all_players(cur_ground_truth_row, cur_ground_truth_pred_row, ground_truth_d2_img_draw, draw_max,
+                    draw_all_players(cur_ground_truth_row, None, ground_truth_d2_img_draw, draw_max,
                                      ground_truth_players_to_draw)
             details_text_var.set("predicted\n" + predicted_players_str + "\nground_truth\n" + ground_truth_players_str)
 
@@ -308,18 +302,14 @@ def vis_two(predicted_data_df: pd.DataFrame, predicted_pred_df: pd.DataFrame,
 
     # state setters
     def change_round_metric_dependent_data():
-        nonlocal predicted_selected_df, predicted_pred_selected_df, ground_truth_selected_df, ground_truth_pred_selected_df, \
+        nonlocal predicted_selected_df, ground_truth_selected_df, ground_truth_pred_selected_df, \
             similarity_match_df, cur_round, cur_metric_type, predicted_to_ground_truth_round_data
         predicted_selected_df = predicted_data_df.loc[predicted_data_df[round_id_column] == cur_round]
-        predicted_pred_selected_df = predicted_pred_df.loc[predicted_data_df[round_id_column] == cur_round]
 
         predicted_to_ground_truth_round_data = \
             predicted_to_ground_truth_dict[cur_round][cur_metric_type][cur_round_match_id]
         ground_truth_selected_df = \
             ground_truth_data_df.loc[ground_truth_data_df[round_id_column] ==
-                                     predicted_to_ground_truth_round_data.ground_truth_round_id]
-        ground_truth_pred_selected_df = \
-            ground_truth_pred_df.loc[ground_truth_data_df[round_id_column] ==
                                      predicted_to_ground_truth_round_data.ground_truth_round_id]
         similarity_match_df = predicted_to_ground_truth_round_data.similarity_match_df
 
