@@ -3,7 +3,6 @@ from typing import Dict
 import pandas as pd
 
 from learn_bot.latent.load_model import LoadedModel
-from learn_bot.latent.vis.vis import get_rounds_for_cur_hdf5
 from learn_bot.libs.df_grouping import make_index_column
 from learn_bot.mining.area_cluster import *
 from learn_bot.latent.vis.draw_inference import draw_all_players, minimapWidth, minimapHeight, \
@@ -61,7 +60,8 @@ def vis_two(predicted_model: LoadedModel, ground_truth_model: LoadedModel,
     ground_truth_img_label = tk.Label(img_frame, image=ground_truth_d2_photo_img)
     ground_truth_img_label.pack(side="left")
 
-    rounds = get_rounds_for_cur_hdf5(predicted_model)
+    # can't use unique round ids because some rounds may have no matches (on human data, with weird num alive counts)
+    rounds = list(predicted_to_ground_truth_dict[predicted_model.get_cur_hdf5_filename()].keys())
     cur_round: int = -1
     metric_types = ['Unconstrained DTW', 'Slope Constrained DTW', 'Percentile ADE']
     cur_metric_type: str = metric_types[0]
@@ -80,7 +80,7 @@ def vis_two(predicted_model: LoadedModel, ground_truth_model: LoadedModel,
         predicted_model.cur_hdf5_index = int(new_hdf5_id_entry.get())
         predicted_model.load_cur_hdf5_as_pd()
         make_index_column(predicted_model.cur_loaded_df)
-        rounds = get_rounds_for_cur_hdf5(predicted_model)
+        rounds = list(predicted_to_ground_truth_dict[predicted_model.get_cur_hdf5_filename()].keys())
         cur_round = rounds[0]
         round_slider.set(0)
         round_slider_changed(0)
@@ -88,6 +88,12 @@ def vis_two(predicted_model: LoadedModel, ground_truth_model: LoadedModel,
     def round_slider_changed(cur_round_index):
         nonlocal cur_round, num_round_matches
         cur_round = rounds[int(cur_round_index)]
+        #if predicted_model.get_cur_hdf5_filename() not in predicted_to_ground_truth_dict:
+        #    print(1)
+        #if cur_round not in predicted_to_ground_truth_dict[predicted_model.get_cur_hdf5_filename()]:
+        #    print(2)
+        #if cur_metric_type not in predicted_to_ground_truth_dict[predicted_model.get_cur_hdf5_filename()][cur_round]:
+        #    print(3)
         num_round_matches = len(predicted_to_ground_truth_dict[predicted_model.get_cur_hdf5_filename()][cur_round][cur_metric_type])
         round_match_slider.configure(to=num_round_matches - 1)
         round_match_slider_changed(0)
@@ -173,6 +179,8 @@ def vis_two(predicted_model: LoadedModel, ground_truth_model: LoadedModel,
             cur_ground_truth_tick_id = cur_ground_truth_row.loc[tick_id_column]
             cur_ground_truth_game_tick_id = cur_ground_truth_row.loc[game_tick_number_column]
 
+            hdf5_id_text_var.set(f"Predicted Cur HDF5 Id: {predicted_model.get_cur_hdf5_filename()} - {predicted_model.cur_hdf5_index} / {len(predicted_model.dataset.data_hdf5s)}, "
+                                 f"Ground Truth Cur HDF5 Id: {ground_truth_model.get_cur_hdf5_filename()} - {ground_truth_model.cur_hdf5_index} / {len(ground_truth_model.dataset.data_hdf5s)}, ")
             tick_id_text_var.set(f"Predicted Tick ID: {cur_predicted_tick_id}, Predicted Game Tick ID: {cur_predicted_game_tick_id}, "
                                  f"Ground Truth Tick Id: {cur_ground_truth_tick_id}, Ground Truth Game Tick ID: {cur_ground_truth_game_tick_id}")
             round_id_text_var.set(f"Predicted Round ID: {int(cur_round)}, Predicted Round Number: {cur_predicted_row.loc['round number']}, "
