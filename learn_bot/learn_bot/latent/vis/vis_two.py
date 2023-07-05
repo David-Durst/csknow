@@ -2,6 +2,8 @@ from typing import Dict
 
 import pandas as pd
 
+from learn_bot.latent.load_model import LoadedModel
+from learn_bot.latent.vis.vis import get_rounds_for_cur_hdf5
 from learn_bot.libs.df_grouping import make_index_column
 from learn_bot.mining.area_cluster import *
 from learn_bot.latent.vis.draw_inference import draw_all_players, minimapWidth, minimapHeight, \
@@ -30,10 +32,11 @@ PredictedToGroundTruthDict = Dict[int, Dict[str, List[PredictedToGroundTruthRoun
 
 cmap = mpl.cm.get_cmap("Set3").colors
 
-def vis_two(predicted_data_df: pd.DataFrame,
-            ground_truth_data_df: pd.DataFrame, predicted_to_ground_truth_dict: PredictedToGroundTruthDict):
-    make_index_column(predicted_data_df)
-    make_index_column(ground_truth_data_df)
+
+def vis_two(predicted_model: LoadedModel, ground_truth_model: LoadedModel,
+            predicted_to_ground_truth_dict: PredictedToGroundTruthDict):
+    make_index_column(predicted_model.cur_loaded_df)
+    make_index_column(ground_truth_model.cur_loaded_df)
 
     #This creates the main window of an application
     window = tk.Tk()
@@ -57,19 +60,29 @@ def vis_two(predicted_data_df: pd.DataFrame,
     ground_truth_img_label = tk.Label(img_frame, image=ground_truth_d2_photo_img)
     ground_truth_img_label.pack(side="left")
 
-    rounds = predicted_data_df.loc[:, round_id_column].unique().tolist()
+    rounds = get_rounds_for_cur_hdf5(predicted_model)
     cur_round: int = -1
     metric_types = ['Unconstrained DTW', 'Slope Constrained DTW', 'Percentile ADE']
     cur_metric_type: str = metric_types[0]
     cur_round_match_id: int = -1
     num_round_matches: int = 5
     cur_similarity_tick_index: int = -1
-    predicted_selected_df: pd.DataFrame = predicted_data_df
-    ground_truth_selected_df: pd.DataFrame = ground_truth_data_df
+    predicted_selected_df: pd.DataFrame = predicted_model.cur_loaded_df
+    ground_truth_selected_df: pd.DataFrame = ground_truth_model.cur_loaded_df
     similarity_match_df: Optional[pd.DataFrame] = None
     predicted_to_ground_truth_round_data: Optional[PredictedToGroundTruthRoundData] = None
     draw_max: bool = True
     draw_overlap: bool = False
+
+    def hdf5_id_update():
+        nonlocal rounds, cur_round
+        predicted_model.cur_hdf5_index = int(new_hdf5_id_entry.get())
+        predicted_model.load_cur_hdf5_as_pd()
+        make_index_column(predicted_model.cur_loaded_df)
+        rounds = get_rounds_for_cur_hdf5(predicted_model)
+        cur_round = rounds[0]
+        round_slider.set(0)
+        round_slider_changed(0)
 
     def round_slider_changed(cur_round_index):
         nonlocal cur_round, num_round_matches
@@ -308,7 +321,8 @@ def vis_two(predicted_data_df: pd.DataFrame,
     def change_round_metric_dependent_data():
         nonlocal predicted_selected_df, ground_truth_selected_df, similarity_match_df, cur_round, cur_metric_type, \
             predicted_to_ground_truth_round_data
-        predicted_selected_df = predicted_data_df.loc[predicted_data_df[round_id_column] == cur_round]
+        predicted_selected_df = \
+            predicted_model.cur_inference_df.loc[predicted_model.cur_loaded_df[round_id_column] == cur_round]
 
         predicted_to_ground_truth_round_data = \
             predicted_to_ground_truth_dict[cur_round][cur_metric_type][cur_round_match_id]
@@ -326,7 +340,21 @@ def vis_two(predicted_data_df: pd.DataFrame,
     s.theme_use('alt')
     s.configure('Valid.TCombobox', fieldbackground='white')
     s.configure('Invalid.TCombobox', fieldbackground='#cfcfcf')
-    # creating round slider and label
+    # hdf5 id slider
+    hdf5_id_frame = tk.Frame(window)
+    hdf5_id_frame.pack(pady=5)
+    hdf5_id_text_var = tk.StringVar()
+    hdf5_id_label = tk.Label(hdf5_id_frame, textvariable=hdf5_id_text_var)
+    hdf5_id_label.pack(side="left")
+    new_hdf5_id_label = tk.Label(hdf5_id_frame, text="New HDF5 Id:")
+    new_hdf5_id_label.pack(side="left")
+    new_hdf5_id_var = tk.StringVar(value="")
+    new_hdf5_id_entry = tk.Entry(hdf5_id_frame, width=5, textvariable=new_hdf5_id_var)
+    new_hdf5_id_entry.pack(side="left")
+    update_hdf5_id_button = tk.Button(hdf5_id_frame, text="update hdf5 id", command=hdf5_id_update)
+    update_hdf5_id_button.pack(side="left")
+
+    # round id slider
     round_id_frame = tk.Frame(window)
     round_id_frame.pack(pady=5)
     round_id_text_var = tk.StringVar()

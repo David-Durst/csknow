@@ -7,14 +7,15 @@ import numpy as np
 from dataclasses import dataclass
 from pathlib import Path
 
+from learn_bot.latent.place_area.load_data import LoadDataOptions
 from learn_bot.latent.vis.vis_two import PredictedToGroundTruthDict, PredictedToGroundTruthRoundData
 
 
 @dataclass
 class ComparisonConfig:
     similarity_data_path: Path
-    predicted_data_path: Path
-    ground_truth_data_path: Path
+    predicted_load_data_options: LoadDataOptions
+    ground_truth_load_data_options: LoadDataOptions
     limit_predicted_df_to_bot_good: bool
     limit_predicted_df_to_human_good: bool
     metric_cost_file_name: str

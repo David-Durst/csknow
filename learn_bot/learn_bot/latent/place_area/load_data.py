@@ -14,6 +14,7 @@ from learn_bot.libs.multi_hdf5_wrapper import MultiHDF5Wrapper, HDF5SourceOption
 just_test_comment = "just_test"
 just_bot_comment = "just_bot"
 bot_and_human_comment = "bot_and_human"
+just_small_human_comment = "just_small_human"
 just_human_comment = "just_human"
 all_comment = "_all"
 human_with_bot_nav_added_comment = "human_with_added_bot_nav"
@@ -34,6 +35,7 @@ class LoadDataOptions:
     use_manual_data: bool
     use_rollout_data: bool
     use_synthetic_data: bool
+    use_small_human_data: bool
     use_all_human_data: bool
     add_manual_to_all_human_data: bool
     limit_manual_data_to_no_enemies_nav: bool
@@ -71,6 +73,9 @@ class LoadDataResult:
             force_test_data = PDWrapper('test', force_test_data_df, hdf5_id_columns)
             self.diff_train_test = False
             hdf5_sources.append(synthetic_data)
+        elif load_data_options.use_all_human_data:
+            self.dataset_comment = small_latent_team_hdf5_data_path
+            hdf5_sources.append(human_latent_team_hdf5_data_path)
         elif load_data_options.use_all_human_data:
             self.dataset_comment = just_human_comment + all_comment
             hdf5_sources.append(all_train_latent_team_hdf5_dir_path)

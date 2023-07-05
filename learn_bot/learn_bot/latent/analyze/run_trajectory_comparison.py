@@ -17,6 +17,7 @@ from learn_bot.latent.analyze.process_trajectory_comparison import ComparisonCon
     plot_trajectory_comparison_histograms, build_predicted_to_ground_truth_dict
 from learn_bot.latent.dataset import LatentDataset
 from learn_bot.latent.engagement.column_names import max_enemies, round_id_column
+from learn_bot.latent.load_model import load_model_file
 from learn_bot.latent.place_area.column_names import place_area_input_column_types, delta_pos_output_column_types, \
     delta_pos_grid_num_cells
 from learn_bot.latent.transformer_nested_hidden_latent_model import TransformerNestedHiddenLatentModel
@@ -25,7 +26,7 @@ from learn_bot.latent.vis.vis_two import vis_two, PredictedToGroundTruthDict, Pr
 from learn_bot.libs.df_grouping import make_index_column
 from learn_bot.latent.train import checkpoints_path, TrainResult, latent_id_cols
 from learn_bot.latent.place_area.load_data import human_latent_team_hdf5_data_path, manual_latent_team_hdf5_data_path, \
-    rollout_latent_team_hdf5_data_path, all_train_latent_team_hdf5_dir_path
+    rollout_latent_team_hdf5_data_path, all_train_latent_team_hdf5_dir_path, LoadDataOptions, LoadDataResult
 from learn_bot.libs.hdf5_to_pd import load_hdf5_to_pd
 from learn_bot.libs.hdf5_wrapper import HDF5Wrapper
 from learn_bot.libs.io_transforms import IOColumnTransformers, CUDA_DEVICE_STR
@@ -37,24 +38,6 @@ time_vs_hand_crafted_bot_similarity_hdf5_data_path = Path(__file__).parent / '..
 no_time_vs_hand_crafted_bot_similarity_hdf5_data_path = Path(__file__).parent / '..' / '..' / '..' / '..' / 'analytics' / 'rollout_outputs' / 'learnedNoTimeNoWeightDecayBotTrajectorySimilarity.hdf5'
 human_vs_human_similarity_hdf5_data_path = Path(__file__).parent / '..' / '..' / '..' / '..' / 'analytics' / 'csv_outputs' / 'humanTrajectorySimilarity.hdf5'
 all_human_vs_all_human_similarity_hdf5_data_path = Path(__file__).parent / '..' / '..' / '..' / '..' / 'analytics' / 'all_train_outputs' / 'humanTrajectorySimilarity.hdf5'
-
-def load_model_file(all_data_df: pd.DataFrame, model_file_name: str) -> TrainResult:
-    cur_checkpoints_path = checkpoints_path
-    if len(sys.argv) > 2:
-        cur_checkpoints_path = cur_checkpoints_path / sys.argv[2]
-    model_file = torch.load(cur_checkpoints_path / model_file_name)
-
-    make_index_column(all_data_df)
-
-    all_data = LatentDataset(all_data_df, model_file['column_transformers'])
-
-    column_transformers = IOColumnTransformers(place_area_input_column_types, delta_pos_output_column_types, all_data_df)
-
-    model = TransformerNestedHiddenLatentModel(model_file['column_transformers'], 2 * max_enemies, delta_pos_grid_num_cells, 2, 4)
-    model.load_state_dict(model_file['model_state_dict'])
-    model.to(CUDA_DEVICE_STR)
-
-    return TrainResult(all_data, all_data, all_data_df, all_data_df, column_transformers, model)
 
 bot_good_rounds = [4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 33, 35, 37, 39, 41, 43, 45, 47, 49, 51, 53, 55,
                    57, 59, 61, 63, 65, 67, 69, 71, 73, 75, 78, 80, 82, 85, 87, 89, 91, 93, 95, 97, 99, 102, 104, 106, 108,
@@ -96,21 +79,40 @@ human_good_rounds = [512, 1, 4, 517, 520, 10, 15, 529, 534, 535, 25, 26, 27, 28,
 #metric_cost_file_name = "human_vs_human_distribution"
 #metric_cost_title = "Human vs Human Distribution"
 
+manual_load_data_option = LoadDataOptions(
+    use_manual_data=True,
+    use_rollout_data=False,
+    use_synthetic_data=False,
+    use_small_human_data=False,
+    use_all_human_data=False,
+    add_manual_to_all_human_data=False,
+    limit_manual_data_to_no_enemies_nav=False
+)
+
 hand_crafted_bot_vs_hand_crafted_bot_config = ComparisonConfig(
     hand_crafted_bot_vs_hand_crafted_bot_similarity_hdf5_data_path,
-    manual_latent_team_hdf5_data_path,
-    manual_latent_team_hdf5_data_path,
+    manual_load_data_option,
+    manual_load_data_option,
     True,
     False,
     "hand_crafted_bot_vs_hand_crafted_bot_distribution",
     "Hand-Crafted Bot vs Hand-Crafted Bot Distribution"
 )
 
+rollout_load_data_option = LoadDataOptions(
+    use_manual_data=False,
+    use_rollout_data=True,
+    use_synthetic_data=False,
+    use_small_human_data=False,
+    use_all_human_data=False,
+    add_manual_to_all_human_data=False,
+    limit_manual_data_to_no_enemies_nav=False
+)
 
 learned_time_bot_vs_hand_crafted_bot_config = ComparisonConfig(
     time_vs_hand_crafted_bot_similarity_hdf5_data_path,
-    rollout_latent_team_hdf5_data_path,
-    manual_latent_team_hdf5_data_path,
+    rollout_load_data_option,
+    manual_load_data_option,
     False,
     False,
     "learned_time_bot_vs_hand_crafted_bot_distribution",
@@ -119,28 +121,48 @@ learned_time_bot_vs_hand_crafted_bot_config = ComparisonConfig(
 
 learned_no_time_bot_vs_hand_crafted_bot_config = ComparisonConfig(
     no_time_vs_hand_crafted_bot_similarity_hdf5_data_path,
-    rollout_latent_team_hdf5_data_path,
-    manual_latent_team_hdf5_data_path,
+    rollout_load_data_option,
+    manual_load_data_option,
     False,
     False,
     "learned_no_time_no_weight_decay_bot_vs_hand_crafted_bot_distribution",
     "Learned No Time No Weight Decay Bot vs Hand-Crafted Bot Distribution"
 )
 
+small_human_load_data_option = LoadDataOptions(
+    use_manual_data=False,
+    use_rollout_data=False,
+    use_synthetic_data=False,
+    use_small_human_data=True,
+    use_all_human_data=False,
+    add_manual_to_all_human_data=False,
+    limit_manual_data_to_no_enemies_nav=False
+)
+
 human_vs_human_config = ComparisonConfig(
     human_vs_human_similarity_hdf5_data_path,
-    human_latent_team_hdf5_data_path,
-    human_latent_team_hdf5_data_path,
+    small_human_load_data_option,
+    small_human_load_data_option,
     False,
     True,
     "human_vs_human_distribution",
     "Human vs Human Distribution"
 )
 
+all_human_load_data_option = LoadDataOptions(
+    use_manual_data=False,
+    use_rollout_data=False,
+    use_synthetic_data=False,
+    use_small_human_data=False,
+    use_all_human_data=True,
+    add_manual_to_all_human_data=False,
+    limit_manual_data_to_no_enemies_nav=False
+)
+
 all_human_vs_all_human_config = ComparisonConfig(
     all_human_vs_all_human_similarity_hdf5_data_path,
-    all_train_latent_team_hdf5_dir_path, # TODO: need to update this for multi hdf5 wrapper, then change these paths
-    all_train_latent_team_hdf5_dir_path,
+    all_human_load_data_option,
+    all_human_load_data_option,
     False,
     False,
     "all_human_vs_all_human_distribution",
@@ -185,36 +207,33 @@ def compare_trajectories():
 
     # load data
     start_predicted_load_time = time.perf_counter()
+    predicted_data = LoadDataResult(config.predicted_load_data_options)
     if config.limit_predicted_df_to_bot_good:
-        predicted_hdf5_wrapper = HDF5Wrapper(config.predicted_data_path, latent_id_cols)
-        predicted_hdf5_wrapper.limit(predicted_hdf5_wrapper.id_df[round_id_column].isin(bot_good_rounds))
-        predicted_df = load_hdf5_to_pd(config.predicted_data_path)
-        predicted_df = predicted_df.iloc[predicted_hdf5_wrapper.id_df['id'], :]
-    elif config.limit_predicted_df_to_human_good:
-        predicted_hdf5_wrapper = HDF5Wrapper(config.predicted_data_path, latent_id_cols)
-        predicted_hdf5_wrapper.limit(predicted_hdf5_wrapper.id_df[round_id_column].isin(human_good_rounds))
+        predicted_data.limit([lambda df: df[round_id_column].isin(bot_good_rounds)])
+        #predicted_hdf5_wrapper = HDF5Wrapper(config.predicted_data_path, latent_id_cols)
+        #predicted_hdf5_wrapper.limit(predicted_hdf5_wrapper.id_df[round_id_column].isin(bot_good_rounds))
         #predicted_df = load_hdf5_to_pd(config.predicted_data_path)
         #predicted_df = predicted_df.iloc[predicted_hdf5_wrapper.id_df['id'], :]
-    else:
-        predicted_df = load_hdf5_to_pd(config.predicted_data_path)
-    print(len(predicted_df))
-    time.sleep(10)
-    exit(0)
-    predicted_result = load_model_file(predicted_df, "delta_pos_checkpoint.pt")
+    elif config.limit_predicted_df_to_human_good:
+        predicted_data.limit([lambda df: df[round_id_column].isin(human_good_rounds)])
+        #predicted_hdf5_wrapper = HDF5Wrapper(config.predicted_data_path, latent_id_cols)
+        #predicted_hdf5_wrapper.limit(predicted_hdf5_wrapper.id_df[round_id_column].isin(human_good_rounds))
+        #predicted_df = load_hdf5_to_pd(config.predicted_data_path)
+        #predicted_df = predicted_df.iloc[predicted_hdf5_wrapper.id_df['id'], :]
+    #else:
+    #    predicted_df = load_hdf5_to_pd(config.predicted_data_path)
+    predicted_model = load_model_file(predicted_data)
     end_predicted_load_time = time.perf_counter()
     print(f"predicted load time {end_predicted_load_time - start_predicted_load_time: 0.4f}")
 
     start_ground_truth_load_time = time.perf_counter()
-    ground_truth_indices_ranges = sorted(ground_truth_indices_ranges, key=lambda r: r.start)
-    ground_truth_indices = [i for r in ground_truth_indices_ranges for i in r]
 
-    ground_truth_df = load_hdf5_to_pd(config.ground_truth_data_path)
-    ground_truth_df = ground_truth_df.iloc[ground_truth_indices, :]
-    ground_truth_result = load_model_file(ground_truth_df, "delta_pos_checkpoint.pt")
+    ground_truth_data = LoadDataResult(config.ground_truth_load_data_options)
+    ground_truth_model = load_model_file(ground_truth_data)
     end_ground_truth_load_time = time.perf_counter()
     print(f"ground truth load time {end_ground_truth_load_time - start_ground_truth_load_time: 0.4f}")
 
-    vis_two(predicted_df, ground_truth_df, predicted_to_ground_truth_dict)
+    vis_two(predicted_model, ground_truth_model, predicted_to_ground_truth_dict)
 
 
 if __name__ == "__main__":
