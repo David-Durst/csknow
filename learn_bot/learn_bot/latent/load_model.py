@@ -44,7 +44,7 @@ class LoadedModel:
     def load_cur_hdf5_as_pd(self):
         self.cur_loaded_df = load_hdf5_to_pd(self.dataset.data_hdf5s[self.cur_hdf5_index].hdf5_path)
         # done to apply limit on hdf5 wrapper's id df to actual df
-        self.cur_loaded_df = self.cur_loaded_df.loc[self.dataset.data_hdf5s[self.cur_hdf5_index].id_df['id'], :]
+        self.cur_loaded_df = self.cur_loaded_df.iloc[self.dataset.data_hdf5s[self.cur_hdf5_index].id_df['id'], :]
         self.cur_dataset = LatentDataset(self.cur_loaded_df, self.column_transformers)
 
 

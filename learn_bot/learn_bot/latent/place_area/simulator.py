@@ -14,7 +14,7 @@ from learn_bot.latent.place_area.pos_abs_delta_conversion import delta_pos_grid_
     delta_pos_grid_cell_dim, \
     delta_pos_grid_num_xy_cells_per_z_change, compute_new_pos, NavData
 from learn_bot.latent.place_area.load_data import human_latent_team_hdf5_data_path, manual_latent_team_hdf5_data_path, \
-    rollout_latent_team_hdf5_data_path, LoadDataResult
+    rollout_latent_team_hdf5_data_path, LoadDataResult, LoadDataOptions
 from learn_bot.latent.transformer_nested_hidden_latent_model import *
 from learn_bot.latent.vis.vis import vis
 from learn_bot.libs.hdf5_to_pd import load_hdf5_to_pd, load_hdf5_extra_to_list
@@ -105,19 +105,21 @@ def delta_pos_rollout(loaded_model: LoadedModel):
                             loaded_model.column_transformers)
 
 
-use_manual_data = False
-use_rollout_data = False
-use_synthetic_data = False
-use_all_human_data = True
-add_manual_to_all_human_data = False
-limit_manual_data_to_no_enemies_nav = True
+load_data_options = LoadDataOptions(
+    use_manual_data=False,
+    use_rollout_data=False,
+    use_synthetic_data=False,
+    use_all_human_data=True,
+    add_manual_to_all_human_data=False,
+    limit_manual_data_to_no_enemies_nav=True
+)
+
 nav_data = None
 
 if __name__ == "__main__":
     nav_data = NavData(CUDA_DEVICE_STR)
 
-    load_data_result = LoadDataResult(use_manual_data, use_rollout_data, use_synthetic_data, use_all_human_data,
-                                      add_manual_to_all_human_data, limit_manual_data_to_no_enemies_nav)
+    load_data_result = LoadDataResult(load_data_options)
     #if manual_data:
     #    all_data_df = load_hdf5_to_pd(manual_latent_team_hdf5_data_path, rows_to_get=[i for i in range(20000)])
     #    #all_data_df = all_data_df[all_data_df['test name'] == b'LearnedGooseToCatScript']
