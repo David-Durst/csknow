@@ -29,7 +29,7 @@ def generate_bins(min_bin_start: int, max_bin_end: int, bin_width: int) -> List[
 def plot_hist(ax: plt.Axes, data: pd.Series, bins: List[int]):
     ax.hist(data.values, bins=bins, weights=np.ones(len(data)) / len(data))
     ax.grid(visible=True)
-    #ax.yaxis.set_major_formatter(PercentFormatter(1))
+    # ax.yaxis.set_major_formatter(PercentFormatter(1))
 
 
 dtw_cost_bins = generate_bins(0, 15000, 1000)
@@ -49,7 +49,8 @@ def plot_trajectory_comparison_histograms(similarity_df: pd.DataFrame, config: C
 
     # plot cost, distance, and time by metric type
     metric_types = similarity_df[metric_type_col].unique().tolist()
-    metric_types_similarity_df = similarity_df.loc[:, [metric_type_col, dtw_cost_col, delta_distance_col, delta_time_col]]
+    metric_types_similarity_df = similarity_df.loc[:,
+                                 [metric_type_col, dtw_cost_col, delta_distance_col, delta_time_col]]
 
     fig = plt.figure(figsize=(15, 15), constrained_layout=True)
     fig.suptitle(config.metric_cost_title)
@@ -81,10 +82,15 @@ def build_predicted_to_ground_truth_dict(similarity_df: pd.DataFrame) -> Predict
         for agent_pair in agent_mapping_str.split(','):
             agents = [int(agent) for agent in agent_pair.split('_')]
             agent_mapping[int(agents[0])] = int(agents[1])
-        if row[predicted_round_id_col] not in predicted_to_ground_truth_dict:
-            predicted_to_ground_truth_dict[row[predicted_round_id_col]] = {}
-        if metric_type not in predicted_to_ground_truth_dict[row[predicted_round_id_col]]:
-            predicted_to_ground_truth_dict[row[predicted_round_id_col]][metric_type] = []
-        predicted_to_ground_truth_dict[row[predicted_round_id_col]][metric_type].append(
+        if row[predicted_trace_batch_col] not in predicted_to_ground_truth_dict:
+            predicted_to_ground_truth_dict[row[predicted_trace_batch_col]] = {}
+        if row[predicted_round_id_col] not in predicted_to_ground_truth_dict[row[predicted_trace_batch_col]]:
+            predicted_to_ground_truth_dict[row[predicted_trace_batch_col]][row[predicted_round_id_col]] = {}
+        if metric_type not in \
+                predicted_to_ground_truth_dict[row[predicted_trace_batch_col]][row[predicted_round_id_col]]:
+            predicted_to_ground_truth_dict[row[predicted_trace_batch_col]][row[predicted_round_id_col]][metric_type] = []
+        predicted_to_ground_truth_dict[row[predicted_trace_batch_col]][row[predicted_round_id_col]][metric_type].append(
             PredictedToGroundTruthRoundData(row[predicted_round_id_col], row[best_fit_ground_truth_round_id_col],
+                                            row[best_fit_ground_truth_trace_batch_col],
                                             row, agent_mapping))
+    return predicted_to_ground_truth_dict

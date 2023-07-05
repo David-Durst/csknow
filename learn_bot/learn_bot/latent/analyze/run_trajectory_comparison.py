@@ -233,7 +233,7 @@ def compare_trajectories():
     end_ground_truth_load_time = time.perf_counter()
     print(f"ground truth load time {end_ground_truth_load_time - start_ground_truth_load_time: 0.4f}")
 
-    vis_two(predicted_model, ground_truth_model, predicted_to_ground_truth_dict)
+    vis_two(predicted_model, ground_truth_model, predicted_to_ground_truth_dict, similarity_match_index_df)
 
 
 if __name__ == "__main__":

@@ -1,6 +1,8 @@
 predicted_name_col = 'predicted name'
 best_fit_ground_truth_name_col = 'best fit ground truth name'
 metric_type_col = 'metric type'
+predicted_trace_batch_col = 'predicted trace batch'
+best_fit_ground_truth_trace_batch_col = 'best fit ground truth trace batch'
 predicted_round_id_col = 'predicted round id'
 best_fit_ground_truth_round_id_col = 'best fit ground truth round id'
 predicted_start_trace_index_col = 'predicted start trace index'

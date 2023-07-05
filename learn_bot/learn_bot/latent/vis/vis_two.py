@@ -19,6 +19,7 @@ import matplotlib as mpl
 class PredictedToGroundTruthRoundData:
     predicted_round_id: int
     ground_truth_round_id: int
+    ground_truth_hdf5_filename: str
     similarity_row: pd.Series
     agent_mapping: Dict[int, int]
 
@@ -28,13 +29,13 @@ class PredictedToGroundTruthRoundData:
             self.similarity_row[start_dtw_matched_indices_col] + self.similarity_row[length_dtw_matched_inidices_col]]
 
 
-PredictedToGroundTruthDict = Dict[int, Dict[str, List[PredictedToGroundTruthRoundData]]]
+PredictedToGroundTruthDict = Dict[str, Dict[int, Dict[str, List[PredictedToGroundTruthRoundData]]]]
 
 cmap = mpl.cm.get_cmap("Set3").colors
 
 
 def vis_two(predicted_model: LoadedModel, ground_truth_model: LoadedModel,
-            predicted_to_ground_truth_dict: PredictedToGroundTruthDict):
+            predicted_to_ground_truth_dict: PredictedToGroundTruthDict, similarity_match_index_df: pd.DataFrame):
     make_index_column(predicted_model.cur_loaded_df)
     make_index_column(ground_truth_model.cur_loaded_df)
 
@@ -69,7 +70,7 @@ def vis_two(predicted_model: LoadedModel, ground_truth_model: LoadedModel,
     cur_similarity_tick_index: int = -1
     predicted_selected_df: pd.DataFrame = predicted_model.cur_loaded_df
     ground_truth_selected_df: pd.DataFrame = ground_truth_model.cur_loaded_df
-    similarity_match_df: Optional[pd.DataFrame] = None
+    similarity_match_index_subset_df: Optional[pd.DataFrame] = None
     predicted_to_ground_truth_round_data: Optional[PredictedToGroundTruthRoundData] = None
     draw_max: bool = True
     draw_overlap: bool = False
@@ -87,7 +88,7 @@ def vis_two(predicted_model: LoadedModel, ground_truth_model: LoadedModel,
     def round_slider_changed(cur_round_index):
         nonlocal cur_round, num_round_matches
         cur_round = rounds[int(cur_round_index)]
-        num_round_matches = len(predicted_to_ground_truth_dict[cur_round][cur_metric_type])
+        num_round_matches = len(predicted_to_ground_truth_dict[predicted_model.get_cur_hdf5_filename()][cur_round][cur_metric_type])
         round_match_slider.configure(to=num_round_matches - 1)
         round_match_slider_changed(0)
 
@@ -161,12 +162,12 @@ def vis_two(predicted_model: LoadedModel, ground_truth_model: LoadedModel,
         if len(predicted_selected_df) > 0:
             cur_similarity_tick_index = int(cur_similarity_tick_index_str)
 
-            cur_predicted_index = similarity_match_df.iloc[cur_similarity_tick_index].loc[first_matched_index_col]
+            cur_predicted_index = similarity_match_index_subset_df.iloc[cur_similarity_tick_index].loc[first_matched_index_col]
             cur_predicted_row = predicted_selected_df.iloc[cur_predicted_index]
             cur_predicted_tick_id = cur_predicted_row.loc[tick_id_column]
             cur_predicted_game_tick_id = cur_predicted_row.loc[tick_id_column]
 
-            cur_ground_truth_index = similarity_match_df.iloc[cur_similarity_tick_index].loc[second_matched_index_col]
+            cur_ground_truth_index = similarity_match_index_subset_df.iloc[cur_similarity_tick_index].loc[second_matched_index_col]
             cur_ground_truth_row = ground_truth_selected_df.iloc[cur_ground_truth_index]
             cur_ground_truth_round = cur_ground_truth_row.loc[round_id_column]
             cur_ground_truth_tick_id = cur_ground_truth_row.loc[tick_id_column]
@@ -296,7 +297,7 @@ def vis_two(predicted_model: LoadedModel, ground_truth_model: LoadedModel,
 
     def step_forward_clicked():
         nonlocal cur_similarity_tick_index
-        if cur_similarity_tick_index < len(similarity_match_df) - 1:
+        if cur_similarity_tick_index < len(similarity_match_index_subset_df) - 1:
             cur_similarity_tick_index += 1
             tick_slider.set(cur_similarity_tick_index)
             tick_slider_changed(cur_similarity_tick_index)
@@ -319,19 +320,27 @@ def vis_two(predicted_model: LoadedModel, ground_truth_model: LoadedModel,
 
     # state setters
     def change_round_metric_dependent_data():
-        nonlocal predicted_selected_df, ground_truth_selected_df, similarity_match_df, cur_round, cur_metric_type, \
+        nonlocal predicted_selected_df, ground_truth_selected_df, similarity_match_index_subset_df, cur_round, cur_metric_type, \
             predicted_to_ground_truth_round_data
         predicted_selected_df = \
             predicted_model.cur_inference_df.loc[predicted_model.cur_loaded_df[round_id_column] == cur_round]
 
         predicted_to_ground_truth_round_data = \
             predicted_to_ground_truth_dict[cur_round][cur_metric_type][cur_round_match_id]
-        ground_truth_selected_df = \
-            ground_truth_data_df.loc[ground_truth_data_df[round_id_column] ==
-                                     predicted_to_ground_truth_round_data.ground_truth_round_id]
-        similarity_match_df = predicted_to_ground_truth_round_data.similarity_match_df
 
-        tick_slider.configure(to=len(similarity_match_df)-1)
+        new_ground_truth_hdf5_filename = predicted_to_ground_truth_round_data.ground_truth_hdf5_filename
+        new_ground_truth_hdf5_index = ground_truth_model.filename_to_hdf5_index[new_ground_truth_hdf5_filename]
+        if new_ground_truth_hdf5_index != ground_truth_model.cur_hdf5_index:
+            ground_truth_model.cur_hdf5_index = new_ground_truth_hdf5_index
+            ground_truth_model.load_cur_hdf5_as_pd()
+            make_index_column(ground_truth_model.cur_loaded_df)
+        ground_truth_selected_df = \
+            ground_truth_model.cur_loaded_df.loc[ground_truth_model.cur_loaded_df[round_id_column] ==
+                                                 predicted_to_ground_truth_round_data.ground_truth_round_id]
+        similarity_match_index_subset_df = \
+            predicted_to_ground_truth_round_data.get_similarity_match_index_df_subset(similarity_match_index_df)
+
+        tick_slider.configure(to=len(similarity_match_index_subset_df)-1)
         tick_slider.set(0)
         tick_slider_changed(0)
 

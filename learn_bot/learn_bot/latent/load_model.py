@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
 import sys
-from typing import Optional
+from typing import Optional, Dict
 
 import pandas as pd
 import torch
@@ -26,6 +26,7 @@ class LoadedModel:
     column_transformers: IOColumnTransformers
     model: TransformerNestedHiddenLatentModel
     dataset: MultipleLatentHDF5Dataset
+    filename_to_hdf5_index: Dict[str, int]
     cur_hdf5_index: int
     cur_loaded_df: pd.DataFrame
     cur_dataset: LatentDataset
@@ -36,6 +37,9 @@ class LoadedModel:
         self.column_transformers = column_transformers
         self.model = model
         self.dataset = dataset
+        self.filename_to_hdf5_index = {}
+        for i, hdf5_wrapper in enumerate(self.dataset.data_hdf5s):
+            self.filename_to_hdf5_index[str(hdf5_wrapper.hdf5_path.name)] = i
         self.cur_hdf5_index = 0
         self.load_cur_hdf5_as_pd()
         # this will be set later depending on if doing off policy or on policy inference
@@ -46,6 +50,9 @@ class LoadedModel:
         # done to apply limit on hdf5 wrapper's id df to actual df
         self.cur_loaded_df = self.cur_loaded_df.iloc[self.dataset.data_hdf5s[self.cur_hdf5_index].id_df['id'], :]
         self.cur_dataset = LatentDataset(self.cur_loaded_df, self.column_transformers)
+
+    def get_cur_hdf5_filename(self) -> str:
+        return str(self.dataset.data_hdf5s[self.cur_hdf5_index].hdf5_path.name)
 
 
 def load_model_file(loaded_data: LoadDataResult) -> LoadedModel:

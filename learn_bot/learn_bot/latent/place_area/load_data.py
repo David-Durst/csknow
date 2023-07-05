@@ -101,7 +101,7 @@ class LoadDataResult:
                                                    duplicate_last_hdf5_equal_to_rest=duplicate_last_hdf5_equal_to_rest)
 
     def limit(self, limit_fns: List[LimitFn]):
-        for i in range(limit_fns):
+        for i in range(len(limit_fns)):
             self.multi_hdf5_wrapper.hdf5_wrappers[i].limit(limit_fns[i](self.multi_hdf5_wrapper.hdf5_wrappers[i].id_df))
 
 
