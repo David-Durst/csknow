@@ -73,9 +73,13 @@ class LoadDataResult:
             force_test_data = PDWrapper('test', force_test_data_df, hdf5_id_columns)
             self.diff_train_test = False
             hdf5_sources.append(synthetic_data)
-        elif load_data_options.use_all_human_data:
-            self.dataset_comment = small_latent_team_hdf5_data_path
-            hdf5_sources.append(human_latent_team_hdf5_data_path)
+        elif load_data_options.use_small_human_data:
+            self.dataset_comment = just_human_comment + limited_comment + "_unfilitered"
+            human_data = HDF5Wrapper(human_latent_team_hdf5_data_path, ['id', round_id_column, test_success_col])
+            #with open(good_retake_rounds_path, "r") as f:
+            #    good_retake_rounds = eval(f.read())
+            #human_data.limit(human_data.id_df[round_id_column].isin(good_retake_rounds))
+            hdf5_sources.append(human_data)
         elif load_data_options.use_all_human_data:
             self.dataset_comment = just_human_comment + all_comment
             hdf5_sources.append(all_train_latent_team_hdf5_dir_path)
@@ -90,12 +94,7 @@ class LoadDataResult:
                 hdf5_sources.append(manual_data)
                 duplicate_last_hdf5_equal_to_rest = True
         else:
-            self.dataset_comment = just_human_comment + limited_comment + "_unfilitered"
-            human_data = HDF5Wrapper(human_latent_team_hdf5_data_path, ['id', round_id_column, test_success_col])
-            #with open(good_retake_rounds_path, "r") as f:
-            #    good_retake_rounds = eval(f.read())
-            #human_data.limit(human_data.id_df[round_id_column].isin(good_retake_rounds))
-            hdf5_sources.append(human_data)
+            raise Exception("Must call LoadDataResult with something True")
         self.multi_hdf5_wrapper = MultiHDF5Wrapper(hdf5_sources, hdf5_id_columns, diff_train_test=self.diff_train_test,
                                                    force_test_hdf5=force_test_data,
                                                    duplicate_last_hdf5_equal_to_rest=duplicate_last_hdf5_equal_to_rest)

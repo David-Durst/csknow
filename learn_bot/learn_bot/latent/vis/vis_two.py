@@ -78,7 +78,7 @@ def vis_two(predicted_model: LoadedModel, ground_truth_model: LoadedModel,
     def hdf5_id_update():
         nonlocal rounds, cur_round
         predicted_model.cur_hdf5_index = int(new_hdf5_id_entry.get())
-        predicted_model.load_cur_hdf5_as_pd()
+        predicted_model.load_cur_hdf5_as_pd(False)
         make_index_column(predicted_model.cur_loaded_df)
         rounds = list(predicted_to_ground_truth_dict[predicted_model.get_cur_hdf5_filename()].keys())
         cur_round = rounds[0]
@@ -96,6 +96,7 @@ def vis_two(predicted_model: LoadedModel, ground_truth_model: LoadedModel,
         #    print(3)
         num_round_matches = len(predicted_to_ground_truth_dict[predicted_model.get_cur_hdf5_filename()][cur_round][cur_metric_type])
         round_match_slider.configure(to=num_round_matches - 1)
+        round_match_slider.set(0)
         round_match_slider_changed(0)
 
     def round_back_clicked():
@@ -340,7 +341,7 @@ def vis_two(predicted_model: LoadedModel, ground_truth_model: LoadedModel,
         new_ground_truth_hdf5_index = ground_truth_model.filename_to_hdf5_index[new_ground_truth_hdf5_filename]
         if new_ground_truth_hdf5_index != ground_truth_model.cur_hdf5_index:
             ground_truth_model.cur_hdf5_index = new_ground_truth_hdf5_index
-            ground_truth_model.load_cur_hdf5_as_pd()
+            ground_truth_model.load_cur_hdf5_as_pd(False)
             make_index_column(ground_truth_model.cur_loaded_df)
         ground_truth_selected_df = \
             ground_truth_model.cur_loaded_df.loc[ground_truth_model.cur_loaded_df[round_id_column] ==
