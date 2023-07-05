@@ -43,11 +43,11 @@ class HDF5Wrapper:
     def create_np_array(self, cts: IOColumnTransformers, load_output_data: bool = True):
         HDF5Wrapper.input_data[self.hdf5_path] = load_hdf5_to_np_array(self.hdf5_path,
                                                                        cts.input_types.column_names_all_categorical_columns(),
-                                                                       True)
+                                                                       True)[self.id_df.id]
         if load_output_data:
             HDF5Wrapper.output_data[self.hdf5_path] = load_hdf5_to_np_array(self.hdf5_path,
                                                                             cts.output_types.column_names_all_categorical_columns(),
-                                                                            False)
+                                                                            False)[self.id_df.id]
 
     def get_input_data(self) -> np.ndarray:
         return HDF5Wrapper.input_data[self.hdf5_path]
