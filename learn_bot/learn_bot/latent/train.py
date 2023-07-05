@@ -14,7 +14,7 @@ from learn_bot.latent.dataset import *
 from learn_bot.latent.engagement.column_names import round_id_column
 from learn_bot.latent.latent_hdf5_dataset import MultipleLatentHDF5Dataset
 from learn_bot.latent.place_area.load_data import human_latent_team_hdf5_data_path, manual_latent_team_hdf5_data_path, \
-    load_data
+    LoadDataResult
 from learn_bot.latent.place_area.pos_abs_delta_conversion import delta_pos_grid_num_cells
 from learn_bot.latent.place_area.column_names import place_area_input_column_types, delta_pos_output_column_types, test_success_col
 from learn_bot.latent.profiling import profile_latent_model
@@ -393,8 +393,8 @@ limit_manual_data_to_no_enemies_nav = True
 
 
 def run_single_training():
-    load_data_result = load_data(use_manual_data, False, use_synthetic_data, use_all_human_data,
-                                 add_manual_to_all_human_data, limit_manual_data_to_no_enemies_nav)
+    load_data_result = LoadDataResult(use_manual_data, False, use_synthetic_data, use_all_human_data,
+                                      add_manual_to_all_human_data, limit_manual_data_to_no_enemies_nav)
     if len(sys.argv) > 1:
         hyperparameter_indices = [int(i) for i in sys.argv[1].split(",")]
         for index in hyperparameter_indices:

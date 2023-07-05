@@ -1,6 +1,6 @@
 from learn_bot.latent.load_model import load_model_file
 from learn_bot.latent.place_area.load_data import human_latent_team_hdf5_data_path, manual_latent_team_hdf5_data_path, \
-    rollout_latent_team_hdf5_data_path, load_data
+    rollout_latent_team_hdf5_data_path, LoadDataResult
 from learn_bot.libs.df_grouping import make_index_column, train_test_split_by_col_ids
 from learn_bot.latent.vis.off_policy_inference import off_policy_inference
 from learn_bot.latent.vis.vis import vis
@@ -15,8 +15,8 @@ add_manual_to_all_human_data = False
 limit_manual_data_to_no_enemies_nav = True
 
 if __name__ == "__main__":
-    load_data_result = load_data(use_manual_data, use_rollout_data, use_synthetic_data, use_all_human_data,
-                                 add_manual_to_all_human_data, limit_manual_data_to_no_enemies_nav)
+    load_data_result = LoadDataResult(use_manual_data, use_rollout_data, use_synthetic_data, use_all_human_data,
+                                      add_manual_to_all_human_data, limit_manual_data_to_no_enemies_nav)
     #if manual_data:
     #    manual_data = HDF5Wrapper(manual_latent_team_hdf5_data_path, hdf5_id_columns)
     #    all_data_df = load_hdf5_to_pd(manual_latent_team_hdf5_data_path, rows_to_get=[i for i in range(20000)])
