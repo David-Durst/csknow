@@ -76,21 +76,21 @@ def plot_trajectory_comparison_histograms(similarity_df: pd.DataFrame, config: C
 def build_predicted_to_ground_truth_dict(similarity_df: pd.DataFrame) -> PredictedToGroundTruthDict:
     predicted_to_ground_truth_dict: PredictedToGroundTruthDict = {}
     for idx, row in similarity_df.iterrows():
+        predicted_trace_batch = row[predicted_trace_batch_col].decode('utf-8')
         metric_type = row[metric_type_col].decode('utf-8')
         agent_mapping_str = row[agent_mapping_col].decode('utf-8')
         agent_mapping = {}
         for agent_pair in agent_mapping_str.split(','):
             agents = [int(agent) for agent in agent_pair.split('_')]
             agent_mapping[int(agents[0])] = int(agents[1])
-        if row[predicted_trace_batch_col] not in predicted_to_ground_truth_dict:
-            predicted_to_ground_truth_dict[row[predicted_trace_batch_col]] = {}
-        if row[predicted_round_id_col] not in predicted_to_ground_truth_dict[row[predicted_trace_batch_col]]:
-            predicted_to_ground_truth_dict[row[predicted_trace_batch_col]][row[predicted_round_id_col]] = {}
-        if metric_type not in \
-                predicted_to_ground_truth_dict[row[predicted_trace_batch_col]][row[predicted_round_id_col]]:
-            predicted_to_ground_truth_dict[row[predicted_trace_batch_col]][row[predicted_round_id_col]][metric_type] = []
-        predicted_to_ground_truth_dict[row[predicted_trace_batch_col]][row[predicted_round_id_col]][metric_type].append(
+        if predicted_trace_batch not in predicted_to_ground_truth_dict:
+            predicted_to_ground_truth_dict[predicted_trace_batch] = {}
+        if row[predicted_round_id_col] not in predicted_to_ground_truth_dict[predicted_trace_batch]:
+            predicted_to_ground_truth_dict[predicted_trace_batch][row[predicted_round_id_col]] = {}
+        if metric_type not in predicted_to_ground_truth_dict[predicted_trace_batch][row[predicted_round_id_col]]:
+            predicted_to_ground_truth_dict[predicted_trace_batch][row[predicted_round_id_col]][metric_type] = []
+        predicted_to_ground_truth_dict[predicted_trace_batch][row[predicted_round_id_col]][metric_type].append(
             PredictedToGroundTruthRoundData(row[predicted_round_id_col], row[best_fit_ground_truth_round_id_col],
-                                            row[best_fit_ground_truth_trace_batch_col],
+                                            row[best_fit_ground_truth_trace_batch_col].decode('utf-8'),
                                             row, agent_mapping))
     return predicted_to_ground_truth_dict

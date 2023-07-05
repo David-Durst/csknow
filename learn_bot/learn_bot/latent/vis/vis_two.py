@@ -241,10 +241,10 @@ def vis_two(predicted_model: LoadedModel, ground_truth_model: LoadedModel,
             else:
                 predicted_players_str = \
                     draw_all_players(cur_predicted_row, None, predicted_d2_img_draw, draw_max,
-                                     predicted_players_to_draw)
+                                     predicted_players_to_draw, draw_only_pos=True)
                 ground_truth_players_str = \
                     draw_all_players(cur_ground_truth_row, None, ground_truth_d2_img_draw, draw_max,
-                                     ground_truth_players_to_draw)
+                                     ground_truth_players_to_draw, draw_only_pos=True)
             details_text_var.set("predicted\n" + predicted_players_str + "\nground_truth\n" + ground_truth_players_str)
 
             if draw_overlap:
@@ -323,10 +323,10 @@ def vis_two(predicted_model: LoadedModel, ground_truth_model: LoadedModel,
         nonlocal predicted_selected_df, ground_truth_selected_df, similarity_match_index_subset_df, cur_round, cur_metric_type, \
             predicted_to_ground_truth_round_data
         predicted_selected_df = \
-            predicted_model.cur_inference_df.loc[predicted_model.cur_loaded_df[round_id_column] == cur_round]
+            predicted_model.cur_loaded_df.loc[predicted_model.cur_loaded_df[round_id_column] == cur_round]
 
         predicted_to_ground_truth_round_data = \
-            predicted_to_ground_truth_dict[cur_round][cur_metric_type][cur_round_match_id]
+            predicted_to_ground_truth_dict[predicted_model.get_cur_hdf5_filename()][cur_round][cur_metric_type][cur_round_match_id]
 
         new_ground_truth_hdf5_filename = predicted_to_ground_truth_round_data.ground_truth_hdf5_filename
         new_ground_truth_hdf5_index = ground_truth_model.filename_to_hdf5_index[new_ground_truth_hdf5_filename]
