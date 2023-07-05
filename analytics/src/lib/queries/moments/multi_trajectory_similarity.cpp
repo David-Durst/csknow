@@ -523,10 +523,12 @@ namespace csknow::multi_trajectory_similarity {
             similarityMutex.unlock();
 
             if (validPredictedRoundIds && validPredictedRoundIds.value().get().count(predictedMT.roundId) == 0) {
+                result[i].valid = false;
                 continue;
             }
             result[i] = MultiTrajectorySimilarityResult(predictedMT, groundTruthMTs, ctAliveTAliveToAgentMappingOptions,
                                                         validGroundTruthRoundIds);
+            result[i].valid = true;
             predictedMTsProcessed++;
             printProgress(predictedMTsProcessed, validSize/*predictedMTs.size()*/);
 
@@ -595,6 +597,9 @@ namespace csknow::multi_trajectory_similarity {
         vector<size_t> startDTWMatchedIndices, lengthDTWMatchedIndices, firstMatchedIndex, secondMatchedIndex;
 
         for (const auto & mtSimilarityResult : result) {
+            if (!mtSimilarityResult.valid) {
+                continue;
+            }
             for (const auto & metricType : {MetricType::UnconstrainedDTW, MetricType::SlopeConstrainedDTW,
                                             MetricType::PercentileADE}) {
                 const vector<MultiTrajectorySimilarityMetricData> & metricDataMatches = mtSimilarityResult.getDataByType(metricType);
