@@ -495,7 +495,8 @@ namespace csknow::multi_trajectory_similarity {
         std::cout << "predictedMTs size: " << predictedMTs.size() << std::endl;
 
         std::atomic<size_t> predictedMTsProcessed = 0;
-        size_t totalSize = 250;
+        size_t totalSize = predictedMTs.size();//250;
+        size_t validSize = validPredictedRoundIds ? validPredictedRoundIds.value().get().size() : totalSize;
         result.resize(totalSize/*predictedMTs.size()*/);
 #pragma omp parallel for
         for (size_t i = 0; i < totalSize/*predictedMTs.size()*/; i++) {
@@ -527,7 +528,7 @@ namespace csknow::multi_trajectory_similarity {
             result[i] = MultiTrajectorySimilarityResult(predictedMT, groundTruthMTs, ctAliveTAliveToAgentMappingOptions,
                                                         validGroundTruthRoundIds);
             predictedMTsProcessed++;
-            printProgress(predictedMTsProcessed, totalSize/*predictedMTs.size()*/);
+            printProgress(predictedMTsProcessed, validSize/*predictedMTs.size()*/);
 
             similarityMutex.lock();
             valid[omp_get_thread_num()] = false;
