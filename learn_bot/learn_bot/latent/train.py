@@ -398,6 +398,8 @@ load_data_options = LoadDataOptions(
 
 def run_single_training():
     load_data_result = LoadDataResult(load_data_options)
+    if load_data_options.use_all_human_data:
+
     if len(sys.argv) > 1:
         hyperparameter_indices = [int(i) for i in sys.argv[1].split(",")]
         for index in hyperparameter_indices:

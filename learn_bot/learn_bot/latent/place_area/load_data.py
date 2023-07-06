@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from pathlib import Path
-from typing import List, Callable
+from typing import List, Callable, Optional
 
 import pandas as pd
 
@@ -99,8 +99,10 @@ class LoadDataResult:
                                                    force_test_hdf5=force_test_data,
                                                    duplicate_last_hdf5_equal_to_rest=duplicate_last_hdf5_equal_to_rest)
 
-    def limit(self, limit_fns: List[LimitFn]):
+    def limit(self, limit_fns: List[Optional[LimitFn]]):
         for i in range(len(limit_fns)):
+            if limit_fns[i] is None:
+                continue
             self.multi_hdf5_wrapper.hdf5_wrappers[i].limit(limit_fns[i](self.multi_hdf5_wrapper.hdf5_wrappers[i].id_df))
 
 

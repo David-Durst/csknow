@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Dict, Optional
 
 import pandas as pd
 from learn_bot.latent.analyze.comparison_column_names import *
@@ -7,7 +7,8 @@ import numpy as np
 from dataclasses import dataclass
 from pathlib import Path
 
-from learn_bot.latent.place_area.load_data import LoadDataOptions
+from learn_bot.latent.engagement.column_names import round_id_column
+from learn_bot.latent.place_area.load_data import LoadDataOptions, LoadDataResult, LimitFn
 from learn_bot.latent.vis.vis_two import PredictedToGroundTruthDict, PredictedToGroundTruthRoundData
 
 
@@ -94,3 +95,24 @@ def build_predicted_to_ground_truth_dict(similarity_df: pd.DataFrame) -> Predict
                                             row[best_fit_ground_truth_trace_batch_col].decode('utf-8'),
                                             row, agent_mapping))
     return predicted_to_ground_truth_dict
+
+
+def limit_big_good_rounds_from_small_good_rounds(similarity_df: pd.DataFrame, small_good_rounds: List[int],
+                                                 loaded_data_result: LoadDataResult):
+    big_good_rounds: Dict[str, List[int]] = {}
+    best_match_similarity_df = similarity_df[similarity_df[best_match_id_col] == 0]
+    for idx, row in best_match_similarity_df.iterrows():
+        hdf5_filename = row[predicted_trace_batch_col].decode('utf-8')
+        if hdf5_filename not in big_good_rounds:
+            big_good_rounds[hdf5_filename] = []
+        if row[best_fit_ground_truth_round_id_col] in small_good_rounds:
+            big_good_rounds[hdf5_filename].append(row[predicted_round_id_col])
+
+    limit_fns: List[Optional[LimitFn]] = []
+    for i, hdf5_wrapper in enumerate(loaded_data_result.multi_hdf5_wrapper.hdf5_wrappers):
+        hdf5_filename = str(hdf5_wrapper.hdf5_path.name)
+        if hdf5_filename in big_good_rounds:
+            limit_fns.append(lambda df: df[round_id_column].isin(big_good_rounds[hdf5_filename]))
+        else:
+            limit_fns.append(None)
+    loaded_data_result.limit(limit_fns)
