@@ -5,7 +5,7 @@ from typing import List, Callable, Optional, Dict
 import pandas as pd
 
 from learn_bot.latent.analyze.comparison_column_names import predicted_trace_batch_col, \
-    best_fit_ground_truth_round_id_col, predicted_round_id_col, best_match_id_col
+    best_fit_ground_truth_round_id_col, predicted_round_id_col, best_match_id_col, metric_type_col
 from learn_bot.latent.engagement.column_names import game_id_column, round_id_column
 from learn_bot.latent.place_area.column_names import hdf5_id_columns, test_success_col
 from learn_bot.latent.place_area.create_test_data import create_left_right_train_data, create_left_right_test_data
@@ -121,7 +121,8 @@ class LoadDataResult:
 
     def limit_big_good_rounds_from_small_good_rounds(self, similarity_df: pd.DataFrame, small_good_rounds: List[int]):
         big_good_rounds: Dict[str, List[int]] = {}
-        best_match_similarity_df = similarity_df[similarity_df[best_match_id_col] == 0]
+        best_match_similarity_df = similarity_df[(similarity_df[best_match_id_col] == 0) &
+                                                 (similarity_df[metric_type_col] == b'Slope Constrained DTW')]
         for idx, row in best_match_similarity_df.iterrows():
             hdf5_filename = row[predicted_trace_batch_col].decode('utf-8')
             if hdf5_filename not in big_good_rounds:
