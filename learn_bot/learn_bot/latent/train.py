@@ -10,6 +10,8 @@ from torch.utils.data import DataLoader
 
 from torch.utils.tensorboard import SummaryWriter
 
+from learn_bot.latent.analyze.comparison_column_names import human_good_rounds, \
+    all_human_vs_small_human_similarity_hdf5_data_path
 from learn_bot.latent.dataset import *
 from learn_bot.latent.engagement.column_names import round_id_column
 from learn_bot.latent.latent_hdf5_dataset import MultipleLatentHDF5Dataset
@@ -19,6 +21,7 @@ from learn_bot.latent.place_area.pos_abs_delta_conversion import delta_pos_grid_
 from learn_bot.latent.place_area.column_names import place_area_input_column_types, delta_pos_output_column_types, test_success_col
 from learn_bot.latent.profiling import profile_latent_model
 from learn_bot.latent.transformer_nested_hidden_latent_model import TransformerNestedHiddenLatentModel
+from learn_bot.libs.hdf5_to_pd import load_hdf5_to_pd
 from learn_bot.libs.hdf5_wrapper import HDF5Wrapper
 from learn_bot.libs.io_transforms import CUDA_DEVICE_STR
 from learn_bot.latent.accuracy_and_loss import compute_loss, compute_accuracy_and_delta_diff, \
@@ -392,14 +395,14 @@ load_data_options = LoadDataOptions(
     use_small_human_data=False,
     use_all_human_data=True,
     add_manual_to_all_human_data=True,
-    limit_manual_data_to_no_enemies_nav=True
+    limit_manual_data_to_no_enemies_nav=True,
+    small_good_rounds=human_good_rounds,
+    similarity_df=load_hdf5_to_pd(all_human_vs_small_human_similarity_hdf5_data_path)
 )
 
 
 def run_single_training():
     load_data_result = LoadDataResult(load_data_options)
-    if load_data_options.use_all_human_data:
-
     if len(sys.argv) > 1:
         hyperparameter_indices = [int(i) for i in sys.argv[1].split(",")]
         for index in hyperparameter_indices:

@@ -1,9 +1,11 @@
 from dataclasses import dataclass
 from pathlib import Path
-from typing import List, Callable, Optional
+from typing import List, Callable, Optional, Dict
 
 import pandas as pd
 
+from learn_bot.latent.analyze.comparison_column_names import predicted_trace_batch_col, \
+    best_fit_ground_truth_round_id_col, predicted_round_id_col, best_match_id_col
 from learn_bot.latent.engagement.column_names import game_id_column, round_id_column
 from learn_bot.latent.place_area.column_names import hdf5_id_columns, test_success_col
 from learn_bot.latent.place_area.create_test_data import create_left_right_train_data, create_left_right_test_data
@@ -39,6 +41,10 @@ class LoadDataOptions:
     use_all_human_data: bool
     add_manual_to_all_human_data: bool
     limit_manual_data_to_no_enemies_nav: bool
+    # set these if want to filter all human based on small human
+    small_good_rounds: Optional[List[int]] = None
+    similarity_df: Optional[pd.DataFrame] = None
+
 
 
 class LoadDataResult:
@@ -97,14 +103,40 @@ class LoadDataResult:
             raise Exception("Must call LoadDataResult with something True")
         self.multi_hdf5_wrapper = MultiHDF5Wrapper(hdf5_sources, hdf5_id_columns, diff_train_test=self.diff_train_test,
                                                    force_test_hdf5=force_test_data,
-                                                   duplicate_last_hdf5_equal_to_rest=duplicate_last_hdf5_equal_to_rest)
+                                                   duplicate_last_hdf5_equal_to_rest=duplicate_last_hdf5_equal_to_rest,
+                                                   split_train_test_on_init=False)
+        if load_data_options.small_good_rounds is not None and load_data_options.similarity_df is not None:
+            self.limit_big_good_rounds_from_small_good_rounds(load_data_options.similarity_df,
+                                                              load_data_options.small_good_rounds)
+        self.multi_hdf5_wrapper.train_test_split_by_col(force_test_data)
 
     def limit(self, limit_fns: List[Optional[LimitFn]]):
+        # note: need to redo train test split if applying limit later and want to use train-test splits with
+        # updated filter
         for i in range(len(limit_fns)):
             if limit_fns[i] is None:
                 continue
             self.multi_hdf5_wrapper.hdf5_wrappers[i].limit(limit_fns[i](self.multi_hdf5_wrapper.hdf5_wrappers[i].id_df))
 
 
+    def limit_big_good_rounds_from_small_good_rounds(self, similarity_df: pd.DataFrame, small_good_rounds: List[int]):
+        big_good_rounds: Dict[str, List[int]] = {}
+        best_match_similarity_df = similarity_df[similarity_df[best_match_id_col] == 0]
+        for idx, row in best_match_similarity_df.iterrows():
+            hdf5_filename = row[predicted_trace_batch_col].decode('utf-8')
+            if hdf5_filename not in big_good_rounds:
+                big_good_rounds[hdf5_filename] = []
+            if row[best_fit_ground_truth_round_id_col] in small_good_rounds:
+                big_good_rounds[hdf5_filename].append(row[predicted_round_id_col])
+
+        limit_fns: List[Optional[LimitFn]] = []
+        for i, hdf5_wrapper in enumerate(self.multi_hdf5_wrapper.hdf5_wrappers):
+            hdf5_filename = str(hdf5_wrapper.hdf5_path.name)
+            if hdf5_filename in big_good_rounds:
+                # https://stackoverflow.com/questions/2295290/what-do-lambda-function-closures-capture
+                limit_fns.append(lambda df, filename=hdf5_filename: df[round_id_column].isin(big_good_rounds[filename]))
+            else:
+                limit_fns.append(None)
+        self.limit(limit_fns)
 
 

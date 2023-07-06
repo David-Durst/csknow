@@ -41,13 +41,15 @@ class HDF5Wrapper:
         return result
 
     def create_np_array(self, cts: IOColumnTransformers, load_output_data: bool = True):
+        # don't need to filder by id_df after limit, as data loader will get the id from the limited id_df for lookup
+        # in entire np array
         HDF5Wrapper.input_data[self.hdf5_path] = load_hdf5_to_np_array(self.hdf5_path,
                                                                        cts.input_types.column_names_all_categorical_columns(),
-                                                                       True)[self.id_df.id]
+                                                                       True)#[self.id_df.id]
         if load_output_data:
             HDF5Wrapper.output_data[self.hdf5_path] = load_hdf5_to_np_array(self.hdf5_path,
                                                                             cts.output_types.column_names_all_categorical_columns(),
-                                                                            False)[self.id_df.id]
+                                                                            False)#[self.id_df.id]
 
     def get_input_data(self) -> np.ndarray:
         return HDF5Wrapper.input_data[self.hdf5_path]
