@@ -85,31 +85,38 @@ def vis(loaded_model: LoadedModel, inference_fn: Callable[[LoadedModel], None]):
 
     def tick_slider_changed(cur_tick_index_str):
         nonlocal cur_tick, cur_tick_index, d2_img, d2_img_draw, img_label, draw_max
+        if selected_df.empty:
+            print("why empty selected_df?")
+            return
         cur_tick_index = int(cur_tick_index_str)
         cur_index = indices[cur_tick_index]
         cur_tick = ticks[cur_tick_index]
         cur_game_tick = game_ticks[cur_tick_index]
-        hdf5_id_text_var.set(f"Cur HDF5 Id: {loaded_model.cur_hdf5_index}, ")
+
+        hdf5_id_text_var.set(f"Predicted Cur HDF5 Id: {loaded_model.get_cur_hdf5_filename()} - {loaded_model.cur_hdf5_index} / "
+                             f"{len(loaded_model.dataset.data_hdf5s) - 1}, ")
         tick_id_text_var.set("Tick ID: " + str(cur_tick))
-        tick_game_id_text_var.set("Game Tick ID: " + str(cur_game_tick))
+        data_series = selected_df.loc[cur_index, :]
+        pred_series = pred_selected_df.loc[cur_index, :]
+        tick_game_id_text_var.set(f"Game Tick ID: {cur_game_tick}")
         round_id_text_var.set(f"Round ID: {int(cur_round)}, Round Number: {selected_df.loc[cur_index, 'round number']}")
+        other_state_text_var.set(f"Planted A {data_series[c4_plant_a_col]}, "
+                                 f"Planted B {data_series[c4_plant_b_col]}, "
+                                 f"Not Planted {data_series[c4_not_planted_col]}, "
+                                 f"C4 Pos ({data_series[c4_pos_cols[0]]}, {data_series[c4_pos_cols[1]]}, {data_series[c4_pos_cols[2]]}),"
+                                 f"C4 Ticks Since Plant {data_series[c4_ticks_since_plant[0]]}")
+
         d2_img_copy = d2_img.copy().convert("RGBA")
         d2_overlay_im = Image.new("RGBA", d2_img_copy.size, (255, 255, 255, 0))
         d2_img_draw = ImageDraw.Draw(d2_overlay_im)
-        if len(selected_df) > 0:
-            data_series = selected_df.loc[cur_index, :]
-            pred_series = pred_selected_df.loc[cur_index, :]
-            other_state_text_var.set(f"Planted A {data_series[c4_plant_a_col]}, "
-                                     f"Planted B {data_series[c4_plant_b_col]}, "
-                                     f"Not Planted {data_series[c4_not_planted_col]}, "
-                                     f"C4 Pos ({data_series[c4_pos_cols[0]]}, {data_series[c4_pos_cols[1]]}, {data_series[c4_pos_cols[2]]})")
-            players_to_draw_str = player_distributions_var.get()
-            if players_to_draw_str == "*":
-                players_to_draw = list(range(0, len(specific_player_place_area_columns)))
-            else:
-                players_to_draw = [int(p) for p in players_to_draw_str.split(",")]
-            players_str = draw_all_players(data_series, pred_series, d2_img_draw, draw_max, players_to_draw)
-            details_text_var.set(players_str)
+        players_to_draw_str = player_distributions_var.get()
+        if players_to_draw_str == "*":
+            players_to_draw = list(range(0, len(specific_player_place_area_columns)))
+        else:
+            players_to_draw = [int(p) for p in players_to_draw_str.split(",")]
+        players_str = draw_all_players(data_series, pred_series, d2_img_draw, draw_max, players_to_draw)
+
+        details_text_var.set(players_str)
         d2_img_copy.alpha_composite(d2_overlay_im)
         updated_d2_photo_img = itk.PhotoImage(d2_img_copy)
         img_label.configure(image=updated_d2_photo_img)

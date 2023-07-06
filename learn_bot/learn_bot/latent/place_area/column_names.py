@@ -13,7 +13,7 @@ delta_pos_grid_num_cells = delta_pos_z_num_cells * \
 delta_pos_grid_num_cells_per_xy_dim = isqrt(int(delta_pos_grid_num_cells / delta_pos_z_num_cells))
 delta_pos_grid_num_xy_cells_per_z_change = delta_pos_grid_num_cells_per_xy_dim * delta_pos_grid_num_cells_per_xy_dim
 
-float_c4_cols = [] #[c4_distance_to_a_site_col, c4_distance_to_b_site_col] + c4_pos_cols + c4_ticks_since_plant
+float_c4_cols = c4_ticks_since_plant #[] #[c4_distance_to_a_site_col, c4_distance_to_b_site_col] + c4_pos_cols + c4_ticks_since_plant
 
 test_success_col = 'test success'
 
