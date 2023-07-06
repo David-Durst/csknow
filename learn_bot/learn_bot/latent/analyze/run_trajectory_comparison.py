@@ -38,6 +38,7 @@ time_vs_hand_crafted_bot_similarity_hdf5_data_path = Path(__file__).parent / '..
 no_time_vs_hand_crafted_bot_similarity_hdf5_data_path = Path(__file__).parent / '..' / '..' / '..' / '..' / 'analytics' / 'rollout_outputs' / 'learnedNoTimeNoWeightDecayBotTrajectorySimilarity.hdf5'
 human_vs_human_similarity_hdf5_data_path = Path(__file__).parent / '..' / '..' / '..' / '..' / 'analytics' / 'csv_outputs' / 'humanTrajectorySimilarity.hdf5'
 all_human_vs_all_human_similarity_hdf5_data_path = Path(__file__).parent / '..' / '..' / '..' / '..' / 'analytics' / 'all_train_outputs' / 'humanTrajectorySimilarity.hdf5'
+all_human_vs_small_human_similarity_hdf5_data_path = Path(__file__).parent / '..' / '..' / '..' / '..' / 'analytics' / 'all_train_outputs' / 'humanVsSmallHumanTrajectorySimilarity.hdf5'
 
 bot_good_rounds = [4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 33, 35, 37, 39, 41, 43, 45, 47, 49, 51, 53, 55,
                    57, 59, 61, 63, 65, 67, 69, 71, 73, 75, 78, 80, 82, 85, 87, 89, 91, 93, 95, 97, 99, 102, 104, 106, 108,
@@ -169,6 +170,16 @@ all_human_vs_all_human_config = ComparisonConfig(
     "All Human vs All Human Distribution"
 )
 
+all_human_vs_small_human_config = ComparisonConfig(
+    all_human_vs_small_human_similarity_hdf5_data_path,
+    all_human_load_data_option,
+    small_human_load_data_option,
+    False,
+    False,
+    "all_human_vs_small_human_distribution",
+    "All Human vs Small Human Distribution"
+)
+
 
 just_plot_summaries = False
 
@@ -184,10 +195,16 @@ def compare_trajectories():
         config = human_vs_human_config
     elif config_case == 4:
         config = all_human_vs_all_human_config
+    elif config_case == 5:
+        config = all_human_vs_small_human_config
 
     os.makedirs(similarity_plots_path, exist_ok=True)
     similarity_df = load_hdf5_to_pd(config.similarity_data_path)
     similarity_df = similarity_df[similarity_df[dtw_cost_col] != 0.]
+    # remove this if later when updated all comparisons
+    if config_case == 5:
+        similarity_df = similarity_df[(similarity_df[predicted_round_number_col] != similarity_df[best_fit_ground_truth_round_number_col]) |
+                                      (abs(similarity_df[predicted_first_game_tick_number_col] - similarity_df[best_fit_ground_truth_first_game_tick_number_col]) > 11)]
     similarity_match_index_df = load_hdf5_to_pd(config.similarity_data_path, root_key='extra')
 
     start_similarity_plot_time = time.perf_counter()

@@ -57,7 +57,7 @@ namespace csknow::multi_trajectory_similarity {
         std::optional<std::reference_wrapper<const csknow::feature_store::TeamFeatureStoreResult>> traceBatch;
         vector<Trajectory> trajectories;
         int ctTrajectories, tTrajectories;
-        int64_t roundId;
+        int64_t roundId, roundNumber, firstGameTickNumber;
 
         double distance() const;
         double fde(const MultiTrajectory & otherMT, map<int, int> agentMapping) const;

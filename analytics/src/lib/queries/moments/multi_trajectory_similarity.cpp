@@ -296,7 +296,9 @@ namespace csknow::multi_trajectory_similarity {
                 }
             }
             mts.push_back({traces, trajectories, ctTrajectories, tTrajectories,
-                           traces.roundId[roundStartTraceIndex[roundIndex]]});
+                           traces.roundId[roundStartTraceIndex[roundIndex]],
+                           traces.roundNumber[roundStartTraceIndex[roundIndex]],
+                           traces.gameTickNumber[roundStartTraceIndex[roundIndex]]});
         }
     }
 
@@ -590,6 +592,8 @@ namespace csknow::multi_trajectory_similarity {
         vector<string> metricTypes;
         vector<string> predictedTraceBatch, bestFitGroundTruthTraceBatch;
         vector<int64_t> predictedRoundIds, bestFitGroundTruthRoundIds;
+        vector<int64_t> predictedRoundNumbers, bestFitGroundTruthRoundNumbers;
+        vector<int64_t> predictedFirstGameTickNumber, bestFitGroundTruthFirstGameTickNumber;
         vector<size_t> bestMatchIds, predictedStartTraceIndex, predictedEndTraceIndex,
             bestFitGroundTruthStartTraceIndex, bestFitGroundTruthEndTraceIndex;
         vector<double> dtwCost, deltaTime, deltaDistance;
@@ -612,6 +616,10 @@ namespace csknow::multi_trajectory_similarity {
                     bestFitGroundTruthTraceBatch.push_back(metricData.mt.traceBatch->get().fileName);
                     predictedRoundIds.push_back(mtSimilarityResult.predictedMT.roundId);
                     bestFitGroundTruthRoundIds.push_back(metricData.mt.roundId);
+                    predictedRoundNumbers.push_back(mtSimilarityResult.predictedMT.roundNumber);
+                    bestFitGroundTruthRoundNumbers.push_back(metricData.mt.roundNumber);
+                    predictedFirstGameTickNumber.push_back(mtSimilarityResult.predictedMT.firstGameTickNumber);
+                    bestFitGroundTruthFirstGameTickNumber.push_back(metricData.mt.firstGameTickNumber);
                     bestMatchIds.push_back(bestMatchId);
                     predictedStartTraceIndex.push_back(mtSimilarityResult.predictedMT.startTraceIndex());
                     predictedEndTraceIndex.push_back(mtSimilarityResult.predictedMT.maxEndTraceIndex());
@@ -645,6 +653,10 @@ namespace csknow::multi_trajectory_similarity {
         file.createDataSet("/data/best fit ground truth trace batch", bestFitGroundTruthTraceBatch);
         file.createDataSet("/data/predicted round id", predictedRoundIds);
         file.createDataSet("/data/best fit ground truth round id", bestFitGroundTruthRoundIds);
+        file.createDataSet("/data/predicted round number", predictedRoundNumbers);
+        file.createDataSet("/data/best fit ground truth round number", bestFitGroundTruthRoundNumbers);
+        file.createDataSet("/data/predicted first game tick number", predictedFirstGameTickNumber);
+        file.createDataSet("/data/best fit ground truth first game tick number", bestFitGroundTruthFirstGameTickNumber);
         file.createDataSet("/data/best match ids", bestMatchIds);
         file.createDataSet("/data/predicted start trace index", predictedStartTraceIndex);
         file.createDataSet("/data/predicted end trace index", predictedEndTraceIndex);

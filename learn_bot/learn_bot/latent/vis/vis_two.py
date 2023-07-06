@@ -172,7 +172,7 @@ def vis_two(predicted_model: LoadedModel, ground_truth_model: LoadedModel,
             cur_predicted_index = similarity_match_index_subset_df.iloc[cur_similarity_tick_index].loc[first_matched_index_col]
             cur_predicted_row = predicted_selected_df.iloc[cur_predicted_index]
             cur_predicted_tick_id = cur_predicted_row.loc[tick_id_column]
-            cur_predicted_game_tick_id = cur_predicted_row.loc[tick_id_column]
+            cur_predicted_game_tick_id = cur_predicted_row.loc[game_tick_number_column]
 
             cur_ground_truth_index = similarity_match_index_subset_df.iloc[cur_similarity_tick_index].loc[second_matched_index_col]
             cur_ground_truth_row = ground_truth_selected_df.iloc[cur_ground_truth_index]
@@ -180,8 +180,8 @@ def vis_two(predicted_model: LoadedModel, ground_truth_model: LoadedModel,
             cur_ground_truth_tick_id = cur_ground_truth_row.loc[tick_id_column]
             cur_ground_truth_game_tick_id = cur_ground_truth_row.loc[game_tick_number_column]
 
-            hdf5_id_text_var.set(f"Predicted Cur HDF5 Id: {predicted_model.get_cur_hdf5_filename()} - {predicted_model.cur_hdf5_index} / {len(predicted_model.dataset.data_hdf5s)}, "
-                                 f"Ground Truth Cur HDF5 Id: {ground_truth_model.get_cur_hdf5_filename()} - {ground_truth_model.cur_hdf5_index} / {len(ground_truth_model.dataset.data_hdf5s)}, ")
+            hdf5_id_text_var.set(f"Predicted Cur HDF5 Id: {predicted_model.get_cur_hdf5_filename()} - {predicted_model.cur_hdf5_index} / {len(predicted_model.dataset.data_hdf5s) - 1}, "
+                                 f"Ground Truth Cur HDF5 Id: {ground_truth_model.get_cur_hdf5_filename()} - {ground_truth_model.cur_hdf5_index} / {len(ground_truth_model.dataset.data_hdf5s) - 1}, ")
             tick_id_text_var.set(f"Predicted Tick ID: {cur_predicted_tick_id}, Predicted Game Tick ID: {cur_predicted_game_tick_id}, "
                                  f"Ground Truth Tick Id: {cur_ground_truth_tick_id}, Ground Truth Game Tick ID: {cur_ground_truth_game_tick_id}")
             round_id_text_var.set(f"Predicted Round ID: {int(cur_round)}, Predicted Round Number: {cur_predicted_row.loc['round number']}, "
