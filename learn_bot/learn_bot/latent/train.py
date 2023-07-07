@@ -238,22 +238,22 @@ def train(train_type: TrainType, multi_hdf5_wrapper: MultiHDF5Wrapper,
                     optimizer.zero_grad()
                 with autocast(device):
                     pred = model(X, Y)
-                model.noise_var = -1.
-                if torch.isnan(X).any():
-                    print('bad X')
-                    sys.exit(0)
-                if torch.isnan(Y).any():
-                    print('bad Y')
-                    sys.exit(0)
-                if torch.isnan(pred[0]).any():
-                    print(X)
-                    print(pred[0])
-                    print('bad pred')
-                    sys.exit(0)
-                batch_loss = compute_loss(pred, Y, duplicated_last, model.num_players)
-                # uncomment here and below causes memory issues
-                cumulative_loss += batch_loss
-                #losses.append(batch_loss.get_total_loss().tolist()[0])
+                    model.noise_var = -1.
+                    if torch.isnan(X).any():
+                        print('bad X')
+                        sys.exit(0)
+                    if torch.isnan(Y).any():
+                        print('bad Y')
+                        sys.exit(0)
+                    if torch.isnan(pred[0]).any():
+                        print(X)
+                        print(pred[0])
+                        print('bad pred')
+                        sys.exit(0)
+                    batch_loss = compute_loss(pred, Y, duplicated_last, model.num_players)
+                    # uncomment here and below causes memory issues
+                    cumulative_loss += batch_loss
+                    #losses.append(batch_loss.get_total_loss().tolist()[0])
 
                 # Backpropagation
                 if train:
