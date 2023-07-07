@@ -236,7 +236,7 @@ def train(train_type: TrainType, multi_hdf5_wrapper: MultiHDF5Wrapper,
                 if train:
                     model.noise_var = hyperparameter_options.noise_var
                     optimizer.zero_grad()
-                with autocast():
+                with autocast(device):
                     pred = model(X, Y)
                 model.noise_var = -1.
                 if torch.isnan(X).any():
