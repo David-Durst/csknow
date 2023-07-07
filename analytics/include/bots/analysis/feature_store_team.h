@@ -82,6 +82,7 @@ namespace csknow::feature_store {
             vector<bool> alive;
             vector<Vec3> footPos;
             //vector<Vec3> alignedFootPos;
+            array<vector<Vec3>, num_prior_ticks> priorVelocity;
             array<vector<Vec3>, num_prior_ticks> priorFootPos;
             array<vector<bool>, num_prior_ticks> priorFootPosValid;
             vector<Vec3> velocity;

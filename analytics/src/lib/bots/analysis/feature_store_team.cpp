@@ -412,6 +412,7 @@ namespace csknow::feature_store {
                         const BTTeamPlayerData & priorBTTeamPlayerData =
                                 priorBTTeamTickData.at(btTeamPlayerData.playerId);
                         columnData[columnIndex].priorFootPos[j][internalTickIndex] = priorBTTeamPlayerData.curFootPos;
+                        columnData[columnIndex].priorVelocity[j][internalTickIndex] = priorBTTeamPlayerData.velocity;
                         if (isnan(priorBTTeamPlayerData.curFootPos.x) || isnan(priorBTTeamPlayerData.curFootPos.y) || isnan(priorBTTeamPlayerData.curFootPos.z) ) {
                             std::cout << "found nan" << std::endl;
                         }
@@ -945,15 +946,18 @@ namespace csknow::feature_store {
                                    columnData[columnPlayer].ctTeam, hdf5FlatCreateProps);
                 saveVec3VectorToHDF5(columnData[columnPlayer].footPos, file,
                                      "player pos " + columnTeam + " " + iStr, hdf5FlatCreateProps);
+                saveVec3VectorToHDF5(columnData[columnPlayer].velocity, file,
+                                     "player velocity " + columnTeam + " " + iStr, hdf5FlatCreateProps);
                 for (int priorTick = 0; priorTick < num_prior_ticks; priorTick++) {
                     saveVec3VectorToHDF5(columnData[columnPlayer].priorFootPos[priorTick], file,
                                          "player pos " + columnTeam + " " + iStr + " t-" + std::to_string(priorTick+1),
                                          hdf5FlatCreateProps);
+                    saveVec3VectorToHDF5(columnData[columnPlayer].priorVelocity[priorTick], file,
+                                         "player velocity " + columnTeam + " " + iStr + " t-" + std::to_string(priorTick+1),
+                                         hdf5FlatCreateProps);
                     file.createDataSet("/data/player history valid " + columnTeam + " " + iStr + " t-" + std::to_string(priorTick+1),
                                        columnData[columnPlayer].priorFootPosValid[priorTick], hdf5FlatCreateProps);
                 }
-                saveVec3VectorToHDF5(columnData[columnPlayer].velocity, file,
-                                     "player velocity " + columnTeam + " " + iStr, hdf5FlatCreateProps);
                 vector<string> deltaPosNames;
                 for (size_t deltaPosIndex = 0; deltaPosIndex < delta_pos_grid_num_cells; deltaPosIndex++) {
                     string deltaPosIndexStr = std::to_string(deltaPosIndex);
