@@ -5,7 +5,7 @@ from typing import Dict
 import sys
 
 import torch.optim
-from torch import nn
+from torch import nn, autocast
 from torch.utils.data import DataLoader
 
 from torch.utils.tensorboard import SummaryWriter
@@ -194,12 +194,13 @@ def train(train_type: TrainType, multi_hdf5_wrapper: MultiHDF5Wrapper,
     # define losses
     optimizer = torch.optim.Adam(model.parameters(), lr=hyperparameter_options.learning_rate,
                                  weight_decay=hyperparameter_options.weight_decay)
+    scaler = torch.cuda.amp.GradScaler()
     #optimizer = torch.optim.SGD(model.parameters(), lr=0.001)
 
     # train and test the model
     first_row: torch.Tensor = None
 
-    def train_or_test_SL_epoch(dataloader, model, optimizer, train=True):
+    def train_or_test_SL_epoch(dataloader, model, optimizer, scaler, train=True):
         nonlocal first_row
         size = len(dataloader.dataset)
         num_batches = len(dataloader)
@@ -234,7 +235,9 @@ def train(train_type: TrainType, multi_hdf5_wrapper: MultiHDF5Wrapper,
                 # Compute prediction error
                 if train:
                     model.noise_var = hyperparameter_options.noise_var
-                pred = model(X, Y)
+                    optimizer.zero_grad()
+                with autocast():
+                    pred = model(X, Y)
                 model.noise_var = -1.
                 if torch.isnan(X).any():
                     print('bad X')
@@ -254,9 +257,8 @@ def train(train_type: TrainType, multi_hdf5_wrapper: MultiHDF5Wrapper,
 
                 # Backpropagation
                 if train:
-                    optimizer.zero_grad()
-                    batch_loss.get_total_loss().backward()
-                    optimizer.step()
+                    scaler.scale(batch_loss.get_total_loss()).backward()
+                    scaler.step(optimizer)
 
                 compute_accuracy_and_delta_diff(pred, Y, duplicated_last, accuracy, delta_diff_xy, delta_diff_xyz,
                                                 valids_per_accuracy_column, model.num_players, column_transformers)
@@ -341,19 +343,19 @@ def train(train_type: TrainType, multi_hdf5_wrapper: MultiHDF5Wrapper,
     min_test_loss = float("inf")
     def train_and_test_SL(model, train_dataloader, test_dataloader, num_epochs):
         global total_epochs
-        nonlocal optimizer, min_test_loss
+        nonlocal optimizer, scaler, min_test_loss
         for _ in range(num_epochs):
             print(f"\nEpoch {total_epochs}\n" + f"-------------------------------")
             if enable_training:
                 train_loss, train_accuracy, train_delta_diff_xy, train_delta_diff_xyz = \
-                    train_or_test_SL_epoch(train_dataloader, model, optimizer, True)
+                    train_or_test_SL_epoch(train_dataloader, model, optimizer, scaler, True)
             else:
                 with torch.no_grad():
                     train_loss, train_accuracy, train_delta_diff_xy, train_delta_diff_xyz = \
-                        train_or_test_SL_epoch(train_dataloader, model, optimizer, False)
+                        train_or_test_SL_epoch(train_dataloader, model, optimizer, scaler, False)
             with torch.no_grad():
                 test_loss, test_accuracy, test_delta_diff_xy, test_delta_diff_xyz = \
-                    train_or_test_SL_epoch(test_dataloader, model, None, False)
+                    train_or_test_SL_epoch(test_dataloader, model, None, None, False)
             cur_test_loss_float = test_loss.get_accumulated_loss()
             if cur_test_loss_float < min_test_loss:
                 save_model(False, total_epochs)
