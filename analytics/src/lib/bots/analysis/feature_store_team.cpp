@@ -62,8 +62,10 @@ namespace csknow::feature_store {
             //columnCTData[i].distanceToBSite.resize(size, 0);
             for (int j = 0; j < num_prior_ticks; j++) {
                 columnTData[i].priorFootPos[j].resize(size, zeroVec);
+                columnTData[i].priorVelocity[j].resize(size, zeroVec);
                 columnTData[i].priorFootPosValid[j].resize(size, false);
                 columnCTData[i].priorFootPos[j].resize(size, zeroVec);
+                columnCTData[i].priorVelocity[j].resize(size, zeroVec);
                 columnCTData[i].priorFootPosValid[j].resize(size, false);
             }
             /*
@@ -226,8 +228,10 @@ namespace csknow::feature_store {
                 //columnCTData[i].distanceToBSite[rowIndex] = 0.;
                 for (int j = 0; j < num_prior_ticks; j++) {
                     columnTData[i].priorFootPos[j][rowIndex] = zeroVec;
+                    columnTData[i].priorVelocity[j][rowIndex] = zeroVec;
                     columnTData[i].priorFootPosValid[j][rowIndex] = false;
                     columnCTData[i].priorFootPos[j][rowIndex] = zeroVec;
+                    columnCTData[i].priorVelocity[j][rowIndex] = zeroVec;
                     columnCTData[i].priorFootPosValid[j][rowIndex] = false;
                 }
                 /*
