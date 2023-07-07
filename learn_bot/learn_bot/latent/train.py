@@ -216,12 +216,23 @@ def train(train_type: TrainType, multi_hdf5_wrapper: MultiHDF5Wrapper,
         #losses = []
         # bar = Bar('Processing', max=size)
         batch_num = 0
+        first_x = None
+        first_y = None
+        first_duplicated_last = None
         with tqdm(total=len(dataloader), disable=False) as pbar:
             for batch, (X, Y, duplicated_last) in enumerate(dataloader):
                 batch_num += 1
                 if first_row is None:
                     first_row = X[0:1, :]
-                X, Y, duplicated_last = X.to(device), Y.to(device), duplicated_last.to(device)
+                if True or first_x is None:
+                    X, Y, duplicated_last = X.to(device), Y.to(device), duplicated_last.to(device)
+                    first_x = X
+                    first_y = Y
+                    first_duplicated_last = duplicated_last
+                else:
+                    X = first_x
+                    Y = first_y
+                    duplicated_last = first_duplicated_last
                 Y = Y.float()
                 # XR = torch.randn_like(X, device=device)
                 # XR[:,0] = X[:,0]
@@ -374,8 +385,8 @@ def train(train_type: TrainType, multi_hdf5_wrapper: MultiHDF5Wrapper,
     test_data = MultipleLatentHDF5Dataset(multi_hdf5_wrapper.test_hdf5_wrappers, column_transformers,
                                           multi_hdf5_wrapper.duplicate_last_hdf5_equal_to_rest)
     batch_size = min(hyperparameter_options.batch_size, min(len(train_data), len(test_data)))
-    train_dataloader = DataLoader(train_data, batch_size=batch_size, num_workers=10, shuffle=True, pin_memory=True)
-    test_dataloader = DataLoader(test_data, batch_size=batch_size, num_workers=10, shuffle=True, pin_memory=True)
+    train_dataloader = DataLoader(train_data, batch_size=batch_size, num_workers=4, shuffle=True, pin_memory=True)
+    test_dataloader = DataLoader(test_data, batch_size=batch_size, num_workers=4, shuffle=True, pin_memory=True)
 
     print(f"num train examples: {len(train_data)}")
     print(f"num test examples: {len(test_data)}")
