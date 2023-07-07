@@ -259,6 +259,7 @@ def train(train_type: TrainType, multi_hdf5_wrapper: MultiHDF5Wrapper,
                 if train:
                     scaler.scale(batch_loss.get_total_loss()).backward()
                     scaler.step(optimizer)
+                    scaler.update()
 
                 compute_accuracy_and_delta_diff(pred, Y, duplicated_last, accuracy, delta_diff_xy, delta_diff_xyz,
                                                 valids_per_accuracy_column, model.num_players, column_transformers)
