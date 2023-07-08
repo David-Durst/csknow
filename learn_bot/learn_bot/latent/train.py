@@ -64,7 +64,7 @@ class HyperparameterOptions:
     learning_rate: float = 4e-5
     weight_decay: float = 0.
     layers: int = 2
-    heads: int = 4
+    heads: int = 8
     noise_var: float = 20.
     comment: str = ""
 
@@ -236,7 +236,7 @@ def train(train_type: TrainType, multi_hdf5_wrapper: MultiHDF5Wrapper,
                 if train:
                     model.noise_var = hyperparameter_options.noise_var
                     optimizer.zero_grad()
-                with autocast(device, enabled=False):
+                with autocast(device, enabled=True):
                     pred = model(X, Y)
                     model.noise_var = -1.
                     if torch.isnan(X).any():
@@ -249,7 +249,7 @@ def train(train_type: TrainType, multi_hdf5_wrapper: MultiHDF5Wrapper,
                         print(X)
                         print(pred[0])
                         print('bad pred')
-                        pred = model(X, Y)
+                        model(X, Y)
                         sys.exit(0)
                     batch_loss = compute_loss(pred, Y, duplicated_last, model.num_players)
                     # uncomment here and below causes memory issues
