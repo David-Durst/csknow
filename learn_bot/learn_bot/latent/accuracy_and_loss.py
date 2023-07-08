@@ -40,7 +40,7 @@ class LatentLosses:
     def __itruediv__(self, other):
         self.cat_accumulator /= other
         self.duplicate_last_cat_accumulator /= other
-        self.total_loss /= other
+        self.total_accumulator /= other
         return self
 
     def add_scalars(self, writer: SummaryWriter, prefix: str, total_epoch_num: int):
