@@ -58,23 +58,27 @@ def compute_loss(pred, Y, duplicated_last, num_players) -> LatentLosses:
     # merging time steps so can do filtering before cross entropy loss
     Y_per_player = rearrange(Y, "b (p d) -> (b p) d", p=num_players)
     pred_transformed_per_player = rearrange(pred_transformed, "b (p d) -> (b p) d", p=num_players)
-    duplicated_last_per_player = repeat(duplicated_last, "b -> (b repeat)", repeat=num_players)
+    #duplicated_last_per_player = repeat(duplicated_last, "b -> (b repeat)", repeat=num_players)
     valid_rows = Y_per_player.sum(axis=1) > 0.1
     valid_Y_transformed = Y_per_player[valid_rows]
     valid_pred_transformed = pred_transformed_per_player[valid_rows]
-    valid_duplicated_last_per_player = duplicated_last_per_player[valid_rows]
-    if valid_Y_transformed[~valid_duplicated_last_per_player].shape[0] > 0:
-        cat_loss = cross_entropy_loss_fn(valid_pred_transformed[~valid_duplicated_last_per_player],
-                                         valid_Y_transformed[~valid_duplicated_last_per_player])
-        if torch.isnan(cat_loss).any():
-            print('bad loss')
-        losses.cat_loss += cat_loss
-    if valid_Y_transformed[valid_duplicated_last_per_player].shape[0] > 0.:
-        duplicated_last_cat_loss = cross_entropy_loss_fn(valid_pred_transformed[valid_duplicated_last_per_player],
-                                                         valid_Y_transformed[valid_duplicated_last_per_player])
-        if torch.isnan(duplicated_last_cat_loss).any():
-            print('bad loss')
-        losses.duplicate_last_cat_loss += duplicated_last_cat_loss
+    #valid_duplicated_last_per_player = duplicated_last_per_player[valid_rows]
+    cat_loss = cross_entropy_loss_fn(valid_pred_transformed, valid_Y_transformed)
+    if torch.isnan(cat_loss).any():
+        print('bad loss')
+    losses.cat_loss += cat_loss
+    #if valid_Y_transformed[~valid_duplicated_last_per_player].shape[0] > 0:
+    #    cat_loss = cross_entropy_loss_fn(valid_pred_transformed[~valid_duplicated_last_per_player],
+    #                                     valid_Y_transformed[~valid_duplicated_last_per_player])
+    #    if torch.isnan(cat_loss).any():
+    #        print('bad loss')
+    #    losses.cat_loss += cat_loss
+    #if valid_Y_transformed[valid_duplicated_last_per_player].shape[0] > 0.:
+    #    duplicated_last_cat_loss = cross_entropy_loss_fn(valid_pred_transformed[valid_duplicated_last_per_player],
+    #                                                     valid_Y_transformed[valid_duplicated_last_per_player])
+    #    if torch.isnan(duplicated_last_cat_loss).any():
+    #        print('bad loss')
+    #    losses.duplicate_last_cat_loss += duplicated_last_cat_loss
 
     return losses
 
