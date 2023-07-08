@@ -13,40 +13,40 @@ from torch import nn
 
 # https://stackoverflow.com/questions/65192475/pytorch-logsoftmax-vs-softmax-for-crossentropyloss
 # no need to do softmax for classification output
-cross_entropy_loss_fn = nn.CrossEntropyLoss()
+cross_entropy_loss_fn = nn.CrossEntropyLoss(reduction='sum')
 
 class LatentLosses:
     cat_loss: torch.Tensor
     cat_accumulator: float
     duplicate_last_cat_loss: torch.Tensor
     duplicate_last_cat_accumulator: float
+    total_loss: torch.Tensor
+    total_accumulator: float
 
     def __init__(self):
         self.cat_loss = torch.zeros([1]).to(CUDA_DEVICE_STR)
         self.cat_accumulator = 0.
         self.duplicate_last_cat_loss = torch.zeros([1]).to(CUDA_DEVICE_STR)
         self.duplicate_last_cat_accumulator = 0.
-
-    def get_total_loss(self):
-        return self.cat_loss + self.duplicate_last_cat_loss
-
-    def get_accumulated_loss(self):
-        return self.cat_accumulator + self.duplicate_last_cat_accumulator
+        self.total_loss = torch.zeros([1]).to(CUDA_DEVICE_STR)
+        self.total_accumulator = 0.
 
     def __iadd__(self, other):
         self.cat_accumulator += other.cat_loss.item()
         self.duplicate_last_cat_accumulator += other.duplicate_last_cat_loss.item()
+        self.total_accumulator += other.total_loss.item()
         return self
 
     def __itruediv__(self, other):
         self.cat_accumulator /= other
         self.duplicate_last_cat_accumulator /= other
+        self.total_loss /= other
         return self
 
     def add_scalars(self, writer: SummaryWriter, prefix: str, total_epoch_num: int):
         writer.add_scalar(prefix + '/loss/cat', self.cat_accumulator, total_epoch_num)
         writer.add_scalar(prefix + '/loss/repeated cat', self.duplicate_last_cat_accumulator, total_epoch_num)
-        writer.add_scalar(prefix + '/loss/total', self.get_accumulated_loss(), total_epoch_num)
+        writer.add_scalar(prefix + '/loss/total', self.total_loss, total_epoch_num)
 
 
 # https://discuss.pytorch.org/t/how-to-combine-multiple-criterions-to-a-loss-function/348/4
@@ -72,13 +72,17 @@ def compute_loss(pred, Y, duplicated_last, num_players) -> LatentLosses:
                                          valid_Y_transformed[~valid_duplicated_last_per_player])
         if torch.isnan(cat_loss).any():
             print('bad loss')
-        losses.cat_loss += cat_loss
+        losses.cat_loss += cat_loss / valid_Y_transformed[~valid_duplicated_last_per_player].shape[0]
+        losses.total_loss += cat_loss
     if valid_Y_transformed[valid_duplicated_last_per_player].shape[0] > 0.:
         duplicated_last_cat_loss = cross_entropy_loss_fn(valid_pred_transformed[valid_duplicated_last_per_player],
                                                          valid_Y_transformed[valid_duplicated_last_per_player])
         if torch.isnan(duplicated_last_cat_loss).any():
             print('bad loss')
-        losses.duplicate_last_cat_loss += duplicated_last_cat_loss
+        losses.duplicate_last_cat_loss += duplicated_last_cat_loss / \
+                                          valid_Y_transformed[valid_duplicated_last_per_player].shape[0]
+        losses.total_loss += duplicated_last_cat_loss
+    losses.total_loss /= valid_Y_transformed.shape[0]
 
     return losses
 

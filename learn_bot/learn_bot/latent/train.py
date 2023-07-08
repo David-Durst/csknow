@@ -265,13 +265,11 @@ def train(train_type: TrainType, multi_hdf5_wrapper: MultiHDF5Wrapper,
                     batch_loss = compute_loss(pred, Y, duplicated_last, model.num_players)
                     # uncomment here and below causes memory issues
                     cumulative_loss += batch_loss
-                    #losses.append(batch_loss.get_total_loss().tolist()[0])
-                    if train:
-                        total_loss = batch_loss.get_total_loss()
+                    #losses.append(batch_loss.total_loss.tolist()[0])
 
                 # Backpropagation
                 if train:
-                    scaler.scale(total_loss).backward()
+                    scaler.scale(batch_loss.total_loss).backward()
                     scaler.step(optimizer)
                     scaler.update()
 
@@ -302,7 +300,7 @@ def train(train_type: TrainType, multi_hdf5_wrapper: MultiHDF5Wrapper,
         accuracy_string = finish_accuracy_and_delta_diff(accuracy, delta_diff_xy, delta_diff_xyz,
                                                          valids_per_accuracy_column, column_transformers)
         train_test_str = "Train" if train else "Test"
-        print(f"Epoch {train_test_str} Accuracy: {accuracy_string}, Transformed Avg Loss: {cumulative_loss.get_accumulated_loss():>8f}")
+        print(f"Epoch {train_test_str} Accuracy: {accuracy_string}, Transformed Avg Loss: {cumulative_loss.total_accumulator:>8f}")
         return cumulative_loss, accuracy, delta_diff_xy, delta_diff_xyz
 
     def save_model(not_best: bool, iter: int):
@@ -371,7 +369,7 @@ def train(train_type: TrainType, multi_hdf5_wrapper: MultiHDF5Wrapper,
             with torch.no_grad():
                 test_loss, test_accuracy, test_delta_diff_xy, test_delta_diff_xyz = \
                     train_or_test_SL_epoch(test_dataloader, model, None, None, False)
-            cur_test_loss_float = test_loss.get_accumulated_loss()
+            cur_test_loss_float = test_loss.total_accumulator
             if cur_test_loss_float < min_test_loss:
                 save_model(False, total_epochs)
                 min_test_loss = cur_test_loss_float
