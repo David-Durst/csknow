@@ -61,7 +61,7 @@ class TrainType(Enum):
 class HyperparameterOptions:
     num_epochs: int = 60
     batch_size: int = 512
-    learning_rate: float = 4e-5
+    learning_rate: float = 4e-6
     weight_decay: float = 0.
     layers: int = 2
     heads: int = 8
@@ -247,31 +247,31 @@ def train(train_type: TrainType, multi_hdf5_wrapper: MultiHDF5Wrapper,
                 if train:
                     model.noise_var = hyperparameter_options.noise_var
                     optimizer.zero_grad()
-                with torch.autograd.detect_anomaly():
-                    with autocast(device, enabled=True):
+                with autocast(device, enabled=True):
+                    pred = model(X, Y)
+                    model.noise_var = -1.
+                    if torch.isnan(X).any():
+                        print('bad X')
+                        sys.exit(0)
+                    if torch.isnan(Y).any():
+                        print('bad Y')
+                        sys.exit(0)
+                    if torch.isnan(pred[0]).any():
+                        print(X)
+                        print(pred[0])
+                        print('bad pred')
                         pred = model(X, Y)
-                        model.noise_var = -1.
-                        if torch.isnan(X).any():
-                            print('bad X')
-                            sys.exit(0)
-                        if torch.isnan(Y).any():
-                            print('bad Y')
-                            sys.exit(0)
-                        if torch.isnan(pred[0]).any():
-                            print(X)
-                            print(pred[0])
-                            print('bad pred')
-                            sys.exit(0)
-                        batch_loss = compute_loss(pred, Y, duplicated_last, model.num_players)
-                        # uncomment here and below causes memory issues
-                        cumulative_loss += batch_loss
-                        #losses.append(batch_loss.get_total_loss().tolist()[0])
+                        sys.exit(0)
+                    batch_loss = compute_loss(pred, Y, duplicated_last, model.num_players)
+                    # uncomment here and below causes memory issues
+                    cumulative_loss += batch_loss
+                    #losses.append(batch_loss.get_total_loss().tolist()[0])
 
-                    # Backpropagation
-                    if train:
-                        scaler.scale(batch_loss.get_total_loss()).backward()
-                        scaler.step(optimizer)
-                        scaler.update()
+                # Backpropagation
+                if train:
+                    scaler.scale(batch_loss.get_total_loss()).backward()
+                    scaler.step(optimizer)
+                    scaler.update()
 
                 compute_accuracy_and_delta_diff(pred, Y, duplicated_last, accuracy, delta_diff_xy, delta_diff_xyz,
                                                 valids_per_accuracy_column, model.num_players, column_transformers)
