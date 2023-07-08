@@ -262,14 +262,16 @@ def train(train_type: TrainType, multi_hdf5_wrapper: MultiHDF5Wrapper,
                         print('bad pred')
                         pred = model(X, Y)
                         sys.exit(0)
-                batch_loss = compute_loss(pred, Y, duplicated_last, model.num_players)
-                # uncomment here and below causes memory issues
-                cumulative_loss += batch_loss
-                #losses.append(batch_loss.get_total_loss().tolist()[0])
+                    batch_loss = compute_loss(pred, Y, duplicated_last, model.num_players)
+                    # uncomment here and below causes memory issues
+                    cumulative_loss += batch_loss
+                    #losses.append(batch_loss.get_total_loss().tolist()[0])
+                    if train:
+                        total_loss = batch_loss.get_total_loss()
 
                 # Backpropagation
                 if train:
-                    scaler.scale(batch_loss.get_total_loss()).backward()
+                    scaler.scale(total_loss).backward()
                     scaler.step(optimizer)
                     scaler.update()
 
