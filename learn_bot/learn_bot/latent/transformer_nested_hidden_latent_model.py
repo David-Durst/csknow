@@ -27,7 +27,7 @@ d2_max = [1832., 3157., 236.]
 
 
 class TransformerNestedHiddenLatentModel(nn.Module):
-    internal_width = 512
+    internal_width = 128
     cts: IOColumnTransformers
     output_layers: List[nn.Module]
     latent_to_distributions: Callable

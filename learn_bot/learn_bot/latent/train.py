@@ -64,7 +64,7 @@ class HyperparameterOptions:
     learning_rate: float = 4e-5
     weight_decay: float = 0.
     layers: int = 2
-    heads: int = 8
+    heads: int = 4
     noise_var: float = 20.
     comment: str = ""
 
@@ -216,23 +216,12 @@ def train(train_type: TrainType, multi_hdf5_wrapper: MultiHDF5Wrapper,
         #losses = []
         # bar = Bar('Processing', max=size)
         batch_num = 0
-        first_x = None
-        first_y = None
-        first_duplicated_last = None
         with tqdm(total=len(dataloader), disable=False) as pbar:
             for batch, (X, Y, duplicated_last) in enumerate(dataloader):
                 batch_num += 1
                 if first_row is None:
                     first_row = X[0:1, :]
-                if True or first_x is None:
-                    X, Y, duplicated_last = X.to(device), Y.to(device), duplicated_last.to(device)
-                    first_x = X
-                    first_y = Y
-                    first_duplicated_last = duplicated_last
-                else:
-                    X = first_x
-                    Y = first_y
-                    duplicated_last = first_duplicated_last
+                X, Y, duplicated_last = X.to(device), Y.to(device), duplicated_last.to(device)
                 Y = Y.float()
                 # XR = torch.randn_like(X, device=device)
                 # XR[:,0] = X[:,0]
@@ -247,7 +236,7 @@ def train(train_type: TrainType, multi_hdf5_wrapper: MultiHDF5Wrapper,
                 if train:
                     model.noise_var = hyperparameter_options.noise_var
                     optimizer.zero_grad()
-                with autocast(device, enabled=True):
+                with autocast(device, enabled=False):
                     pred = model(X, Y)
                     model.noise_var = -1.
                     if torch.isnan(X).any():
