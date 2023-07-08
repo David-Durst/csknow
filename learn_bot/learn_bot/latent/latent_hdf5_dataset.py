@@ -74,4 +74,4 @@ class MultipleLatentHDF5Dataset(Dataset):
         x_tensor = torch.tensor(self.data_hdf5s[hdf5_index].get_input_data()[hdf5_id])
         y_tensor = torch.tensor(self.data_hdf5s[hdf5_index].get_output_data()[hdf5_id])
         return x_tensor, y_tensor, \
-            torch.tensor(self.duplicate_last_equal_to_rest and (hdf5_index == len(self.data_hdf5s) - 1))
+            torch.tensor(self.duplicate_last_equal_to_rest and (hdf5_index == len(self.data_hdf5s) - 1)), torch.tensor([idx, hdf5_index, hdf5_id])

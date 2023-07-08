@@ -216,13 +216,23 @@ def train(train_type: TrainType, multi_hdf5_wrapper: MultiHDF5Wrapper,
         #losses = []
         # bar = Bar('Processing', max=size)
         batch_num = 0
+        prior_bad_X = None
+        prior_bad_Y = None
+        prior_bad_duplicated_last = None
+        prior_bad_indices = None
         with tqdm(total=len(dataloader), disable=False) as pbar:
-            for batch, (X, Y, duplicated_last) in enumerate(dataloader):
+            for batch, (X, Y, duplicated_last, indices) in enumerate(dataloader):
                 batch_num += 1
                 if first_row is None:
                     first_row = X[0:1, :]
-                X, Y, duplicated_last = X.to(device), Y.to(device), duplicated_last.to(device)
-                Y = Y.float()
+                if prior_bad_X is None:
+                    X, Y, duplicated_last = X.to(device), Y.to(device), duplicated_last.to(device)
+                    Y = Y.float()
+                else:
+                    X = prior_bad_X
+                    Y = prior_bad_Y
+                    duplicated_last = prior_bad_duplicated_last
+                    indices = prior_bad_indices
                 # XR = torch.randn_like(X, device=device)
                 # XR[:,0] = X[:,0]
                 # YZ = torch.zeros_like(Y) + 0.1
@@ -249,8 +259,11 @@ def train(train_type: TrainType, multi_hdf5_wrapper: MultiHDF5Wrapper,
                         print(X)
                         print(pred[0])
                         print('bad pred')
-                        model(X, Y)
-                        sys.exit(0)
+                        prior_bad_X = X.detach()
+                        prior_bad_Y = Y.detach()
+                        prior_bad_duplicated_last = duplicated_last.detach()
+                        prior_bad_indices = indices
+                        #sys.exit(0)
                     batch_loss = compute_loss(pred, Y, duplicated_last, model.num_players)
                     # uncomment here and below causes memory issues
                     cumulative_loss += batch_loss
@@ -375,13 +388,13 @@ def train(train_type: TrainType, multi_hdf5_wrapper: MultiHDF5Wrapper,
     test_data = MultipleLatentHDF5Dataset(multi_hdf5_wrapper.test_hdf5_wrappers, column_transformers,
                                           multi_hdf5_wrapper.duplicate_last_hdf5_equal_to_rest)
     batch_size = min(hyperparameter_options.batch_size, min(len(train_data), len(test_data)))
-    train_dataloader = DataLoader(train_data, batch_size=batch_size, num_workers=4, shuffle=True, pin_memory=True)
-    test_dataloader = DataLoader(test_data, batch_size=batch_size, num_workers=4, shuffle=True, pin_memory=True)
+    train_dataloader = DataLoader(train_data, batch_size=batch_size, num_workers=0, shuffle=True, pin_memory=True)
+    test_dataloader = DataLoader(test_data, batch_size=batch_size, num_workers=0, shuffle=True, pin_memory=True)
 
     print(f"num train examples: {len(train_data)}")
     print(f"num test examples: {len(test_data)}")
 
-    for X, Y, _ in train_dataloader:
+    for X, Y, _, _ in train_dataloader:
         print(f"Train shape of X: {X.shape} {X.dtype}")
         print(f"Train shape of Y: {Y.shape} {Y.dtype}")
         break
