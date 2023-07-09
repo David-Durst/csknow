@@ -13,7 +13,7 @@ from torch import nn
 
 # https://stackoverflow.com/questions/65192475/pytorch-logsoftmax-vs-softmax-for-crossentropyloss
 # no need to do softmax for classification output
-cross_entropy_loss_fn = nn.CrossEntropyLoss()
+cross_entropy_loss_fn = nn.CrossEntropyLoss(reduction='none')
 
 class LatentLosses:
     cat_loss: torch.Tensor
@@ -67,26 +67,26 @@ def compute_loss(pred, Y, duplicated_last, num_players) -> LatentLosses:
     #if torch.isnan(cat_loss).any():
     #    print('bad loss')
     #losses.cat_loss += cat_loss
-    #losses_to_cat = []
+    losses_to_cat = []
     if valid_Y_transformed[~valid_duplicated_last_per_player].shape[0] > 0:
         cat_loss = cross_entropy_loss_fn(valid_pred_transformed[~valid_duplicated_last_per_player],
                                          valid_Y_transformed[~valid_duplicated_last_per_player])
         if torch.isnan(cat_loss).any():
             print('bad loss')
-        losses.cat_loss = cat_loss #torch.mean(cat_loss)
-        #losses_to_cat.append(cat_loss)
+        losses.cat_loss = torch.mean(cat_loss)
+        losses_to_cat.append(cat_loss)
     if valid_Y_transformed[valid_duplicated_last_per_player].shape[0] > 0.:
         duplicated_last_cat_loss = cross_entropy_loss_fn(valid_pred_transformed[valid_duplicated_last_per_player],
                                                          valid_Y_transformed[valid_duplicated_last_per_player])
         if torch.isnan(duplicated_last_cat_loss).any():
             print('bad loss')
-        losses.duplicate_last_cat_loss = duplicated_last_cat_loss #torch.mean(duplicated_last_cat_loss)
-        #losses_to_cat.append(duplicated_last_cat_loss)
-    total_loss = cross_entropy_loss_fn(valid_pred_transformed, valid_Y_transformed)
-    if torch.isnan(total_loss).any():
-        print('bad loss')
-    losses.total_loss = total_loss
-    #losses.total_loss = torch.mean(pack(losses_to_cat, '*')[0])
+        losses.duplicate_last_cat_loss = torch.mean(duplicated_last_cat_loss)
+        losses_to_cat.append(duplicated_last_cat_loss)
+    #total_loss = cross_entropy_loss_fn(valid_pred_transformed, valid_Y_transformed)
+    #if torch.isnan(total_loss).any():
+    #    print('bad loss')
+    #losses.total_loss = total_loss
+    losses.total_loss = torch.mean(pack(losses_to_cat, '*')[0])
 
     return losses
 
