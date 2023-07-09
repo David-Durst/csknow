@@ -37,13 +37,16 @@ delta_distance_bins = generate_bins(-20000, 20000, 2500)
 delta_time_bins = generate_bins(-40, 40, 5)
 
 
-def plot_trajectory_comparison_histograms(similarity_df: pd.DataFrame, config: ComparisonConfig,
-                                          similarity_plots_path: Path):
+def set_pd_print_options():
     pd.options.display.max_columns = None
-
     pd.options.display.max_rows = None
     pd.options.display.width = 1000
     pd.set_option('display.float_format', lambda x: '%.2f' % x)
+
+
+def plot_trajectory_comparison_histograms(similarity_df: pd.DataFrame, config: ComparisonConfig,
+                                          similarity_plots_path: Path):
+    set_pd_print_options()
     # print(similarity_df.loc[:, [predicted_round_id_col, best_fit_ground_truth_round_id_col, metric_type_col,
     #                            dtw_cost_col, delta_distance_col, delta_time_col]])
 

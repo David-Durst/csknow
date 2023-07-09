@@ -1,5 +1,6 @@
 from typing import Set, Callable
 
+from learn_bot.latent.analyze.process_trajectory_comparison import set_pd_print_options
 from learn_bot.latent.load_model import LoadedModel
 from learn_bot.latent.train import good_retake_rounds_path
 from learn_bot.libs.df_grouping import make_index_column
@@ -53,6 +54,8 @@ def vis(loaded_model: LoadedModel, inference_fn: Callable[[LoadedModel], None]):
     draw_max: bool = True
     good_retake_rounds: Set[int] = set()
 
+    set_pd_print_options()
+
     def hdf5_id_update():
         nonlocal rounds, cur_round
         loaded_model.cur_hdf5_index = int(new_hdf5_id_entry.get())
@@ -103,7 +106,7 @@ def vis(loaded_model: LoadedModel, inference_fn: Callable[[LoadedModel], None]):
         other_state_text_var.set(f"Planted A {data_series[c4_plant_a_col]}, "
                                  f"Planted B {data_series[c4_plant_b_col]}, "
                                  f"Not Planted {data_series[c4_not_planted_col]}, "
-                                 f"C4 Pos ({data_series[c4_pos_cols[0]]}, {data_series[c4_pos_cols[1]]}, {data_series[c4_pos_cols[2]]}),"
+                                 f"C4 Pos ({data_series[c4_pos_cols[0]]:.2f}, {data_series[c4_pos_cols[1]]:.2f}, {data_series[c4_pos_cols[2]]:.2f}),"
                                  f"C4 Ticks Since Plant {data_series[c4_ticks_since_plant[0]]}")
 
         d2_img_copy = d2_img.copy().convert("RGBA")
@@ -159,6 +162,16 @@ def vis(loaded_model: LoadedModel, inference_fn: Callable[[LoadedModel], None]):
             cur_tick_index += 1
             tick_slider.set(cur_tick_index)
             tick_slider_changed(cur_tick_index)
+
+
+    def print_row_clicked():
+        cur_index = indices[cur_tick_index]
+        non_delta_pos_cols = []
+        for col in selected_df.columns:
+            if "delta pos" not in col:
+                non_delta_pos_cols.append(col)
+        data_series = selected_df.loc[cur_index, non_delta_pos_cols]
+        print(data_series)
 
 
     def toggle_distribution_clicked():
@@ -276,6 +289,8 @@ def vis(loaded_model: LoadedModel, inference_fn: Callable[[LoadedModel], None]):
     # creating vis control frame
     distribution_control_frame = tk.Frame(window)
     distribution_control_frame.pack(pady=5)
+    print_row_button = tk.Button(distribution_control_frame, text="print df row", command=print_row_clicked)
+    print_row_button.pack(side="left")
     distribution_toggle_button = tk.Button(distribution_control_frame, text="toggle max/distribution", command=toggle_distribution_clicked)
     distribution_toggle_button.pack(side="left")
     player_distributions_label = tk.Label(distribution_control_frame, text="players to show")

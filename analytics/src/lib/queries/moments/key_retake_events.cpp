@@ -41,9 +41,16 @@ namespace csknow::key_retake_events {
         for (int64_t roundIndex = 0; roundIndex < rounds.size; roundIndex++) {
             bool foundFirstFireInRound = false, foundFirstPlantInRound = false, foundFirstDefusalInRound = false,
                 foundExplosionInRound = false, foundTestStartInRound = false, foundTestFinishInRound = false;
+            if (roundIndex == 203) {
+                int x = 2;
+                (void) x;
+            }
             int64_t firstPlantTick = INVALID_ID;
             int64_t firstExplosionTick = INVALID_ID;
-            for (int64_t tickIndex = rounds.ticksPerRound[roundIndex].minId;
+            // 2355745_137045_quazar-vs-unique-m3-dust2_72b8a4fe-c00a-11ec-992c-0a58a9feac02.dem
+            // round 20 has a plant ending on the first tick because it carries over from the prior round
+            // skip the first 128 ticks to avoid this
+            for (int64_t tickIndex = rounds.ticksPerRound[roundIndex].minId + 128;
                  tickIndex <= rounds.ticksPerRound[roundIndex].maxId; tickIndex++) {
                 // fire event
                 if (!foundFirstFireInRound) {

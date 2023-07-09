@@ -27,7 +27,7 @@ d2_max = [1832., 3157., 236.]
 
 
 class TransformerNestedHiddenLatentModel(nn.Module):
-    internal_width = 128 #512
+    internal_width = 512 #128
     cts: IOColumnTransformers
     output_layers: List[nn.Module]
     latent_to_distributions: Callable
@@ -184,21 +184,25 @@ class TransformerNestedHiddenLatentModel(nn.Module):
         x_gathered = torch.cat([x_pos_encoded, x_non_pos], -1)
         x_embedded = self.embedding_model(x_gathered)
 
-        if self.num_time_steps > 1:
-            x_batch_player_flattened = rearrange(x_embedded, "b p t d -> (b p) t d")
-            batch_temporal_positional_encoding = self.temporal_positional_encoding.repeat([x.shape[0], 1, 1]) \
-                .to(x.device.type)
-            x_temporal_encoded_batch_player_flattened = x_batch_player_flattened + batch_temporal_positional_encoding
-            x_temporal_encoded_player_time_flattened = rearrange(x_temporal_encoded_batch_player_flattened,
-                                                                 "(b p) t d -> b (p t) d", p=self.num_players,
-                                                                 t=self.num_time_steps)
-            x_temporal_embedded_player_time_flattened = \
-                self.temporal_transformer_encoder(x_temporal_encoded_player_time_flattened,
-                                                  mask=self.temporal_mask_cpu.to(x.device.type))
-            x_temporal_embedded = rearrange(x_temporal_embedded_player_time_flattened, "b (p t) d -> b p t d",
-                                            p=self.num_players, t=self.num_time_steps)
-        else:
-            x_temporal_embedded = x_embedded
+        if self.num_time_steps < 2:
+            raise Exception("must have history")
+        # apply temporal encoder to get one token per player
+        # need to flatten first across batch/player to do temporal positional encoding per player
+        x_batch_player_flattened = rearrange(x_embedded, "b p t d -> (b p) t d")
+        batch_temporal_positional_encoding = self.temporal_positional_encoding.repeat([x.shape[0], 1, 1]) \
+            .to(x.device.type)
+        x_temporal_encoded_batch_player_flattened = x_batch_player_flattened + batch_temporal_positional_encoding
+        # next flatten all tokens into on sequence per batch. using temporal_mask to ensure only comparing tokens
+        # from same players
+        x_temporal_encoded_player_time_flattened = rearrange(x_temporal_encoded_batch_player_flattened,
+                                                             "(b p) t d -> b (p t) d", p=self.num_players,
+                                                             t=self.num_time_steps)
+        x_temporal_embedded_player_time_flattened = \
+            self.temporal_transformer_encoder(x_temporal_encoded_player_time_flattened,
+                                              mask=self.temporal_mask_cpu.to(x.device.type))
+        # take last token per player
+        x_temporal_embedded = rearrange(x_temporal_embedded_player_time_flattened, "b (p t) d -> b p t d",
+                                        p=self.num_players, t=self.num_time_steps)
         x_temporal_embedded_flattened = x_temporal_embedded[:, :, 0, :]
 
 
