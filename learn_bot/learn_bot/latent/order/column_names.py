@@ -13,7 +13,7 @@ class C4Status(Enum):
 
 num_c4_status = 3
 num_orders_per_site = 3
-num_prior_ticks = 10
+num_prior_ticks = 4
 num_places = 26
 area_grid_dim = 5
 area_grid_size = area_grid_dim * area_grid_dim

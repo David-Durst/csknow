@@ -13,8 +13,8 @@
 
 namespace csknow::feature_store {
     constexpr double maxWorldDistance = 4000.;
-    constexpr int prior_tick_spacing = 128;
-    constexpr int num_prior_ticks = 10;
+    constexpr int prior_tick_spacing = 64;
+    constexpr int num_prior_ticks = 4;
 
     struct BTTeamPlayerData {
         int64_t playerId;

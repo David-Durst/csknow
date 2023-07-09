@@ -258,6 +258,9 @@ def train(train_type: TrainType, multi_hdf5_wrapper: MultiHDF5Wrapper,
                     if torch.isnan(pred[0]).any():
                         print(X)
                         print(pred[0])
+                        print(torch.isnan(pred[0]).nonzero())
+                        bad_batch_row = torch.isnan(pred[0]).nonzero()[0,0].item()
+                        print(indices[bad_batch_row])
                         print('bad pred')
                         prior_bad_X = X.detach()
                         prior_bad_Y = Y.detach()

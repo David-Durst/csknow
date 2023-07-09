@@ -1011,13 +1011,15 @@ namespace csknow::feature_store {
                 columnData[columnPlayer].alive = file.getDataSet("/data/alive " + columnTeam + " " + iStr).read<std::vector<bool>>();
                 columnData[columnPlayer].ctTeam = file.getDataSet("/data/player ctTeam " + columnTeam + " " + iStr).read<std::vector<bool>>();
                 loadVec3VectorFromHDF5(columnData[columnPlayer].footPos, file, "player pos " + columnTeam + " " + iStr);
+                loadVec3VectorFromHDF5(columnData[columnPlayer].velocity, file, "player velocity " + columnTeam + " " + iStr);
                 for (int priorTick = 0; priorTick < num_prior_ticks; priorTick++) {
                     loadVec3VectorFromHDF5(columnData[columnPlayer].priorFootPos[priorTick], file,
                                            "player pos " + columnTeam + " " + iStr + " t-" + std::to_string(priorTick + 1));
+                    loadVec3VectorFromHDF5(columnData[columnPlayer].priorVelocity[priorTick], file,
+                                           "player velocity " + columnTeam + " " + iStr + " t-" + std::to_string(priorTick + 1));
                     columnData[columnPlayer].priorFootPosValid[priorTick] =
                             file.getDataSet("/data/player history valid " + columnTeam + " " + iStr + " t-" + std::to_string(priorTick + 1)).read<std::vector<bool>>();
                 }
-                loadVec3VectorFromHDF5(columnData[columnPlayer].velocity, file, "player velocity " + columnTeam + " " + iStr);
                 vector<string> deltaPosNames;
                 for (size_t deltaPosIndex = 0; deltaPosIndex < delta_pos_grid_num_cells; deltaPosIndex++) {
                     string deltaPosIndexStr = std::to_string(deltaPosIndex);
