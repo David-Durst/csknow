@@ -138,7 +138,9 @@ def draw_all_players(data_series: pd.Series, pred_series: Optional[pd.Series], i
             result += player_str + "\n"
             #print(player_str)
             if draw_max:
-                data_coord.draw_vis(im_draw, True)
+                # filter out ends of players lives when there is no pred prob
+                if max_data_prob > 0.5:
+                    data_coord.draw_vis(im_draw, True)
                 pred_coord.draw_vis(im_draw, True)
             else:
                 xy_coord_to_sum_prob: Dict[Tuple[int, int], float] = {}

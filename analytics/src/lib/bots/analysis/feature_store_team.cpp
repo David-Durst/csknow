@@ -737,7 +737,12 @@ namespace csknow::feature_store {
                 std::raise(SIGINT);
             }
 
+            // ignore players who aren't alive far enough in the future
             int64_t futureTickIndex = futureTracker.fromOldest();
+            if (columnData[playerColumn].playerId[futureTickIndex] != columnData[playerColumn].playerId[curTick]) {
+                continue;
+            }
+
             // if jumping, look twice as far in future
             bool jumping = false, falling = false;
             for (int64_t i = 0; i < futureTracker.getCurSize(); i++) {
