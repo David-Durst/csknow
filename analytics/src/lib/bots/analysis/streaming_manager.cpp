@@ -54,7 +54,10 @@ void StreamingManager::update(const ServerState & state) {
 RoundPlantDefusal processRoundPlantDefusals(const Rounds & rounds, const Ticks & ticks, const Plants & plants,
                                             const Defusals & defusals, int64_t roundIndex) {
     RoundPlantDefusal result{INVALID_ID, INVALID_ID};
-    for (int64_t tickIndex = rounds.ticksPerRound[roundIndex].minId;
+    // 2355745_137045_quazar-vs-unique-m3-dust2_72b8a4fe-c00a-11ec-992c-0a58a9feac02.dem
+    // round 20 has a plant ending on the first tick because it carries over from the prior round
+    // skip the first 128 ticks to avoid this
+    for (int64_t tickIndex = rounds.ticksPerRound[roundIndex].minId + 128;
          tickIndex <= rounds.ticksPerRound[roundIndex].maxId; tickIndex++) {
         if (result.plantTickIndex == INVALID_ID) {
             for (const auto & [_0, _1, plantIndex] :
