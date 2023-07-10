@@ -224,7 +224,7 @@ def train(train_type: TrainType, multi_hdf5_wrapper: MultiHDF5Wrapper,
         prior_bad_indices = None
         start_epoch_time = time.perf_counter()
         with tqdm(total=len(dataloader), disable=False) as pbar:
-            for batch, (X, Y, duplicated_last, indices) in enumerate(dataloader):
+            for batch, (X, Y, duplicated_last) in enumerate(dataloader):
                 batch_num += 1
                 #if batch_num > 24:
                 #    break
@@ -374,22 +374,24 @@ def train(train_type: TrainType, multi_hdf5_wrapper: MultiHDF5Wrapper,
         for _ in range(num_epochs):
             print(f"\nEpoch {total_epochs}\n" + f"-------------------------------")
             if enable_training:
-                with profile(activities=[ProfilerActivity.CPU, ProfilerActivity.CUDA],
-                             on_trace_ready=torch.profiler.tensorboard_trace_handler(
-                                 str(runs_path / ('trace_' + hyperparameter_options.to_str(model)))),
-                             schedule=schedule(wait=2, warmup=3, active=30, repeat=3),
-                             profile_memory=True,
-                             with_stack=True) as prof:
-                             #schedule=schedule(wait=5, warmup=5, active=20),
-                             #on_trace_ready=trace_handler) as prof:
+                if True:
+                    with profile(activities=[ProfilerActivity.CPU, ProfilerActivity.CUDA],
+                                 on_trace_ready=torch.profiler.tensorboard_trace_handler(
+                                     str(runs_path / ('trace_' + hyperparameter_options.to_str(model)))),
+                                 schedule=schedule(wait=2, warmup=3, active=30, repeat=1),
+                                 profile_memory=True,
+                                 with_stack=True) as prof:
+                                 #schedule=schedule(wait=5, warmup=5, active=20),
+                                 #on_trace_ready=trace_handler) as prof:
+                        train_loss, train_accuracy, train_delta_diff_xy, train_delta_diff_xyz = \
+                            train_or_test_SL_epoch(train_dataloader, model, optimizer, scaler, True, prof)
+                    print(prof.key_averages().table(sort_by="self_cuda_time_total", row_limit=10))
+                    print(prof.key_averages().table(sort_by="self_cpu_time_total", row_limit=10))
+                    #prof.export_chrome_trace("/raid/durst/csknow/learn_bot/traces/trace_all.json")
+                    quit(0)
+                else:
                     train_loss, train_accuracy, train_delta_diff_xy, train_delta_diff_xyz = \
-                        train_or_test_SL_epoch(train_dataloader, model, optimizer, scaler, True, prof)
-                print(prof.key_averages().table(sort_by="self_cuda_time_total", row_limit=10))
-                print(prof.key_averages().table(sort_by="self_cpu_time_total", row_limit=10))
-                #prof.export_chrome_trace("/raid/durst/csknow/learn_bot/traces/trace_all.json")
-                quit(0)
-                #train_loss, train_accuracy, train_delta_diff_xy, train_delta_diff_xyz = \
-                #    train_or_test_SL_epoch(train_dataloader, model, optimizer, scaler, True)
+                        train_or_test_SL_epoch(train_dataloader, model, optimizer, scaler, True)
             else:
                 with torch.no_grad():
                     train_loss, train_accuracy, train_delta_diff_xy, train_delta_diff_xyz = \
@@ -420,7 +422,7 @@ def train(train_type: TrainType, multi_hdf5_wrapper: MultiHDF5Wrapper,
     print(f"num train examples: {len(train_data)}")
     print(f"num test examples: {len(test_data)}")
 
-    for X, Y, _, _ in train_dataloader:
+    for X, Y, _ in train_dataloader:
         print(f"Train shape of X: {X.shape} {X.dtype}")
         print(f"Train shape of Y: {Y.shape} {Y.dtype}")
         break

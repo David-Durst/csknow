@@ -4,6 +4,7 @@ from typing import List, Dict, Optional
 import h5py
 import numpy as np
 import pandas as pd
+import torch
 
 from learn_bot.libs.hdf5_to_pd import load_hdf5_to_pd
 from learn_bot.libs.io_transforms import IOColumnTransformers
@@ -14,8 +15,8 @@ class HDF5Wrapper:
     id_cols: List[str]
     id_df: pd.DataFrame
     sample_df: pd.DataFrame
-    input_data: Dict[Path, np.ndarray] = {}
-    output_data: Dict[Path, np.ndarray] = {}
+    input_data: Dict[Path, torch.Tensor] = {}
+    output_data: Dict[Path, torch.Tensor] = {}
 
     def __init__(self, hdf5_path: Path, id_cols: List[str], id_df: Optional[pd.DataFrame] = None,
                  sample_df: Optional[pd.DataFrame] = None):
@@ -40,21 +41,23 @@ class HDF5Wrapper:
         result = HDF5Wrapper(self.hdf5_path, self.id_cols, self.id_df.copy(), self.sample_df.copy())
         return result
 
-    def create_np_array(self, cts: IOColumnTransformers, load_output_data: bool = True):
+    def create_tensors(self, cts: IOColumnTransformers, load_output_data: bool = True):
         # don't need to filder by id_df after limit, as data loader will get the id from the limited id_df for lookup
         # in entire np array
-        HDF5Wrapper.input_data[self.hdf5_path] = load_hdf5_to_np_array(self.hdf5_path,
-                                                                       cts.input_types.column_names_all_categorical_columns(),
-                                                                       True)#[self.id_df.id]
+        HDF5Wrapper.input_data[self.hdf5_path] = \
+            torch.Tensor(load_hdf5_to_np_array(self.hdf5_path,
+                                               cts.input_types.column_names_all_categorical_columns(),
+                                               True))#[self.id_df.id]
         if load_output_data:
-            HDF5Wrapper.output_data[self.hdf5_path] = load_hdf5_to_np_array(self.hdf5_path,
-                                                                            cts.output_types.column_names_all_categorical_columns(),
-                                                                            False)#[self.id_df.id]
+            HDF5Wrapper.output_data[self.hdf5_path] = \
+                torch.Tensor(load_hdf5_to_np_array(self.hdf5_path,
+                                                   cts.output_types.column_names_all_categorical_columns(),
+                                                   False))#[self.id_df.id]
 
-    def get_input_data(self) -> np.ndarray:
+    def get_input_data(self) -> torch.Tensor:
         return HDF5Wrapper.input_data[self.hdf5_path]
 
-    def get_output_data(self) -> np.ndarray:
+    def get_output_data(self) -> torch.Tensor:
         return HDF5Wrapper.output_data[self.hdf5_path]
 
 
@@ -92,7 +95,7 @@ class PDWrapper(HDF5Wrapper):
         result = PDWrapper(self.hdf5_path, self.sample_df.copy(), self.id_cols)
         return result
 
-    def create_np_array(self, cts: IOColumnTransformers):
+    def create_tensors(self, cts: IOColumnTransformers):
         HDF5Wrapper.input_data[self.hdf5_path] = \
             self.sample_df.loc[:, cts.input_types.column_names_all_categorical_columns()].to_numpy(dtype=np.float32)
         HDF5Wrapper.output_data[self.hdf5_path] = \

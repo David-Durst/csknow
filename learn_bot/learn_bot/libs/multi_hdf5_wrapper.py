@@ -89,5 +89,5 @@ class MultiHDF5Wrapper:
 
     def create_np_arrays(self, cts: IOColumnTransformers, load_output_data: bool = True):
         for hdf5_wrapper in self.hdf5_wrappers:
-            hdf5_wrapper.create_np_array(cts, load_output_data)
+            hdf5_wrapper.create_tensors(cts, load_output_data)
 

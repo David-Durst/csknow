@@ -23,8 +23,8 @@ class LatentHDF5Dataset(Dataset):
 
     def __getitem__(self, idx):
         hdf5_id = self.data_hdf5.id_df.iloc[idx].loc['id']
-        x_tensor = torch.tensor(self.data_hdf5.get_input_data()[hdf5_id])
-        y_tensor = torch.tensor(self.data_hdf5.get_output_data()[hdf5_id])
+        x_tensor = self.data_hdf5.get_input_data()[hdf5_id]
+        y_tensor = self.data_hdf5.get_output_data()[hdf5_id]
         return x_tensor, y_tensor
 
 
@@ -71,7 +71,8 @@ class MultipleLatentHDF5Dataset(Dataset):
                 idx_in_hdf5 %= len(self.data_hdf5s[i])
                 break
         hdf5_id = self.data_hdf5s[hdf5_index].id_df.iloc[idx_in_hdf5].loc['id']
-        x_tensor = torch.tensor(self.data_hdf5s[hdf5_index].get_input_data()[hdf5_id])
-        y_tensor = torch.tensor(self.data_hdf5s[hdf5_index].get_output_data()[hdf5_id])
+        x_tensor = self.data_hdf5s[hdf5_index].get_input_data()[hdf5_id]
+        y_tensor = self.data_hdf5s[hdf5_index].get_output_data()[hdf5_id]
         return x_tensor, y_tensor, \
-            torch.tensor(self.duplicate_last_equal_to_rest and (hdf5_index == len(self.data_hdf5s) - 1)), torch.tensor([idx, hdf5_index, hdf5_id])
+            torch.tensor(self.duplicate_last_equal_to_rest and (hdf5_index == len(self.data_hdf5s) - 1))#, \
+            #[idx, hdf5_index, hdf5_id]
