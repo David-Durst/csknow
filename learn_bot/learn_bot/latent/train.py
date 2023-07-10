@@ -201,7 +201,7 @@ def train(train_type: TrainType, multi_hdf5_wrapper: MultiHDF5Wrapper,
     # train and test the model
     first_row: torch.Tensor = None
 
-    def train_or_test_SL_epoch(dataloader, model, optimizer, scaler, train=True):
+    def train_or_test_SL_epoch(dataloader, model, optimizer, scaler, train=True, profiler=None):
         nonlocal first_row
         size = len(dataloader.dataset)
         num_batches = len(dataloader)
@@ -282,6 +282,8 @@ def train(train_type: TrainType, multi_hdf5_wrapper: MultiHDF5Wrapper,
                 compute_accuracy_and_delta_diff(pred, Y, duplicated_last, accuracy, delta_diff_xy, delta_diff_xyz,
                                                 valids_per_accuracy_column, model.num_players, column_transformers)
                 pbar.update(1)
+                if profiler is not None:
+                    profiler.step()
 
         cumulative_loss /= len(dataloader)
         for name in column_transformers.output_types.column_names():
@@ -366,10 +368,13 @@ def train(train_type: TrainType, multi_hdf5_wrapper: MultiHDF5Wrapper,
         for _ in range(num_epochs):
             print(f"\nEpoch {total_epochs}\n" + f"-------------------------------")
             if enable_training:
-                with profile(activities=[ProfilerActivity.CPU, ProfilerActivity.CUDA]) as prof:
+                def trace_handler(p):
+                    output = p.key_averages().table(sort_by="self_cuda_time_total", row_limit=10)
+                    print(output)
+                    p.export_chrome_trace("/raid/durst/csknow/learn_bot/traces/trace_" + str(p.step_num) + ".json")
+                with profile(activities=[ProfilerActivity.CPU, ProfilerActivity.CUDA], on_trace_ready=trace_handler) as prof:
                     train_loss, train_accuracy, train_delta_diff_xy, train_delta_diff_xyz = \
-                        train_or_test_SL_epoch(train_dataloader, model, optimizer, scaler, True)
-                print(prof.key_averages().table(sort_by="cuda_time_total", row_limit=10))
+                        train_or_test_SL_epoch(train_dataloader, model, optimizer, scaler, True, prof)
             else:
                 with torch.no_grad():
                     train_loss, train_accuracy, train_delta_diff_xy, train_delta_diff_xyz = \
