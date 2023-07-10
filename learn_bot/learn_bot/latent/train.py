@@ -6,7 +6,7 @@ import sys
 
 import torch.optim
 from torch import nn, autocast
-from torch.profiler import profile, ProfilerActivity
+from torch.profiler import profile, ProfilerActivity, schedule
 from torch.utils.data import DataLoader
 
 from torch.utils.tensorboard import SummaryWriter
@@ -372,7 +372,9 @@ def train(train_type: TrainType, multi_hdf5_wrapper: MultiHDF5Wrapper,
                     output = p.key_averages().table(sort_by="self_cuda_time_total", row_limit=10)
                     print(output)
                     p.export_chrome_trace("/raid/durst/csknow/learn_bot/traces/trace_" + str(p.step_num) + ".json")
-                with profile(activities=[ProfilerActivity.CPU, ProfilerActivity.CUDA], on_trace_ready=trace_handler) as prof:
+                with profile(activities=[ProfilerActivity.CPU, ProfilerActivity.CUDA],
+                             schedule=schedule(wait=5, warmup=5, active=20),
+                             on_trace_ready=trace_handler) as prof:
                     train_loss, train_accuracy, train_delta_diff_xy, train_delta_diff_xyz = \
                         train_or_test_SL_epoch(train_dataloader, model, optimizer, scaler, True, prof)
                 quit(0)
