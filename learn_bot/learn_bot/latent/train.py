@@ -375,6 +375,7 @@ def train(train_type: TrainType, multi_hdf5_wrapper: MultiHDF5Wrapper,
                 with profile(activities=[ProfilerActivity.CPU, ProfilerActivity.CUDA], on_trace_ready=trace_handler) as prof:
                     train_loss, train_accuracy, train_delta_diff_xy, train_delta_diff_xyz = \
                         train_or_test_SL_epoch(train_dataloader, model, optimizer, scaler, True, prof)
+                quit(0)
             else:
                 with torch.no_grad():
                     train_loss, train_accuracy, train_delta_diff_xy, train_delta_diff_xyz = \
