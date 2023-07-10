@@ -7,7 +7,7 @@ from learn_bot.latent.engagement.column_names import max_enemies
 from learn_bot.latent.order.column_names import team_strs, player_team_str, flatten_list
 from learn_bot.latent.place_area.column_names import specific_player_place_area_columns, delta_pos_grid_num_cells
 from learn_bot.latent.place_area.pos_abs_delta_conversion import compute_new_pos, NavData, \
-    delta_one_hot_max_to_index, delta_one_hot_prob_to_index, max_speed_per_half_second
+    delta_one_hot_max_to_index, delta_one_hot_prob_to_index, max_speed_per_half_second, max_speed_per_second
 from learn_bot.libs.io_transforms import IOColumnTransformers, CUDA_DEVICE_STR, CPU_DEVICE_STR
 from learn_bot.libs.positional_encoding import *
 from einops import rearrange
@@ -45,12 +45,12 @@ class TransformerNestedHiddenLatentModel(nn.Module):
             [range_list_to_index_list(cts.get_name_ranges(True, False, contained_str="player pos " + player_team_str(team_str, player_index)))
              for team_str in team_strs for player_index in range(max_enemies)]
         )
-        self.players_vel_columns = flatten_list(
-            [range_list_to_index_list(cts.get_name_ranges(True, False, contained_str="player velocity " + player_team_str(team_str, player_index)))
-             for team_str in team_strs for player_index in range(max_enemies)]
-        )
-        pos_and_vel_columns = self.players_pos_columns + self.players_vel_columns
-        self.players_non_pos_columns = flatten_list([
+        #self.players_vel_columns = flatten_list(
+        #    [range_list_to_index_list(cts.get_name_ranges(True, False, contained_str="player velocity " + player_team_str(team_str, player_index)))
+        #     for team_str in team_strs for player_index in range(max_enemies)]
+        #)
+        pos_and_vel_columns = self.players_pos_columns + [] #self.players_vel_columns
+        self.players_non_pos_vel_columns = flatten_list([
             [player_column for player_column in player_columns if player_column not in pos_and_vel_columns]
             for player_columns in players_columns
         ])
@@ -82,8 +82,9 @@ class TransformerNestedHiddenLatentModel(nn.Module):
 
         # NERF code calls it positional embedder, but it's encoder since not learned
         self.spatial_positional_encoder, self.spatial_positional_encoder_out_dim = get_embedder()
-        self.columns_per_player_time_step = (len(self.players_non_pos_columns) // self.num_players) + \
-                                            self.spatial_positional_encoder_out_dim
+        self.columns_per_player_time_step = (len(self.players_non_pos_vel_columns) // self.num_players) + \
+                                            self.spatial_positional_encoder_out_dim # + \
+                                            #(len(self.players_vel_columns) // self.num_players // self.num_time_steps)
 
         # positional encoding library doesn't play well with torchscript, so I'll just make the
         # encoding matrices upfront and add them during inference
@@ -178,19 +179,27 @@ class TransformerNestedHiddenLatentModel(nn.Module):
         return team_mask
 
     def forward(self, x, y=None):
-        x_pos = rearrange(x[:, self.players_pos_columns], "b (p t d) -> b p t d", p=self.num_players,
-                          t=self.num_time_steps, d=self.num_dim)
-        if self.num_time_steps > 1:
-            x_pos_lagged = torch.roll(x_pos, 1, 2)
-            x_pos[:, :, 1:] = x_pos_lagged[:, :, 1:] - x_pos[:, :, 1:]
-        x_pos_encoded = self.encode_pos(x_pos)
-        x_non_pos = rearrange(x[:, self.players_non_pos_columns], "b (p d) -> b p 1 d", p=self.num_players) \
-            .repeat([1, 1, self.num_time_steps, 1])
-        x_gathered = torch.cat([x_pos_encoded, x_non_pos], -1)
-        x_embedded = self.embedding_model(x_gathered)
-
         if self.num_time_steps < 2:
             raise Exception("must have history")
+
+        x_pos = rearrange(x[:, self.players_pos_columns], "b (p t d) -> b p t d", p=self.num_players,
+                          t=self.num_time_steps, d=self.num_dim)
+        # delta encode prior pos
+        x_pos_lagged = torch.roll(x_pos, 1, 2)
+        x_pos[:, :, 1:] = x_pos_lagged[:, :, 1:] - x_pos[:, :, 1:]
+        x_pos_encoded = self.encode_pos(x_pos)
+
+        #x_vel = rearrange(x[:, self.players_vel_columns], "b (p t d) -> b p t d", p=self.num_players,
+        #                  t=self.num_time_steps, d=self.num_dim)
+        #x_vel_scaled = x_vel / max_speed_per_second
+
+
+        x_non_pos = rearrange(x[:, self.players_non_pos_vel_columns], "b (p d) -> b p 1 d", p=self.num_players) \
+            .repeat([1, 1, self.num_time_steps, 1])
+        x_gathered = torch.cat([x_pos_encoded, x_non_pos], -1)
+        #x_gathered = torch.cat([x_pos_encoded, x_vel_scaled, x_non_pos], -1)
+        x_embedded = self.embedding_model(x_gathered)
+
         # apply temporal encoder to get one token per player
         # need to flatten first across batch/player to do temporal positional encoding per player
         x_batch_player_flattened = rearrange(x_embedded, "b p t d -> (b p) t d")
