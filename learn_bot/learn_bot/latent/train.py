@@ -6,6 +6,7 @@ import sys
 
 import torch.optim
 from torch import nn, autocast
+from torch.profiler import profile, ProfilerActivity
 from torch.utils.data import DataLoader
 
 from torch.utils.tensorboard import SummaryWriter
@@ -365,8 +366,10 @@ def train(train_type: TrainType, multi_hdf5_wrapper: MultiHDF5Wrapper,
         for _ in range(num_epochs):
             print(f"\nEpoch {total_epochs}\n" + f"-------------------------------")
             if enable_training:
-                train_loss, train_accuracy, train_delta_diff_xy, train_delta_diff_xyz = \
-                    train_or_test_SL_epoch(train_dataloader, model, optimizer, scaler, True)
+                with profile(activities=[ProfilerActivity.CPU, ProfilerActivity.CUDA]) as prof:
+                    train_loss, train_accuracy, train_delta_diff_xy, train_delta_diff_xyz = \
+                        train_or_test_SL_epoch(train_dataloader, model, optimizer, scaler, True)
+                print(prof.key_averages().table(sort_by="cuda_time_total", row_limit=10))
             else:
                 with torch.no_grad():
                     train_loss, train_accuracy, train_delta_diff_xy, train_delta_diff_xyz = \
