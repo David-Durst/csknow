@@ -56,13 +56,15 @@ RoundPlantDefusal processRoundPlantDefusals(const Rounds & rounds, const Ticks &
     RoundPlantDefusal result{INVALID_ID, INVALID_ID};
     // 2355745_137045_quazar-vs-unique-m3-dust2_72b8a4fe-c00a-11ec-992c-0a58a9feac02.dem
     // round 20 has a plant ending on the first tick because it carries over from the prior round
-    // skip the first 128 ticks to avoid this
-    for (int64_t tickIndex = rounds.ticksPerRound[roundIndex].minId + 128;
+    // so need to ensure all events start in this round
+    // can't just skip start as defusal game models use the second tick to do plant
+    int64_t roundStartTick = rounds.ticksPerRound[roundIndex].minId;
+    for (int64_t tickIndex = rounds.ticksPerRound[roundIndex].minId;
          tickIndex <= rounds.ticksPerRound[roundIndex].maxId; tickIndex++) {
         if (result.plantTickIndex == INVALID_ID) {
             for (const auto & [_0, _1, plantIndex] :
                 ticks.plantsPerTick.intervalToEvent.findOverlapping(tickIndex, tickIndex)) {
-                if (plants.succesful[plantIndex]) {
+                if (plants.succesful[plantIndex] && plants.startTick[plantIndex] >= roundStartTick) {
                     result.plantTickIndex = plants.endTick[plantIndex];
                 }
             }
@@ -70,7 +72,7 @@ RoundPlantDefusal processRoundPlantDefusals(const Rounds & rounds, const Ticks &
         if (result.defusalTickIndex == INVALID_ID) {
             for (const auto &[_0, _1, defusalIndex]:
                 ticks.defusalsPerTick.intervalToEvent.findOverlapping(tickIndex, tickIndex)) {
-                if (defusals.succesful[defusalIndex]) {
+                if (defusals.succesful[defusalIndex] && defusals.startTick[defusalIndex] >= roundStartTick) {
                     result.defusalTickIndex = defusals.endTick[defusalIndex];
                 }
             }
