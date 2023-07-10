@@ -1,5 +1,6 @@
 # https://pytorch.org/tutorials/beginner/basics/quickstart_tutorial.html
 import os
+import time
 from enum import Enum
 from typing import Dict
 import sys
@@ -221,9 +222,12 @@ def train(train_type: TrainType, multi_hdf5_wrapper: MultiHDF5Wrapper,
         prior_bad_Y = None
         prior_bad_duplicated_last = None
         prior_bad_indices = None
+        start_epoch_time = time.perf_counter()
         with tqdm(total=len(dataloader), disable=False) as pbar:
             for batch, (X, Y, duplicated_last, indices) in enumerate(dataloader):
                 batch_num += 1
+                if profiler is not None and batch_num > 24:
+                    break
                 if first_row is None:
                     first_row = X[0:1, :]
                 if prior_bad_X is None:
@@ -285,6 +289,7 @@ def train(train_type: TrainType, multi_hdf5_wrapper: MultiHDF5Wrapper,
                 if profiler is not None:
                     profiler.step()
 
+        end_epoch_time = time.perf_counter()
         cumulative_loss /= len(dataloader)
         for name in column_transformers.output_types.column_names():
             if name in valids_per_accuracy_column and valids_per_accuracy_column[name] > 0:
@@ -309,6 +314,7 @@ def train(train_type: TrainType, multi_hdf5_wrapper: MultiHDF5Wrapper,
                                                          valids_per_accuracy_column, column_transformers)
         train_test_str = "Train" if train else "Test"
         print(f"Epoch {train_test_str} Accuracy: {accuracy_string}, Transformed Avg Loss: {cumulative_loss.total_accumulator:>8f}")
+        print(f"Epoch Time {end_epoch_time - start_epoch_time: 0.4f} s")
         return cumulative_loss, accuracy, delta_diff_xy, delta_diff_xyz
 
     def save_model(not_best: bool, iter: int):
@@ -368,18 +374,22 @@ def train(train_type: TrainType, multi_hdf5_wrapper: MultiHDF5Wrapper,
         for _ in range(num_epochs):
             print(f"\nEpoch {total_epochs}\n" + f"-------------------------------")
             if enable_training:
-                def trace_handler(p):
-                    output = p.key_averages().table(sort_by="self_cuda_time_total", row_limit=10)
-                    print(output)
-                    p.export_chrome_trace("/raid/durst/csknow/learn_bot/traces/trace_" + str(p.step_num) + ".json")
-                #with profile(activities=[ProfilerActivity.CPU, ProfilerActivity.CUDA],
-                #             schedule=schedule(wait=5, warmup=5, active=20),
-                #             on_trace_ready=trace_handler) as prof:
-                #    train_loss, train_accuracy, train_delta_diff_xy, train_delta_diff_xyz = \
-                #        train_or_test_SL_epoch(train_dataloader, model, optimizer, scaler, True, prof)
-                #quit(0)
-                train_loss, train_accuracy, train_delta_diff_xy, train_delta_diff_xyz = \
-                    train_or_test_SL_epoch(train_dataloader, model, optimizer, scaler, True)
+                with profile(activities=[ProfilerActivity.CPU, ProfilerActivity.CUDA],
+                             on_trace_ready=torch.profiler.tensorboard_trace_handler(
+                                 str(runs_path / ('trace_' + hyperparameter_options.to_str(model)))),
+                             #schedule=schedule(wait=2, warmup=3, active=30),
+                             profile_memory=True,
+                             with_stack=True) as prof:
+                             #schedule=schedule(wait=5, warmup=5, active=20),
+                             #on_trace_ready=trace_handler) as prof:
+                    train_loss, train_accuracy, train_delta_diff_xy, train_delta_diff_xyz = \
+                        train_or_test_SL_epoch(train_dataloader, model, optimizer, scaler, True, prof)
+                print(prof.key_averages().table(sort_by="self_cuda_time_total", row_limit=10))
+                print(prof.key_averages().table(sort_by="self_cpu_time_total", row_limit=10))
+                #prof.export_chrome_trace("/raid/durst/csknow/learn_bot/traces/trace_all.json")
+                quit(0)
+                #train_loss, train_accuracy, train_delta_diff_xy, train_delta_diff_xyz = \
+                #    train_or_test_SL_epoch(train_dataloader, model, optimizer, scaler, True)
             else:
                 with torch.no_grad():
                     train_loss, train_accuracy, train_delta_diff_xy, train_delta_diff_xyz = \
