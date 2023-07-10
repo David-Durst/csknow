@@ -13,7 +13,7 @@ delta_pos_grid_num_cells = delta_pos_z_num_cells * \
 delta_pos_grid_num_cells_per_xy_dim = isqrt(int(delta_pos_grid_num_cells / delta_pos_z_num_cells))
 delta_pos_grid_num_xy_cells_per_z_change = delta_pos_grid_num_cells_per_xy_dim * delta_pos_grid_num_cells_per_xy_dim
 
-float_c4_cols = [] #c4_ticks_since_plant #[c4_distance_to_a_site_col, c4_distance_to_b_site_col] + c4_pos_cols + c4_ticks_since_plant
+float_c4_cols = c4_time_left_percent #c4_ticks_since_plant #[c4_distance_to_a_site_col, c4_distance_to_b_site_col] + c4_pos_cols + c4_ticks_since_plant
 
 test_success_col = 'test success'
 
@@ -55,6 +55,7 @@ class PlayerPlaceAreaColumns:
         self.aligned_pos = [get_player_aligned_pos_columns(player_index, team_str, dim_str) for dim_str in ["x", "y", "z"]]
         self.prior_pos = []
         self.vel = [get_player_velocity_columns(player_index, team_str, dim_str) for dim_str in ["x", "y", "z"]]
+        self.prior_vel = []
         self.cur_place = []
         #self.prior_place = []
         self.area_grid_cell_in_place = []
@@ -78,6 +79,7 @@ class PlayerPlaceAreaColumns:
         for prior_tick in range(1, num_prior_ticks+1):
             for dim_str in ["x", "y", "z"]:
                 self.prior_pos.append(get_player_pos_columns(player_index, team_str, dim_str, prior_tick))
+                self.prior_vel.append(get_player_velocity_columns(player_index, team_str, dim_str, prior_tick))
             #for place_index in range(num_places):
             #    self.prior_place \
             #        .append(get_player_prior_place_columns(player_index, place_index, team_str, prior_tick))

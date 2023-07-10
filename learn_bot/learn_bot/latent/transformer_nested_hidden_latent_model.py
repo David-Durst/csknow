@@ -45,8 +45,13 @@ class TransformerNestedHiddenLatentModel(nn.Module):
             [range_list_to_index_list(cts.get_name_ranges(True, False, contained_str="player pos " + player_team_str(team_str, player_index)))
              for team_str in team_strs for player_index in range(max_enemies)]
         )
+        self.players_vel_columns = flatten_list(
+            [range_list_to_index_list(cts.get_name_ranges(True, False, contained_str="player velocity " + player_team_str(team_str, player_index)))
+             for team_str in team_strs for player_index in range(max_enemies)]
+        )
+        pos_and_vel_columns = self.players_pos_columns + self.players_vel_columns
         self.players_non_pos_columns = flatten_list([
-            [player_column for player_column in player_columns if player_column not in self.players_pos_columns]
+            [player_column for player_column in player_columns if player_column not in pos_and_vel_columns]
             for player_columns in players_columns
         ])
 
