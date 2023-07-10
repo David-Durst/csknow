@@ -266,7 +266,7 @@ def train(train_type: TrainType, multi_hdf5_wrapper: MultiHDF5Wrapper,
                         prior_bad_Y = Y.detach()
                         prior_bad_duplicated_last = duplicated_last.detach()
                         prior_bad_indices = indices
-                        #sys.exit(0)
+                        sys.exit(0)
                     batch_loss = compute_loss(pred, Y, duplicated_last, model.num_players)
                     # uncomment here and below causes memory issues
                     cumulative_loss += batch_loss
