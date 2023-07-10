@@ -226,8 +226,8 @@ def train(train_type: TrainType, multi_hdf5_wrapper: MultiHDF5Wrapper,
         with tqdm(total=len(dataloader), disable=False) as pbar:
             for batch, (X, Y, duplicated_last, indices) in enumerate(dataloader):
                 batch_num += 1
-                if profiler is not None and batch_num > 24:
-                    break
+                #if batch_num > 24:
+                #    break
                 if first_row is None:
                     first_row = X[0:1, :]
                 if prior_bad_X is None:
@@ -377,7 +377,7 @@ def train(train_type: TrainType, multi_hdf5_wrapper: MultiHDF5Wrapper,
                 with profile(activities=[ProfilerActivity.CPU, ProfilerActivity.CUDA],
                              on_trace_ready=torch.profiler.tensorboard_trace_handler(
                                  str(runs_path / ('trace_' + hyperparameter_options.to_str(model)))),
-                             #schedule=schedule(wait=2, warmup=3, active=30),
+                             schedule=schedule(wait=2, warmup=3, active=30),
                              profile_memory=True,
                              with_stack=True) as prof:
                              #schedule=schedule(wait=5, warmup=5, active=20),
