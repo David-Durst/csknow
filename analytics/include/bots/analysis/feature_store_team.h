@@ -33,6 +33,7 @@ namespace csknow::feature_store {
     const int delta_pos_grid_num_xy_cells_per_z_change = delta_pos_grid_num_cells_per_xy_dim * delta_pos_grid_num_cells_per_xy_dim;
     constexpr double seconds_per_c4_timer_bucket = 10.;
     constexpr int num_c4_timer_buckets = 4;
+    constexpr float c4_max_time_seconds = 40.;
     constexpr int every_nth_row = 10;
     const string a_site = "BombsiteA", b_site = "BombsiteB";
     const Vec3 zeroVec = {0., 0., 0.};
@@ -69,6 +70,7 @@ namespace csknow::feature_store {
         vector<bool> c4PlantB;
         vector<bool> c4NotPlanted;
         vector<int64_t> c4TicksSincePlant;
+        vector<float> c4TimeLeftPercent;
         array<vector<bool>, num_c4_timer_buckets> c4TimerBucketed;
         vector<Vec3> c4Pos;
         vector<float> c4DistanceToASite, c4DistanceToBSite;

@@ -107,7 +107,7 @@ def vis(loaded_model: LoadedModel, inference_fn: Callable[[LoadedModel], None]):
                                  f"Planted B {data_series[c4_plant_b_col]}, "
                                  f"Not Planted {data_series[c4_not_planted_col]}, "
                                  f"C4 Pos ({data_series[c4_pos_cols[0]]:.2f}, {data_series[c4_pos_cols[1]]:.2f}, {data_series[c4_pos_cols[2]]:.2f}),"
-                                 f"C4 Ticks Since Plant {data_series[c4_ticks_since_plant[0]]}")
+                                 f"C4 Time Left Percent {data_series[c4_time_left_percent[0]]:.2f}")
 
         d2_img_copy = d2_img.copy().convert("RGBA")
         d2_overlay_im = Image.new("RGBA", d2_img_copy.size, (255, 255, 255, 0))

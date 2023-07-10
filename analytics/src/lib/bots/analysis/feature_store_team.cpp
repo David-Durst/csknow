@@ -27,6 +27,7 @@ namespace csknow::feature_store {
         c4PlantB.resize(size, false);
         c4NotPlanted.resize(size, false);
         c4TicksSincePlant.resize(size, INVALID_ID);
+        c4TimeLeftPercent.resize(size, 1.);
         for (int j = 0; j < num_c4_timer_buckets; j++) {
             c4TimerBucketed[j].resize(size, false);
         }
@@ -193,6 +194,7 @@ namespace csknow::feature_store {
             c4PlantB[rowIndex] = false;
             c4NotPlanted[rowIndex] = false;
             c4TicksSincePlant[rowIndex] = INVALID_ID;
+            c4TimeLeftPercent[rowIndex] = 1.;
             for (int j = 0; j < num_c4_timer_buckets; j++) {
                 c4TimerBucketed[j][rowIndex] = INVALID_ID;
             }
@@ -323,6 +325,11 @@ namespace csknow::feature_store {
             c4NotPlanted[internalTickIndex] = true;
         }
         c4TicksSincePlant[internalTickIndex] = buffer.c4MapData.ticksSincePlant;
+        // TODO: adjust for different tick rates
+        // need to clamp as there's a period after timer finishes before explosion (when bomb light turns white)
+        c4TimeLeftPercent[internalTickIndex] =
+                std::clamp(1.f - static_cast<float>(c4TicksSincePlant[internalTickIndex] / 128.f) / c4_max_time_seconds,
+                           0.f, 1.f);
         int c4TimerBucket = std::min(num_c4_timer_buckets - 1,
                                      static_cast<int>(c4TicksSincePlant[internalTickIndex] / seconds_per_c4_timer_bucket));
         c4TimerBucketed[c4TimerBucket][internalTickIndex] = true;
@@ -932,6 +939,7 @@ namespace csknow::feature_store {
         file.createDataSet("/data/c4 planted b", c4PlantB, hdf5FlatCreateProps);
         file.createDataSet("/data/c4 not planted", c4NotPlanted, hdf5FlatCreateProps);
         file.createDataSet("/data/c4 ticks since plant", c4TicksSincePlant, hdf5FlatCreateProps);
+        file.createDataSet("/data/c4 time left percent", c4TimeLeftPercent, hdf5FlatCreateProps);
         for (size_t c4TimerBucketIndex = 0; c4TimerBucketIndex < num_c4_timer_buckets; c4TimerBucketIndex++) {
             file.createDataSet("/data/c4 timer bucketed " + std::to_string(c4TimerBucketIndex), c4TimerBucketed[c4TimerBucketIndex], hdf5FlatCreateProps);
         }
@@ -996,6 +1004,7 @@ namespace csknow::feature_store {
         c4PlantB = file.getDataSet("/data/c4 planted b").read<std::vector<bool>>();
         c4NotPlanted = file.getDataSet("/data/c4 not planted").read<std::vector<bool>>();
         c4TicksSincePlant = file.getDataSet("/data/c4 ticks since plant").read<std::vector<int64_t>>();
+        c4TimeLeftPercent = file.getDataSet("/data/c4 time left percent").read<std::vector<float>>();
         for (size_t c4TimerBucketIndex = 0; c4TimerBucketIndex < num_c4_timer_buckets; c4TimerBucketIndex++) {
             c4TimerBucketed[c4TimerBucketIndex] = file.getDataSet("/data/c4 timer bucketed " + std::to_string(c4TimerBucketIndex)).read<std::vector<bool>>();
         }

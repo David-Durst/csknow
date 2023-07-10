@@ -24,6 +24,7 @@ c4_plant_b_col = "c4 planted b"
 c4_not_planted_col = "c4 not planted"
 c4_pos_cols = ["c4 pos x", "c4 pos y", "c4 pos z"]
 c4_ticks_since_plant = ["c4 ticks since plant"]
+c4_time_left_percent = ["c4 time left percent"]
 c4_distance_to_a_site_col = "c4 distance to a site"
 c4_distance_to_b_site_col = "c4 distance to b site"
 c4_distance_to_nearest_a_order_nav_area_cols = \
