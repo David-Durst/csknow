@@ -138,10 +138,12 @@ namespace csknow::behavior_tree_latent_states {
                 }
                  */
 
-                commitValidRowInRound = commitValidRowInRound ||
+                bool newCommitValidRowInRound =
                         featureStoreResult.teamFeatureStoreResult.commitTeamRow(tmpPreCommitBuffer[threadNum],
-                                                                                blackboard->distanceToPlaces, blackboard->navFile,
+                                                                                blackboard->distanceToPlaces,
+                                                                                blackboard->navFile,
                                                                                 roundIndex, tickIndex);
+                commitValidRowInRound = commitValidRowInRound || newCommitValidRowInRound;
 
                 /*
                 if (tickIndex == 8080) {
