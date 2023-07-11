@@ -9,6 +9,8 @@
 
 namespace csknow::behavior_tree_latent_states {
 
+    constexpr bool enable_per_player_metrics = true;
+
     NodeState ClearPriorityNode::exec(const ServerState &, TreeThinker &treeThinker) {
         // default values are set to invalid where necessary, so this is fine
         Priority &curPriority = blackboard.playerToPriority[treeThinker.csgoId];
@@ -128,15 +130,10 @@ namespace csknow::behavior_tree_latent_states {
                 blackboard->streamingManager.update(games, roundPlantDefusal, rounds, players, ticks, weaponFire, hurt,
                                                     playerAtTick, tickIndex, nearestNavCell, visPoints, tickRates);
                 const ServerState & curState = blackboard->streamingManager.db.batchData.fromNewest();
+
                 addTreeThinkersToBlackboard(curState, blackboard.get());
                 tmpPreCommitBuffer[threadNum].updateFeatureStoreBufferPlayers(curState);
                 globalQueryNode->exec(curState, defaultThinker);
-
-                /*
-                if (tickIndex == 2487942) {
-                    std::cout << "demo " << games.demoFile[rounds.gameId[roundIndex]] << " game tick number " << ticks.gameTickNumber[tickIndex] << std::endl;
-                }
-                 */
 
                 bool newCommitValidRowInRound =
                         featureStoreResult.teamFeatureStoreResult.commitTeamRow(tmpPreCommitBuffer[threadNum],
@@ -145,79 +142,103 @@ namespace csknow::behavior_tree_latent_states {
                                                                                 roundIndex, tickIndex);
                 commitValidRowInRound = commitValidRowInRound || newCommitValidRowInRound;
 
-                /*
-                if (tickIndex == 8080) {
-                    for (int64_t i = 0; i < 3; i++) {
-                        const ServerState::Client & curClient = curState.getClient(3);
-                        const ServerState::Client & victimClient = curState.getClient(i);
-                        csknow::feature_store::EngagementPossibleEnemy possibleEnemy;
-                        Vec3 victimHeadPos = getCenterHeadCoordinatesForPlayer(victimClient.getEyePosForPlayer(),
-                                                                               victimClient.getCurrentViewAngles(),
-                                                                               victimClient.duckAmount);
-                        Vec2 deltaViewAngle = deltaViewFromOriginToDest(curClient.getEyePosForPlayer(), victimHeadPos,
-                                                                        curClient.getCurrentViewAngles());
-                        std::cout << "tick index " << tickIndex << " cur pos " << curClient.getEyePosForPlayer().toCSV() <<
-                            " enemy pos " << victimClient.getEyePosForPlayer().toCSV() << " cur client view angle "
-                            << curClient.getCurrentViewAngles().toCSV() << std::endl;
-                        std::cout << " delta view angle " << computeMagnitude(deltaViewAngle)
-                                  << " world distance " << computeDistance(curClient.getEyePosForPlayer(), victimClient.getEyePosForPlayer()) << std::endl;
+                if (enable_per_player_metrics) {
+                    std::set<int64_t> firingPlayers;
+                    for (const auto & [_0, _1, fireIndex] :
+                            ticks.weaponFirePerTick.intervalToEvent.findOverlapping(tickIndex, tickIndex)) {
+                        firingPlayers.insert(weaponFire.shooter[fireIndex]);
                     }
-                }
-                 */
 
-                std::set<int64_t> firingPlayers;
-                for (const auto & [_0, _1, fireIndex] :
-                    ticks.weaponFirePerTick.intervalToEvent.findOverlapping(tickIndex, tickIndex)) {
-                    firingPlayers.insert(weaponFire.shooter[fireIndex]);
-                }
-
-                map<int64_t, int64_t> playerToACausalTarget;
-                for (const auto & [_0, _1, engagementIndex] :
-                    acausalEngagementResult.engagementsPerTick.intervalToEvent.findOverlapping(tickIndex, tickIndex)) {
-                    playerToACausalTarget[acausalEngagementResult.playerId[engagementIndex][0]] =
-                        acausalEngagementResult.playerId[engagementIndex][1];
-                }
-
-                // order state transition whenever new orders
-                // since my bots don't need to handle plants (plant start of round for retakes mode), I force a transition
-                // in real data
-                if (curState.c4IsPlanted) {
-                    // this forces state transition on first plant frame (as INVALID_ID until plant)
-                    if (blackboard->newOrderThisFrame || activeOrderState.startTickId == INVALID_ID) {
-                        if (activeOrderState.startTickId != INVALID_ID) {
-                            finishEvent(tmpStartTickId, tmpEndTickId, tmpLength,
-                                        tmpLatentStateType, tmpStatePayload,
-                                        LatentStateType::Order, {}, threadNum,
-                                        tickIndex, activeOrderState);
-                        }
-                        activeOrderState.startTickId = tickIndex;
-                        activeOrderState.payload = {};
+                    map<int64_t, int64_t> playerToACausalTarget;
+                    for (const auto & [_0, _1, engagementIndex] :
+                            acausalEngagementResult.engagementsPerTick.intervalToEvent.findOverlapping(tickIndex, tickIndex)) {
+                        playerToACausalTarget[acausalEngagementResult.playerId[engagementIndex][0]] =
+                                acausalEngagementResult.playerId[engagementIndex][1];
                     }
-                }
 
-                for (int64_t patIndex = ticks.patPerTick[tickIndex].minId;
-                    patIndex <= ticks.patPerTick[tickIndex].maxId; patIndex++) {
-                    CSGOId curPlayerId = playerAtTick.playerId[patIndex];
-                    if (playerAtTick.isAlive[patIndex]) {
-                        playerQueryNode->exec(curState, blackboard->playerToTreeThinkers[curPlayerId]);
-
-                        if (firingPlayers.find(curPlayerId) != firingPlayers.end() && !featureStoreResult.disable) {
-                            featureStoreResult.fireCurTick[patIndex] = true;
+                    // order state transition whenever new orders
+                    // since my bots don't need to handle plants (plant start of round for retakes mode), I force a transition
+                    // in real data
+                    if (curState.c4IsPlanted) {
+                        // this forces state transition on first plant frame (as INVALID_ID until plant)
+                        if (blackboard->newOrderThisFrame || activeOrderState.startTickId == INVALID_ID) {
+                            if (activeOrderState.startTickId != INVALID_ID) {
+                                finishEvent(tmpStartTickId, tmpEndTickId, tmpLength,
+                                            tmpLatentStateType, tmpStatePayload,
+                                            LatentStateType::Order, {}, threadNum,
+                                            tickIndex, activeOrderState);
+                            }
+                            activeOrderState.startTickId = tickIndex;
+                            activeOrderState.payload = {};
                         }
+                    }
 
-                        bool prevActiveEngagement =
-                            activeEngagementState.find(curPlayerId) != activeEngagementState.end();
-                        int64_t curTarget = blackboard->playerToPriority[curPlayerId].targetPlayer.playerId;
-                        CSGOId prevTarget = INVALID_ID;
-                        if (prevActiveEngagement) {
-                            prevTarget =
-                                std::get<EngagementStatePayload>(activeEngagementState[curPlayerId].payload).targetId;
-                        }
+                    for (int64_t patIndex = ticks.patPerTick[tickIndex].minId;
+                         patIndex <= ticks.patPerTick[tickIndex].maxId; patIndex++) {
+                        CSGOId curPlayerId = playerAtTick.playerId[patIndex];
+                        if (playerAtTick.isAlive[patIndex]) {
+                            playerQueryNode->exec(curState, blackboard->playerToTreeThinkers[curPlayerId]);
 
-                        // state transition whenever a target change
-                        if (prevTarget != curTarget) {
-                            // if state change where previously had a target, write the state
+                            if (firingPlayers.find(curPlayerId) != firingPlayers.end() && !featureStoreResult.disable) {
+                                featureStoreResult.fireCurTick[patIndex] = true;
+                            }
+
+                            bool prevActiveEngagement =
+                                    activeEngagementState.find(curPlayerId) != activeEngagementState.end();
+                            int64_t curTarget = blackboard->playerToPriority[curPlayerId].targetPlayer.playerId;
+                            CSGOId prevTarget = INVALID_ID;
                             if (prevActiveEngagement) {
+                                prevTarget =
+                                        std::get<EngagementStatePayload>(activeEngagementState[curPlayerId].payload).targetId;
+                            }
+
+                            // state transition whenever a target change
+                            if (prevTarget != curTarget) {
+                                // if state change where previously had a target, write the state
+                                if (prevActiveEngagement) {
+                                    finishEvent(tmpStartTickId, tmpEndTickId, tmpLength,
+                                                tmpLatentStateType, tmpStatePayload,
+                                                LatentStateType::Engagement,
+                                                EngagementStatePayload{curPlayerId, prevTarget}, threadNum,
+                                                tickIndex, activeEngagementState.at(curPlayerId));
+                                    activeEngagementState.erase(curPlayerId);
+                                }
+                                if (curTarget != INVALID_ID) {
+                                    activeEngagementState[curPlayerId] = {
+                                            tickIndex,
+                                            EngagementStatePayload{curPlayerId, curTarget}
+                                    };
+                                }
+                            }
+
+                            bool visibleEngagement = curTarget != INVALID_ID;
+                            bool hitEngagement = playerToACausalTarget.find(curPlayerId) != playerToACausalTarget.end();
+                            tmpPreCommitBuffer[threadNum].addEngagementLabel(hitEngagement, visibleEngagement);
+                            if (visibleEngagement && hitEngagement) {
+                                int64_t acausalTarget = playerToACausalTarget[curPlayerId];
+                                if (curTarget == acausalTarget) {
+                                    tmpPreCommitBuffer[threadNum].addTargetPossibleEnemyLabel({curTarget, true, true});
+                                }
+                                else {
+                                    tmpPreCommitBuffer[threadNum].addTargetPossibleEnemyLabel({curTarget, true, false});
+                                    tmpPreCommitBuffer[threadNum].addTargetPossibleEnemyLabel({acausalTarget, false, true});
+                                }
+                            }
+                            else if (visibleEngagement) {
+                                tmpPreCommitBuffer[threadNum].addTargetPossibleEnemyLabel({curTarget, true, false});
+                            }
+                            else if (hitEngagement) {
+                                tmpPreCommitBuffer[threadNum].addTargetPossibleEnemyLabel({
+                                                                                                  playerToACausalTarget[curPlayerId], false, true
+                                                                                          });
+                            }
+                        }
+                        else {
+                            bool prevActiveEngagement =
+                                    activeEngagementState.find(curPlayerId) != activeEngagementState.end();
+                            if (prevActiveEngagement) {
+                                CSGOId prevTarget =
+                                        std::get<EngagementStatePayload>(activeEngagementState[curPlayerId].payload).targetId;
                                 finishEvent(tmpStartTickId, tmpEndTickId, tmpLength,
                                             tmpLatentStateType, tmpStatePayload,
                                             LatentStateType::Engagement,
@@ -225,71 +246,31 @@ namespace csknow::behavior_tree_latent_states {
                                             tickIndex, activeEngagementState.at(curPlayerId));
                                 activeEngagementState.erase(curPlayerId);
                             }
-                            if (curTarget != INVALID_ID) {
-                                activeEngagementState[curPlayerId] = {
-                                    tickIndex,
-                                    EngagementStatePayload{curPlayerId, curTarget}
-                                };
-                            }
                         }
-
-                        bool visibleEngagement = curTarget != INVALID_ID;
-                        bool hitEngagement = playerToACausalTarget.find(curPlayerId) != playerToACausalTarget.end();
-                        tmpPreCommitBuffer[threadNum].addEngagementLabel(hitEngagement, visibleEngagement);
-                        if (visibleEngagement && hitEngagement) {
-                            int64_t acausalTarget = playerToACausalTarget[curPlayerId];
-                            if (curTarget == acausalTarget) {
-                                tmpPreCommitBuffer[threadNum].addTargetPossibleEnemyLabel({curTarget, true, true});
-                            }
-                            else {
-                                tmpPreCommitBuffer[threadNum].addTargetPossibleEnemyLabel({curTarget, true, false});
-                                tmpPreCommitBuffer[threadNum].addTargetPossibleEnemyLabel({acausalTarget, false, true});
-                            }
-                        }
-                        else if (visibleEngagement) {
-                            tmpPreCommitBuffer[threadNum].addTargetPossibleEnemyLabel({curTarget, true, false});
-                        }
-                        else if (hitEngagement) {
-                            tmpPreCommitBuffer[threadNum].addTargetPossibleEnemyLabel({
-                                playerToACausalTarget[curPlayerId], false, true
-                            });
-                        }
+                        featureStoreResult.commitPlayerRow(tmpPreCommitBuffer[threadNum], patIndex,
+                                                           roundIndex, tickIndex, curPlayerId);
                     }
-                    else {
-                        bool prevActiveEngagement =
-                            activeEngagementState.find(curPlayerId) != activeEngagementState.end();
-                        if (prevActiveEngagement) {
-                            CSGOId prevTarget =
-                                std::get<EngagementStatePayload>(activeEngagementState[curPlayerId].payload).targetId;
-                            finishEvent(tmpStartTickId, tmpEndTickId, tmpLength,
-                                        tmpLatentStateType, tmpStatePayload,
-                                        LatentStateType::Engagement,
-                                        EngagementStatePayload{curPlayerId, prevTarget}, threadNum,
-                                        tickIndex, activeEngagementState.at(curPlayerId));
-                            activeEngagementState.erase(curPlayerId);
-                        }
-                    }
-                    featureStoreResult.commitPlayerRow(tmpPreCommitBuffer[threadNum], patIndex,
-                                                       roundIndex, tickIndex, curPlayerId);
                 }
             }
 
-            // finish all active events
-            if (activeOrderState.startTickId != INVALID_ID) {
-                finishEvent(tmpStartTickId, tmpEndTickId, tmpLength,
-                            tmpLatentStateType, tmpStatePayload,
-                            LatentStateType::Order, {}, threadNum,
-                            rounds.ticksPerRound[roundIndex].maxId, activeOrderState);
-            }
-            for (const auto & [playerId, temporaryStateData] : activeEngagementState) {
-                finishEvent(tmpStartTickId, tmpEndTickId, tmpLength,
-                            tmpLatentStateType, tmpStatePayload,
-                            LatentStateType::Engagement,
-                            EngagementStatePayload{playerId,
-                            std::get<EngagementStatePayload>(temporaryStateData.payload).targetId}, threadNum,
-                            rounds.ticksPerRound[roundIndex].maxId,
-                            activeEngagementState.at(playerId));
+            if (enable_per_player_metrics) {
+                // finish all active events
+                if (activeOrderState.startTickId != INVALID_ID) {
+                    finishEvent(tmpStartTickId, tmpEndTickId, tmpLength,
+                                tmpLatentStateType, tmpStatePayload,
+                                LatentStateType::Order, {}, threadNum,
+                                rounds.ticksPerRound[roundIndex].maxId, activeOrderState);
+                }
+                for (const auto & [playerId, temporaryStateData] : activeEngagementState) {
+                    finishEvent(tmpStartTickId, tmpEndTickId, tmpLength,
+                                tmpLatentStateType, tmpStatePayload,
+                                LatentStateType::Engagement,
+                                EngagementStatePayload{playerId,
+                                                       std::get<EngagementStatePayload>(temporaryStateData.payload).targetId}, threadNum,
+                                rounds.ticksPerRound[roundIndex].maxId,
+                                activeEngagementState.at(playerId));
 
+                }
             }
 
             tmpRoundSizes[threadNum].push_back(static_cast<int64_t>(tmpStartTickId[threadNum].size()) - tmpRoundStarts[threadNum].back());

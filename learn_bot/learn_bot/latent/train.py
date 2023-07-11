@@ -314,7 +314,7 @@ def train(train_type: TrainType, multi_hdf5_wrapper: MultiHDF5Wrapper,
                                                          valids_per_accuracy_column, column_transformers)
         train_test_str = "Train" if train else "Test"
         print(f"Epoch {train_test_str} Accuracy: {accuracy_string}, Transformed Avg Loss: {cumulative_loss.total_accumulator:>8f}")
-        print(f"Epoch Time {end_epoch_time - start_epoch_time: 0.4f} s")
+        print(f"Batch Time {(end_epoch_time - start_epoch_time) / batch_num: 0.4f} s")
         return cumulative_loss, accuracy, delta_diff_xy, delta_diff_xyz
 
     def save_model(not_best: bool, iter: int):
