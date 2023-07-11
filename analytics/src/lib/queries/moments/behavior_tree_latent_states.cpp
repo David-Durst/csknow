@@ -99,8 +99,15 @@ namespace csknow::behavior_tree_latent_states {
             map<CSGOId, TemporaryStateData> activeEngagementState;
 
             set<int64_t> curPlayers;
+            bool commitValidRowInRound = false;
             for (int64_t tickIndex = rounds.ticksPerRound[roundIndex].minId;
                 mapValid && tickIndex <= rounds.ticksPerRound[roundIndex].maxId; tickIndex++) {
+                // clear history until commit a valid row
+                // this ensures that history always starts fresh on first save row (aka ignoring teleports during setup, and history from before round starts)
+                // so when deploy in retakes game without no history, match training data
+                if (!commitValidRowInRound) {
+                    tmpPreCommitBuffer[threadNum].clearHistory();
+                }
 
                 // reset blackboard if new player joins
                 set<int64_t> newPlayers;
@@ -131,9 +138,10 @@ namespace csknow::behavior_tree_latent_states {
                 }
                  */
 
-                featureStoreResult.teamFeatureStoreResult.commitTeamRow(tmpPreCommitBuffer[threadNum],
-                                                                        blackboard->distanceToPlaces, blackboard->navFile,
-                                                                        roundIndex, tickIndex);
+                commitValidRowInRound = commitValidRowInRound ||
+                        featureStoreResult.teamFeatureStoreResult.commitTeamRow(tmpPreCommitBuffer[threadNum],
+                                                                                blackboard->distanceToPlaces, blackboard->navFile,
+                                                                                roundIndex, tickIndex);
 
                 /*
                 if (tickIndex == 8080) {

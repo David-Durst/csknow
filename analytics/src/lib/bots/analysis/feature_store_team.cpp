@@ -294,13 +294,13 @@ namespace csknow::feature_store {
         return xValue + yValue * area_grid_dim;
     }
 
-    void TeamFeatureStoreResult::commitTeamRow(FeatureStorePreCommitBuffer & buffer,
+    bool TeamFeatureStoreResult::commitTeamRow(FeatureStorePreCommitBuffer & buffer,
                                                DistanceToPlacesResult & distanceToPlaces,
                                                const nav_mesh::nav_file & navFile,
                                                int64_t roundIndex, int64_t tickIndex) {
         int64_t internalTickIndex = tickIdToInternalId[tickIndex];
         if (internalTickIndex == INVALID_ID) {
-            return;
+            return false;
         }
 
         roundId[internalTickIndex] = roundIndex;
@@ -443,6 +443,7 @@ namespace csknow::feature_store {
             }
         }
          */
+        return true;
     }
 
     /*

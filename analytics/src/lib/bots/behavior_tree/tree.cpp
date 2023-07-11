@@ -130,6 +130,18 @@ void Tree::tick(ServerState & state, const string & mapsPath) {
        featureStoreResult.defaultBuffer.clearHistory();
     }
 
+    // also clear history on teleports (aka teleport confirmation id doesn't equal telport id)
+    bool newTeleport = false;
+    for (const auto & client : state.clients) {
+        if (client.lastTeleportConfirmationId != client.lastTeleportId) {
+            newTeleport = true;
+            break;
+        }
+    }
+    if (newTeleport) {
+        featureStoreResult.defaultBuffer.clearHistory();
+    }
+
     if (!blackboard->playerToTreeThinkers.empty()) {
         vector<PrintState> printStates;
 
