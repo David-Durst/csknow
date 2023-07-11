@@ -1,3 +1,4 @@
+from learn_bot.latent.analyze.process_trajectory_comparison import set_pd_print_options
 from learn_bot.latent.load_model import load_model_file
 from learn_bot.latent.place_area.load_data import human_latent_team_hdf5_data_path, manual_latent_team_hdf5_data_path, \
     rollout_latent_team_hdf5_data_path, LoadDataResult, LoadDataOptions
@@ -37,5 +38,12 @@ if __name__ == "__main__":
     #for flip_column in [ColumnsToFlip(" CT 1", " CT 2")]:
     #    flip_column.apply_flip(all_data_df)
 
+    set_pd_print_options()
+    non_delta_pos_cols = []
+    for col in load_data_result.multi_hdf5_wrapper.hdf5_wrappers[0].sample_df.columns:
+        if "delta pos" not in col:
+            non_delta_pos_cols.append(col)
+    data_series = load_data_result.multi_hdf5_wrapper.hdf5_wrappers[0].sample_df.iloc[0].loc[non_delta_pos_cols]
+    print(data_series)
     loaded_model = load_model_file(load_data_result)
     vis(loaded_model, off_policy_inference)

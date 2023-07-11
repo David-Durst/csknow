@@ -224,7 +224,7 @@ def train(train_type: TrainType, multi_hdf5_wrapper: MultiHDF5Wrapper,
         prior_bad_indices = None
         start_epoch_time = time.perf_counter()
         with tqdm(total=len(dataloader), disable=False) as pbar:
-            for batch, (X, Y, duplicated_last) in enumerate(dataloader):
+            for batch, (X, Y, duplicated_last, indices) in enumerate(dataloader):
                 batch_num += 1
                 #if batch_num > 24:
                 #    break
@@ -374,7 +374,7 @@ def train(train_type: TrainType, multi_hdf5_wrapper: MultiHDF5Wrapper,
         for _ in range(num_epochs):
             print(f"\nEpoch {total_epochs}\n" + f"-------------------------------")
             if enable_training:
-                if True:
+                if False:
                     with profile(activities=[ProfilerActivity.CPU, ProfilerActivity.CUDA],
                                  on_trace_ready=torch.profiler.tensorboard_trace_handler(
                                      str(runs_path / ('trace_' + hyperparameter_options.to_str(model)))),
@@ -422,7 +422,7 @@ def train(train_type: TrainType, multi_hdf5_wrapper: MultiHDF5Wrapper,
     print(f"num train examples: {len(train_data)}")
     print(f"num test examples: {len(test_data)}")
 
-    for X, Y, _ in train_dataloader:
+    for X, Y, _, _ in train_dataloader:
         print(f"Train shape of X: {X.shape} {X.dtype}")
         print(f"Train shape of Y: {Y.shape} {Y.dtype}")
         break
