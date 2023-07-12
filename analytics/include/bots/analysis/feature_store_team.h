@@ -115,7 +115,7 @@ namespace csknow::feature_store {
                                std::optional<std::reference_wrapper<const csknow::key_retake_events::KeyRetakeEvents>> keyRetakeEvents = std::nullopt);
         virtual ~TeamFeatureStoreResult() = default;
         void reinit();
-        bool commitTeamRow(FeatureStorePreCommitBuffer & buffer, DistanceToPlacesResult & distanceToPlaces,
+        bool commitTeamRow(FeatureStorePreCommitBuffer & buffer, const DistanceToPlacesResult & distanceToPlaces,
                            const nav_mesh::nav_file & navFile,
                            int64_t roundIndex = 0, int64_t tickIndex = 0);
         enum class ACausalTimingOption {

@@ -84,8 +84,9 @@ namespace csknow::feature_store {
         CircularBuffer<std::map<int64_t, BTTeamPlayerData>>
             historicalPlayerDataBuffer{prior_tick_spacing * num_prior_ticks + 1};
 
-        void clearHistory();
+        void updateCurTeamData(const ServerState & state, const nav_mesh::nav_file & navFile);
         void appendPlayerHistory();
+        void clearHistory();
         int64_t getPlayerOldestContiguousHistoryIndex(int64_t playerId);
     };
 }

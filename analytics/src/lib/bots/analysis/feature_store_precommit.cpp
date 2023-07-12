@@ -38,6 +38,33 @@ namespace csknow::feature_store {
         engagementTeammateBuffer.push_back(engagementTeammate);
     }
 
+    void FeatureStorePreCommitBuffer::updateCurTeamData(const ServerState & state, const nav_mesh::nav_file & navFile) {
+        btTeamPlayerData.clear();
+        for (const auto & client : state.clients) {
+            if (!client.isAlive) {
+                continue;
+            }
+            AreaId curAreaId = navFile
+                    .get_nearest_area_by_position(vec3Conv(client.getFootPosForPlayer()))
+                    .get_id();
+            int64_t curAreaIndex = navFile.m_area_ids_to_indices.at(curAreaId);
+            btTeamPlayerData.push_back({client.csgoId, client.team, curAreaId, curAreaIndex,
+                                        client.getFootPosForPlayer(), client.getVelocity()});
+        }
+        appendPlayerHistory();
+        AreaId c4AreaId = navFile
+                .get_nearest_area_by_position(vec3Conv(state.getC4Pos()))
+                .get_id();
+        int64_t c4AreaIndex = navFile.m_area_ids_to_indices.at(c4AreaId);
+        c4MapData = {
+                state.getC4Pos(),
+                state.c4IsPlanted,
+                state.ticksSinceLastPlant,
+                c4AreaId,
+                c4AreaIndex
+        };
+    }
+
     void FeatureStorePreCommitBuffer::appendPlayerHistory() {
         std::map<int64_t, BTTeamPlayerData> newEntryHistoricalPlayerDataBuffer;
         for (const auto & playerData : btTeamPlayerData) {

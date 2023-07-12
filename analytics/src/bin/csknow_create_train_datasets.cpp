@@ -27,6 +27,7 @@
 #include "queries/inference_moments/inference_engagement_aim.h"
 #include "queries/training_moments/training_navigation.h"
 #include "queries/moments/key_retake_events.h"
+#include "queries/moments/feature_store_team_extractor.h"
 #define CPPHTTPLIB_OPENSSL_SUPPORT
 #include "httplib.h"
 #include <cerrno>
@@ -241,12 +242,14 @@ int main(int argc, char * argv[]) {
     EngagementResult engagementResult = queryEngagementResult(games, filteredRounds, ticks, hurt);
     std::cout << "size: " << engagementResult.size << std::endl;
 
+    /*
     // bt latent events
     string behaviorTreeLatentEventsName = "behaviorTreeLatentEvents";
     string behaviorTreeFeatureStoreName = "behaviorTreeFeatureStore";
     string behaviorTreeTeamFeatureStoreName = "behaviorTreeTeamFeatureStore";
     string behaviorTreeWindowFeatureStoreName = "behaviorTreeWindowFeatureStore";
     std::cout << "processing behaviorTreeLatentEvents" << std::endl;
+    auto behaviorTreeLatentEventsTimeStart = std::chrono::system_clock::now();
     keyRetakeEvents.enableNonTestPlantRounds = enableNonTestPlantRounds;
     csknow::behavior_tree_latent_states::BehaviorTreeLatentStates behaviorTreeLatentEvents(ticks, playerAtTick,
                                                                                            ordersResult.orders,
@@ -257,6 +260,10 @@ int main(int argc, char * argv[]) {
                                       ordersResult, players, games, filteredRounds, ticks,
                                       playerAtTick, weaponFire, hurt, plants, defusals, engagementResult);
     std::cout << "size: " << behaviorTreeLatentEvents.size << std::endl;
+    auto behaviorTreeLatentEventsTimeEnd = std::chrono::system_clock::now();
+    std::chrono::duration<double> behaviorTreeLatentEventsTime =
+            behaviorTreeLatentEventsTimeEnd - behaviorTreeLatentEventsTimeStart;
+    std::cout << "behavior tree latent events time " << behaviorTreeLatentEventsTime.count() << std::endl;
     //behaviorTreeLatentEvents.featureStoreResult.teamFeatureStoreResult.checkPossiblyBadValue();
 
     std::cout << "processing behavior tree feature store" << std::endl;
@@ -269,6 +276,28 @@ int main(int argc, char * argv[]) {
                                                                                             map_navs.at("de_dust2"),
                                                                                             keyRetakeEvents);
     std::cout << "size: " << behaviorTreeLatentEvents.featureStoreResult.teamFeatureStoreResult.size << std::endl;
+     */
+
+    string behaviorTreeTeamFeatureStoreName = "behaviorTreeTeamFeatureStore";
+    std::cout << "processing teamFeatureStore" << std::endl;
+    auto teamFeatureStoreTimeStart = std::chrono::system_clock::now();
+    keyRetakeEvents.enableNonTestPlantRounds = enableNonTestPlantRounds;
+    csknow::feature_store::TeamFeatureStoreResult teamFeatureStoreResult =
+            csknow::feature_store::featureStoreTeamExtraction(navPath + "/de_dust2.nav", map_navs["de_dust2"],
+                                                              ordersResult.orders,
+                                                              map_visPoints.at("de_dust2"), d2DistanceToPlacesResult,
+                                                              nearestNavCellResult,
+                                                              players, games, filteredRounds, ticks,
+                                                              playerAtTick, weaponFire, hurt, plants, defusals,
+                                                              keyRetakeEvents);
+    auto teamFeatureStoreTimeEnd = std::chrono::system_clock::now();
+    std::chrono::duration<double> behaviorTreeLatentEventsTime = teamFeatureStoreTimeEnd - teamFeatureStoreTimeStart;
+    std::cout << "team feature store time " << behaviorTreeLatentEventsTime.count() << std::endl;
+
+    std::cout << "processing team feature store" << std::endl;
+    teamFeatureStoreResult.computeAcausalLabels(games, filteredRounds, ticks, players, d2DistanceToPlacesResult,
+                                                map_navs.at("de_dust2"), keyRetakeEvents);
+    std::cout << "size: " << teamFeatureStoreResult.size << std::endl;
 
     /*
     std::cout << "processing behavior tree window feature store" << std::endl;
@@ -330,7 +359,7 @@ int main(int argc, char * argv[]) {
             //{engagementAimName, engagementAimResult},
             //{latentEngagementAimName, latentEngagementAimResult},
             //{behaviorTreeFeatureStoreName, behaviorTreeLatentEvents.featureStoreResult},
-            {behaviorTreeTeamFeatureStoreName + outputNameAppendix, behaviorTreeLatentEvents.featureStoreResult.teamFeatureStoreResult}
+            {behaviorTreeTeamFeatureStoreName + outputNameAppendix, teamFeatureStoreResult}
             //{trainingNavigationName, trainingNavigationResult},
     };
 

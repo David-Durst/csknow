@@ -295,7 +295,7 @@ namespace csknow::feature_store {
     }
 
     bool TeamFeatureStoreResult::commitTeamRow(FeatureStorePreCommitBuffer & buffer,
-                                               DistanceToPlacesResult & distanceToPlaces,
+                                               const DistanceToPlacesResult & distanceToPlaces,
                                                const nav_mesh::nav_file & navFile,
                                                int64_t roundIndex, int64_t tickIndex) {
         int64_t internalTickIndex = tickIdToInternalId[tickIndex];
