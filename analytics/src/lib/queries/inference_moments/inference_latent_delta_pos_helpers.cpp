@@ -18,8 +18,9 @@ namespace csknow::inference_delta_pos {
         result.rowCPP.push_back(static_cast<float>(teamFeatureStoreResult.c4Pos[rowIndex].x));
         result.rowCPP.push_back(static_cast<float>(teamFeatureStoreResult.c4Pos[rowIndex].y));
         result.rowCPP.push_back(static_cast<float>(teamFeatureStoreResult.c4Pos[rowIndex].z));
-        result.rowCPP.push_back(static_cast<float>(teamFeatureStoreResult.c4TicksSincePlant[rowIndex]));
          */
+        result.rowCPP.push_back(static_cast<float>(teamFeatureStoreResult.c4TimeLeftPercent[rowIndex]));
+
         // player data
         bool ctColumnData = true;
         for (const auto & columnData :
