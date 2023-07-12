@@ -47,7 +47,7 @@ namespace csknow::feature_store {
                 }
 
                 streamingManager.update(games, roundPlantDefusal, rounds, players, ticks, weaponFire, hurt,
-                                        playerAtTick, tickIndex, nearestNavCell, visPoints, tickRates);
+                                        playerAtTick, tickIndex, nearestNavCell, visPoints, tickRates, false);
                 const ServerState & curState = streamingManager.db.batchData.fromNewest();
 
                 tmpPreCommitBuffer[threadNum].updateFeatureStoreBufferPlayers(curState);

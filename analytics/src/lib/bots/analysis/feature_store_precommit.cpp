@@ -44,11 +44,11 @@ namespace csknow::feature_store {
             if (!client.isAlive) {
                 continue;
             }
-            AreaId curAreaId = navFile
-                    .get_nearest_area_by_position(vec3Conv(client.getFootPosForPlayer()))
-                    .get_id();
-            int64_t curAreaIndex = navFile.m_area_ids_to_indices.at(curAreaId);
-            btTeamPlayerData.push_back({client.csgoId, client.team, curAreaId, curAreaIndex,
+            //AreaId curAreaId = navFile
+            //        .get_nearest_area_by_position(vec3Conv(client.getFootPosForPlayer()))
+            //        .get_id();
+            //int64_t curAreaIndex = navFile.m_area_ids_to_indices.at(curAreaId);
+            btTeamPlayerData.push_back({client.csgoId, client.team, /*curAreaId, curAreaIndex,*/
                                         client.getFootPosForPlayer(), client.getVelocity()});
         }
         appendPlayerHistory();

@@ -19,8 +19,8 @@ namespace csknow::feature_store {
     struct BTTeamPlayerData {
         int64_t playerId;
         TeamId teamId;
-        AreaId curArea;
-        int64_t curAreaIndex;
+        //AreaId curArea;
+        //int64_t curAreaIndex;
         Vec3 curFootPos;
         Vec3 velocity;
     };

@@ -242,8 +242,8 @@ int main(int argc, char * argv[]) {
     EngagementResult engagementResult = queryEngagementResult(games, filteredRounds, ticks, hurt);
     std::cout << "size: " << engagementResult.size << std::endl;
 
-    /*
     // bt latent events
+    /*
     string behaviorTreeLatentEventsName = "behaviorTreeLatentEvents";
     string behaviorTreeFeatureStoreName = "behaviorTreeFeatureStore";
     string behaviorTreeTeamFeatureStoreName = "behaviorTreeTeamFeatureStore";
@@ -359,6 +359,7 @@ int main(int argc, char * argv[]) {
             //{engagementAimName, engagementAimResult},
             //{latentEngagementAimName, latentEngagementAimResult},
             //{behaviorTreeFeatureStoreName, behaviorTreeLatentEvents.featureStoreResult},
+            //{behaviorTreeTeamFeatureStoreName + outputNameAppendix, behaviorTreeLatentEvents.featureStoreResult.teamFeatureStoreResult}
             {behaviorTreeTeamFeatureStoreName + outputNameAppendix, teamFeatureStoreResult}
             //{trainingNavigationName, trainingNavigationResult},
     };

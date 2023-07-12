@@ -85,7 +85,8 @@ void StreamingManager::update(const Games & games, const RoundPlantDefusal & rou
                               const Players & players, const Ticks & ticks, const WeaponFire & weaponFire,
                               const Hurt & hurt, const PlayerAtTick & playerAtTick, int64_t tickIndex,
                               const csknow::nearest_nav_cell::NearestNavCell & nearestNavCell,
-                              const VisPoints & visPoints, const TickRates & tickRates) {
+                              const VisPoints & visPoints, const TickRates & tickRates,
+                              bool computeVisibility) {
     ServerState newState;
 
     newState.loadedSuccessfully = true;
@@ -192,14 +193,16 @@ void StreamingManager::update(const Games & games, const RoundPlantDefusal & rou
               [](const ServerState::Client & a, const ServerState::Client & b) { return a.csgoId < b.csgoId; });
 
     // loadVisibilityClientPairs equivalent
-    for (size_t outerClientIndex = 0; outerClientIndex < newState.clients.size(); outerClientIndex++) {
-        const ServerState::Client & outerClient = newState.clients[outerClientIndex];
-        for (size_t innerClientIndex = outerClientIndex + 1; innerClientIndex < newState.clients.size();
-            innerClientIndex++) {
-            const ServerState::Client & innerClient = newState.clients[innerClientIndex];
-            if (demoIsVisible(playerAtTick, playerToPATindex[outerClient.csgoId],
-                              playerToPATindex[innerClient.csgoId], nearestNavCell, visPoints)) {
-                newState.visibilityClientPairs.insert({outerClient.csgoId, innerClient.csgoId});
+    if (computeVisibility) {
+        for (size_t outerClientIndex = 0; outerClientIndex < newState.clients.size(); outerClientIndex++) {
+            const ServerState::Client & outerClient = newState.clients[outerClientIndex];
+            for (size_t innerClientIndex = outerClientIndex + 1; innerClientIndex < newState.clients.size();
+                 innerClientIndex++) {
+                const ServerState::Client & innerClient = newState.clients[innerClientIndex];
+                if (demoIsVisible(playerAtTick, playerToPATindex[outerClient.csgoId],
+                                  playerToPATindex[innerClient.csgoId], nearestNavCell, visPoints)) {
+                    newState.visibilityClientPairs.insert({outerClient.csgoId, innerClient.csgoId});
+                }
             }
         }
     }

@@ -34,7 +34,7 @@ public:
                 const Players & players, const Ticks & ticks, const WeaponFire & weaponFire, const Hurt & hurt,
                 const PlayerAtTick & playerAtTick, int64_t tickIndex,
                 const csknow::nearest_nav_cell::NearestNavCell & nearestNavCell, const VisPoints & visPoints,
-                const TickRates & tickRates);
+                const TickRates & tickRates, bool computeVisibility = true);
 };
 
 bool demoIsVisible(const PlayerAtTick & playerAtTick, int64_t attackerPATId, int64_t victimPATId,
