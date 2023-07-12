@@ -46,7 +46,7 @@ class LatentLosses:
     def add_scalars(self, writer: SummaryWriter, prefix: str, total_epoch_num: int):
         writer.add_scalar(prefix + '/loss/cat', self.cat_accumulator, total_epoch_num)
         writer.add_scalar(prefix + '/loss/repeated cat', self.duplicate_last_cat_accumulator, total_epoch_num)
-        writer.add_scalar(prefix + '/loss/total', self.total_loss, total_epoch_num)
+        writer.add_scalar(prefix + '/loss/total', self.total_accumulator, total_epoch_num)
 
 
 # https://discuss.pytorch.org/t/how-to-combine-multiple-criterions-to-a-loss-function/348/4
