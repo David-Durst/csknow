@@ -243,6 +243,7 @@ int main(int argc, char * argv[]) {
     std::cout << "size: " << engagementResult.size << std::endl;
 
     // bt latent events
+    /*
     string behaviorTreeLatentEventsName = "behaviorTreeLatentEvents";
     string behaviorTreeFeatureStoreName = "behaviorTreeFeatureStore";
     string behaviorTreeTeamFeatureStoreName = "behaviorTreeTeamFeatureStore";
@@ -275,8 +276,8 @@ int main(int argc, char * argv[]) {
                                                                                             map_navs.at("de_dust2"),
                                                                                             keyRetakeEvents);
     std::cout << "size: " << behaviorTreeLatentEvents.featureStoreResult.teamFeatureStoreResult.size << std::endl;
+     */
 
-     /*
     string behaviorTreeTeamFeatureStoreName = "behaviorTreeTeamFeatureStore";
     std::cout << "processing teamFeatureStore" << std::endl;
     auto teamFeatureStoreTimeStart = std::chrono::system_clock::now();
@@ -297,7 +298,6 @@ int main(int argc, char * argv[]) {
     teamFeatureStoreResult.computeAcausalLabels(games, filteredRounds, ticks, players, d2DistanceToPlacesResult,
                                                 map_navs.at("de_dust2"), keyRetakeEvents);
     std::cout << "size: " << teamFeatureStoreResult.size << std::endl;
-     */
 
     /*
     std::cout << "processing behavior tree window feature store" << std::endl;
