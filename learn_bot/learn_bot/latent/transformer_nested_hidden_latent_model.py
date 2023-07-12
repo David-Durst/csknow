@@ -151,17 +151,17 @@ class TransformerNestedHiddenLatentModel(nn.Module):
             y_per_player = delta_one_hot_max_to_index(y)
         else:
             y_per_player = delta_one_hot_prob_to_index(y)
+        # shift by 1 so never looking into future (and 0 out for past)
+        y_per_player_shifted = torch.roll(y_per_player, 1, dims=1)
+        y_per_player_shifted[:, 0] = 0
         if x_pos.device.type == CPU_DEVICE_STR:
-            y_pos = compute_new_pos(x_pos, y_per_player, self.nav_data_cpu)
+            y_pos = compute_new_pos(x_pos, y_per_player_shifted, self.nav_data_cpu)
         else:
-            y_pos = compute_new_pos(x_pos, y_per_player, self.nav_data_cuda)
+            y_pos = compute_new_pos(x_pos, y_per_player_shifted, self.nav_data_cuda)
         y_pos_encoded = self.encode_pos(y_pos)
         #y_pos_time_flattened = rearrange(y_pos_encoded, "b p t d -> b p (t d)")
         y_gathered = torch.cat([y_pos_encoded, x_non_pos], -1)[:, :, 0, :]
-        # shift by 1 so input is from prior player (not current player aka looking into future)
-        y_gathered_shifted = torch.roll(y_gathered, 1, dims=1)
-        y_gathered_shifted[:, 0] = 0
-        return self.embedding_model(y_gathered_shifted)
+        return self.embedding_model(y_gathered)
 
     def generate_tgt_mask(self, device: str) -> torch.Tensor:
         # base tgt mask that is diagonal to ensure only look at future teammates
