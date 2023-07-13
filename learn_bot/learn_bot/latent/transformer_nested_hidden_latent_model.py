@@ -100,6 +100,12 @@ class TransformerNestedHiddenLatentModel(nn.Module):
             nn.Linear(self.internal_width, self.internal_width),
         )
 
+        self.y_embedding_model = nn.Sequential(
+            nn.Linear(self.num_dim, self.internal_width),
+            nn.LeakyReLU(),
+            nn.Linear(self.internal_width, self.internal_width),
+        )
+
         self.nav_data_cpu = NavData(CPU_DEVICE_STR)
         self.nav_data_cuda = NavData(CUDA_DEVICE_STR)
 
@@ -124,7 +130,7 @@ class TransformerNestedHiddenLatentModel(nn.Module):
             nn.Flatten(1)
         )
 
-    def encode_pos(self, pos: torch.tensor):
+    def encode_pos(self, pos: torch.tensor, enable_noise=True):
         # https://arxiv.org/pdf/2003.08934.pdf
         # 5.1 - everything is normalized -1 to 1
         pos_scaled = torch.zeros_like(pos)
@@ -137,7 +143,7 @@ class TransformerNestedHiddenLatentModel(nn.Module):
         pos_scaled = torch.clamp(pos_scaled, 0, 1)
         pos_scaled = (pos_scaled * 2) - 1
 
-        if self.noise_var >= 0.:
+        if self.noise_var >= 0. and enable_noise:
             means = torch.zeros(pos.shape)
             vars = torch.full(pos.shape, self.noise_var)
             noise = torch.normal(means, vars).to(pos.device.type)
@@ -154,14 +160,18 @@ class TransformerNestedHiddenLatentModel(nn.Module):
         # shift by 1 so never looking into future (and 0 out for past)
         y_per_player_shifted = torch.roll(y_per_player, 1, dims=1)
         y_per_player_shifted[:, 0] = 0
+        #return self.y_embedding_model(rearrange(y_per_player_shifted, "b y -> b y 1"))
+        #x_pos_shifted = torch.roll(x_pos, 1, dims=1)
+        x_pos_zeros = torch.zeros_like(x_pos)
         if x_pos.device.type == CPU_DEVICE_STR:
-            y_pos = compute_new_pos(x_pos, y_per_player_shifted, self.nav_data_cpu)
+            y_pos = compute_new_pos(x_pos_zeros, y_per_player_shifted, self.nav_data_cpu)
         else:
-            y_pos = compute_new_pos(x_pos, y_per_player_shifted, self.nav_data_cuda)
-        y_pos_encoded = self.encode_pos(y_pos)
+            y_pos = compute_new_pos(x_pos_zeros, y_per_player_shifted, self.nav_data_cuda)
+        #y_pos2 = compute_new_pos(x_pos_shifted, y_per_player_shifted, self.nav_data_cuda)
+        y_pos_encoded = y_pos / max_speed_per_second #self.encode_pos(y_pos, enable_noise=False)
         #y_pos_time_flattened = rearrange(y_pos_encoded, "b p t d -> b p (t d)")
-        y_gathered = torch.cat([y_pos_encoded, x_non_pos], -1)[:, :, 0, :]
-        return self.embedding_model(y_gathered)
+        #y_gathered = torch.cat([y_pos_encoded, x_non_pos], -1)[:, :, 0, :]
+        return self.y_embedding_model(y_pos_encoded[:,:,0,:])#y_gathered)
 
     def generate_tgt_mask(self, device: str) -> torch.Tensor:
         # base tgt mask that is diagonal to ensure only look at future teammates

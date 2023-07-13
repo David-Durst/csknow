@@ -44,6 +44,7 @@ class LoadDataOptions:
     # set these if want to filter all human based on small human
     small_good_rounds: Optional[List[int]] = None
     similarity_df: Optional[pd.DataFrame] = None
+    limit_manual_data_to_only_enemies_no_nav: bool = False
 
 
 
@@ -62,6 +63,8 @@ class LoadDataResult:
             manual_data = HDF5Wrapper(manual_latent_team_hdf5_data_path, hdf5_id_columns)
             if load_data_options.limit_manual_data_to_no_enemies_nav:
                 manual_data.limit((manual_data.id_df[test_success_col] == 1.) & (manual_data.id_df[game_id_column] == 1))
+            elif load_data_options.limit_manual_data_to_only_enemies_no_nav:
+                manual_data.limit((manual_data.id_df[test_success_col] == 1.) & (manual_data.id_df[game_id_column] == 0))
             else:
                 manual_data.limit(manual_data.id_df[test_success_col] == 1.)
             hdf5_sources.append(manual_data)
