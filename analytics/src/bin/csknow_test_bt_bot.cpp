@@ -76,12 +76,15 @@ int main(int argc, char * argv[]) {
     ScriptsRunner formationDataGenerator(formationInitializer.createFormationScripts(mapMeshResult, true), false);
 
     ScriptsRunner scriptsRunner(Script::makeList(
-         //make_unique<GooseToCatScript>(state)
-             /*
+            /*
+         make_unique<GooseToCatScript>(state),
             make_unique<GooseToCatShortScript>(state)
             make_unique<CTPushLongScript>(state),
             make_unique<CTPushBDoorsScript>(state),
-            make_unique<CTPushBHoleScript>(state)
+             */
+            //make_unique<CTPushBHoleScript>(state),
+            make_unique<CTPushMidToBHoleScript>(state),
+                    /*
             make_unique<DefuseScript>(state),
             // * /
             make_unique<InterruptedDefuseScript>(state)
@@ -99,9 +102,7 @@ int main(int argc, char * argv[]) {
             make_unique<PushLurkBaitASiteScript>(state),
             make_unique<PushATwoOrdersScript>(state),
             make_unique<PushTwoBDoorsScript>(state),
-              */
             make_unique<PushThreeBScript>(state)
-                    /*
             make_unique<MemoryAimCheck>(state),
             make_unique<MemoryForgetCheck>(state),
             make_unique<CommunicationAimCheck>(state),
@@ -111,8 +112,8 @@ int main(int argc, char * argv[]) {
             make_unique<DiffusionPossibleNavAreasCheck>(state),
             make_unique<VisibilityPossibleNavAreasCheck>(state),
             make_unique<DangerOnePlayerCheck>(state),
+              */
             make_unique<DangerTwoPlayerCheck>(state)
-                 */
     ), true);
     ScriptsRunner scenarioRunner(variable_aim_test::makeBotTests(), false, 0);
     ScriptsRunner humanScenarioRunner(variable_aim_test::makeHumanTests(), false, 1);
@@ -158,8 +159,8 @@ int main(int argc, char * argv[]) {
             else if (state.clients.size() > 0) {
                 //std::cout << "time since last save " << state.getSecondsBetweenTimes(start, priorStart) << std::endl;
                 if (runTest) {
-                    //scriptsRunner.initialize(tree, state);
-                    //finishedTests = scriptsRunner.tick(tree, state);
+                    scriptsRunner.initialize(tree, state);
+                    finishedTests = scriptsRunner.tick(tree, state);
                     //scenarioRunner.initialize(tree, state);
                     //finishedTests = scenarioRunner.tick(tree, state);
                     //humanScenarioRunner.initialize(tree, state);
@@ -172,8 +173,8 @@ int main(int argc, char * argv[]) {
                     //finishedTests = learnedTeamworkDataGenerator.tick(tree, state);
                     //outDistributionDataGenerator.initialize(tree, state);
                     //finishedTests = outDistributionDataGenerator.tick(tree, state);
-                    learnedAllDataGenerator.initialize(tree, state);
-                    finishedTests = learnedAllDataGenerator.tick(tree, state);
+                    //learnedAllDataGenerator.initialize(tree, state);
+                    //finishedTests = learnedAllDataGenerator.tick(tree, state);
                     //formationDataGenerator.initialize(tree, state);
                     //finishedTests = formationDataGenerator.tick(tree, state);
                 }

@@ -325,11 +325,16 @@ public:
                     std::move(setupCommands),
                     make_unique<DisableActionsNode>(blackboard, "DisableSetup", vector{neededBots[0].id, neededBots[1].id})
             ), "DisableDuringSetup");
+            Node::Ptr placeChecks = make_unique<SequenceNode>(blackboard, Node::makeList(
+                    make_unique<RepeatDecorator>(blackboard, make_unique<DistanceConstraint>(blackboard, neededBots[0].id, neededBots[1].id, PosConstraintOp::LT, 300.), true),
+                    make_unique<RepeatDecorator>(blackboard, make_unique<InPlace>(blackboard, neededBots[0].id, "BombsiteB"), true),
+                    make_unique<RepeatDecorator>(blackboard, make_unique<InPlace>(blackboard, neededBots[1].id, "BombsiteB"), true)
+            ));
             commands = make_unique<SequenceNode>(blackboard, Node::makeList(
                     std::move(disableAllDuringSetup),
                     make_unique<ParallelFirstNode>(blackboard, Node::makeList(
-                            make_unique<RepeatDecorator>(blackboard, make_unique<DistanceConstraint>(blackboard, neededBots[0].id, neededBots[1].id, PosConstraintOp::LT, 300.), true),
-                            make_unique<movement::WaitNode>(blackboard, 15, false))
+                            std::move(placeChecks),
+                            make_unique<movement::WaitNode>(blackboard, 25, false))
                     ))
             );
         }

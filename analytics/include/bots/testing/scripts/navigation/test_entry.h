@@ -247,4 +247,37 @@ public:
     }
 };
 
+class CTPushMidToBHoleScript : public Script {
+public:
+    OrderId addedOrderId;
+
+    explicit CTPushMidToBHoleScript(const ServerState &) :
+            Script("CTPushBHoleScript", {{0, ENGINE_TEAM_CT}}, {ObserveType::FirstPerson, 0}) { }
+
+    void initialize(Tree & tree, ServerState & state) override  {
+        if (tree.newBlackboard) {
+            Blackboard & blackboard = *tree.blackboard;
+            Script::initialize(tree, state);
+            set<AreaId> areasToRemove{4048};
+            commands = make_unique<SequenceNode>(blackboard, Node::makeList(
+                    make_unique<InitTestingRound>(blackboard, name),
+                    make_unique<movement::WaitNode>(blackboard, 1.0),
+                    make_unique<SpecDynamic>(blackboard, neededBots, observeSettings),
+                    make_unique<movement::WaitNode>(blackboard, 0.1),
+                    make_unique<SlayAllBut>(blackboard, vector{neededBots[0].id},state),
+                    make_unique<movement::WaitNode>(blackboard, 0.1),
+                    make_unique<SetPos>(blackboard, Vec3({-224., 1225., 66.}), Vec2({2.903987, -95.587982})),
+                    make_unique<movement::WaitNode>(blackboard, 0.1),
+                    make_unique<Teleport>(blackboard, neededBots[0].id, state),
+                    make_unique<movement::WaitNode>(blackboard, 0.1),
+                    make_unique<ForceOrderNode>(blackboard, "ForceBHoleLong", vector{neededBots[0].id}, strategy::offenseHoleToBWaypoints, areasToRemove, addedOrderId),
+                    make_unique<ParallelFirstNode>(blackboard, Node::makeList(
+                            make_unique<RepeatDecorator>(blackboard, make_unique<InPlace>(blackboard, neededBots[0].id, "BombsiteB"), true),
+                            make_unique<movement::WaitNode>(blackboard, 20, false))
+                    ))
+            );
+        }
+    }
+};
+
 #endif //CSKNOW_ENTRY_H
