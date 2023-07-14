@@ -51,6 +51,7 @@ def vis(loaded_model: LoadedModel, inference_fn: Callable[[LoadedModel], None]):
     cur_tick_index: int = -1
     selected_df: pd.DataFrame = loaded_model.cur_loaded_df
     pred_selected_df: pd.DataFrame = loaded_model.cur_inference_df
+    draw_pred: bool = True
     draw_max: bool = True
     good_retake_rounds: Set[int] = set()
 
@@ -117,7 +118,13 @@ def vis(loaded_model: LoadedModel, inference_fn: Callable[[LoadedModel], None]):
             players_to_draw = list(range(0, len(specific_player_place_area_columns)))
         else:
             players_to_draw = [int(p) for p in players_to_draw_str.split(",")]
-        players_str = draw_all_players(data_series, pred_series, d2_img_draw, draw_max, players_to_draw)
+        player_to_color = {}
+        if not draw_pred:
+            for i in range(max_enemies):
+                player_to_color[i] = (4, 190, 196)
+                player_to_color[i+max_enemies] = (187, 142, 52)
+        players_str = draw_all_players(data_series, pred_series, d2_img_draw, draw_max, players_to_draw,
+                                       player_to_color=player_to_color, draw_only_pos=not draw_pred)
 
         details_text_var.set(players_str)
         d2_img_copy.alpha_composite(d2_overlay_im)
@@ -163,6 +170,10 @@ def vis(loaded_model: LoadedModel, inference_fn: Callable[[LoadedModel], None]):
             tick_slider.set(cur_tick_index)
             tick_slider_changed(cur_tick_index)
 
+    def pred_toggle_clicked():
+        nonlocal draw_pred
+        draw_pred = not draw_pred
+        tick_slider_changed(cur_tick_index)
 
     def print_row_clicked():
         cur_index = indices[cur_tick_index]
@@ -289,6 +300,8 @@ def vis(loaded_model: LoadedModel, inference_fn: Callable[[LoadedModel], None]):
     # creating vis control frame
     distribution_control_frame = tk.Frame(window)
     distribution_control_frame.pack(pady=5)
+    pred_toggle_button = tk.Button(distribution_control_frame, text="toggle pred", command=pred_toggle_clicked)
+    pred_toggle_button.pack(side="left")
     print_row_button = tk.Button(distribution_control_frame, text="print df row", command=print_row_clicked)
     print_row_button.pack(side="left")
     distribution_toggle_button = tk.Button(distribution_control_frame, text="toggle max/distribution", command=toggle_distribution_clicked)
