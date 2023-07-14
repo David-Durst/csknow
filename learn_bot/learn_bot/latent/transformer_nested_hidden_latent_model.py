@@ -165,7 +165,7 @@ class TransformerNestedHiddenLatentModel(nn.Module):
         y_pos_encoded = self.encode_pos(y_pos, enable_noise=False)
         #y_pos_time_flattened = rearrange(y_pos_encoded, "b p t d -> b p (t d)")
         y_gathered = torch.cat([y_pos_encoded, x_non_pos], -1)[:, :, 0, :]
-        return y_gathered
+        return self.embedding_model(y_gathered)
 
     def generate_tgt_mask(self, device: str) -> torch.Tensor:
         # base tgt mask that is diagonal to ensure only look at future teammates
