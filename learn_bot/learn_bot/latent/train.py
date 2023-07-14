@@ -434,7 +434,7 @@ def train(train_type: TrainType, multi_hdf5_wrapper: MultiHDF5Wrapper,
 latent_id_cols = ['id', round_id_column, test_success_col]
 
 load_data_options = LoadDataOptions(
-    use_manual_data=True,
+    use_manual_data=False,
     use_rollout_data=False,
     use_synthetic_data=False,
     use_small_human_data=False,
