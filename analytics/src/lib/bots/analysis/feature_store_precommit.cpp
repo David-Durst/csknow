@@ -49,7 +49,9 @@ namespace csknow::feature_store {
             //        .get_id();
             //int64_t curAreaIndex = navFile.m_area_ids_to_indices.at(curAreaId);
             btTeamPlayerData.push_back({client.csgoId, client.team, /*curAreaId, curAreaIndex,*/
-                                        client.getFootPosForPlayer(), client.getVelocity()});
+                                        client.getFootPosForPlayer(), client.getVelocity(),
+                                        static_cast<EngineWeaponId>(client.currentWeaponId),
+                                        client.isScoped, client.isAirborne, client.isWalking});
         }
         appendPlayerHistory();
         AreaId c4AreaId = navFile

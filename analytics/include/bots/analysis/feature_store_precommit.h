@@ -9,6 +9,7 @@
 #include "bots/load_save_bot_data.h"
 #include "geometryNavConversions.h"
 #include "circular_buffer.h"
+#include "weapon_id_converter.h"
 #include <map>
 
 namespace csknow::feature_store {
@@ -23,6 +24,10 @@ namespace csknow::feature_store {
         //int64_t curAreaIndex;
         Vec3 curFootPos;
         Vec3 velocity;
+        EngineWeaponId weaponId;
+        bool scoped;
+        bool airborne;
+        bool walking;
     };
 
     struct C4MapData {
