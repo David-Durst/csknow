@@ -177,24 +177,20 @@ double engineWeaponIdToMaxSpeed(EngineWeaponId engineWeaponId, StatureOptions st
     return actualMaxSpeed;
 }
 
-MovementTypes getMovementType(EngineWeaponId engineWeaponId, Vec3 vel, StatureOptions statureOption, bool scoped, bool airborne) {
+MovementStatus getMovementType(EngineWeaponId engineWeaponId, Vec3 vel, StatureOptions statureOption, bool scoped, bool airborne) {
     double weaponMaxSpeed = engineWeaponIdToMaxSpeed(engineWeaponId, statureOption, scoped);
     Vec2 vel2D{vel.x, vel.y};
     double speed2D = computeMagnitude(vel2D);
     // airborne check is for the 30 unit speed that you can accel from stopped while in air
-    if (speed2D >= weaponMaxSpeed / 2. || (airborne && speed2D >= airwalkSpeed / 2.)) {
-        if (statureOption == StatureOptions::Standing) {
-            return MovementTypes::Running;
-        }
-        else if (statureOption == StatureOptions::Walking) {
-            return MovementTypes::Walking;
-        }
-        else if (statureOption == StatureOptions::Crouching) {
-            return MovementTypes::Crouching;
-        }
+    bool moving = speed2D >= weaponMaxSpeed / 2. || (airborne && speed2D >= airwalkSpeed / 2.);
+    if (statureOption == StatureOptions::Standing) {
+        return {MovementTypes::Running, moving};
     }
-    else {
-        return MovementTypes::Still;
+    else if (statureOption == StatureOptions::Walking) {
+        return {MovementTypes::Walking, moving};
+    }
+    else if (statureOption == StatureOptions::Crouching) {
+        return {MovementTypes::Crouching, moving};
     }
 }
 
@@ -204,15 +200,15 @@ int velocityToDir(Vec3 vel) {
     return static_cast<int>((velAngle + directionAngleRange / 2.) / directionAngleRange) % numDirections;
 }
 
-Vec3 movementTypeAndDirToVel(MovementTypes movementType, int dir, EngineWeaponId engineWeaponId, bool scoped) {
+Vec3 movementTypeAndDirToVel(MovementStatus movementStatus, int dir, EngineWeaponId engineWeaponId, bool scoped) {
     StatureOptions statureOption;
-    if (movementType == MovementTypes::Still) {
+    if (!movementStatus.moving) {
         return {0., 0., 0.};
     }
-    else if (movementType == MovementTypes::Crouching) {
+    else if (movementStatus.movementType == MovementTypes::Crouching) {
         statureOption = StatureOptions::Crouching;
     }
-    else if (movementType == MovementTypes::Walking) {
+    else if (movementStatus.movementType == MovementTypes::Walking) {
         statureOption = StatureOptions::Walking;
     }
     else {

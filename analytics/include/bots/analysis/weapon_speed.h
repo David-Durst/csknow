@@ -23,15 +23,18 @@ enum class StatureOptions {
 double engineWeaponIdToMaxSpeed(EngineWeaponId engineWeaponId, StatureOptions statureOption, bool scoped);
 
 enum class MovementTypes {
-    Still = 0,
-    Crouching = 1,
-    Walking = 2,
-    Running = 3,
+    Crouching = 0,
+    Walking = 1,
+    Running = 2,
     NUM_MOVEMENT_TYPES
 };
-MovementTypes getMovementType(EngineWeaponId engineWeaponId, Vec3 vel, StatureOptions statureOption, bool scoped, bool airborne);
+struct MovementStatus {
+    MovementTypes movementType;
+    bool moving;
+};
+MovementStatus getMovementType(EngineWeaponId engineWeaponId, Vec3 vel, StatureOptions statureOption, bool scoped, bool airborne);
 
 int velocityToDir(Vec3 vel);
-Vec3 movementTypeAndDirToVel(MovementTypes movementType, int dir, EngineWeaponId engineWeaponId, bool scoped);
+Vec3 movementTypeAndDirToVel(MovementStatus movementStatus, int dir, EngineWeaponId engineWeaponId, bool scoped);
 
 #endif //CSKNOW_WEAPON_SPEED_H
