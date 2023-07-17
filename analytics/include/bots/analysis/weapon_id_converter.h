@@ -8,6 +8,7 @@
 
 #include <cstdint>
 #include "queries/parser_constants.h"
+#include <string>
 
 enum class EngineWeaponId {
     None = 0,

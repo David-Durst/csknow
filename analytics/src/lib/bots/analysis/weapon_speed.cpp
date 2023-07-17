@@ -189,7 +189,7 @@ MovementStatus getMovementType(EngineWeaponId engineWeaponId, Vec3 vel, StatureO
     else if (statureOption == StatureOptions::Walking) {
         return {MovementTypes::Walking, moving};
     }
-    else if (statureOption == StatureOptions::Crouching) {
+    else {
         return {MovementTypes::Crouching, moving};
     }
 }
