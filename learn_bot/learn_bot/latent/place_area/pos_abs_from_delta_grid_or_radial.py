@@ -73,13 +73,13 @@ def get_delta_indices_from_radial(pred_labels: torch.Tensor, stature_to_speed: t
     not_moving = pred_labels == 0.
     moving_pred_labels = pred_labels - 1.
     z_jump_index = torch.floor(moving_pred_labels / num_radial_bins_per_z_axis)
-    dir_stature_pred_label = torch.floor(moving_pred_labels / StatureOptions.NUM_STATURE_OPTIONS.value)
+    dir_stature_pred_label = torch.floor(torch.remainder(moving_pred_labels, num_radial_bins_per_z_axis))
     per_batch_stature_index = \
         torch.floor(torch.remainder(dir_stature_pred_label, StatureOptions.NUM_STATURE_OPTIONS.value)).int()
     # necessary since index select expects 1d
     flattened_stature_index = rearrange(per_batch_stature_index, 'b p -> (b p)',
                                         p=len(specific_player_place_area_columns))
-    dir_degrees = torch.floor(dir_stature_pred_label / delta_pos_grid_num_cells_per_xy_dim) * direction_angle_range
+    dir_degrees = torch.floor(dir_stature_pred_label / StatureOptions.NUM_STATURE_OPTIONS.value) * direction_angle_range
     # stature to lookup table of speeds
     flattened_max_speed_per_stature = torch.index_select(stature_to_speed, 0, flattened_stature_index)
     per_batch_max_speed_per_stature = rearrange(flattened_max_speed_per_stature, '(b p) -> b p',

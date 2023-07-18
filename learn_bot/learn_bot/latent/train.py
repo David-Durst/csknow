@@ -20,7 +20,8 @@ from learn_bot.latent.latent_hdf5_dataset import MultipleLatentHDF5Dataset
 from learn_bot.latent.place_area.load_data import human_latent_team_hdf5_data_path, manual_latent_team_hdf5_data_path, \
     LoadDataResult, LoadDataOptions
 from learn_bot.latent.place_area.pos_abs_from_delta_grid_or_radial import delta_pos_grid_num_cells
-from learn_bot.latent.place_area.column_names import place_area_input_column_types, radial_vel_output_column_types, test_success_col
+from learn_bot.latent.place_area.column_names import place_area_input_column_types, radial_vel_output_column_types, \
+    test_success_col, num_radial_bins
 from learn_bot.latent.profiling import profile_latent_model
 from learn_bot.latent.transformer_nested_hidden_latent_model import TransformerNestedHiddenLatentModel
 from learn_bot.libs.hdf5_to_pd import load_hdf5_to_pd
@@ -167,7 +168,7 @@ def train(train_type: TrainType, multi_hdf5_wrapper: MultiHDF5Wrapper,
     if train_type == TrainType.DeltaPos:
         column_transformers = IOColumnTransformers(place_area_input_column_types, radial_vel_output_column_types,
                                                    multi_hdf5_wrapper.train_hdf5_wrappers[0].sample_df)
-        model = TransformerNestedHiddenLatentModel(column_transformers, 2 * max_enemies, delta_pos_grid_num_cells,
+        model = TransformerNestedHiddenLatentModel(column_transformers, 2 * max_enemies, num_radial_bins,
                                                    hyperparameter_options.layers, hyperparameter_options.heads)
         if load_model_path:
             model_file = torch.load(load_model_path)
