@@ -7,34 +7,43 @@
 
 #include "bots/analysis/weapon_id_converter.h"
 #include "bots/load_save_bot_data.h"
+#include "enum_helpers.h"
 
-constexpr double walkingModifier = 0.52;
-constexpr double crouchingModifier = 0.34;
-constexpr double airwalkSpeed = 30.;
-constexpr int numDirections = 8;
-constexpr double directionAngleRange = 360. / numDirections;
+namespace csknow::weapon_speed {
+    constexpr double walking_modifier = 0.52;
+    constexpr double crouching_modifier = 0.34;
+    constexpr double airwalk_speed = 30.;
+    constexpr int num_directions = 16;
+    constexpr double direction_angle_range = 360. / num_directions;
+    constexpr int num_z_axis_layers = 3;
 
-enum class StatureOptions {
-    Standing,
-    Walking,
-    Crouching,
-};
+    enum class StatureOptions {
+        Standing = 0,
+        Walking,
+        Crouching,
+        NUM_STATURE_OPTIONS
+    };
 
-double engineWeaponIdToMaxSpeed(EngineWeaponId engineWeaponId, StatureOptions statureOption, bool scoped);
+    double engineWeaponIdToMaxSpeed(EngineWeaponId engineWeaponId, StatureOptions statureOption, bool scoped);
 
-enum class MovementTypes {
-    Crouching = 0,
-    Walking = 1,
-    Running = 2,
-    NUM_MOVEMENT_TYPES
-};
-struct MovementStatus {
-    MovementTypes movementType;
-    bool moving;
-};
-MovementStatus getMovementType(EngineWeaponId engineWeaponId, Vec3 vel, StatureOptions statureOption, bool scoped, bool airborne);
+    // plus 1 for standing still
+    constexpr int radial_movement_options = num_directions * enumAsInt(StatureOptions::NUM_STATURE_OPTIONS) + 1;
+    struct MovementStatus {
+        Vec3 vel;
+        StatureOptions statureOption;
+        bool moving, jumping, falling;
+        int dir;
 
-int velocityToDir(Vec3 vel);
-Vec3 movementTypeAndDirToVel(MovementStatus movementStatus, int dir, EngineWeaponId engineWeaponId, bool scoped);
+        MovementStatus(EngineWeaponId engineWeaponId, Vec3 vel, StatureOptions statureOption, bool scoped,
+                       bool airborne, bool jumping, bool falling);
+        MovementStatus(EngineWeaponId engineWeaponId, bool scoped, int radialMovementBin);
+
+        int velocityToDir(Vec3 vel);
+        int toRadialMovementBin();
+        Vec3 movementTypeAndDirToVel();
+    };
+
+
+}
 
 #endif //CSKNOW_WEAPON_SPEED_H
