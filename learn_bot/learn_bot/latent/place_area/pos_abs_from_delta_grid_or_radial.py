@@ -6,7 +6,8 @@ from einops import rearrange
 
 from learn_bot.latent.place_area.column_names import specific_player_place_area_columns, delta_pos_grid_radius, \
     delta_pos_grid_cell_dim, delta_pos_z_num_cells, delta_pos_grid_num_cells, delta_pos_grid_num_cells_per_xy_dim, \
-    delta_pos_grid_num_xy_cells_per_z_change
+    delta_pos_grid_num_xy_cells_per_z_change, num_radial_bins, num_radial_bins_per_z_axis, direction_angle_range, \
+    StatureOptions
 from learn_bot.libs.hdf5_to_pd import load_hdf5_extra_to_list, load_hdf5_to_pd
 from learn_bot.libs.vec import Vec3
 from dataclasses import dataclass
@@ -58,7 +59,7 @@ class DeltaXYZIndices:
     z_jump_index: torch.Tensor
 
 
-def get_delta_indices(pred_labels: torch.Tensor) -> DeltaXYZIndices:
+def get_delta_indices_from_grid(pred_labels: torch.Tensor) -> DeltaXYZIndices:
     z_jump_index = torch.floor(pred_labels / delta_pos_grid_num_xy_cells_per_z_change)
     xy_pred_label = torch.floor(torch.remainder(pred_labels, delta_pos_grid_num_xy_cells_per_z_change))
     x_index = torch.floor(torch.remainder(xy_pred_label, delta_pos_grid_num_cells_per_xy_dim)) - \
@@ -68,8 +69,33 @@ def get_delta_indices(pred_labels: torch.Tensor) -> DeltaXYZIndices:
     return DeltaXYZIndices(x_index, y_index, z_jump_index)
 
 
-def compute_new_pos(input_pos_tensor: torch.tensor, pred_labels: torch.Tensor, nav_data: NavData):
-    delta_xyz_indices = get_delta_indices(pred_labels)
+def get_delta_indices_from_radial(pred_labels: torch.Tensor, stature_to_speed: torch.Tensor) -> DeltaXYZIndices:
+    not_moving = pred_labels == 0.
+    moving_pred_labels = pred_labels - 1.
+    z_jump_index = torch.floor(moving_pred_labels / num_radial_bins_per_z_axis)
+    dir_stature_pred_label = torch.floor(moving_pred_labels / StatureOptions.NUM_STATURE_OPTIONS.value)
+    per_batch_stature_index = \
+        torch.floor(torch.remainder(dir_stature_pred_label, StatureOptions.NUM_STATURE_OPTIONS.value)).int()
+    # necessary since index select expects 1d
+    flattened_stature_index = rearrange(per_batch_stature_index, 'b p -> (b p)',
+                                        p=len(specific_player_place_area_columns))
+    dir_degrees = torch.floor(dir_stature_pred_label / delta_pos_grid_num_cells_per_xy_dim) * direction_angle_range
+    # stature to lookup table of speeds
+    flattened_max_speed_per_stature = torch.index_select(stature_to_speed, 0, flattened_stature_index)
+    per_batch_max_speed_per_stature = rearrange(flattened_max_speed_per_stature, '(b p) -> b p',
+                                                p=len(specific_player_place_area_columns))
+    # return cos/sin of dir degre
+    not_moving_zeros = torch.zeros_like(per_batch_max_speed_per_stature)
+    return DeltaXYZIndices(
+        torch.where(not_moving, not_moving_zeros, torch.cos(dir_degrees) * per_batch_max_speed_per_stature),
+        torch.where(not_moving, not_moving_zeros, torch.sin(dir_degrees) * per_batch_max_speed_per_stature),
+        torch.where(not_moving, not_moving_zeros, z_jump_index))
+
+
+def compute_new_pos(input_pos_tensor: torch.Tensor, pred_labels: torch.Tensor, nav_data: NavData, pred_is_grid: bool,
+                    stature_to_speed: torch.Tensor):
+    delta_xyz_indices = get_delta_indices_from_grid(pred_labels) if pred_is_grid else \
+        get_delta_indices_from_radial(pred_labels, stature_to_speed)
     z_index = torch.zeros_like(delta_xyz_indices.x_index)
 
     # convert to xy pos changes
@@ -103,14 +129,14 @@ def compute_new_pos(input_pos_tensor: torch.tensor, pred_labels: torch.Tensor, n
     return output_and_history_pos_tensor
 
 
-def delta_one_hot_max_to_index(pred: torch.Tensor) -> torch.Tensor:
+def one_hot_max_to_index(pred: torch.Tensor) -> torch.Tensor:
     return torch.argmax(rearrange(pred, 'b (p d) -> b p d', p=len(specific_player_place_area_columns)), 2)
 
 
-def delta_one_hot_prob_to_index(pred: torch.Tensor) -> torch.Tensor:
+def one_hot_prob_to_index(pred: torch.Tensor) -> torch.Tensor:
     if pred.device.type == CUDA_DEVICE_STR:
         probs = rearrange(pred, 'b (p d) -> (b p) d', p=len(specific_player_place_area_columns))
         return rearrange(torch.multinomial(probs, 1, replacement=True), '(b p) d -> b (p d)',
                          p=len(specific_player_place_area_columns))
     else:
-        return delta_one_hot_max_to_index(pred)
+        return one_hot_max_to_index(pred)

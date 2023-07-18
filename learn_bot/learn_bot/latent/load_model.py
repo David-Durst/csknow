@@ -12,7 +12,7 @@ from learn_bot.latent.engagement.column_names import max_enemies
 from learn_bot.latent.latent_hdf5_dataset import MultipleLatentHDF5Dataset
 from learn_bot.latent.place_area.filter import filter_region
 from learn_bot.latent.place_area.load_data import LoadDataResult
-from learn_bot.latent.place_area.pos_abs_delta_conversion import delta_pos_grid_num_cells, AABB
+from learn_bot.latent.place_area.pos_abs_from_delta_grid_or_radial import delta_pos_grid_num_cells, AABB
 from learn_bot.latent.place_area.column_names import round_id_column, place_area_input_column_types, \
     radial_vel_output_column_types, test_success_col
 from learn_bot.libs.hdf5_to_pd import load_hdf5_to_pd

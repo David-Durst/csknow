@@ -19,7 +19,7 @@ from learn_bot.latent.engagement.column_names import round_id_column
 from learn_bot.latent.latent_hdf5_dataset import MultipleLatentHDF5Dataset
 from learn_bot.latent.place_area.load_data import human_latent_team_hdf5_data_path, manual_latent_team_hdf5_data_path, \
     LoadDataResult, LoadDataOptions
-from learn_bot.latent.place_area.pos_abs_delta_conversion import delta_pos_grid_num_cells
+from learn_bot.latent.place_area.pos_abs_from_delta_grid_or_radial import delta_pos_grid_num_cells
 from learn_bot.latent.place_area.column_names import place_area_input_column_types, radial_vel_output_column_types, test_success_col
 from learn_bot.latent.profiling import profile_latent_model
 from learn_bot.latent.transformer_nested_hidden_latent_model import TransformerNestedHiddenLatentModel
@@ -416,8 +416,8 @@ def train(train_type: TrainType, multi_hdf5_wrapper: MultiHDF5Wrapper,
     test_data = MultipleLatentHDF5Dataset(multi_hdf5_wrapper.test_hdf5_wrappers, column_transformers,
                                           multi_hdf5_wrapper.duplicate_last_hdf5_equal_to_rest)
     batch_size = min(hyperparameter_options.batch_size, min(len(train_data), len(test_data)))
-    train_dataloader = DataLoader(train_data, batch_size=batch_size, num_workers=4, shuffle=True, pin_memory=True)
-    test_dataloader = DataLoader(test_data, batch_size=batch_size, num_workers=4, shuffle=True, pin_memory=True)
+    train_dataloader = DataLoader(train_data, batch_size=batch_size, num_workers=0, shuffle=True, pin_memory=True)
+    test_dataloader = DataLoader(test_data, batch_size=batch_size, num_workers=0, shuffle=True, pin_memory=True)
 
     print(f"num train examples: {len(train_data)}")
     print(f"num test examples: {len(test_data)}")

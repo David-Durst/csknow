@@ -222,8 +222,8 @@ namespace csknow::weapon_speed {
             double maxSpeed = engineWeaponIdToMaxSpeed(engineWeaponId, statureOption, scoped);
             double velAngle = (static_cast<double>(dir) - 0.5) * direction_angle_range;
             vel = {
-                    std::sin(glm::radians(velAngle)) * maxSpeed,
                     std::cos(glm::radians(velAngle)) * maxSpeed,
+                    std::sin(glm::radians(velAngle)) * maxSpeed,
                     0.
             };
         }

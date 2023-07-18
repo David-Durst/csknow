@@ -5,9 +5,10 @@ from torch import nn
 
 from learn_bot.latent.engagement.column_names import max_enemies
 from learn_bot.latent.order.column_names import team_strs, player_team_str, flatten_list
-from learn_bot.latent.place_area.column_names import specific_player_place_area_columns, delta_pos_grid_num_cells
-from learn_bot.latent.place_area.pos_abs_delta_conversion import compute_new_pos, NavData, \
-    delta_one_hot_max_to_index, delta_one_hot_prob_to_index, max_speed_per_half_second, max_speed_per_second
+from learn_bot.latent.place_area.column_names import specific_player_place_area_columns, num_radial_bins, \
+    walking_modifier, ducking_modifier
+from learn_bot.latent.place_area.pos_abs_from_delta_grid_or_radial import compute_new_pos, NavData, \
+    one_hot_max_to_index, one_hot_prob_to_index, max_speed_per_half_second, max_speed_per_second
 from learn_bot.libs.io_transforms import IOColumnTransformers, CUDA_DEVICE_STR, CPU_DEVICE_STR
 from learn_bot.libs.positional_encoding import *
 from einops import rearrange
@@ -80,6 +81,12 @@ class TransformerNestedHiddenLatentModel(nn.Module):
         self.d2_min_gpu = self.d2_min_cpu.to(CUDA_DEVICE_STR)
         self.d2_max_gpu = self.d2_max_cpu.to(CUDA_DEVICE_STR)
 
+        # radial speed matrices
+        self.stature_to_speed_cpu = torch.tensor([max_speed_per_second, max_speed_per_second * walking_modifier,
+                                                  max_speed_per_second * ducking_modifier])
+        self.stature_to_speed_gpu = self.stature_to_speed_cpu.to(CUDA_DEVICE_STR)
+
+
         # NERF code calls it positional embedder, but it's encoder since not learned
         self.spatial_positional_encoder, self.spatial_positional_encoder_out_dim = get_embedder()
         self.columns_per_player_time_step = (len(self.players_non_pos_vel_columns) // self.num_players) + \
@@ -148,9 +155,9 @@ class TransformerNestedHiddenLatentModel(nn.Module):
 
     def encode_y(self, x_pos, x_non_pos, y, take_max) -> torch.Tensor:
         if take_max:
-            y_per_player = delta_one_hot_max_to_index(y)
+            y_per_player = one_hot_max_to_index(y)
         else:
-            y_per_player = delta_one_hot_prob_to_index(y)
+            y_per_player = one_hot_prob_to_index(y)
         # shift by 1 so never looking into future (and 0 out for past)
         y_per_player_shifted = torch.roll(y_per_player, 1, dims=1)
         y_per_player_shifted[:, 0] = 0
@@ -158,9 +165,9 @@ class TransformerNestedHiddenLatentModel(nn.Module):
         #x_pos_shifted = torch.roll(x_pos, 1, dims=1)
         #x_pos_zeros = torch.zeros_like(x_pos)
         if x_pos.device.type == CPU_DEVICE_STR:
-            y_pos = compute_new_pos(x_pos, y_per_player_shifted, self.nav_data_cpu)
+            y_pos = compute_new_pos(x_pos, y_per_player_shifted, self.nav_data_cpu, False, self.stature_to_speed_cpu)
         else:
-            y_pos = compute_new_pos(x_pos, y_per_player_shifted, self.nav_data_cuda)
+            y_pos = compute_new_pos(x_pos, y_per_player_shifted, self.nav_data_cuda, False, self.stature_to_speed_gpu)
         #y_pos2 = compute_new_pos(x_pos_shifted, y_per_player_shifted, self.nav_data_cuda)
         y_pos_encoded = self.encode_pos(y_pos, enable_noise=False)
         #y_pos_time_flattened = rearrange(y_pos_encoded, "b p t d -> b p (t d)")
@@ -238,7 +245,7 @@ class TransformerNestedHiddenLatentModel(nn.Module):
             latent = self.decoder(transformed)
             return self.logits_output(latent), self.prob_output(latent)
         else:
-            y_nested = torch.zeros([x.shape[0], self.num_players, delta_pos_grid_num_cells], device=x.device.type)
+            y_nested = torch.zeros([x.shape[0], self.num_players, num_radial_bins], device=x.device.type)
             y_nested[:, :, 0] = 1.
             y = rearrange(y_nested, "b p d -> b (p d)")
             memory = self.transformer_model.encoder(x_temporal_embedded_flattened, src_key_padding_mask=dead_gathered)
@@ -249,4 +256,4 @@ class TransformerNestedHiddenLatentModel(nn.Module):
                 prob_output_nested = rearrange(self.prob_output(latent), "b (p d) -> b p d", p=self.num_players)
                 y_nested[:, i] = prob_output_nested[:, i]
                 y_nested[:, i + self.num_players_per_team] = prob_output_nested[:, i + self.num_players_per_team]
-            return self.logits_output(latent), self.prob_output(latent), delta_one_hot_prob_to_index(y)
+            return self.logits_output(latent), self.prob_output(latent), one_hot_prob_to_index(y)

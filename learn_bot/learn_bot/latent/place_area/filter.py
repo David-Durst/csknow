@@ -1,7 +1,7 @@
 import pandas as pd
 
 from learn_bot.latent.place_area.column_names import *
-from learn_bot.latent.place_area.pos_abs_delta_conversion import *
+from learn_bot.latent.place_area.pos_abs_from_delta_grid_or_radial import *
 
 num_alive_col = 'num alive'
 

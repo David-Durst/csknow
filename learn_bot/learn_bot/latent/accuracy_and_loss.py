@@ -5,7 +5,7 @@ from einops import rearrange, repeat, pack
 from torch.utils.tensorboard import SummaryWriter
 
 from learn_bot.latent.dataset import *
-from learn_bot.latent.place_area.pos_abs_delta_conversion import get_delta_indices
+from learn_bot.latent.place_area.pos_abs_from_delta_grid_or_radial import get_delta_indices_from_grid
 from learn_bot.libs.io_transforms import IOColumnTransformers, ColumnTransformerType, CPU_DEVICE_STR, \
     get_untransformed_outputs, get_transformed_outputs, CUDA_DEVICE_STR
 from math import sqrt
@@ -108,8 +108,8 @@ def compute_accuracy_and_delta_diff(pred, Y, duplicated_last, accuracy, delta_di
     masked_accuracy_per_player = accuracy_per_player * Y_valid_per_player_row
 
     # compute delta diffs
-    Y_delta_indices = get_delta_indices(Y_label_per_player)
-    pred_untransformed_delta_indices = get_delta_indices(pred_untransformed_label_per_player)
+    Y_delta_indices = get_delta_indices_from_grid(Y_label_per_player)
+    pred_untransformed_delta_indices = get_delta_indices_from_grid(pred_untransformed_label_per_player)
     delta_diff_xy_per_player = torch.sqrt(
         torch.pow(Y_delta_indices.x_index - pred_untransformed_delta_indices.x_index, 2) +
         torch.pow(Y_delta_indices.y_index - pred_untransformed_delta_indices.y_index, 2)

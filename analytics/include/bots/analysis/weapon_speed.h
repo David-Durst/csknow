@@ -42,7 +42,6 @@ namespace csknow::weapon_speed {
 
         int velocityToDir(Vec3 vel);
         int toRadialMovementBin();
-        Vec3 movementTypeAndDirToVel();
     };
 
 
