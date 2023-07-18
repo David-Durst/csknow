@@ -28,6 +28,7 @@ namespace csknow::feature_store {
         bool scoped;
         bool airborne;
         bool walking;
+        bool ducking;
     };
 
     struct C4MapData {

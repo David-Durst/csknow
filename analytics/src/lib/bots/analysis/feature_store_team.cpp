@@ -104,10 +104,24 @@ namespace csknow::feature_store {
                 columnCTData[i].distributionNearestAreaGridInPlace[j].resize(size, INVALID_ID);
                 //columnCTData[i].distributionNearestAreaGridInPlace7to15s[j].resize(size, INVALID_ID);
             }
-             */
             for (int j = 0; j < delta_pos_grid_num_cells; j++) {
                 columnTData[i].deltaPos[j].resize(size, false);
                 columnCTData[i].deltaPos[j].resize(size, false);
+            }
+             */
+            columnTData[i].weaponId.resize(size, EngineWeaponId::None);
+            columnCTData[i].weaponId.resize(size, EngineWeaponId::None);
+            columnTData[i].scoped.resize(size, false);
+            columnCTData[i].scoped.resize(size, false);
+            columnTData[i].airborne.resize(size, false);
+            columnCTData[i].airborne.resize(size, false);
+            columnTData[i].walking.resize(size, false);
+            columnCTData[i].walking.resize(size, false);
+            columnTData[i].ducking.resize(size, false);
+            columnCTData[i].ducking.resize(size, false);
+            for (int j = 0; j < weapon_speed::num_radial_bins; j++) {
+                columnTData[i].radialVel[j].resize(size, false);
+                columnCTData[i].radialVel[j].resize(size, false);
             }
         }
         this->size = size;
@@ -271,10 +285,24 @@ namespace csknow::feature_store {
                     columnCTData[i].distributionNearestAreaGridInPlace[j][rowIndex] = INVALID_ID;
                     //columnCTData[i].distributionNearestAreaGridInPlace7to15s[j][rowIndex] = INVALID_ID;
                 }
-                 */
                 for (int j = 0; j < delta_pos_grid_num_cells; j++) {
                     columnTData[i].deltaPos[j][rowIndex] = false;
                     columnCTData[i].deltaPos[j][rowIndex] = false;
+                }
+                 */
+                columnTData[i].weaponId[rowIndex] = EngineWeaponId::None;
+                columnCTData[i].weaponId[rowIndex] = EngineWeaponId::None;
+                columnTData[i].scoped[rowIndex] = false;
+                columnCTData[i].scoped[rowIndex] = false;
+                columnTData[i].airborne[rowIndex] = false;
+                columnCTData[i].airborne[rowIndex] = false;
+                columnTData[i].walking[rowIndex] = false;
+                columnCTData[i].walking[rowIndex] = false;
+                columnTData[i].ducking[rowIndex] = false;
+                columnCTData[i].ducking[rowIndex] = false;
+                for (int j = 0; j < weapon_speed::num_radial_bins; j++) {
+                    columnTData[i].radialVel[j][rowIndex] = false;
+                    columnCTData[i].radialVel[j][rowIndex] = false;
                 }
             }
         }
@@ -384,6 +412,11 @@ namespace csknow::feature_store {
             columnData[columnIndex].footPos[internalTickIndex] = btTeamPlayerData.curFootPos;
             //columnData[columnIndex].alignedFootPos[internalTickIndex] = (btTeamPlayerData.curFootPos / delta_pos_grid_num_cells_per_xy_dim).trunc();
             columnData[columnIndex].velocity[internalTickIndex] = btTeamPlayerData.velocity;
+            columnData[columnIndex].weaponId[internalTickIndex] = btTeamPlayerData.weaponId;
+            columnData[columnIndex].scoped[internalTickIndex] = btTeamPlayerData.scoped;
+            columnData[columnIndex].airborne[internalTickIndex] = btTeamPlayerData.airborne;
+            columnData[columnIndex].walking[internalTickIndex] = btTeamPlayerData.walking;
+            columnData[columnIndex].ducking[internalTickIndex] = btTeamPlayerData.ducking;
             //columnData[columnIndex].distanceToASite[internalTickIndex] =
             //    distanceToPlaces.getClosestDistance(btTeamPlayerData.curArea, a_site, navFile);
             //columnData[columnIndex].distanceToBSite[internalTickIndex] =
@@ -738,7 +771,8 @@ namespace csknow::feature_store {
             }
             // clear out values for current tick
             for (size_t deltaPosGridIndex = 0; deltaPosGridIndex < delta_pos_grid_num_cells; deltaPosGridIndex++) {
-                columnData[playerColumn].deltaPos[deltaPosGridIndex][curTick] = false;
+                //columnData[playerColumn].deltaPos[deltaPosGridIndex][curTick] = false;
+                columnData[playerColumn].radialVel[deltaPosGridIndex][curTick] = false;
             }
             if (futureTracker.isEmpty()) {
                 std::cout << "delta pos acausal label with no future ticks" << std::endl;
@@ -746,7 +780,8 @@ namespace csknow::feature_store {
             }
 
             // ignore players who aren't alive far enough in the future
-            int64_t futureTickIndex = futureTracker.fromOldest();
+            // look at next tick;
+            int64_t futureTickIndex = futureTracker.fromNewest(1);//fromOldest();
             if (columnData[playerColumn].playerId[futureTickIndex] != columnData[playerColumn].playerId[curTick]) {
                 continue;
             }
@@ -767,6 +802,7 @@ namespace csknow::feature_store {
                 std::cout << "delta pos acausal future tick in past" << std::endl;
                 std::raise(SIGINT);
             }
+            /*
             Vec3 curFootPos = columnData[playerColumn].footPos[curTick];
             AABB deltaPosRange = {
                     {
@@ -780,9 +816,26 @@ namespace csknow::feature_store {
                         curFootPos.z
                     }
             };
+             */
             //max_z_delta = std::max(max_z_delta, std::abs(columnData[playerColumn].footPos[futureTickIndex].z - curFootPos.z));
+            /*
             int deltaPosIndex = getDeltaPosFlatIndex(columnData[playerColumn].footPos[futureTickIndex], deltaPosRange,
                                                      jumping, falling);
+                                                     */
+            weapon_speed::StatureOptions statureOption = weapon_speed::StatureOptions::Standing;
+            if (columnData[playerColumn].ducking[curTick]) {
+                statureOption = weapon_speed::StatureOptions::Ducking;
+            }
+            else if (columnData[playerColumn].walking[curTick]) {
+                statureOption = weapon_speed::StatureOptions::Walking;
+            }
+            weapon_speed::MovementStatus movementStatus(columnData[playerColumn].weaponId[curTick],
+                                                        columnData[playerColumn].velocity[curTick],
+                                                        columnData[playerColumn].velocity[futureTickIndex],
+                                                        statureOption,
+                                                        columnData[playerColumn].scoped[curTick],
+                                                        columnData[playerColumn].airborne[futureTickIndex],
+                                                        jumping, falling);
             /*
             // if jumping and standing still in xy, look twice as far in future
             if (deltaPosIndex == 12 && jumping) {
@@ -790,7 +843,8 @@ namespace csknow::feature_store {
                 deltaPosIndex = getDeltaPosFlatIndex(columnData[playerColumn].footPos[futureTickIndex], deltaPosRange);
             }
              */
-            columnData[playerColumn].deltaPos[deltaPosIndex][curTick] = true;
+            //columnData[playerColumn].deltaPos[deltaPosIndex][curTick] = true;
+            columnData[playerColumn].radialVel[movementStatus.toRadialMovementBin()][curTick] = true;
         }
     }
 
@@ -979,8 +1033,12 @@ namespace csknow::feature_store {
                 vector<string> deltaPosNames;
                 for (size_t deltaPosIndex = 0; deltaPosIndex < delta_pos_grid_num_cells; deltaPosIndex++) {
                     string deltaPosIndexStr = std::to_string(deltaPosIndex);
+                    /*
                     file.createDataSet("/data/delta pos " + deltaPosIndexStr + " " + columnTeam + " " + iStr,
                                        columnData[columnPlayer].deltaPos[deltaPosIndex], hdf5FlatCreateProps);
+                                       */
+                    file.createDataSet("/data/radial vel " + deltaPosIndexStr + " " + columnTeam + " " + iStr,
+                                       columnData[columnPlayer].radialVel[deltaPosIndex], hdf5FlatCreateProps);
                 }
             }
         }
@@ -1038,8 +1096,12 @@ namespace csknow::feature_store {
                 vector<string> deltaPosNames;
                 for (size_t deltaPosIndex = 0; deltaPosIndex < delta_pos_grid_num_cells; deltaPosIndex++) {
                     string deltaPosIndexStr = std::to_string(deltaPosIndex);
+                    /*
                     columnData[columnPlayer].deltaPos[deltaPosIndex] =
                             file.getDataSet("/data/delta pos " + deltaPosIndexStr + " " + columnTeam + " " + iStr).read<std::vector<bool>>();
+                            */
+                    columnData[columnPlayer].radialVel[deltaPosIndex] =
+                            file.getDataSet("/data/radial vel " + deltaPosIndexStr + " " + columnTeam + " " + iStr).read<std::vector<bool>>();
                 }
             }
         }

@@ -165,23 +165,39 @@ namespace csknow::weapon_speed {
         double actualMaxSpeed = maxWeaponSpeed;
         if (statureOption == StatureOptions::Walking) {
             actualMaxSpeed *= walking_modifier;
-        } else if (statureOption == StatureOptions::Crouching) {
-            actualMaxSpeed *= crouching_modifier;
+        } else if (statureOption == StatureOptions::Ducking) {
+            actualMaxSpeed *= ducking_modifier;
         }
 
         return actualMaxSpeed;
     }
 
 
-    MovementStatus::MovementStatus(EngineWeaponId engineWeaponId, Vec3 vel, StatureOptions statureOption, bool scoped,
-                                   bool airborne, bool jumping, bool falling) : vel(vel), statureOption(statureOption),
-                                   jumping(jumping), falling(falling) {
+    MovementStatus::MovementStatus(EngineWeaponId engineWeaponId, Vec3 curVel, Vec3 nextVel, StatureOptions statureOption,
+                                   bool scoped, bool airborne, bool jumping, bool falling) : vel(vel),
+                                   statureOption(statureOption), jumping(jumping), falling(falling) {
         double weaponMaxSpeed = engineWeaponIdToMaxSpeed(engineWeaponId, statureOption, scoped);
+        // check if within threshold of moving or not moving. otherwise look ad delta in vel
+        double movingSpeedThreshold = weaponMaxSpeed * speed_threshold;
+        double notMovingSpeedThreshold = weaponMaxSpeed * (1 - speed_threshold);
+        // airborne check is for the 30 unit speed that you can accel from stopped while in air
+        if (airborne) {
+            movingSpeedThreshold = airwalk_speed * speed_threshold;
+        }
+
         Vec2 vel2D{vel.x, vel.y};
         double speed2D = computeMagnitude(vel2D);
-        // airborne check is for the 30 unit speed that you can accel from stopped while in air
-        moving = speed2D >= weaponMaxSpeed / 2. || (airborne && speed2D >= airwalk_speed / 2.);
-        dir = velocityToDir(vel);
+        Vec2 curVel2D{curVel.x, curVel.y}, nextVel2D{nextVel.x, nextVel.y};
+        bool increasingVel = computeMagnitude(nextVel2D) - computeMagnitude(curVel2D);
+
+        if (speed2D >= movingSpeedThreshold || (speed2D >= notMovingSpeedThreshold && increasingVel)) {
+            moving = true;
+            dir = velocityToDir(vel);
+        }
+        else {
+            moving = false;
+            dir = 0;
+        }
     }
 
     MovementStatus::MovementStatus(EngineWeaponId engineWeaponId, bool scoped, int radialMovementBin) {

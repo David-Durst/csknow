@@ -11,6 +11,7 @@
 #include "geometryNavConversions.h"
 #include "queries/distance_to_places.h"
 #include "bots/analysis/feature_store_precommit.h"
+#include "bots/analysis/weapon_speed.h"
 #include "queries/orders.h"
 #include "circular_buffer.h"
 #include "queries/moments/key_retake_events.h"
@@ -96,7 +97,13 @@ namespace csknow::feature_store {
             //array<vector<float>, num_orders_per_site> distributionNearestAOrders, distributionNearestBOrders;
             //array<vector<float>, num_places> distributionNearestPlace;
             //array<vector<float>, area_grid_size> distributionNearestAreaGridInPlace;
-            array<vector<bool>, delta_pos_grid_num_cells> deltaPos;
+            //array<vector<bool>, delta_pos_grid_num_cells> deltaPos;
+            vector<EngineWeaponId> weaponId;
+            vector<bool> scoped;
+            vector<bool> airborne;
+            vector<bool> walking;
+            vector<bool> ducking;
+            array<vector<bool>, weapon_speed::num_radial_bins> radialVel;
         };
         array<ColumnPlayerData, maxEnemies> columnCTData, columnTData;
         vector<std::reference_wrapper<const array<ColumnPlayerData, maxEnemies>>> getAllColumnData() const {

@@ -51,7 +51,7 @@ namespace csknow::feature_store {
             btTeamPlayerData.push_back({client.csgoId, client.team, /*curAreaId, curAreaIndex,*/
                                         client.getFootPosForPlayer(), client.getVelocity(),
                                         static_cast<EngineWeaponId>(client.currentWeaponId),
-                                        client.isScoped, client.isAirborne, client.isWalking});
+                                        client.isScoped, client.isAirborne, client.isWalking, client.duckKeyPressed});
         }
         appendPlayerHistory();
         AreaId c4AreaId = navFile
