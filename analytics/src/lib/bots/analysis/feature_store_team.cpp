@@ -779,7 +779,7 @@ namespace csknow::feature_store {
                 columnData[playerColumn].deltaPos[deltaPosGridIndex][curTick] = false;
             }
              */
-            for (int radialVelIndex = 0; radialVelIndex < weapon_speed::radial_movement_options; radialVelIndex++) {
+            for (int radialVelIndex = 0; radialVelIndex < weapon_speed::num_radial_bins; radialVelIndex++) {
                 columnData[playerColumn].radialVel[radialVelIndex][curTick] = false;
             }
             if (futureTracker.isEmpty()) {
@@ -1046,7 +1046,7 @@ namespace csknow::feature_store {
                                        columnData[columnPlayer].deltaPos[deltaPosIndex], hdf5FlatCreateProps);
                 }
                 */
-                for (int radialVelindex = 0; radialVelindex < weapon_speed::radial_movement_options; radialVelindex++) {
+                for (int radialVelindex = 0; radialVelindex < weapon_speed::num_radial_bins; radialVelindex++) {
                     file.createDataSet("/data/radial vel " + std::to_string(radialVelindex) + " " + columnTeam + " " + iStr,
                                        columnData[columnPlayer].radialVel[radialVelindex], hdf5FlatCreateProps);
                 }
@@ -1111,7 +1111,7 @@ namespace csknow::feature_store {
                             file.getDataSet("/data/delta pos " + deltaPosIndexStr + " " + columnTeam + " " + iStr).read<std::vector<bool>>();
                             */
                 }
-                for (int radialVelindex = 0; radialVelindex < weapon_speed::radial_movement_options; radialVelindex++) {
+                for (int radialVelindex = 0; radialVelindex < weapon_speed::num_radial_bins; radialVelindex++) {
                     columnData[columnPlayer].radialVel[radialVelindex] =
                             file.getDataSet("/data/radial vel " + std::to_string(radialVelindex) + " " + columnTeam + " " + iStr).read<std::vector<bool>>();
                 }

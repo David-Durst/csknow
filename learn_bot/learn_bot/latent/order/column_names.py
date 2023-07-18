@@ -94,6 +94,10 @@ def get_delta_pos_columns(player_index: int, delta_pos_index: int, team_str: str
     return "delta pos " + str(delta_pos_index) + " " + team_str + " " + str(player_index)
 
 
+def get_radial_vel_columns(player_index: int, radial_vel_index: int, team_str: str) -> str:
+    return "radial vel " + str(radial_vel_index) + " " + team_str + " " + str(player_index)
+
+
 def get_player_prior_area_grid_cell_in_place_columns(player_index: int, area_grid_index: int, team_str: str,
                                                      history_index: int) -> str:
     return "prior area grid cell in place " + str(area_grid_index) + " " + team_str + " " + str(player_index) \

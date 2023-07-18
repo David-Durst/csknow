@@ -4,6 +4,7 @@ from typing import TypeVar, Optional
 from learn_bot.latent.engagement.column_names import *
 from learn_bot.latent.order.column_names import *
 
+# rectangular grid const
 delta_pos_grid_radius = 130
 delta_pos_grid_cell_dim = 20
 delta_pos_z_num_cells = 3
@@ -12,6 +13,25 @@ delta_pos_grid_num_cells = delta_pos_z_num_cells * \
                                (delta_pos_grid_cell_dim * delta_pos_grid_cell_dim))
 delta_pos_grid_num_cells_per_xy_dim = isqrt(int(delta_pos_grid_num_cells / delta_pos_z_num_cells))
 delta_pos_grid_num_xy_cells_per_z_change = delta_pos_grid_num_cells_per_xy_dim * delta_pos_grid_num_cells_per_xy_dim
+
+# radial grid const
+class StatureOptions(Enum):
+    Standing = 0
+    Walking = 1
+    Ducking = 2
+    NUM_STATURE_OPTIONS = 3
+
+walking_modifier = 0.52
+ducking_modifier = 0.34
+airwalk_speed = 30.
+num_directions = 16
+direction_angle_range = 360. / num_directions
+num_z_axis_layers = 3
+num_radial_bins = 1 + num_z_axis_layers * num_directions * StatureOptions.NUM_STATURE_OPTIONS.value
+# half of max speed, can upgrade simulator with per-weapon speeds later
+default_speed = 125
+
+
 
 float_c4_cols = c4_time_left_percent #c4_ticks_since_plant #[c4_distance_to_a_site_col, c4_distance_to_b_site_col] + c4_pos_cols + c4_ticks_since_plant
 
@@ -63,6 +83,7 @@ class PlayerPlaceAreaColumns:
         self.distribution_nearest_place = []
         self.distribution_nearest_grid_area = []
         self.delta_pos = []
+        self.radial_vel = []
         for place_index in range(num_places):
             self.cur_place \
                 .append(get_player_cur_place_columns(player_index, place_index, team_str))
@@ -76,6 +97,9 @@ class PlayerPlaceAreaColumns:
         for delta_pos_index in range(delta_pos_grid_num_cells):
             self.delta_pos \
                 .append(get_delta_pos_columns(player_index, delta_pos_index, team_str))
+        for radial_vel_index in range(num_radial_bins):
+            self.radial_vel \
+                .append(get_radial_vel_columns(player_index, radial_vel_index, team_str))
         for prior_tick in range(1, num_prior_ticks+1):
             for dim_str in ["x", "y", "z"]:
                 self.prior_pos.append(get_player_pos_columns(player_index, team_str, dim_str, prior_tick))
@@ -107,7 +131,7 @@ class PlayerPlaceAreaColumns:
         #return [self.cur_place, self.area_grid_cell_in_place, [self.alive], [self.ct_team]]#, self.index_on_team, [self.ct_team]]
         return [[self.alive], [self.ct_team]]
 
-    def to_output_cat_list(self, place: bool, area: bool, delta: bool) -> list[list[str]]:
+    def to_output_cat_list(self, place: bool, area: bool, delta: bool, radial: bool) -> list[list[str]]:
         result = []
         if place:
             result.append(self.distribution_nearest_place)
@@ -115,6 +139,8 @@ class PlayerPlaceAreaColumns:
             result.append(self.distribution_nearest_grid_area)
         if delta:
             result.append(self.delta_pos)
+        if radial:
+            result.append(self.radial_vel)
         return result
 
 
@@ -129,11 +155,13 @@ flat_input_distribution_cat_place_area_columns: list[list[str]] = \
     [[c4_plant_a_col, c4_plant_b_col, c4_not_planted_col]]
 #[['baiting'], [c4_plant_a_col, c4_plant_b_col, c4_not_planted_col]]
 flat_output_cat_place_distribution_columns: list[list[str]] = \
-    flatten_list([cols.to_output_cat_list(True, False, False) for cols in specific_player_place_area_columns])
+    flatten_list([cols.to_output_cat_list(True, False, False, False) for cols in specific_player_place_area_columns])
 flat_output_cat_area_distribution_columns: list[list[str]] = \
-    flatten_list([cols.to_output_cat_list(False, True, False) for cols in specific_player_place_area_columns])
+    flatten_list([cols.to_output_cat_list(False, True, False, False) for cols in specific_player_place_area_columns])
 flat_output_cat_delta_pos_columns: list[list[str]] = \
-    flatten_list([cols.to_output_cat_list(False, False, True) for cols in specific_player_place_area_columns])
+    flatten_list([cols.to_output_cat_list(False, False, True, False) for cols in specific_player_place_area_columns])
+flat_output_cat_radial_vel_columns: list[list[str]] = \
+    flatten_list([cols.to_output_cat_list(False, False, False, True) for cols in specific_player_place_area_columns])
 
 place_area_input_column_types = get_simplified_column_types(flat_input_float_place_area_columns,
                                                             [], #flat_input_cat_place_area_columns,
@@ -145,3 +173,4 @@ place_area_input_column_types = get_simplified_column_types(flat_input_float_pla
 place_output_column_types = get_simplified_column_types([], [], [], flat_output_cat_place_distribution_columns)
 area_output_column_types = get_simplified_column_types([], [], [], flat_output_cat_area_distribution_columns)
 delta_pos_output_column_types = get_simplified_column_types([], [], [], flat_output_cat_delta_pos_columns)
+radial_vel_output_column_types = get_simplified_column_types([], [], [], flat_output_cat_radial_vel_columns)

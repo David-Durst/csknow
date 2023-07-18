@@ -18,7 +18,7 @@ from learn_bot.latent.analyze.process_trajectory_comparison import ComparisonCon
 from learn_bot.latent.dataset import LatentDataset
 from learn_bot.latent.engagement.column_names import max_enemies, round_id_column
 from learn_bot.latent.load_model import load_model_file
-from learn_bot.latent.place_area.column_names import place_area_input_column_types, delta_pos_output_column_types, \
+from learn_bot.latent.place_area.column_names import place_area_input_column_types, \
     delta_pos_grid_num_cells
 from learn_bot.latent.transformer_nested_hidden_latent_model import TransformerNestedHiddenLatentModel
 from learn_bot.latent.vis.off_policy_inference import off_policy_inference

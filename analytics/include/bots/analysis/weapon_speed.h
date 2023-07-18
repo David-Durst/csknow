@@ -23,13 +23,13 @@ namespace csknow::weapon_speed {
     constexpr int num_directions = 16;
     constexpr double direction_angle_range = 360. / num_directions;
     constexpr int num_z_axis_layers = 3;
-    constexpr int num_radial_bins = num_z_axis_layers * num_directions * enumAsInt(StatureOptions::NUM_STATURE_OPTIONS);
+    // add 1 for not moving bin
+    constexpr int num_radial_bins = 1 + num_z_axis_layers * num_directions * enumAsInt(StatureOptions::NUM_STATURE_OPTIONS);
     constexpr double speed_threshold = 0.9;
 
     double engineWeaponIdToMaxSpeed(EngineWeaponId engineWeaponId, StatureOptions statureOption, bool scoped);
 
     // plus 1 for standing still
-    constexpr int radial_movement_options = num_directions * enumAsInt(StatureOptions::NUM_STATURE_OPTIONS) + 1;
     struct MovementStatus {
         Vec3 vel;
         StatureOptions statureOption;

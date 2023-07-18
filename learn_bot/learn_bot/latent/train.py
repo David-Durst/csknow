@@ -20,7 +20,7 @@ from learn_bot.latent.latent_hdf5_dataset import MultipleLatentHDF5Dataset
 from learn_bot.latent.place_area.load_data import human_latent_team_hdf5_data_path, manual_latent_team_hdf5_data_path, \
     LoadDataResult, LoadDataOptions
 from learn_bot.latent.place_area.pos_abs_delta_conversion import delta_pos_grid_num_cells
-from learn_bot.latent.place_area.column_names import place_area_input_column_types, delta_pos_output_column_types, test_success_col
+from learn_bot.latent.place_area.column_names import place_area_input_column_types, radial_vel_output_column_types, test_success_col
 from learn_bot.latent.profiling import profile_latent_model
 from learn_bot.latent.transformer_nested_hidden_latent_model import TransformerNestedHiddenLatentModel
 from learn_bot.libs.hdf5_to_pd import load_hdf5_to_pd
@@ -165,7 +165,7 @@ def train(train_type: TrainType, multi_hdf5_wrapper: MultiHDF5Wrapper,
 
     # Define model
     if train_type == TrainType.DeltaPos:
-        column_transformers = IOColumnTransformers(place_area_input_column_types, delta_pos_output_column_types,
+        column_transformers = IOColumnTransformers(place_area_input_column_types, radial_vel_output_column_types,
                                                    multi_hdf5_wrapper.train_hdf5_wrappers[0].sample_df)
         model = TransformerNestedHiddenLatentModel(column_transformers, 2 * max_enemies, delta_pos_grid_num_cells,
                                                    hyperparameter_options.layers, hyperparameter_options.heads)
@@ -174,7 +174,7 @@ def train(train_type: TrainType, multi_hdf5_wrapper: MultiHDF5Wrapper,
             model.load_state_dict(model_file['model_state_dict'])
         model = model.to(device)
         input_column_types = place_area_input_column_types
-        output_column_types = delta_pos_output_column_types
+        output_column_types = radial_vel_output_column_types
     else:
         raise Exception("invalid train type")
 
@@ -439,8 +439,8 @@ load_data_options = LoadDataOptions(
     use_synthetic_data=False,
     use_small_human_data=False,
     use_all_human_data=True,
-    add_manual_to_all_human_data=True,
-    limit_manual_data_to_no_enemies_nav=True,
+    add_manual_to_all_human_data=False,
+    limit_manual_data_to_no_enemies_nav=False,
     limit_manual_data_to_only_enemies_no_nav=False,
     small_good_rounds=human_good_rounds,
     similarity_df=load_hdf5_to_pd(all_human_vs_small_human_similarity_hdf5_data_path)
