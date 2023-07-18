@@ -174,7 +174,7 @@ namespace csknow::weapon_speed {
 
 
     MovementStatus::MovementStatus(EngineWeaponId engineWeaponId, Vec3 curVel, Vec3 nextVel, StatureOptions statureOption,
-                                   bool scoped, bool airborne, bool jumping, bool falling) : vel(vel),
+                                   bool scoped, bool airborne, bool jumping, bool falling) : vel(curVel),
                                    statureOption(statureOption), jumping(jumping), falling(falling) {
         double weaponMaxSpeed = engineWeaponIdToMaxSpeed(engineWeaponId, statureOption, scoped);
         // check if within threshold of moving or not moving. otherwise look ad delta in vel
@@ -231,6 +231,10 @@ namespace csknow::weapon_speed {
 
     int MovementStatus::velocityToDir(Vec3 vel) {
         double velAngle = glm::degrees(std::atan2(vel.y, vel.x));
+        // make velAngle always positive
+        if (velAngle < 0.) {
+            velAngle = 360. - velAngle;
+        }
         // adjust by half angle range so that first angle range is centered around 0.
         return static_cast<int>((velAngle + direction_angle_range / 2.) / direction_angle_range) % num_directions;
     }
