@@ -127,10 +127,8 @@ def compute_accuracy_and_delta_diff(pred, Y, duplicated_last, accuracy, delta_di
     Y_delta_pos_with_z[:, :, 2] = Y_delta_pos.z_jump_index * 45.
     pred_untransformed_delta_pos_with_z = pred_untransformed_delta_pos.delta_pos.clone()
     pred_untransformed_delta_pos_with_z[:, :, 2] = pred_untransformed_delta_pos.z_jump_index * 45.
-
-    delta_diff_xyz_per_player = torch.sqrt(torch.sum(torch.pow(Y_delta_pos_with_z.delta_pos -
-                                                               pred_untransformed_delta_pos_with_z.delta_pos, 2),
-                                                     dim=-1))
+    delta_diff_xyz_per_player = \
+        torch.sqrt(torch.sum(torch.pow(Y_delta_pos_with_z - pred_untransformed_delta_pos_with_z, 2), dim=-1))
     #    torch.sqrt(
     #    torch.pow(Y_delta_indices.x_index - pred_untransformed_delta_indices.x_index, 2) +
     #    torch.pow(Y_delta_indices.y_index - pred_untransformed_delta_indices.y_index, 2) +
