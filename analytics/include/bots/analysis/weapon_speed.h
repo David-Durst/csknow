@@ -40,9 +40,9 @@ namespace csknow::weapon_speed {
                        bool scoped, bool airborne, bool jumping, bool falling);
         MovementStatus(EngineWeaponId engineWeaponId, bool scoped, int radialMovementBin);
 
-        int velocityToDir(Vec3 vel);
-        int toRadialMovementBin();
+        int toRadialMovementBin() const;
     };
+    int velocityToDir(Vec3 vel);
 
 
 }

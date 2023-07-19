@@ -228,17 +228,7 @@ namespace csknow::weapon_speed {
         }
     }
 
-    int MovementStatus::velocityToDir(Vec3 vel) {
-        double velAngle = glm::degrees(std::atan2(vel.y, vel.x));
-        // make velAngle always positive
-        if (velAngle < 0.) {
-            velAngle = 360. - velAngle;
-        }
-        // adjust by half angle range so that first angle range is centered around 0.
-        return static_cast<int>((velAngle + direction_angle_range / 2.) / direction_angle_range) % num_directions;
-    }
-
-    int MovementStatus::toRadialMovementBin() {
+    int MovementStatus::toRadialMovementBin() const {
         if (!moving) {
             return 0;
         }
@@ -253,5 +243,15 @@ namespace csknow::weapon_speed {
             return 1 + zAxisIndex * num_directions * enumAsInt(StatureOptions::NUM_STATURE_OPTIONS) +
                 dir * enumAsInt(StatureOptions::NUM_STATURE_OPTIONS) + enumAsInt(statureOption);
         }
+    }
+
+    int velocityToDir(Vec3 vel) {
+        double velAngle = glm::degrees(std::atan2(vel.y, vel.x));
+        // make velAngle always positive
+        if (velAngle < 0.) {
+            velAngle = 360. + velAngle;
+        }
+        // adjust by half angle range so that first angle range is centered around 0.
+        return static_cast<int>((velAngle + direction_angle_range / 2.) / direction_angle_range) % num_directions;
     }
 }
