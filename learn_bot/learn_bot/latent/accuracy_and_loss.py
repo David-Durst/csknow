@@ -5,7 +5,8 @@ from einops import rearrange, repeat, pack
 from torch.utils.tensorboard import SummaryWriter
 
 from learn_bot.latent.dataset import *
-from learn_bot.latent.place_area.pos_abs_from_delta_grid_or_radial import get_delta_indices_from_grid
+from learn_bot.latent.place_area.pos_abs_from_delta_grid_or_radial import get_delta_indices_from_grid, \
+    get_delta_pos_from_radial
 from learn_bot.libs.io_transforms import IOColumnTransformers, ColumnTransformerType, CPU_DEVICE_STR, \
     get_untransformed_outputs, get_transformed_outputs, CUDA_DEVICE_STR
 from math import sqrt
@@ -93,7 +94,8 @@ def compute_loss(pred, Y, duplicated_last, num_players) -> LatentLosses:
 duplicated_name_str = 'duplicated'
 
 def compute_accuracy_and_delta_diff(pred, Y, duplicated_last, accuracy, delta_diff_xy, delta_diff_xyz,
-                                    valids_per_accuracy_column, num_players, column_transformers: IOColumnTransformers):
+                                    valids_per_accuracy_column, num_players, column_transformers: IOColumnTransformers,
+                                    stature_to_speed):
     pred_untransformed = get_untransformed_outputs(pred)
 
     name = column_transformers.output_types.categorical_distribution_first_sub_cols[0]
@@ -108,18 +110,32 @@ def compute_accuracy_and_delta_diff(pred, Y, duplicated_last, accuracy, delta_di
     masked_accuracy_per_player = accuracy_per_player * Y_valid_per_player_row
 
     # compute delta diffs
-    Y_delta_indices = get_delta_indices_from_grid(Y_label_per_player)
-    pred_untransformed_delta_indices = get_delta_indices_from_grid(pred_untransformed_label_per_player)
-    delta_diff_xy_per_player = torch.sqrt(
-        torch.pow(Y_delta_indices.x_index - pred_untransformed_delta_indices.x_index, 2) +
-        torch.pow(Y_delta_indices.y_index - pred_untransformed_delta_indices.y_index, 2)
-    )
+    #Y_delta_indices = get_delta_indices_from_grid(Y_label_per_player)
+    #pred_untransformed_delta_indices = get_delta_indices_from_grid(pred_untransformed_label_per_player)
+    Y_delta_pos = get_delta_pos_from_radial(Y_label_per_player, stature_to_speed)
+    pred_untransformed_delta_pos = \
+        get_delta_pos_from_radial(pred_untransformed_label_per_player, stature_to_speed)
+    delta_diff_xy_per_player = \
+        torch.sqrt(torch.sum(torch.pow(Y_delta_pos.delta_pos - pred_untransformed_delta_pos.delta_pos, 2), dim=-1))
+    #torch.sqrt(
+    #    torch.pow(Y_delta_indices.x_index - pred_untransformed_delta_indices.x_index, 2) +
+    #    torch.pow(Y_delta_indices.y_index - pred_untransformed_delta_indices.y_index, 2)
+    #)
     masked_delta_diff_xy = delta_diff_xy_per_player * Y_valid_per_player_row
-    delta_diff_xyz_per_player = torch.sqrt(
-        torch.pow(Y_delta_indices.x_index - pred_untransformed_delta_indices.x_index, 2) +
-        torch.pow(Y_delta_indices.y_index - pred_untransformed_delta_indices.y_index, 2) +
-        torch.pow(Y_delta_indices.z_jump_index - pred_untransformed_delta_indices.z_jump_index, 2)
-    )
+    # 45 is reasonable jump height, so use that as z distance
+    Y_delta_pos_with_z = Y_delta_pos.delta_pos.clone()
+    Y_delta_pos_with_z[:, :, 2] = Y_delta_pos.z_jump_index * 45.
+    pred_untransformed_delta_pos_with_z = pred_untransformed_delta_pos.delta_pos.clone()
+    pred_untransformed_delta_pos_with_z[:, :, 2] = pred_untransformed_delta_pos.z_jump_index * 45.
+
+    delta_diff_xyz_per_player = torch.sqrt(torch.sum(torch.pow(Y_delta_pos_with_z.delta_pos -
+                                                               pred_untransformed_delta_pos_with_z.delta_pos, 2),
+                                                     dim=-1))
+    #    torch.sqrt(
+    #    torch.pow(Y_delta_indices.x_index - pred_untransformed_delta_indices.x_index, 2) +
+    #    torch.pow(Y_delta_indices.y_index - pred_untransformed_delta_indices.y_index, 2) +
+    #    torch.pow(Y_delta_indices.z_jump_index - pred_untransformed_delta_indices.z_jump_index, 2)
+    #)
     masked_delta_diff_xyz = delta_diff_xyz_per_player * Y_valid_per_player_row
 
     if name not in accuracy:

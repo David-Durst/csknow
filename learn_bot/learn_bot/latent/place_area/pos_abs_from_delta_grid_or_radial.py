@@ -69,7 +69,13 @@ def get_delta_indices_from_grid(pred_labels: torch.Tensor) -> DeltaXYZIndices:
     return DeltaXYZIndices(x_index, y_index, z_jump_index)
 
 
-def get_delta_indices_from_radial(pred_labels: torch.Tensor, stature_to_speed: torch.Tensor) -> DeltaXYZIndices:
+@dataclass
+class DeltaPosWithZIndex:
+    delta_pos: torch.Tensor
+    z_jump_index: torch.Tensor
+
+
+def get_delta_pos_from_radial(pred_labels: torch.Tensor, stature_to_speed: torch.Tensor) -> DeltaPosWithZIndex:
     not_moving = pred_labels == 0.
     moving_pred_labels = pred_labels - 1.
     z_jump_index = torch.floor(moving_pred_labels / num_radial_bins_per_z_axis)
@@ -86,30 +92,40 @@ def get_delta_indices_from_radial(pred_labels: torch.Tensor, stature_to_speed: t
                                                 p=len(specific_player_place_area_columns))
     # return cos/sin of dir degre
     not_moving_zeros = torch.zeros_like(per_batch_max_speed_per_stature)
-    return DeltaXYZIndices(
+    delta_pos = torch.stack([
         torch.where(not_moving, not_moving_zeros, torch.cos(dir_degrees) * per_batch_max_speed_per_stature),
         torch.where(not_moving, not_moving_zeros, torch.sin(dir_degrees) * per_batch_max_speed_per_stature),
-        torch.where(not_moving, not_moving_zeros, z_jump_index))
+        not_moving_zeros
+    ], dim=-1)
+    return DeltaPosWithZIndex(delta_pos, torch.where(not_moving, not_moving_zeros, z_jump_index))
 
 
 def compute_new_pos(input_pos_tensor: torch.Tensor, pred_labels: torch.Tensor, nav_data: NavData, pred_is_grid: bool,
                     stature_to_speed: torch.Tensor):
-    delta_xyz_indices = get_delta_indices_from_grid(pred_labels) if pred_is_grid else \
-        get_delta_indices_from_radial(pred_labels, stature_to_speed)
-    z_index = torch.zeros_like(delta_xyz_indices.x_index)
+    if pred_is_grid:
+        delta_xyz_indices = get_delta_indices_from_grid(pred_labels)
+        z_jump_index = delta_xyz_indices.z_jump_index
+        z_index = torch.zeros_like(delta_xyz_indices.x_index)
 
-    # convert to xy pos changes
-    pos_index = torch.stack([delta_xyz_indices.x_index, delta_xyz_indices.y_index, z_index], dim=-1)
-    unscaled_pos_change = (pos_index * delta_pos_grid_cell_dim)
-    pos_change_norm = torch.linalg.vector_norm(unscaled_pos_change, dim=-1, keepdim=True)
-    all_scaled_pos_change = (max_run_speed_per_tick / pos_change_norm) * unscaled_pos_change
-    # if norm less than max run speed, don't scale
-    scaled_pos_change = torch.where(pos_change_norm > max_run_speed_per_tick, all_scaled_pos_change,
-                                    unscaled_pos_change)
+        # convert to xy pos changes
+        pos_index = torch.stack([delta_xyz_indices.x_index, delta_xyz_indices.y_index, z_index], dim=-1)
+        unscaled_pos_change = (pos_index * delta_pos_grid_cell_dim)
+        pos_change_norm = torch.linalg.vector_norm(unscaled_pos_change, dim=-1, keepdim=True)
+        all_scaled_pos_change = (max_run_speed_per_tick / pos_change_norm) * unscaled_pos_change
+        # if norm less than max run speed, don't scale
+        scaled_pos_change = torch.where(pos_change_norm > max_run_speed_per_tick, all_scaled_pos_change,
+                                        unscaled_pos_change)
+    else:
+        delta_pos_with_z = get_delta_pos_from_radial(pred_labels, stature_to_speed)
+        # z is treated differently as need to look at navmesh
+        z_jump_index = delta_pos_with_z.z_jump_index
+        # already scaled since radial uses sin/cos and per statue speed
+        # divide by 2 since changes are per half second
+        scaled_pos_change = delta_pos_with_z.delta_pos / 2.
 
     # apply to input pos
     output_pos_tensor = input_pos_tensor[:, :, 0, :] + scaled_pos_change
-    output_pos_tensor[:, :, 2] += torch.where(delta_xyz_indices.z_jump_index == 2., max_jump_height, 0.)
+    output_pos_tensor[:, :, 2] += torch.where(z_jump_index == 2., max_jump_height, 0.)
     output_pos_tensor[:, :, 0] = output_pos_tensor[:, :, 0].clamp(min=nav_data.nav_region.min.x,
                                                                   max=nav_data.nav_region.max.x)
     output_pos_tensor[:, :, 1] = output_pos_tensor[:, :, 1].clamp(min=nav_data.nav_region.min.y,
@@ -122,7 +138,7 @@ def compute_new_pos(input_pos_tensor: torch.Tensor, pred_labels: torch.Tensor, n
     nav_grid_index = rearrange(torch.sum(nav_data.num_steps * nav_grid_steps, dim=-1), 'b p -> (b p)')
     nav_above_below_per_player = rearrange(torch.index_select(nav_data.nav_above_below, 0, nav_grid_index),
                                            '(b p) o -> b p o', p=len(specific_player_place_area_columns))
-    output_pos_tensor[:, :, 2] = torch.where(delta_xyz_indices.z_jump_index == 1,
+    output_pos_tensor[:, :, 2] = torch.where(z_jump_index == 1,
                                              nav_above_below_per_player[:, :, 0], nav_above_below_per_player[:, :, 1])
     output_and_history_pos_tensor = torch.roll(input_pos_tensor, 1, 2)
     output_and_history_pos_tensor[:, :, 0, :] = output_pos_tensor

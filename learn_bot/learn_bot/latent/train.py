@@ -285,7 +285,8 @@ def train(train_type: TrainType, multi_hdf5_wrapper: MultiHDF5Wrapper,
                     scaler.update()
 
                 compute_accuracy_and_delta_diff(pred, Y, duplicated_last, accuracy, delta_diff_xy, delta_diff_xyz,
-                                                valids_per_accuracy_column, model.num_players, column_transformers)
+                                                valids_per_accuracy_column, model.num_players, column_transformers,
+                                                model.stature_to_speed_gpu)
                 pbar.update(1)
                 if profiler is not None:
                     profiler.step()
@@ -435,11 +436,11 @@ def train(train_type: TrainType, multi_hdf5_wrapper: MultiHDF5Wrapper,
 latent_id_cols = ['id', round_id_column, test_success_col]
 
 load_data_options = LoadDataOptions(
-    use_manual_data=False,
+    use_manual_data=True,
     use_rollout_data=False,
     use_synthetic_data=False,
     use_small_human_data=False,
-    use_all_human_data=True,
+    use_all_human_data=False,
     add_manual_to_all_human_data=False,
     limit_manual_data_to_no_enemies_nav=False,
     limit_manual_data_to_only_enemies_no_nav=False,
