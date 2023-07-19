@@ -1,7 +1,7 @@
 import tkinter as tk
 from tkinter import ttk, font
 from typing import Tuple, Optional, List, Dict
-from math import sqrt, pow, cos, sin
+from math import sqrt, pow, cos, sin, radians
 
 import pandas as pd
 from PIL import Image, ImageDraw, ImageTk as itk
@@ -64,14 +64,18 @@ class VisMapCoordinate():
         new_radial_cell = VisMapCoordinate(self.coords.x, self.coords.y, self.coords.z, False)
         new_radial_cell.is_player = False
         new_radial_cell.is_prediction = is_prediction
-        new_radial_cell.z_index = int(radial_index / num_radial_bins_per_z_axis)
-        dir_stature_radial_index = radial_index % num_radial_bins_per_z_axis
+        not_moving = radial_index == 0
+        moving_radial_index = radial_index - 1
+        new_radial_cell.z_index = int(moving_radial_index / num_radial_bins_per_z_axis)
+        dir_stature_radial_index = moving_radial_index % num_radial_bins_per_z_axis
         stature_index = int(dir_stature_radial_index % StatureOptions.NUM_STATURE_OPTIONS.value)
         speed = stature_to_speed_list[stature_index]
         dir_index = int(dir_stature_radial_index / StatureOptions.NUM_STATURE_OPTIONS.value)
         dir_degrees = dir_index * direction_angle_range
-        new_radial_cell.coords.x += cos(dir_degrees) * speed
-        new_radial_cell.coords.y += sin(dir_degrees) * speed
+        # divide by 2 for speed as looking at half second
+        if not not_moving:
+            new_radial_cell.coords.x += cos(radians(dir_degrees)) * speed / 2.
+            new_radial_cell.coords.y += sin(radians(dir_degrees)) * speed / 2.
         return new_radial_cell
 
     def draw_vis(self, im_draw: ImageDraw, use_scale: bool, custom_color: Optional[Tuple] = None, rectangle = True):
@@ -150,7 +154,13 @@ def draw_all_players(data_series: pd.Series, pred_series: Optional[pd.Series], i
 
             data_coord = pos_coord.get_radial_cell(max_data_index, False)
             pred_coord = pos_coord.get_radial_cell(max_pred_index, True)
-            player_str = f'''{player_place_area_columns.player_id} pos {pos_coord.coords}, data {data_coord.coords} {data_coord.z_index}, pred {pred_coord.coords} {pred_coord.z_index}'''
+            vel_per_player = Vec3(data_series[player_place_area_columns.vel[0]],
+                                  data_series[player_place_area_columns.vel[1]],
+                                  data_series[player_place_area_columns.vel[2]])
+            player_str = f"{player_place_area_columns.player_id} pos {pos_coord.coords}, " \
+                         f"data {data_coord.coords} {data_coord.z_index}, " \
+                         f"pred {pred_coord.coords} {pred_coord.z_index}, " \
+                         f"vel {vel_per_player}, radial index {max_data_index}"
             result += player_str + "\n"
             #print(player_str)
             if draw_max:
@@ -163,7 +173,7 @@ def draw_all_players(data_series: pd.Series, pred_series: Optional[pd.Series], i
                 xy_coord_to_max_prob: Dict[Tuple[float, float], float] = {}
                 xy_coord_to_sum_coord: Dict[Tuple[float, float], VisMapCoordinate] = {}
                 xy_coord_to_max_prob_z_index: Dict[Tuple[float, float], int] = {}
-                for i in range(delta_pos_grid_num_cells):
+                for i in range(num_radial_bins):
                     cur_pred_prob = pred_series[player_place_area_columns.radial_vel[i]]
                     cur_pred_coord = pos_coord.get_radial_cell(i, True)
                     xy_coord = cur_pred_coord.coords.x, cur_pred_coord.coords.y

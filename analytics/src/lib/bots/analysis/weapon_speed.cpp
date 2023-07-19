@@ -179,7 +179,6 @@ namespace csknow::weapon_speed {
         double weaponMaxSpeed = engineWeaponIdToMaxSpeed(engineWeaponId, statureOption, scoped);
         // check if within threshold of moving or not moving. otherwise look ad delta in vel
         double movingSpeedThreshold = weaponMaxSpeed * speed_threshold;
-        double notMovingSpeedThreshold = weaponMaxSpeed * (1 - speed_threshold);
         // airborne check is for the 30 unit speed that you can accel from stopped while in air
         if (airborne) {
             movingSpeedThreshold = airwalk_speed * speed_threshold;
@@ -190,7 +189,7 @@ namespace csknow::weapon_speed {
         Vec2 curVel2D{curVel.x, curVel.y}, nextVel2D{nextVel.x, nextVel.y};
         bool increasingVel = computeMagnitude(nextVel2D) - computeMagnitude(curVel2D);
 
-        if (speed2D >= movingSpeedThreshold || (speed2D >= notMovingSpeedThreshold && increasingVel)) {
+        if (speed2D >= movingSpeedThreshold || increasingVel) {
             moving = true;
             dir = velocityToDir(vel);
         }

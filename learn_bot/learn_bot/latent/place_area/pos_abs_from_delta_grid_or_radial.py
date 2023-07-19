@@ -93,8 +93,8 @@ def get_delta_pos_from_radial(pred_labels: torch.Tensor, stature_to_speed: torch
     # return cos/sin of dir degre
     not_moving_zeros = torch.zeros_like(per_batch_max_speed_per_stature)
     delta_pos = torch.stack([
-        torch.where(not_moving, not_moving_zeros, torch.cos(dir_degrees) * per_batch_max_speed_per_stature),
-        torch.where(not_moving, not_moving_zeros, torch.sin(dir_degrees) * per_batch_max_speed_per_stature),
+        torch.where(not_moving, not_moving_zeros, torch.cos(torch.deg2rad(dir_degrees)) * per_batch_max_speed_per_stature),
+        torch.where(not_moving, not_moving_zeros, torch.sin(torch.deg2rad(dir_degrees)) * per_batch_max_speed_per_stature),
         not_moving_zeros
     ], dim=-1)
     return DeltaPosWithZIndex(delta_pos, torch.where(not_moving, not_moving_zeros, z_jump_index))
