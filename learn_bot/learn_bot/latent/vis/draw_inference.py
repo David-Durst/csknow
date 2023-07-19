@@ -76,6 +76,9 @@ class VisMapCoordinate():
         if not not_moving:
             new_radial_cell.coords.x += cos(radians(dir_degrees)) * speed / 2.
             new_radial_cell.coords.y += sin(radians(dir_degrees)) * speed / 2.
+        else:
+            # for vis purposes, not moving has no change in z axis
+            new_radial_cell.z_index = 1
         return new_radial_cell
 
     def draw_vis(self, im_draw: ImageDraw, use_scale: bool, custom_color: Optional[Tuple] = None, rectangle = True):
