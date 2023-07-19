@@ -14,7 +14,7 @@ from learn_bot.latent.place_area.filter import filter_region
 from learn_bot.latent.place_area.load_data import LoadDataResult
 from learn_bot.latent.place_area.pos_abs_from_delta_grid_or_radial import delta_pos_grid_num_cells, AABB
 from learn_bot.latent.place_area.column_names import round_id_column, place_area_input_column_types, \
-    radial_vel_output_column_types, test_success_col
+    radial_vel_output_column_types, test_success_col, num_radial_bins
 from learn_bot.libs.hdf5_to_pd import load_hdf5_to_pd
 from learn_bot.libs.hdf5_wrapper import HDF5Wrapper
 from learn_bot.libs.io_transforms import IOColumnTransformers, CUDA_DEVICE_STR
@@ -69,7 +69,7 @@ def load_model_file(loaded_data: LoadDataResult) -> LoadedModel:
                                                loaded_data.multi_hdf5_wrapper.hdf5_wrappers[0].sample_df)
 
     model = TransformerNestedHiddenLatentModel(model_file['column_transformers'], 2 * max_enemies,
-                                               delta_pos_grid_num_cells, 2, 4)
+                                               num_radial_bins, 2, 4)
     model.load_state_dict(model_file['model_state_dict'])
     model.to(CUDA_DEVICE_STR)
 

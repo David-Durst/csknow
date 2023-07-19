@@ -25,6 +25,8 @@ def range_list_to_index_list(range_list: list[range]) -> list[int]:
 
 d2_min = [-2257., -1207., -204.128]
 d2_max = [1832., 3157., 236.]
+stature_to_speed_list = [max_speed_per_second, max_speed_per_second * walking_modifier,
+                         max_speed_per_second * ducking_modifier]
 
 
 class TransformerNestedHiddenLatentModel(nn.Module):
@@ -82,8 +84,7 @@ class TransformerNestedHiddenLatentModel(nn.Module):
         self.d2_max_gpu = self.d2_max_cpu.to(CUDA_DEVICE_STR)
 
         # radial speed matrices
-        self.stature_to_speed_cpu = torch.tensor([max_speed_per_second, max_speed_per_second * walking_modifier,
-                                                  max_speed_per_second * ducking_modifier])
+        self.stature_to_speed_cpu = torch.tensor(stature_to_speed_list)
         self.stature_to_speed_gpu = self.stature_to_speed_cpu.to(CUDA_DEVICE_STR)
 
 

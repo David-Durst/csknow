@@ -1,14 +1,16 @@
 import tkinter as tk
 from tkinter import ttk, font
 from typing import Tuple, Optional, List, Dict
-from math import sqrt, pow
+from math import sqrt, pow, cos, sin
 
 import pandas as pd
 from PIL import Image, ImageDraw, ImageTk as itk
 
 from learn_bot.latent.place_area.pos_abs_from_delta_grid_or_radial import delta_pos_grid_num_cells, delta_pos_grid_num_cells_per_xy_dim, \
     delta_pos_grid_cell_dim, delta_pos_grid_num_xy_cells_per_z_change
-from learn_bot.latent.place_area.column_names import specific_player_place_area_columns
+from learn_bot.latent.place_area.column_names import specific_player_place_area_columns, num_radial_bins, \
+    num_radial_bins_per_z_axis, StatureOptions, direction_angle_range
+from learn_bot.latent.transformer_nested_hidden_latent_model import stature_to_speed_list
 from learn_bot.mining.area_cluster import Vec3
 
 player_width = 32
@@ -57,6 +59,20 @@ class VisMapCoordinate():
         new_grid_cell.coords.x += x_index * delta_pos_grid_cell_dim
         new_grid_cell.coords.y += y_index * delta_pos_grid_cell_dim
         return new_grid_cell
+
+    def get_radial_cell(self, radial_index: int, is_prediction: bool):
+        new_radial_cell = VisMapCoordinate(self.coords.x, self.coords.y, self.coords.z, False)
+        new_radial_cell.is_player = False
+        new_radial_cell.is_prediction = is_prediction
+        new_radial_cell.z_index = int(radial_index / num_radial_bins_per_z_axis)
+        dir_stature_radial_index = radial_index % num_radial_bins_per_z_axis
+        stature_index = int(dir_stature_radial_index % StatureOptions.NUM_STATURE_OPTIONS.value)
+        speed = stature_to_speed_list[stature_index]
+        dir_index = int(dir_stature_radial_index / StatureOptions.NUM_STATURE_OPTIONS.value)
+        dir_degrees = dir_index * direction_angle_range
+        new_radial_cell.coords.x += cos(dir_degrees) * speed
+        new_radial_cell.coords.y += sin(dir_degrees) * speed
+        return new_radial_cell
 
     def draw_vis(self, im_draw: ImageDraw, use_scale: bool, custom_color: Optional[Tuple] = None, rectangle = True):
         half_width = delta_pos_grid_cell_dim / 2
@@ -122,18 +138,18 @@ def draw_all_players(data_series: pd.Series, pred_series: Optional[pd.Series], i
             max_data_index = -1
             max_pred_prob = -1
             max_pred_index = -1
-            for i in range(delta_pos_grid_num_cells):
-                cur_data_prob = data_series[player_place_area_columns.delta_pos[i]]
+            for i in range(num_radial_bins):
+                cur_data_prob = data_series[player_place_area_columns.radial_vel[i]]
                 if cur_data_prob > max_data_prob:
                     max_data_prob = cur_data_prob
                     max_data_index = i
-                cur_pred_prob = pred_series[player_place_area_columns.delta_pos[i]]
+                cur_pred_prob = pred_series[player_place_area_columns.radial_vel[i]]
                 if cur_pred_prob > max_pred_prob:
                     max_pred_prob = cur_pred_prob
                     max_pred_index = i
 
-            data_coord = pos_coord.get_grid_cell(max_data_index, False)
-            pred_coord = pos_coord.get_grid_cell(max_pred_index, True)
+            data_coord = pos_coord.get_radial_cell(max_data_index, False)
+            pred_coord = pos_coord.get_radial_cell(max_pred_index, True)
             player_str = f'''{player_place_area_columns.player_id} pos {pos_coord.coords}, data {data_coord.coords} {data_coord.z_index}, pred {pred_coord.coords} {pred_coord.z_index}'''
             result += player_str + "\n"
             #print(player_str)
@@ -143,13 +159,13 @@ def draw_all_players(data_series: pd.Series, pred_series: Optional[pd.Series], i
                     data_coord.draw_vis(im_draw, True)
                 pred_coord.draw_vis(im_draw, True)
             else:
-                xy_coord_to_sum_prob: Dict[Tuple[int, int], float] = {}
-                xy_coord_to_max_prob: Dict[Tuple[int, int], float] = {}
-                xy_coord_to_sum_coord: Dict[Tuple[int, int], VisMapCoordinate] = {}
-                xy_coord_to_max_prob_z_index: Dict[Tuple[int, int], int] = {}
+                xy_coord_to_sum_prob: Dict[Tuple[float, float], float] = {}
+                xy_coord_to_max_prob: Dict[Tuple[float, float], float] = {}
+                xy_coord_to_sum_coord: Dict[Tuple[float, float], VisMapCoordinate] = {}
+                xy_coord_to_max_prob_z_index: Dict[Tuple[float, float], int] = {}
                 for i in range(delta_pos_grid_num_cells):
-                    cur_pred_prob = pred_series[player_place_area_columns.delta_pos[i]]
-                    cur_pred_coord = pos_coord.get_grid_cell(i, True)
+                    cur_pred_prob = pred_series[player_place_area_columns.radial_vel[i]]
+                    cur_pred_coord = pos_coord.get_radial_cell(i, True)
                     xy_coord = cur_pred_coord.coords.x, cur_pred_coord.coords.y
                     if xy_coord not in xy_coord_to_sum_prob:
                         xy_coord_to_sum_prob[xy_coord] = 0
