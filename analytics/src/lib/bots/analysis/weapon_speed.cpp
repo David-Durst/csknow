@@ -223,16 +223,16 @@ namespace csknow::weapon_speed {
         }
         else {
             int movementBin3D = radialMovementBin - 1;
-            zBin = movementBin3D / num_z_axis_layers;
+            zBin = movementBin3D / num_radial_bins_per_z_axis;
             moving = true;
             jumping = zBin == 2;
             falling = zBin == 0;
-            int movementBin2D = movementBin3D % num_z_axis_layers;
-            dir = movementBin2D / enumAsInt(StatureOptions::NUM_STATURE_OPTIONS);
+            int dirStatureRadialIndex = movementBin3D % num_radial_bins_per_z_axis;
+            dir = dirStatureRadialIndex / enumAsInt(StatureOptions::NUM_STATURE_OPTIONS);
             statureOption =
-                    static_cast<StatureOptions>(movementBin2D % enumAsInt(StatureOptions::NUM_STATURE_OPTIONS));
+                    static_cast<StatureOptions>(dirStatureRadialIndex % enumAsInt(StatureOptions::NUM_STATURE_OPTIONS));
             double maxSpeed = engineWeaponIdToMaxSpeed(engineWeaponId, statureOption, scoped);
-            double velAngle = (static_cast<double>(dir) - 0.5) * direction_angle_range;
+            double velAngle = dir * direction_angle_range;
             vel = {
                     std::cos(glm::radians(velAngle)) * maxSpeed,
                     std::sin(glm::radians(velAngle)) * maxSpeed,

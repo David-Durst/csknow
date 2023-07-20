@@ -105,12 +105,13 @@ namespace csknow::inference_delta_pos {
 
         float mostLikelyRadialVelProb = -1;
         size_t playerStartIndex = values.playerIdToColumnIndex.at(curPlayerId) * csknow::weapon_speed::num_radial_bins;
+        // std::cout << output.size(0) << "," << output.size(1) << std::endl;
         for (size_t radialVelIndex = 0; radialVelIndex < csknow::weapon_speed::num_radial_bins; radialVelIndex++) {
             if ((useRealProbT && teamId == ENGINE_TEAM_T) || (useRealProbCT && teamId == ENGINE_TEAM_CT)) {
                 result.radialVelProbabilities.push_back(output[0][playerStartIndex + radialVelIndex].item<float>());
             }
             else {
-                result.radialVelProbabilities.push_back(1. / csknow::feature_store::delta_pos_grid_num_cells);
+                result.radialVelProbabilities.push_back(1. / csknow::weapon_speed::num_radial_bins);
             }
             if (result.radialVelProbabilities.back() > mostLikelyRadialVelProb) {
                 mostLikelyRadialVelProb = result.radialVelProbabilities.back();

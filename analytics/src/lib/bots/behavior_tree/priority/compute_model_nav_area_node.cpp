@@ -142,6 +142,11 @@ namespace csknow::compute_nav_area {
         }
         */
         modelNavData.radialVelIndex = deltaPosOption;
+        /*
+        if (modelNavData.radialVelIndex == 64 || modelNavData.radialVelIndex == 67 || modelNavData.radialVelIndex == 70 || modelNavData.radialVelIndex == 73 || modelNavData.radialVelIndex == 76 || modelNavData.radialVelIndex == 79 || modelNavData.radialVelIndex == 82) {
+            std::cout << "hi" << std::endl;
+        }
+         */
         csknow::weapon_speed::MovementStatus movementStatus(static_cast<EngineWeaponId>(curClient.currentWeaponId),
                                                             curClient.isScoped, modelNavData.radialVelIndex);
         modelNavData.deltaXVal = movementStatus.vel.x;

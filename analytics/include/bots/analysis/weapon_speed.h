@@ -24,7 +24,8 @@ namespace csknow::weapon_speed {
     constexpr double direction_angle_range = 360. / num_directions;
     constexpr int num_z_axis_layers = 3;
     // add 1 for not moving bin
-    constexpr int num_radial_bins = 1 + num_z_axis_layers * num_directions * enumAsInt(StatureOptions::NUM_STATURE_OPTIONS);
+    constexpr int num_radial_bins_per_z_axis = num_directions * enumAsInt(StatureOptions::NUM_STATURE_OPTIONS);
+    constexpr int num_radial_bins = 1 + num_z_axis_layers * num_radial_bins_per_z_axis;
     constexpr double speed_threshold = 0.98;
 
     double engineWeaponIdToMaxSpeed(EngineWeaponId engineWeaponId, StatureOptions statureOption, bool scoped);
