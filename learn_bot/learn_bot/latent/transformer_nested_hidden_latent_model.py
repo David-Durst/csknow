@@ -154,26 +154,26 @@ class TransformerNestedHiddenLatentModel(nn.Module):
 
         return self.spatial_positional_encoder(pos_scaled)
 
-    def encode_y(self, x_pos, x_non_pos, y, take_max) -> torch.Tensor:
-        if take_max:
-            y_per_player = one_hot_max_to_index(y)
-        else:
-            y_per_player = one_hot_prob_to_index(y)
-        # shift by 1 so never looking into future (and 0 out for past)
-        y_per_player_shifted = torch.roll(y_per_player, 1, dims=1)
-        y_per_player_shifted[:, 0] = 0
-        #return self.y_embedding_model(rearrange(y_per_player_shifted, "b y -> b y 1"))
-        #x_pos_shifted = torch.roll(x_pos, 1, dims=1)
-        #x_pos_zeros = torch.zeros_like(x_pos)
-        #if x_pos.device.type == CPU_DEVICE_STR:
-        #    y_pos = compute_new_pos(x_pos, y_per_player_shifted, self.nav_data_cpu, False, self.stature_to_speed_cpu)
-        #else:
-        #    y_pos = compute_new_pos(x_pos, y_per_player_shifted, self.nav_data_cuda, False, self.stature_to_speed_gpu)
-        #y_pos2 = compute_new_pos(x_pos_shifted, y_per_player_shifted, self.nav_data_cuda)
-        y_pos_encoded = self.encode_pos(x_pos, enable_noise=False)
-        #y_pos_time_flattened = rearrange(y_pos_encoded, "b p t d -> b p (t d)")
-        y_gathered = torch.cat([y_pos_encoded, x_non_pos], -1)[:, :, 0, :]
-        return self.embedding_model(y_gathered)
+    #def encode_y(self, x_pos, x_non_pos, y, take_max) -> torch.Tensor:
+    #    if take_max:
+    #        y_per_player = one_hot_max_to_index(y)
+    #    else:
+    #        y_per_player = one_hot_prob_to_index(y)
+    #    # shift by 1 so never looking into future (and 0 out for past)
+    #    y_per_player_shifted = torch.roll(y_per_player, 1, dims=1)
+    #    y_per_player_shifted[:, 0] = 0
+    #    #return self.y_embedding_model(rearrange(y_per_player_shifted, "b y -> b y 1"))
+    #    #x_pos_shifted = torch.roll(x_pos, 1, dims=1)
+    #    #x_pos_zeros = torch.zeros_like(x_pos)
+    #    #if x_pos.device.type == CPU_DEVICE_STR:
+    #    #    y_pos = compute_new_pos(x_pos, y_per_player_shifted, self.nav_data_cpu, False, self.stature_to_speed_cpu)
+    #    #else:
+    #    #    y_pos = compute_new_pos(x_pos, y_per_player_shifted, self.nav_data_cuda, False, self.stature_to_speed_gpu)
+    #    #y_pos2 = compute_new_pos(x_pos_shifted, y_per_player_shifted, self.nav_data_cuda)
+    #    y_pos_encoded = self.encode_pos(x_pos, enable_noise=False)
+    #    #y_pos_time_flattened = rearrange(y_pos_encoded, "b p t d -> b p (t d)")
+    #    y_gathered = torch.cat([y_pos_encoded, x_non_pos], -1)[:, :, 0, :]
+    #    return self.embedding_model(y_gathered)
 
     def generate_tgt_mask(self, device: str) -> torch.Tensor:
         # base tgt mask that is diagonal to ensure only look at future teammates
@@ -237,24 +237,32 @@ class TransformerNestedHiddenLatentModel(nn.Module):
 
         tgt_mask = self.generate_tgt_mask(x.device.type)
 
-        if y is not None:
-            y_encoded = self.encode_y(x_pos, x_non_pos, y, True)
-            transformed = self.transformer_model(x_temporal_embedded_flattened, y_encoded, tgt_mask=tgt_mask,
-                                                 src_key_padding_mask=dead_gathered)#,
-                                                 #tgt_key_padding_mask=dead_gathered)
-            #transformed = transformed.masked_fill(torch.isnan(transformed), 0)
-            latent = self.decoder(transformed)
-            return self.logits_output(latent), self.prob_output(latent)
-        else:
-            y_nested = torch.zeros([x.shape[0], self.num_players, num_radial_bins], device=x.device.type)
-            y_nested[:, :, 0] = 1.
-            y = rearrange(y_nested, "b p d -> b (p d)")
-            memory = self.transformer_model.encoder(x_temporal_embedded_flattened, src_key_padding_mask=dead_gathered)
-            for i in range(self.num_players_per_team):
-                y_encoded = self.encode_y(x_pos, x_non_pos, y, False)
-                transformed = self.transformer_model.decoder(y_encoded, memory, tgt_mask=tgt_mask)
-                latent = self.decoder(transformed)
-                prob_output_nested = rearrange(self.prob_output(latent), "b (p d) -> b p d", p=self.num_players)
-                y_nested[:, i] = prob_output_nested[:, i]
-                y_nested[:, i + self.num_players_per_team] = prob_output_nested[:, i + self.num_players_per_team]
-            return self.logits_output(latent), self.prob_output(latent), one_hot_prob_to_index(y)
+        x_pos_encoded_no_noise = self.encode_pos(x_pos, enable_noise=False)
+        x_gathered_no_noise = torch.cat([x_pos_encoded_no_noise, x_non_pos], -1)[:, :, 0, :]
+        x_embedded_no_noise = self.embedding_model(x_gathered_no_noise)
+        transformed = self.transformer_model(x_temporal_embedded_flattened, x_embedded_no_noise, tgt_mask=tgt_mask,
+                                             src_key_padding_mask=dead_gathered)
+        latent = self.decoder(transformed)
+        prob_output = self.prob_output(latent)
+        return self.logits_output(latent), prob_output, one_hot_prob_to_index(prob_output)
+        #if y is not None:
+        #    y_encoded = self.encode_y(x_pos, x_non_pos, y, True)
+        #    transformed = self.transformer_model(x_temporal_embedded_flattened, y_encoded, tgt_mask=tgt_mask,
+        #                                         src_key_padding_mask=dead_gathered)#,
+        #                                         #tgt_key_padding_mask=dead_gathered)
+        #    #transformed = transformed.masked_fill(torch.isnan(transformed), 0)
+        #    latent = self.decoder(transformed)
+        #    return self.logits_output(latent), self.prob_output(latent)
+        #else:
+        #    y_nested = torch.zeros([x.shape[0], self.num_players, num_radial_bins], device=x.device.type)
+        #    y_nested[:, :, 0] = 1.
+        #    y = rearrange(y_nested, "b p d -> b (p d)")
+        #    memory = self.transformer_model.encoder(x_temporal_embedded_flattened, src_key_padding_mask=dead_gathered)
+        #    for i in range(self.num_players_per_team):
+        #        y_encoded = self.encode_y(x_pos, x_non_pos, y, False)
+        #        transformed = self.transformer_model.decoder(y_encoded, memory, tgt_mask=tgt_mask)
+        #        latent = self.decoder(transformed)
+        #        prob_output_nested = rearrange(self.prob_output(latent), "b (p d) -> b p d", p=self.num_players)
+        #        y_nested[:, i] = prob_output_nested[:, i]
+        #        y_nested[:, i + self.num_players_per_team] = prob_output_nested[:, i + self.num_players_per_team]
+        #    return self.logits_output(latent), self.prob_output(latent), one_hot_prob_to_index(y)

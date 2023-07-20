@@ -123,17 +123,11 @@ def compute_new_pos(input_pos_tensor: torch.Tensor, pred_labels: torch.Tensor, n
         delta_pos_with_z = get_delta_pos_from_radial(pred_labels, stature_to_speed)
         # z is treated differently as need to look at navmesh
         z_jump_index = delta_pos_with_z.z_jump_index
-        pos_change_norm = torch.linalg.vector_norm(delta_pos_with_z.delta_pos, dim=-1, keepdim=True)
-        all_scaled_pos_change = (max_run_speed_per_tick / pos_change_norm) * delta_pos_with_z.delta_pos
-        # if norm less than max run speed, don't scale
-        scaled_pos_change = torch.where(pos_change_norm > max_run_speed_per_tick, all_scaled_pos_change,
-                                        delta_pos_with_z.delta_pos)
         # already scaled since radial uses sin/cos and per statue speed
-        #print('hi')
-        #scaled_pos_change = delta_pos_with_z.delta_pos
+        scaled_pos_change = delta_pos_with_z.delta_pos
 
     # apply to input pos
-    output_pos_tensor = input_pos_tensor[:, :, 0, :]# + scaled_pos_change
+    output_pos_tensor = input_pos_tensor[:, :, 0, :] + scaled_pos_change
     output_pos_tensor[:, :, 2] += torch.where(z_jump_index == 2., max_jump_height, 0.)
     output_pos_tensor[:, :, 0] = output_pos_tensor[:, :, 0].clamp(min=nav_data.nav_region.min.x,
                                                                   max=nav_data.nav_region.max.x)
