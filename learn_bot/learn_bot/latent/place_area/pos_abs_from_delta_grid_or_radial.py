@@ -78,7 +78,10 @@ class DeltaPosWithZIndex:
 def get_delta_pos_from_radial(pred_labels: torch.Tensor, stature_to_speed: torch.Tensor) -> DeltaPosWithZIndex:
     not_moving = pred_labels == 0.
     moving_pred_labels = pred_labels - 1.
-    z_jump_index = torch.floor(moving_pred_labels / num_radial_bins_per_z_axis)
+    not_moving_z_index = torch.ones_like(moving_pred_labels)
+    # if not moving, then z jump index is 0
+    z_jump_index = torch.where(not_moving, not_moving_z_index,
+                               torch.floor(moving_pred_labels / num_radial_bins_per_z_axis))
     dir_stature_pred_label = torch.floor(torch.remainder(moving_pred_labels, num_radial_bins_per_z_axis))
     per_batch_stature_index = \
         torch.floor(torch.remainder(dir_stature_pred_label, StatureOptions.NUM_STATURE_OPTIONS.value)).int()
@@ -87,7 +90,8 @@ def get_delta_pos_from_radial(pred_labels: torch.Tensor, stature_to_speed: torch
                                         p=len(specific_player_place_area_columns))
     dir_degrees = torch.floor(dir_stature_pred_label / StatureOptions.NUM_STATURE_OPTIONS.value) * direction_angle_range
     # stature to lookup table of speeds
-    flattened_max_speed_per_stature = torch.index_select(stature_to_speed, 0, flattened_stature_index)
+    # divide by 2 since changes are per half second
+    flattened_max_speed_per_stature = torch.index_select(stature_to_speed, 0, flattened_stature_index) / 2.
     per_batch_max_speed_per_stature = rearrange(flattened_max_speed_per_stature, '(b p) -> b p',
                                                 p=len(specific_player_place_area_columns))
     # return cos/sin of dir degre
@@ -97,7 +101,7 @@ def get_delta_pos_from_radial(pred_labels: torch.Tensor, stature_to_speed: torch
         torch.where(not_moving, not_moving_zeros, torch.sin(torch.deg2rad(dir_degrees)) * per_batch_max_speed_per_stature),
         not_moving_zeros
     ], dim=-1)
-    return DeltaPosWithZIndex(delta_pos, torch.where(not_moving, not_moving_zeros, z_jump_index))
+    return DeltaPosWithZIndex(delta_pos, z_jump_index)
 
 
 def compute_new_pos(input_pos_tensor: torch.Tensor, pred_labels: torch.Tensor, nav_data: NavData, pred_is_grid: bool,
@@ -120,8 +124,7 @@ def compute_new_pos(input_pos_tensor: torch.Tensor, pred_labels: torch.Tensor, n
         # z is treated differently as need to look at navmesh
         z_jump_index = delta_pos_with_z.z_jump_index
         # already scaled since radial uses sin/cos and per statue speed
-        # divide by 2 since changes are per half second
-        scaled_pos_change = delta_pos_with_z.delta_pos / 2.
+        scaled_pos_change = delta_pos_with_z.delta_pos
 
     # apply to input pos
     output_pos_tensor = input_pos_tensor[:, :, 0, :] + scaled_pos_change
