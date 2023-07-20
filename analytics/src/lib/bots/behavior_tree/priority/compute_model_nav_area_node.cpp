@@ -152,6 +152,8 @@ namespace csknow::compute_nav_area {
         modelNavData.deltaXVal = movementStatus.vel.x;
         modelNavData.deltaYVal = movementStatus.vel.y;
         modelNavData.deltaZVal = movementStatus.zBin;
+        curPriority.moveOptions.walk = movementStatus.statureOption == weapon_speed::StatureOptions::Walking;
+        curPriority.moveOptions.crouch = movementStatus.statureOption == weapon_speed::StatureOptions::Ducking;
 
 
         /*
@@ -288,19 +290,22 @@ namespace csknow::compute_nav_area {
             if (blackboard.playerToLastProbDeltaPosAssignment.find(treeThinker.csgoId) ==
                 blackboard.playerToLastProbDeltaPosAssignment.end() || timeForNewDeltaPos) {
                 blackboard.playerToLastProbDeltaPosAssignment[treeThinker.csgoId] =
-                        {Vec3{INVALID_ID, INVALID_ID, INVALID_ID}, 0, 0, false};
+                        {Vec3{INVALID_ID, INVALID_ID, INVALID_ID}, 0, 0, false, false, false};
             }
             PriorityDeltaPosAssignment & lastProbDeltaPosAssignment =
                     blackboard.playerToLastProbDeltaPosAssignment[treeThinker.csgoId];
             if (!lastProbDeltaPosAssignment.valid) {
                 computeDeltaPosProbabilistic(state, curPriority, treeThinker.csgoId, modelNavData);
-                lastProbDeltaPosAssignment = {curPriority.targetPos, curPriority.targetAreaId, modelNavData.radialVelIndex, true};
+                lastProbDeltaPosAssignment = {curPriority.targetPos, curPriority.targetAreaId, modelNavData.radialVelIndex,
+                                              curPriority.moveOptions.walk, curPriority.moveOptions.crouch, true};
                 blackboard.playerToTicksSinceLastProbDeltaPosAssignment[treeThinker.csgoId] = 0;
                 lastProbDeltaPosAssignment.valid = true;
             }
             else {
                 curPriority.targetPos = lastProbDeltaPosAssignment.targetPos;
                 curPriority.targetAreaId = lastProbDeltaPosAssignment.targetAreaId;
+                curPriority.moveOptions.walk = lastProbDeltaPosAssignment.walk;
+                curPriority.moveOptions.crouch = lastProbDeltaPosAssignment.crouch;
             }
 
             curPriority.nonDangerAimAreaType = NonDangerAimAreaType::Path;

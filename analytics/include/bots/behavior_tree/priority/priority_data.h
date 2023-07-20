@@ -24,6 +24,8 @@ struct PriorityDeltaPosAssignment {
     Vec3 targetPos;
     AreaId targetAreaId;
     int64_t radialVelIndex;
+    bool walk;
+    bool crouch;
     bool valid;
 };
 
