@@ -15,8 +15,10 @@ namespace csknow::inference_delta_pos {
     InferenceDeltaPosTickValues extractFeatureStoreDeltaPosValues(
             const csknow::feature_store::FeatureStoreResult & featureStoreResult, int64_t rowIndex);
     struct InferenceDeltaPosPlayerAtTickProbabilities {
-        vector<float> deltaPosProbabilities;
-        int64_t mostLikelyDeltaPos;
+        //vector<float> deltaPosProbabilities;
+        //int64_t mostLikelyDeltaPos;
+        vector<float> radialVelProbabilities;
+        int64_t mostLikelyRadialVel;
     };
     InferenceDeltaPosPlayerAtTickProbabilities extractFeatureStoreDeltaPosResults(
             const at::Tensor & output, const InferenceDeltaPosTickValues & values, int64_t curPlayerId, TeamId teamId);

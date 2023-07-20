@@ -34,7 +34,7 @@ namespace csknow::weapon_speed {
         Vec3 vel;
         StatureOptions statureOption;
         bool moving, jumping, falling;
-        int dir;
+        int dir, zBin;
 
         MovementStatus(EngineWeaponId engineWeaponId, Vec3 curVel, Vec3 nextVel, StatureOptions statureOption,
                        bool scoped, bool airborne, bool jumping, bool falling);

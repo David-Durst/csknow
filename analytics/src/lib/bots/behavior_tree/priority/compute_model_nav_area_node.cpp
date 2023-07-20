@@ -14,8 +14,8 @@ namespace csknow::compute_nav_area {
         // add half so get center of each area grid
         // no need for z since doing 2d compare
         curPriority.targetPos = curClient.getFootPosForPlayer() + Vec3{
-                static_cast<double>(modelNavData.deltaXVal * csknow::feature_store::delta_pos_grid_cell_dim),
-                static_cast<double>(modelNavData.deltaYVal * csknow::feature_store::delta_pos_grid_cell_dim),
+                static_cast<double>(modelNavData.deltaXVal)/* * csknow::feature_store::delta_pos_grid_cell_dim)*/,
+                static_cast<double>(modelNavData.deltaYVal)/* * csknow::feature_store::delta_pos_grid_cell_dim)*/,
                 modelNavData.deltaZVal > 1 ? MAX_JUMP_HEIGHT : 0.
         };
 
@@ -102,7 +102,7 @@ namespace csknow::compute_nav_area {
         // compute area probabilities
         const csknow::inference_delta_pos::InferenceDeltaPosPlayerAtTickProbabilities & deltaPosProbabilities =
                 blackboard.inferenceManager.playerToInferenceData.at(csgoId).deltaPosProbabilities;
-        vector<float> probabilities = deltaPosProbabilities.deltaPosProbabilities;
+        vector<float> probabilities = deltaPosProbabilities.radialVelProbabilities;
         const ServerState::Client & curClient = state.getClient(csgoId);
 
         // re-weight just because want to be certain sums to one
@@ -141,8 +141,15 @@ namespace csknow::compute_nav_area {
             }
         }
         */
-        modelNavData.deltaPosIndex = deltaPosOption;
+        modelNavData.radialVelIndex = deltaPosOption;
+        csknow::weapon_speed::MovementStatus movementStatus(static_cast<EngineWeaponId>(curClient.currentWeaponId),
+                                                            curClient.isScoped, modelNavData.radialVelIndex);
+        modelNavData.deltaXVal = movementStatus.vel.x;
+        modelNavData.deltaYVal = movementStatus.vel.y;
+        modelNavData.deltaZVal = movementStatus.zBin;
 
+
+        /*
         size_t xyPredLabel = deltaPosOption % csknow::feature_store::delta_pos_grid_num_xy_cells_per_z_change;
         // compute map grid to pos, and then pos to area
         // ok to pick bad area, as computePath in path node will pick a valid alternative (tree computes alternatives)
@@ -151,6 +158,9 @@ namespace csknow::compute_nav_area {
         modelNavData.deltaYVal = (xyPredLabel / csknow::feature_store::delta_pos_grid_num_cells_per_xy_dim) -
                                  (csknow::feature_store::delta_pos_grid_num_cells_per_xy_dim / 2);
         modelNavData.deltaZVal = deltaPosOption / csknow::feature_store::delta_pos_grid_num_xy_cells_per_z_change;
+         */
+        // compute map grid to pos, and then pos to area
+        // ok to pick bad area, as computePath in path node will pick a valid alternative (tree computes alternatives)
 
         /*
         if ((modelNavData.deltaXVal < 0 || modelNavData.deltaYVal < 0) && curClient.getFootPosForPlayer().x < 600 && curClient.getFootPosForPlayer().y > 1700) {
@@ -279,7 +289,7 @@ namespace csknow::compute_nav_area {
                     blackboard.playerToLastProbDeltaPosAssignment[treeThinker.csgoId];
             if (!lastProbDeltaPosAssignment.valid) {
                 computeDeltaPosProbabilistic(state, curPriority, treeThinker.csgoId, modelNavData);
-                lastProbDeltaPosAssignment = {curPriority.targetPos, curPriority.targetAreaId, modelNavData.deltaPosIndex, true};
+                lastProbDeltaPosAssignment = {curPriority.targetPos, curPriority.targetAreaId, modelNavData.radialVelIndex, true};
                 blackboard.playerToTicksSinceLastProbDeltaPosAssignment[treeThinker.csgoId] = 0;
                 lastProbDeltaPosAssignment.valid = true;
             }

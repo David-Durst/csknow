@@ -86,6 +86,7 @@ namespace csknow::inference_delta_pos {
     InferenceDeltaPosPlayerAtTickProbabilities extractFeatureStoreDeltaPosResults(
             const at::Tensor & output, const InferenceDeltaPosTickValues & values, int64_t curPlayerId, TeamId teamId) {
         InferenceDeltaPosPlayerAtTickProbabilities result;
+        /*
         float mostLikelyDeltaPosProb = -1;
         size_t playerStartIndex = values.playerIdToColumnIndex.at(curPlayerId) * csknow::feature_store::delta_pos_grid_num_cells;
         for (size_t deltaPosIndex = 0; deltaPosIndex < csknow::feature_store::delta_pos_grid_num_cells; deltaPosIndex++) {
@@ -98,6 +99,22 @@ namespace csknow::inference_delta_pos {
             if (result.deltaPosProbabilities.back() > mostLikelyDeltaPosProb) {
                 mostLikelyDeltaPosProb = result.deltaPosProbabilities.back();
                 result.mostLikelyDeltaPos = static_cast<int64_t>(deltaPosIndex);
+            }
+        }
+        */
+
+        float mostLikelyRadialVelProb = -1;
+        size_t playerStartIndex = values.playerIdToColumnIndex.at(curPlayerId) * csknow::weapon_speed::num_radial_bins;
+        for (size_t radialVelIndex = 0; radialVelIndex < csknow::weapon_speed::num_radial_bins; radialVelIndex++) {
+            if ((useRealProbT && teamId == ENGINE_TEAM_T) || (useRealProbCT && teamId == ENGINE_TEAM_CT)) {
+                result.radialVelProbabilities.push_back(output[0][playerStartIndex + radialVelIndex].item<float>());
+            }
+            else {
+                result.radialVelProbabilities.push_back(1. / csknow::feature_store::delta_pos_grid_num_cells);
+            }
+            if (result.radialVelProbabilities.back() > mostLikelyRadialVelProb) {
+                mostLikelyRadialVelProb = result.radialVelProbabilities.back();
+                result.mostLikelyRadialVel = static_cast<int64_t>(radialVelIndex);
             }
         }
         return result;

@@ -23,7 +23,7 @@ struct PriorityAreaAssignment {
 struct PriorityDeltaPosAssignment {
     Vec3 targetPos;
     AreaId targetAreaId;
-    int64_t deltaPos;
+    int64_t radialVelIndex;
     bool valid;
 };
 

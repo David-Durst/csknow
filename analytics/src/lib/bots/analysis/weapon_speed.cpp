@@ -197,11 +197,24 @@ namespace csknow::weapon_speed {
             moving = false;
             dir = 0;
         }
+        if (!moving) {
+            zBin = 1;
+        }
+        else if (jumping) {
+            zBin = 2;
+        }
+        else if (falling) {
+            zBin = 0;
+        }
+        else {
+            zBin = 1;
+        }
     }
 
     MovementStatus::MovementStatus(EngineWeaponId engineWeaponId, bool scoped, int radialMovementBin) {
         if (radialMovementBin == 0) {
             vel = {0., 0., 0.};
+            zBin = 1;
             statureOption = StatureOptions::Standing;
             moving = false;
             dir = 0;
@@ -210,7 +223,7 @@ namespace csknow::weapon_speed {
         }
         else {
             int movementBin3D = radialMovementBin - 1;
-            int zBin = movementBin3D / num_z_axis_layers;
+            zBin = movementBin3D / num_z_axis_layers;
             moving = true;
             jumping = zBin == 2;
             falling = zBin == 0;
