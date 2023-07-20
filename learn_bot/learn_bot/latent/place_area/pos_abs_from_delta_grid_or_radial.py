@@ -113,6 +113,7 @@ def compute_new_pos(input_pos_tensor: torch.Tensor, pred_labels: torch.Tensor, n
 
         # convert to xy pos changes
         pos_index = torch.stack([delta_xyz_indices.x_index, delta_xyz_indices.y_index, z_index], dim=-1)
+        # scaling is for simulator, not model
         unscaled_pos_change = (pos_index * delta_pos_grid_cell_dim)
         pos_change_norm = torch.linalg.vector_norm(unscaled_pos_change, dim=-1, keepdim=True)
         all_scaled_pos_change = (max_run_speed_per_tick / pos_change_norm) * unscaled_pos_change
@@ -121,10 +122,15 @@ def compute_new_pos(input_pos_tensor: torch.Tensor, pred_labels: torch.Tensor, n
                                         unscaled_pos_change)
     else:
         delta_pos_with_z = get_delta_pos_from_radial(pred_labels, stature_to_speed)
+        # since this is for sim, and simulator steps one tick at a time (rather than 500ms like prediction), rescale it
+        unscaled_pos_change = delta_pos_with_z.delta_pos
+        pos_change_norm = torch.linalg.vector_norm(unscaled_pos_change, dim=-1, keepdim=True)
+        all_scaled_pos_change = (max_run_speed_per_tick / pos_change_norm) * unscaled_pos_change
+        # if norm less than max run speed, don't scale
+        scaled_pos_change = torch.where(pos_change_norm > max_run_speed_per_tick, all_scaled_pos_change,
+                                        unscaled_pos_change)
         # z is treated differently as need to look at navmesh
         z_jump_index = delta_pos_with_z.z_jump_index
-        # already scaled since radial uses sin/cos and per statue speed
-        scaled_pos_change = delta_pos_with_z.delta_pos
 
     # apply to input pos
     output_pos_tensor = input_pos_tensor[:, :, 0, :] + scaled_pos_change
