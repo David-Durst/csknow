@@ -165,12 +165,12 @@ class TransformerNestedHiddenLatentModel(nn.Module):
         #return self.y_embedding_model(rearrange(y_per_player_shifted, "b y -> b y 1"))
         #x_pos_shifted = torch.roll(x_pos, 1, dims=1)
         #x_pos_zeros = torch.zeros_like(x_pos)
-        if x_pos.device.type == CPU_DEVICE_STR:
-            y_pos = compute_new_pos(x_pos, y_per_player_shifted, self.nav_data_cpu, False, self.stature_to_speed_cpu)
-        else:
-            y_pos = compute_new_pos(x_pos, y_per_player_shifted, self.nav_data_cuda, False, self.stature_to_speed_gpu)
+        #if x_pos.device.type == CPU_DEVICE_STR:
+        #    y_pos = compute_new_pos(x_pos, y_per_player_shifted, self.nav_data_cpu, False, self.stature_to_speed_cpu)
+        #else:
+        #    y_pos = compute_new_pos(x_pos, y_per_player_shifted, self.nav_data_cuda, False, self.stature_to_speed_gpu)
         #y_pos2 = compute_new_pos(x_pos_shifted, y_per_player_shifted, self.nav_data_cuda)
-        y_pos_encoded = self.encode_pos(y_pos, enable_noise=False)
+        y_pos_encoded = self.encode_pos(x_pos, enable_noise=False)
         #y_pos_time_flattened = rearrange(y_pos_encoded, "b p t d -> b p (t d)")
         y_gathered = torch.cat([y_pos_encoded, x_non_pos], -1)[:, :, 0, :]
         return self.embedding_model(y_gathered)
