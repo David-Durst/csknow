@@ -43,6 +43,7 @@ def vis(loaded_model: LoadedModel, inference_fn: Callable[[LoadedModel], None]):
     img_label.pack(side="left")
 
     rounds = get_rounds_for_cur_hdf5(loaded_model)
+    print(f"num rounds {len(rounds)}")
     indices = []
     ticks = []
     game_ticks = []
@@ -65,6 +66,7 @@ def vis(loaded_model: LoadedModel, inference_fn: Callable[[LoadedModel], None]):
         index_cur_hdf5(loaded_model)
         rounds = get_rounds_for_cur_hdf5(loaded_model)
         cur_round = rounds[0]
+        print(f"num rounds {len(rounds)}")
         round_slider.set(0)
         round_slider_changed(0)
 
