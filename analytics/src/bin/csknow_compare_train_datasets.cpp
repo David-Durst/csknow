@@ -49,8 +49,8 @@ int main(int argc, char * argv[]) {
         std::cout << "1. path/to/predicted_traces" << std::endl;
         std::cout << "2. path/to/groundTruth_traces" << std::endl;
         std::cout << "3. output_name" << std::endl;
-        std::cout << "4. predicted good rounds - 0 if all round ids, 1 if bot good round ids, 2 if human good round ids" << std::endl;
-        std::cout << "6. ground truth good rounds - 0 if all round ids, 1 if bot good round ids, 2 if human good round ids" << std::endl;
+        std::cout << "4. predicted good rounds - 0 if all round ids, 1 if bot good round ids, 2 if small human good round ids" << std::endl;
+        std::cout << "6. ground truth good rounds - 0 if all round ids, 1 if bot good round ids, 2 if small human good round ids" << std::endl;
         return 1;
     }
 
