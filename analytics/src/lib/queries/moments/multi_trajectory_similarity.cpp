@@ -141,7 +141,7 @@ namespace csknow::multi_trajectory_similarity {
             result.cost = dtwMatrix.get(curLength, otherLength) / static_cast<double>(curLength + otherLength);
 
             size_t i = dtwMatrix.n, j = dtwMatrix.m;
-            while (i > 0 && j > 0) {
+            while (i > 0 || j > 0) {
                 result.matchedIndices.emplace_back(i, j);
                 double minStepOptionCost = std::numeric_limits<double>::infinity();
                 size_t minStepOptionIndex = 0;
@@ -162,6 +162,7 @@ namespace csknow::multi_trajectory_similarity {
                 i -= stepOptions.options[minStepOptionIndex].front().iOffset;
                 j -= stepOptions.options[minStepOptionIndex].front().jOffset;
             }
+            result.matchedIndices.emplace_back(0, 0);
             std::reverse(result.matchedIndices.begin(), result.matchedIndices.end());
         }
         return result;
