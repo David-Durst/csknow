@@ -192,6 +192,13 @@ def vis(loaded_model: LoadedModel, inference_fn: Callable[[LoadedModel], None]):
         draw_max = not draw_max
         tick_slider_changed(cur_tick_index)
 
+    def select_all_retake_rounds():
+        nonlocal selected_retake_rounds
+        selected_retake_rounds = set(rounds)
+        selected_retake_var.set(True)
+        with open(selected_retake_rounds_path_var.get(), "w") as f:
+            f.write(str(selected_retake_rounds) + "\n")
+
     def load_selected_retake_rounds():
         nonlocal selected_retake_rounds
         with open(selected_retake_rounds_path_var.get(), "r") as f:
@@ -326,6 +333,8 @@ def vis(loaded_model: LoadedModel, inference_fn: Callable[[LoadedModel], None]):
     selected_retake_rounds_path_var = tk.StringVar(value=default_selected_retake_rounds_path)
     selected_retake_rounds_entry = tk.Entry(round_label_frame, width=50, textvariable=selected_retake_rounds_path_var)
     selected_retake_rounds_entry.pack(side="left")
+    select_all_retake_rounds_button = tk.Button(round_label_frame, text="select all retake rounds", command=select_all_retake_rounds)
+    select_all_retake_rounds_button.pack(side="left")
     load_selected_retake_rounds_button = tk.Button(round_label_frame, text="load selected retake rounds", command=load_selected_retake_rounds)
     load_selected_retake_rounds_button.pack(side="left")
     selected_retake_var = tk.BooleanVar(value=False)
