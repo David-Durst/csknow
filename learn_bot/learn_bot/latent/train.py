@@ -38,7 +38,7 @@ from typing import Optional
 
 checkpoints_path = Path(__file__).parent / 'checkpoints'
 plot_path = Path(__file__).parent / 'distributions'
-good_retake_rounds_path = Path(__file__).parent / 'vis' / 'good_retake_round_ids.txt'
+default_selected_retake_rounds_path = Path(__file__).parent / 'vis' / 'good_retake_round_ids.txt'
 
 now = datetime.now()
 now_str = now.strftime("%m_%d_%Y__%H_%M_%S")
@@ -475,7 +475,7 @@ def run_curriculum_training():
     bot_data = HDF5Wrapper(manual_latent_team_hdf5_data_path, ['id', round_id_column, game_id_column, test_success_col])
     bot_data.limit(team_data.id_df[test_success_col] == 1.)
     human_data = HDF5Wrapper(human_latent_team_hdf5_data_path, ['id', round_id_column, test_success_col])
-    with open(good_retake_rounds_path, "r") as f:
+    with open(default_selected_retake_rounds_path, "r") as f:
         good_retake_rounds = eval(f.read())
     human_data.limit(human_data.id_df[round_id_column].isin(good_retake_rounds))
     hyperparameter_options = default_hyperparameter_options

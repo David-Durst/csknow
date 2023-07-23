@@ -2,7 +2,7 @@ from typing import Set, Callable
 
 from learn_bot.latent.analyze.process_trajectory_comparison import set_pd_print_options
 from learn_bot.latent.load_model import LoadedModel
-from learn_bot.latent.train import good_retake_rounds_path
+from learn_bot.latent.train import default_selected_retake_rounds_path
 from learn_bot.libs.df_grouping import make_index_column
 from learn_bot.mining.area_cluster import *
 from learn_bot.latent.vis.draw_inference import draw_all_players, minimapWidth, minimapHeight
@@ -54,7 +54,7 @@ def vis(loaded_model: LoadedModel, inference_fn: Callable[[LoadedModel], None]):
     pred_selected_df: pd.DataFrame = loaded_model.cur_inference_df
     draw_pred: bool = True
     draw_max: bool = True
-    good_retake_rounds: Set[int] = set()
+    selected_retake_rounds: Set[int] = set()
 
     set_pd_print_options()
 
@@ -192,13 +192,20 @@ def vis(loaded_model: LoadedModel, inference_fn: Callable[[LoadedModel], None]):
         draw_max = not draw_max
         tick_slider_changed(cur_tick_index)
 
-    def good_retake_clicked():
-        if good_retake_var.get():
-            good_retake_rounds.add(cur_round)
+    def load_selected_retake_rounds():
+        nonlocal selected_retake_rounds
+        with open(selected_retake_rounds_path_var.get(), "r") as f:
+            selected_retake_rounds_str = f.readline().strip()
+            selected_retake_rounds = eval(selected_retake_rounds_str)
+            selected_retake_var.set(cur_round in selected_retake_rounds)
+
+    def selected_retake_clicked():
+        if selected_retake_var.get():
+            selected_retake_rounds.add(cur_round)
         else:
-            good_retake_rounds.remove(cur_round)
-        with open(good_retake_rounds_path, "w") as f:
-            f.write(str(good_retake_rounds) + "\n")
+            selected_retake_rounds.remove(cur_round)
+        with open(selected_retake_rounds_path_var.get(), "w") as f:
+            f.write(str(selected_retake_rounds) + "\n")
 
     # state setters
     def change_round_dependent_data():
@@ -212,7 +219,7 @@ def vis(loaded_model: LoadedModel, inference_fn: Callable[[LoadedModel], None]):
         tick_slider.configure(to=len(ticks)-1)
         tick_slider.set(0)
         tick_slider_changed(0)
-        good_retake_var.set(cur_round in good_retake_rounds)
+        selected_retake_var.set(cur_round in selected_retake_rounds)
 
 
     s = ttk.Style()
@@ -314,10 +321,17 @@ def vis(loaded_model: LoadedModel, inference_fn: Callable[[LoadedModel], None]):
     player_distributions_entry = tk.Entry(distribution_control_frame, width=30, textvariable=player_distributions_var)
     player_distributions_entry.pack(side="left")
 
-    good_retake_var = tk.BooleanVar(value=False)
-    good_retake_checkbutton = tk.Checkbutton(distribution_control_frame, text='Good Retake', variable=good_retake_var,
-                                             onvalue=True, offvalue=False, command=good_retake_clicked)
-    good_retake_checkbutton.pack(side="left")
+    round_label_frame = tk.Frame(window)
+    round_label_frame.pack(pady=5)
+    selected_retake_rounds_path_var = tk.StringVar(value=default_selected_retake_rounds_path)
+    selected_retake_rounds_entry = tk.Entry(round_label_frame, width=50, textvariable=selected_retake_rounds_path_var)
+    selected_retake_rounds_entry.pack(side="left")
+    load_selected_retake_rounds_button = tk.Button(round_label_frame, text="load selected retake rounds", command=load_selected_retake_rounds)
+    load_selected_retake_rounds_button.pack(side="left")
+    selected_retake_var = tk.BooleanVar(value=False)
+    selected_retake_checkbutton = tk.Checkbutton(round_label_frame, text='Selected Retake', variable=selected_retake_var,
+                                             onvalue=True, offvalue=False, command=selected_retake_clicked)
+    selected_retake_checkbutton.pack(side="left")
 
     other_state_frame = tk.Frame(window)
     other_state_frame.pack(pady=5)
