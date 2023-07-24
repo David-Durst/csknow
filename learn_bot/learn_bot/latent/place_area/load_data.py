@@ -32,6 +32,10 @@ rollout_latent_team_hdf5_data_path = Path(__file__).parent / '..' / '..' / '..' 
 SimilarityFn = Callable[[pd.DataFrame], pd.Series]
 
 
+def get_similarity_column(idx: int) -> str:
+    return f'similarity {idx}'
+
+
 @dataclass
 class LoadDataOptions:
     use_manual_data: bool
@@ -157,6 +161,6 @@ class LoadDataResult:
         if limit:
             self.limit(similarity_fns)
         else:
-            self.add_column(similarity_fns, f'similarity {similarity_index}')
+            self.add_column(similarity_fns, get_similarity_column(similarity_index))
 
 

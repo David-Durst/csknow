@@ -57,6 +57,7 @@ class TransformerNestedHiddenLatentModel(nn.Module):
             [player_column for player_column in player_columns if player_column not in pos_and_vel_columns]
             for player_columns in players_columns
         ])
+        self.num_similarity_columns = 2
 
         self.num_players = len(players_columns)
         self.num_dim = 3
@@ -91,6 +92,7 @@ class TransformerNestedHiddenLatentModel(nn.Module):
         # NERF code calls it positional embedder, but it's encoder since not learned
         self.spatial_positional_encoder, self.spatial_positional_encoder_out_dim = get_embedder()
         self.columns_per_player_time_step = (len(self.players_non_pos_vel_columns) // self.num_players) + \
+                                            self.num_similarity_columns + \
                                             self.spatial_positional_encoder_out_dim # + \
                                             #(len(self.players_vel_columns) // self.num_players // self.num_time_steps)
 
@@ -190,7 +192,7 @@ class TransformerNestedHiddenLatentModel(nn.Module):
 
         return team_mask
 
-    def forward(self, x, y=None):
+    def forward(self, x, similarity):
         if self.num_time_steps < 2:
             raise Exception("must have history")
 
@@ -206,8 +208,12 @@ class TransformerNestedHiddenLatentModel(nn.Module):
         #x_vel_scaled = x_vel / max_speed_per_second
 
 
-        x_non_pos = rearrange(x[:, self.players_non_pos_vel_columns], "b (p d) -> b p 1 d", p=self.num_players) \
+        x_non_pos_without_similarity = \
+            rearrange(x[:, self.players_non_pos_vel_columns], "b (p d) -> b p 1 d", p=self.num_players) \
             .repeat([1, 1, self.num_time_steps, 1])
+        similarity_expanded = rearrange(similarity, '(b p t) d -> b p t d', p=1, t=1) \
+            .repeat([1, self.num_players, self.num_time_steps, 1])
+        x_non_pos = torch.concat([x_non_pos_without_similarity, similarity_expanded], dim=-1)
         x_gathered = torch.cat([x_pos_encoded, x_non_pos], -1)
         #x_gathered = torch.cat([x_pos_encoded, x_vel_scaled, x_non_pos], -1)
         x_embedded = self.embedding_model(x_gathered)

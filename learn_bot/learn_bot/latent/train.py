@@ -222,11 +222,12 @@ def train(train_type: TrainType, multi_hdf5_wrapper: MultiHDF5Wrapper,
         batch_num = 0
         prior_bad_X = None
         prior_bad_Y = None
+        prior_bad_similarity = None
         prior_bad_duplicated_last = None
         prior_bad_indices = None
         start_epoch_time = time.perf_counter()
         with tqdm(total=len(dataloader), disable=False) as pbar:
-            for batch, (X, Y, duplicated_last, indices) in enumerate(dataloader):
+            for batch, (X, Y, similarity, duplicated_last, indices) in enumerate(dataloader):
                 batch_num += 1
                 #if batch_num > 24:
                 #    break
@@ -235,9 +236,11 @@ def train(train_type: TrainType, multi_hdf5_wrapper: MultiHDF5Wrapper,
                 if prior_bad_X is None:
                     X, Y, duplicated_last = X.to(device), Y.to(device), duplicated_last.to(device)
                     Y = Y.float()
+                    similarity = similarity.to(device).float()
                 else:
                     X = prior_bad_X
                     Y = prior_bad_Y
+                    similarity = prior_bad_similarity
                     duplicated_last = prior_bad_duplicated_last
                     indices = prior_bad_indices
                 # XR = torch.randn_like(X, device=device)
@@ -254,7 +257,7 @@ def train(train_type: TrainType, multi_hdf5_wrapper: MultiHDF5Wrapper,
                     model.noise_var = hyperparameter_options.noise_var
                     optimizer.zero_grad()
                 with autocast(device, enabled=True):
-                    pred = model(X, Y)
+                    pred = model(X, similarity)
                     model.noise_var = -1.
                     if torch.isnan(X).any():
                         print('bad X')
@@ -271,6 +274,7 @@ def train(train_type: TrainType, multi_hdf5_wrapper: MultiHDF5Wrapper,
                         print('bad pred')
                         prior_bad_X = X.detach()
                         prior_bad_Y = Y.detach()
+                        prior_bad_similarity = similarity.detach()
                         prior_bad_duplicated_last = duplicated_last.detach()
                         prior_bad_indices = indices
                         sys.exit(0)
@@ -419,13 +423,13 @@ def train(train_type: TrainType, multi_hdf5_wrapper: MultiHDF5Wrapper,
     test_data = MultipleLatentHDF5Dataset(multi_hdf5_wrapper.test_hdf5_wrappers, column_transformers,
                                           multi_hdf5_wrapper.duplicate_last_hdf5_equal_to_rest)
     batch_size = min(hyperparameter_options.batch_size, min(len(train_data), len(test_data)))
-    train_dataloader = DataLoader(train_data, batch_size=batch_size, num_workers=3, shuffle=True, pin_memory=True)
-    test_dataloader = DataLoader(test_data, batch_size=batch_size, num_workers=3, shuffle=True, pin_memory=True)
+    train_dataloader = DataLoader(train_data, batch_size=batch_size, num_workers=0, shuffle=True, pin_memory=True)
+    test_dataloader = DataLoader(test_data, batch_size=batch_size, num_workers=0, shuffle=True, pin_memory=True)
 
     print(f"num train examples: {len(train_data)}")
     print(f"num test examples: {len(test_data)}")
 
-    for X, Y, _, _ in train_dataloader:
+    for X, Y, _, _, _ in train_dataloader:
         print(f"Train shape of X: {X.shape} {X.dtype}")
         print(f"Train shape of Y: {Y.shape} {Y.dtype}")
         break

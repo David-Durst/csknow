@@ -2,6 +2,7 @@ import pandas as pd
 import torch
 from torch.utils.data import Dataset
 
+from learn_bot.latent.place_area.load_data import get_similarity_column
 from learn_bot.libs.hdf5_wrapper import HDF5Wrapper
 from learn_bot.libs.io_transforms import IOColumnTransformers
 from pathlib import Path
@@ -53,7 +54,7 @@ class MultipleLatentHDF5Dataset(Dataset):
                 self.hdf5s_cum_len.append(self.total_len)
             else:
                 # handle cases where prior hdf5 have less elements than one to duplicate
-                self.total_len += max(self.total_len, len(data_hdf5))
+                self.total_len += max(self.total_len, len(data_hdf5) // 3)
                 self.hdf5s_cum_len.append(self.total_len)
 
     def __len__(self):
@@ -70,9 +71,15 @@ class MultipleLatentHDF5Dataset(Dataset):
                 # this ensures wrap around when duplicating last
                 idx_in_hdf5 %= len(self.data_hdf5s[i])
                 break
-        hdf5_id = self.data_hdf5s[hdf5_index].id_df.iloc[idx_in_hdf5].loc['id']
+        id_series = self.data_hdf5s[hdf5_index].id_df.iloc[idx_in_hdf5]
+        if get_similarity_column(0) in id_series.index:
+            similarity_tensor = torch.tensor([id_series.loc[get_similarity_column(0)], id_series.loc[get_similarity_column(1)]])
+        else:
+            # for now, only thing without hdf5 is bot data, which always pushes to objective
+            similarity_tensor = torch.tensor([True, True])
+        hdf5_id = id_series.loc['id']
         x_tensor = torch.tensor(self.data_hdf5s[hdf5_index].get_input_data()[hdf5_id])
         y_tensor = torch.tensor(self.data_hdf5s[hdf5_index].get_output_data()[hdf5_id])
-        return x_tensor, y_tensor, \
+        return x_tensor, y_tensor, similarity_tensor, \
             torch.tensor(self.duplicate_last_equal_to_rest and (hdf5_index == len(self.data_hdf5s) - 1)), \
             torch.tensor([idx, hdf5_index, hdf5_id])

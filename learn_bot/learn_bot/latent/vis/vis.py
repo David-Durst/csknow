@@ -4,6 +4,7 @@ import pandas as pd
 
 from learn_bot.latent.analyze.process_trajectory_comparison import set_pd_print_options
 from learn_bot.latent.load_model import LoadedModel
+from learn_bot.latent.place_area.load_data import get_similarity_column
 from learn_bot.latent.train import default_selected_retake_rounds_path
 from learn_bot.libs.df_grouping import make_index_column
 from learn_bot.mining.area_cluster import *
@@ -109,8 +110,8 @@ def vis(loaded_model: LoadedModel, inference_fn: Callable[[LoadedModel], None]):
         pred_series = pred_selected_df.loc[cur_index, :]
         tick_game_id_text_var.set(f"Game Tick ID: {cur_game_tick}")
         extra_round_data_str = ""
-        if "similarity 0" in id_df.columns:
-            extra_round_data_str = f"similarity 0: {id_df.loc[cur_index, 'similarity 0']}, similarity 1: {id_df.loc[cur_index, 'similarity 1']}"
+        if get_similarity_column(0) in id_df.columns:
+            extra_round_data_str = f"similarity 0: {id_df.loc[cur_index, get_similarity_column(0)]}, similarity 1: {id_df.loc[cur_index, get_similarity_column(1)]}"
         round_id_text_var.set(f"Round ID: {int(cur_round)}, Round Number: {selected_df.loc[cur_index, 'round number']}, {extra_round_data_str}")
         other_state_text_var.set(f"Planted A {data_series[c4_plant_a_col]}, "
                                  f"Planted B {data_series[c4_plant_b_col]}, "
