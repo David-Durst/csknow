@@ -32,6 +32,9 @@ rollout_latent_team_hdf5_data_path = Path(__file__).parent / '..' / '..' / '..' 
 SimilarityFn = Callable[[pd.DataFrame], pd.Series]
 
 
+def get_base_similarity_column() -> str:
+    return 'similarity'
+
 def get_similarity_column(idx: int) -> str:
     return f'similarity {idx}'
 

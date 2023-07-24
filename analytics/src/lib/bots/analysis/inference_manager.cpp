@@ -189,8 +189,10 @@ namespace csknow::inference_manager {
         torch::Tensor rowPT = torch::from_blob(deltaPosValues.rowCPP.data(),
                                                {1, static_cast<long>(deltaPosValues.rowCPP.size())},
                                                options);
-
         inputs.push_back(rowPT);
+        vector<float> similarityArr{1., 1.};
+        torch::Tensor similarityPt = torch::from_blob(similarityArr.data(), {1, 2}, options);
+        inputs.push_back(similarityPt);
 
         at::Tensor output = deltaPosModule.forward(inputs).toTuple()->elements()[1].toTensor();
 

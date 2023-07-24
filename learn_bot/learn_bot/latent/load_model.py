@@ -50,7 +50,8 @@ class LoadedModel:
         # done to apply limit on hdf5 wrapper's id df to actual df
         self.cur_loaded_df = self.cur_loaded_df.iloc[self.dataset.data_hdf5s[self.cur_hdf5_index].id_df['id'], :]
         if load_cur_dataset:
-            self.cur_dataset = LatentDataset(self.cur_loaded_df, self.column_transformers)
+            self.cur_dataset = LatentDataset(self.cur_loaded_df, self.column_transformers,
+                                             self.dataset.data_hdf5s[self.cur_hdf5_index].id_df)
 
     def get_cur_id_df(self):
         return self.dataset.data_hdf5s[self.cur_hdf5_index].id_df
