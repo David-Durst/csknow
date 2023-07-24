@@ -202,10 +202,12 @@ def train(train_type: TrainType, multi_hdf5_wrapper: MultiHDF5Wrapper,
     #optimizer = torch.optim.SGD(model.parameters(), lr=0.001)
 
     # train and test the model
+    # first row used to provide input during serialization
     first_row: torch.Tensor = None
+    first_row_similarity: torch.Tensor = None
 
     def train_or_test_SL_epoch(dataloader, model, optimizer, scaler, train=True, profiler=None):
-        nonlocal first_row
+        nonlocal first_row, first_row_similarity
         size = len(dataloader.dataset)
         num_batches = len(dataloader)
         if train:
@@ -233,6 +235,7 @@ def train(train_type: TrainType, multi_hdf5_wrapper: MultiHDF5Wrapper,
                 #    break
                 if first_row is None:
                     first_row = X[0:1, :]
+                    first_row_similarity = similarity[0:1, :]
                 if prior_bad_X is None:
                     X, Y, duplicated_last = X.to(device), Y.to(device), duplicated_last.to(device)
                     Y = Y.float()
@@ -341,7 +344,7 @@ def train(train_type: TrainType, multi_hdf5_wrapper: MultiHDF5Wrapper,
         }, model_path)
         with torch.no_grad():
             model.eval()
-            script_model = torch.jit.trace(model.to(CPU_DEVICE_STR), first_row)
+            script_model = torch.jit.trace(model.to(CPU_DEVICE_STR), (first_row, first_row_similarity))
             #tmp_model = SimplifiedTransformerNestedHiddenLatentModel().to(device)
             #tmp_model.to(CPU_DEVICE_STR)
             #tmp_model.eval()
