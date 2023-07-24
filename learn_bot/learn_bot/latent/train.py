@@ -449,6 +449,8 @@ load_data_options = LoadDataOptions(
     add_manual_to_all_human_data=True,
     limit_manual_data_to_no_enemies_nav=True,
     limit_manual_data_to_only_enemies_no_nav=False,
+    #small_good_rounds=[small_human_good_rounds],
+    #similarity_dfs=[load_hdf5_to_pd(all_human_vs_small_human_similarity_hdf5_data_path)],
     small_good_rounds=[small_human_good_rounds, all_human_28_second_filter_good_rounds],
     similarity_dfs=[load_hdf5_to_pd(all_human_vs_small_human_similarity_hdf5_data_path),
                     load_hdf5_to_pd(all_human_vs_human_28_similarity_hdf5_data_path)],
