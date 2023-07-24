@@ -1,5 +1,7 @@
 from typing import Set, Callable
 
+import pandas as pd
+
 from learn_bot.latent.analyze.process_trajectory_comparison import set_pd_print_options
 from learn_bot.latent.load_model import LoadedModel
 from learn_bot.latent.train import default_selected_retake_rounds_path
@@ -52,6 +54,7 @@ def vis(loaded_model: LoadedModel, inference_fn: Callable[[LoadedModel], None]):
     cur_tick_index: int = -1
     selected_df: pd.DataFrame = loaded_model.cur_loaded_df
     pred_selected_df: pd.DataFrame = loaded_model.cur_inference_df
+    id_df: pd.DataFrame = loaded_model.get_cur_id_df()
     draw_pred: bool = True
     draw_max: bool = True
     selected_retake_rounds: Set[int] = set()
@@ -105,7 +108,10 @@ def vis(loaded_model: LoadedModel, inference_fn: Callable[[LoadedModel], None]):
         data_series = selected_df.loc[cur_index, :]
         pred_series = pred_selected_df.loc[cur_index, :]
         tick_game_id_text_var.set(f"Game Tick ID: {cur_game_tick}")
-        round_id_text_var.set(f"Round ID: {int(cur_round)}, Round Number: {selected_df.loc[cur_index, 'round number']}")
+        extra_round_data_str = ""
+        if "similarity 0" in id_df.columns:
+            extra_round_data_str = f"similarity 0: {id_df.loc[cur_index, 'similarity 0']}, similarity 1: {id_df.loc[cur_index, 'similarity 1']}"
+        round_id_text_var.set(f"Round ID: {int(cur_round)}, Round Number: {selected_df.loc[cur_index, 'round number']}, {extra_round_data_str}")
         other_state_text_var.set(f"Planted A {data_series[c4_plant_a_col]}, "
                                  f"Planted B {data_series[c4_plant_b_col]}, "
                                  f"Not Planted {data_series[c4_not_planted_col]}, "
@@ -216,8 +222,9 @@ def vis(loaded_model: LoadedModel, inference_fn: Callable[[LoadedModel], None]):
 
     # state setters
     def change_round_dependent_data():
-        nonlocal selected_df, pred_selected_df, cur_round, indices, ticks, game_ticks
+        nonlocal selected_df, id_df, pred_selected_df, cur_round, indices, ticks, game_ticks
         selected_df = loaded_model.cur_loaded_df.loc[loaded_model.cur_loaded_df[round_id_column] == cur_round]
+        id_df = loaded_model.get_cur_id_df()
         pred_selected_df = loaded_model.cur_inference_df.loc[loaded_model.cur_loaded_df[round_id_column] == cur_round]
 
         indices = selected_df.loc[:, 'index'].tolist()

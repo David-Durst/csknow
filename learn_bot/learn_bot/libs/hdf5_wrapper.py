@@ -34,6 +34,9 @@ class HDF5Wrapper:
     def limit(self, selector_df: pd.Series):
         self.id_df = self.id_df[selector_df]
 
+    def add_extra_column(self, extra_column_name: str, extra_column: pd.Series):
+        self.id_df[extra_column_name] = extra_column
+
     def __len__(self):
         return len(self.id_df)
 

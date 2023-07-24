@@ -29,7 +29,7 @@ small_latent_team_hdf5_data_path = Path(__file__).parent / '..' / '..' / '..' / 
 manual_latent_team_hdf5_data_path = Path(__file__).parent / '..' / '..' / '..' / '..' / 'analytics' / 'manual_outputs' / 'behaviorTreeTeamFeatureStore.hdf5'
 rollout_latent_team_hdf5_data_path = Path(__file__).parent / '..' / '..' / '..' / '..' / 'analytics' / 'rollout_outputs' / 'behaviorTreeTeamFeatureStore.hdf5'
 
-LimitFn = Callable[[pd.DataFrame], pd.Series]
+SimilarityFn = Callable[[pd.DataFrame], pd.Series]
 
 
 @dataclass
@@ -42,8 +42,10 @@ class LoadDataOptions:
     add_manual_to_all_human_data: bool
     limit_manual_data_to_no_enemies_nav: bool
     # set these if want to filter all human based on small human
-    small_good_rounds: Optional[List[int]] = None
-    similarity_df: Optional[pd.DataFrame] = None
+    small_good_rounds: Optional[List[List[int]]] = None
+    similarity_dfs: Optional[List[pd.DataFrame]] = None
+    # limit or add feature based on matches
+    limit_by_similarity: bool = True
     limit_manual_data_to_only_enemies_no_nav: bool = False
 
 
@@ -108,12 +110,14 @@ class LoadDataResult:
                                                    force_test_hdf5=force_test_data,
                                                    duplicate_last_hdf5_equal_to_rest=duplicate_last_hdf5_equal_to_rest,
                                                    split_train_test_on_init=False)
-        if load_data_options.small_good_rounds is not None and load_data_options.similarity_df is not None:
-            self.limit_big_good_rounds_from_small_good_rounds(load_data_options.similarity_df,
-                                                              load_data_options.small_good_rounds)
+        if load_data_options.small_good_rounds is not None and load_data_options.similarity_dfs is not None:
+            for i in range(len(load_data_options.similarity_dfs)):
+                self.limit_big_good_rounds_from_small_good_rounds(load_data_options.similarity_dfs[i],
+                                                                  load_data_options.small_good_rounds[i],
+                                                                  load_data_options.limit_by_similarity, i)
         self.multi_hdf5_wrapper.train_test_split_by_col(force_test_data)
 
-    def limit(self, limit_fns: List[Optional[LimitFn]]):
+    def limit(self, limit_fns: List[Optional[SimilarityFn]]):
         # note: need to redo train test split if applying limit later and want to use train-test splits with
         # updated filter
         for i in range(len(limit_fns)):
@@ -121,8 +125,17 @@ class LoadDataResult:
                 continue
             self.multi_hdf5_wrapper.hdf5_wrappers[i].limit(limit_fns[i](self.multi_hdf5_wrapper.hdf5_wrappers[i].id_df))
 
+    def add_column(self, add_column_fns: List[Optional[SimilarityFn]], column_name: str):
+        # note: need to redo train test split if applying limit later and want to use train-test splits with
+        # updated filter
+        for i in range(len(add_column_fns)):
+            if add_column_fns[i] is None:
+                continue
+            self.multi_hdf5_wrapper.hdf5_wrappers[i].add_extra_column(column_name,
+                                                                      add_column_fns[i](self.multi_hdf5_wrapper.hdf5_wrappers[i].id_df))
 
-    def limit_big_good_rounds_from_small_good_rounds(self, similarity_df: pd.DataFrame, small_good_rounds: List[int]):
+    def limit_big_good_rounds_from_small_good_rounds(self, similarity_df: pd.DataFrame, small_good_rounds: List[int],
+                                                     limit: bool, similarity_index: int):
         big_good_rounds: Dict[str, List[int]] = {}
         best_match_similarity_df = similarity_df[(similarity_df[best_match_id_col] == 0) &
                                                  (similarity_df[metric_type_col] == b'Slope Constrained DTW')]
@@ -133,14 +146,17 @@ class LoadDataResult:
             if row[best_fit_ground_truth_round_id_col] in small_good_rounds:
                 big_good_rounds[hdf5_filename].append(row[predicted_round_id_col])
 
-        limit_fns: List[Optional[LimitFn]] = []
+        similarity_fns: List[Optional[SimilarityFn]] = []
         for i, hdf5_wrapper in enumerate(self.multi_hdf5_wrapper.hdf5_wrappers):
             hdf5_filename = str(hdf5_wrapper.hdf5_path.name)
             if hdf5_filename in big_good_rounds:
                 # https://stackoverflow.com/questions/2295290/what-do-lambda-function-closures-capture
-                limit_fns.append(lambda df, filename=hdf5_filename: df[round_id_column].isin(big_good_rounds[filename]))
+                similarity_fns.append(lambda df, filename=hdf5_filename: df[round_id_column].isin(big_good_rounds[filename]))
             else:
-                limit_fns.append(None)
-        self.limit(limit_fns)
+                similarity_fns.append(None)
+        if limit:
+            self.limit(similarity_fns)
+        else:
+            self.add_column(similarity_fns, f'similarity {similarity_index}')
 
 

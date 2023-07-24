@@ -12,8 +12,9 @@ from torch.utils.data import DataLoader
 
 from torch.utils.tensorboard import SummaryWriter
 
-from learn_bot.latent.analyze.comparison_column_names import human_good_rounds, \
-    all_human_vs_small_human_similarity_hdf5_data_path
+from learn_bot.latent.analyze.comparison_column_names import small_human_good_rounds, \
+    all_human_vs_small_human_similarity_hdf5_data_path, all_human_28_second_filter_good_rounds, \
+    all_human_vs_human_28_similarity_hdf5_data_path
 from learn_bot.latent.dataset import *
 from learn_bot.latent.engagement.column_names import round_id_column
 from learn_bot.latent.latent_hdf5_dataset import MultipleLatentHDF5Dataset
@@ -444,8 +445,10 @@ load_data_options = LoadDataOptions(
     add_manual_to_all_human_data=True,
     limit_manual_data_to_no_enemies_nav=True,
     limit_manual_data_to_only_enemies_no_nav=False,
-    small_good_rounds=human_good_rounds,
-    similarity_df=load_hdf5_to_pd(all_human_vs_small_human_similarity_hdf5_data_path)
+    small_good_rounds=[small_human_good_rounds, all_human_28_second_filter_good_rounds],
+    similarity_dfs=[load_hdf5_to_pd(all_human_vs_small_human_similarity_hdf5_data_path),
+                    load_hdf5_to_pd(all_human_vs_human_28_similarity_hdf5_data_path)],
+    limit_by_similarity=False
 )
 
 

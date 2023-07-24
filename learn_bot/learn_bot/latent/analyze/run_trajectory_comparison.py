@@ -201,7 +201,7 @@ def compare_trajectories():
         #predicted_df = load_hdf5_to_pd(config.predicted_data_path)
         #predicted_df = predicted_df.iloc[predicted_hdf5_wrapper.id_df['id'], :]
     elif config.limit_predicted_df_to_human_good:
-        predicted_data.limit([lambda df: df[round_id_column].isin(human_good_rounds)])
+        predicted_data.limit([lambda df: df[round_id_column].isin(small_human_good_rounds)])
         #predicted_hdf5_wrapper = HDF5Wrapper(config.predicted_data_path, latent_id_cols)
         #predicted_hdf5_wrapper.limit(predicted_hdf5_wrapper.id_df[round_id_column].isin(human_good_rounds))
         #predicted_df = load_hdf5_to_pd(config.predicted_data_path)
