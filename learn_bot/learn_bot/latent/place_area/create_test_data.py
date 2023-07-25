@@ -1,3 +1,5 @@
+from typing import Dict
+
 import pandas as pd
 import numpy as np
 from learn_bot.latent.place_area.column_names import *
@@ -7,7 +9,7 @@ num_test_ticks = 100
 id_counter = 0
 
 def add_tick_row(player_id: int, alive: int, ct_team: int, pos_x: float, pos_y: float,
-                 planted_a: int, delta_pos_index: int, base_series: pd.Series, new_ticks: List[pd.Series]):
+                 planted_a: int, radial_vel_index: int, base_series: pd.Series, new_ticks: List[pd.Series]):
     global id_counter
     new_tick_series = base_series.copy()
     new_tick_series['id'] = id_counter
@@ -19,7 +21,7 @@ def add_tick_row(player_id: int, alive: int, ct_team: int, pos_x: float, pos_y: 
     new_tick_series[specific_player_place_area_columns[0].pos[0]] = pos_x
     new_tick_series[specific_player_place_area_columns[0].pos[1]] = pos_y
     new_tick_series[c4_plant_a_col] = planted_a
-    new_tick_series[specific_player_place_area_columns[0].delta_pos[delta_pos_index]] = 1
+    new_tick_series[specific_player_place_area_columns[0].radial_vel[radial_vel_index]] = 1
     new_ticks.append(new_tick_series)
 
 
@@ -71,3 +73,52 @@ def create_left_right_test_data(all_data_df: pd.DataFrame) -> pd.DataFrame:
         add_tick_row(1, 1, 1, float(i), 0.5, 0, -1, base_series, new_ticks)
 
     return pd.DataFrame(new_ticks)
+
+
+def create_zeros_train_data(all_data_df: pd.DataFrame) -> pd.DataFrame:
+    global id_counter
+    base_series = all_data_df.iloc[0].copy()
+    for col in all_data_df.columns:
+        if all_data_df[col].dtype.type != np.object_:
+            base_series[col] = 0
+
+    base_series['valid'] = 1
+    base_series[test_success_col] = 1
+
+    new_ticks: List[pd.Series] = []
+    id_counter = 0
+    # increasing x and
+    for i in range(num_test_ticks):
+        add_tick_row(0, 0, 0, 0, 0., 0, 0, base_series, new_ticks)
+
+    for i in range(num_test_ticks):
+        add_tick_row(0, 0, 0, 0, 0., 0, 1, base_series, new_ticks)
+
+    for i in range(num_test_ticks):
+        add_tick_row(0, 0, 0, 0, 0., 0, 2, base_series, new_ticks)
+
+    for i in range(num_test_ticks):
+        add_tick_row(0, 0, 0, 0, 0., 0, 3, base_series, new_ticks)
+
+    return pd.DataFrame(new_ticks)
+
+
+def add_similarity_row(similarity_0_value: bool, similarity_1_value: bool, new_rows: List[Dict]):
+    new_rows.append({get_similarity_column(0): similarity_0_value, get_similarity_column(1): similarity_1_value})
+
+
+def create_similarity_data() -> pd.DataFrame:
+    new_rows: List[Dict] = []
+    for i in range(num_test_ticks):
+        add_similarity_row(False, False, new_rows)
+
+    for i in range(num_test_ticks):
+        add_similarity_row(False, True, new_rows)
+
+    for i in range(num_test_ticks):
+        add_similarity_row(True, False, new_rows)
+
+    for i in range(num_test_ticks):
+        add_similarity_row(True, True, new_rows)
+
+    return pd.DataFrame(new_rows)

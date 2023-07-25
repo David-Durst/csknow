@@ -1,10 +1,7 @@
 from typing import Set, Callable
 
-import pandas as pd
-
 from learn_bot.latent.analyze.process_trajectory_comparison import set_pd_print_options
 from learn_bot.latent.load_model import LoadedModel
-from learn_bot.latent.place_area.load_data import get_similarity_column
 from learn_bot.latent.train import default_selected_retake_rounds_path
 from learn_bot.libs.df_grouping import make_index_column
 from learn_bot.mining.area_cluster import *

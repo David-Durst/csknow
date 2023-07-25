@@ -175,3 +175,11 @@ place_output_column_types = get_simplified_column_types([], [], [], flat_output_
 area_output_column_types = get_simplified_column_types([], [], [], flat_output_cat_area_distribution_columns)
 delta_pos_output_column_types = get_simplified_column_types([], [], [], flat_output_cat_delta_pos_columns)
 radial_vel_output_column_types = get_simplified_column_types([], [], [], flat_output_cat_radial_vel_columns)
+
+
+def get_base_similarity_column() -> str:
+    return 'similarity'
+
+
+def get_similarity_column(idx: int) -> str:
+    return f'similarity {idx}'

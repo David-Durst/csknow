@@ -4,7 +4,7 @@ import pandas as pd
 import torch
 from torch.utils.data import Dataset
 
-from learn_bot.latent.place_area.load_data import get_base_similarity_column
+from learn_bot.latent.place_area.column_names import get_base_similarity_column
 from learn_bot.libs.io_transforms import IOColumnTransformers
 from pathlib import Path
 from learn_bot.latent.engagement.column_names import *

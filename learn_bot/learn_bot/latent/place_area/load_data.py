@@ -7,8 +7,8 @@ import pandas as pd
 from learn_bot.latent.analyze.comparison_column_names import predicted_trace_batch_col, \
     best_fit_ground_truth_round_id_col, predicted_round_id_col, best_match_id_col, metric_type_col
 from learn_bot.latent.engagement.column_names import game_id_column, round_id_column
-from learn_bot.latent.place_area.column_names import hdf5_id_columns, test_success_col
-from learn_bot.latent.place_area.create_test_data import create_left_right_train_data, create_left_right_test_data
+from learn_bot.latent.place_area.column_names import hdf5_id_columns, test_success_col, get_similarity_column
+from learn_bot.latent.place_area.create_test_data import create_zeros_train_data, create_similarity_data
 from learn_bot.libs.hdf5_to_pd import load_hdf5_to_pd
 from learn_bot.libs.hdf5_wrapper import HDF5Wrapper, PDWrapper
 from learn_bot.libs.multi_hdf5_wrapper import MultiHDF5Wrapper, HDF5SourceOptions
@@ -30,13 +30,6 @@ manual_latent_team_hdf5_data_path = Path(__file__).parent / '..' / '..' / '..' /
 rollout_latent_team_hdf5_data_path = Path(__file__).parent / '..' / '..' / '..' / '..' / 'analytics' / 'rollout_outputs' / 'behaviorTreeTeamFeatureStore.hdf5'
 
 SimilarityFn = Callable[[pd.DataFrame], pd.Series]
-
-
-def get_base_similarity_column() -> str:
-    return 'similarity'
-
-def get_similarity_column(idx: int) -> str:
-    return f'similarity {idx}'
 
 
 @dataclass
@@ -84,11 +77,19 @@ class LoadDataResult:
             hdf5_sources.append(rollout_data)
         elif load_data_options.use_synthetic_data:
             self.dataset_comment = just_test_comment
-            base_data = load_hdf5_to_pd(manual_latent_team_hdf5_data_path, rows_to_get=[i for i in range(1)])
-            synthetic_data_df = create_left_right_train_data(base_data)
+            base_data = load_hdf5_to_pd(manual_latent_team_hdf5_data_path, rows_to_get=[1])
+            #synthetic_data_df = create_left_right_train_data(base_data)
+            #synthetic_data = PDWrapper('train', synthetic_data_df, hdf5_id_columns)
+            #force_test_data_df = create_left_right_test_data(base_data)
+            #force_test_data = PDWrapper('test', force_test_data_df, hdf5_id_columns)
+            synthetic_data_df = create_zeros_train_data(base_data)
+            similarity_data = create_similarity_data()
             synthetic_data = PDWrapper('train', synthetic_data_df, hdf5_id_columns)
-            force_test_data_df = create_left_right_test_data(base_data)
+            force_test_data_df = create_zeros_train_data(base_data)
             force_test_data = PDWrapper('test', force_test_data_df, hdf5_id_columns)
+            for c in similarity_data.columns:
+                synthetic_data.add_extra_column(c, similarity_data.loc[:, c])
+                force_test_data.add_extra_column(c, similarity_data.loc[:, c])
             self.diff_train_test = False
             hdf5_sources.append(synthetic_data)
         elif load_data_options.use_small_human_data:
@@ -117,7 +118,8 @@ class LoadDataResult:
                                                    force_test_hdf5=force_test_data,
                                                    duplicate_last_hdf5_equal_to_rest=duplicate_last_hdf5_equal_to_rest,
                                                    split_train_test_on_init=False)
-        if load_data_options.small_good_rounds is not None and load_data_options.similarity_dfs is not None:
+        if not load_data_options.use_synthetic_data and \
+                load_data_options.small_good_rounds is not None and load_data_options.similarity_dfs is not None:
             for i in range(len(load_data_options.similarity_dfs)):
                 self.limit_big_good_rounds_from_small_good_rounds(load_data_options.similarity_dfs[i],
                                                                   load_data_options.small_good_rounds[i],
