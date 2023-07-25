@@ -163,7 +163,6 @@ class LoadDataResult:
                 similarity_fns.append(None)
         if limit:
             self.limit(similarity_fns)
-        else:
-            self.add_column(similarity_fns, get_similarity_column(similarity_index))
+        self.add_column(similarity_fns, get_similarity_column(similarity_index))
 
 
