@@ -65,7 +65,8 @@ def step(rollout_tensor: torch.Tensor, similarity_tensor: torch.Tensor, pred_ten
     input_tensor = rollout_tensor[rollout_tensor_input_indices].to(CUDA_DEVICE_STR)
     input_pos_tensor = rearrange(input_tensor[:, model.players_pos_columns], 'b (p t d) -> b p t d',
                                  p=model.num_players, t=model.num_time_steps, d=model.num_dim)
-    pred = model(input_tensor, similarity_tensor)
+    temperature = torch.Tensor([1.]).to(CUDA_DEVICE_STR)
+    pred = model(input_tensor, similarity_tensor, temperature)
     pred_prob = get_untransformed_outputs(pred)
     pred_tensor[rollout_tensor_input_indices] = pred_prob.to(CPU_DEVICE_STR)
     pred_labels = get_label_outputs(pred)

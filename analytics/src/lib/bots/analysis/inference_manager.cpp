@@ -193,6 +193,9 @@ namespace csknow::inference_manager {
         vector<float> similarityArr{1., 1.};
         torch::Tensor similarityPt = torch::from_blob(similarityArr.data(), {1, 2}, options);
         inputs.push_back(similarityPt);
+        vector<float> temperatureArr{0.7};
+        torch::Tensor temperaturePt = torch::from_blob(temperatureArr.data(), {1, 1}, options);
+        inputs.push_back(temperaturePt);
 
         at::Tensor output = deltaPosModule.forward(inputs).toTuple()->elements()[1].toTensor();
 

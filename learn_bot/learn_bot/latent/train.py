@@ -205,6 +205,8 @@ def train(train_type: TrainType, multi_hdf5_wrapper: MultiHDF5Wrapper,
     # first row used to provide input during serialization
     first_row: torch.Tensor = None
     first_row_similarity: torch.Tensor = None
+    temperature_gpu = torch.Tensor([1.]).to(CUDA_DEVICE_STR)
+    temperature_cpu = torch.Tensor([1.])
 
     def train_or_test_SL_epoch(dataloader, model, optimizer, scaler, train=True, profiler=None):
         nonlocal first_row, first_row_similarity
@@ -260,7 +262,7 @@ def train(train_type: TrainType, multi_hdf5_wrapper: MultiHDF5Wrapper,
                     model.noise_var = hyperparameter_options.noise_var
                     optimizer.zero_grad()
                 with autocast(device, enabled=True):
-                    pred = model(X, similarity)
+                    pred = model(X, similarity, temperature_gpu)
                     model.noise_var = -1.
                     if torch.isnan(X).any():
                         print('bad X')
@@ -344,7 +346,7 @@ def train(train_type: TrainType, multi_hdf5_wrapper: MultiHDF5Wrapper,
         }, model_path)
         with torch.no_grad():
             model.eval()
-            script_model = torch.jit.trace(model.to(CPU_DEVICE_STR), (first_row, first_row_similarity))
+            script_model = torch.jit.trace(model.to(CPU_DEVICE_STR), (first_row, first_row_similarity, temperature_cpu))
             #tmp_model = SimplifiedTransformerNestedHiddenLatentModel().to(device)
             #tmp_model.to(CPU_DEVICE_STR)
             #tmp_model.eval()

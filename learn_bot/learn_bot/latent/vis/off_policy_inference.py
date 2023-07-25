@@ -19,7 +19,8 @@ def off_policy_inference(loaded_model: LoadedModel):
         with tqdm(total=len(dataloader), disable=False) as pbar:
             for batch, (X, Y, similarity) in enumerate(dataloader):
                 X, Y, similarity = X.to(CUDA_DEVICE_STR), Y.to(CUDA_DEVICE_STR), similarity.to(CUDA_DEVICE_STR)
-                pred = loaded_model.model(X, similarity)
+                temperature = torch.Tensor([1.]).to(CUDA_DEVICE_STR)
+                pred = loaded_model.model(X, similarity, temperature)
                 pred_untransformed = get_untransformed_outputs(pred).to(CPU_DEVICE_STR)
                 if result_np is not None:
                     result_np = np.concatenate((result_np, pred_untransformed.numpy()))

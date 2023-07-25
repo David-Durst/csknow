@@ -192,7 +192,7 @@ class TransformerNestedHiddenLatentModel(nn.Module):
 
         return team_mask
 
-    def forward(self, x, similarity):
+    def forward(self, x, similarity, temperature):
         if self.num_time_steps < 2:
             raise Exception("must have history")
 
@@ -249,7 +249,7 @@ class TransformerNestedHiddenLatentModel(nn.Module):
         transformed = self.transformer_model(x_temporal_embedded_flattened, x_embedded_no_noise, tgt_mask=tgt_mask,
                                              src_key_padding_mask=dead_gathered)
         latent = self.decoder(transformed)
-        prob_output = self.prob_output(latent)
+        prob_output = self.prob_output(latent / temperature)
         return self.logits_output(latent), prob_output, one_hot_prob_to_index(prob_output)
         #if y is not None:
         #    y_encoded = self.encode_y(x_pos, x_non_pos, y, True)
