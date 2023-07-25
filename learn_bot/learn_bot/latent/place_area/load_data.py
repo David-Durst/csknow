@@ -8,7 +8,8 @@ from learn_bot.latent.analyze.comparison_column_names import predicted_trace_bat
     best_fit_ground_truth_round_id_col, predicted_round_id_col, best_match_id_col, metric_type_col
 from learn_bot.latent.engagement.column_names import game_id_column, round_id_column
 from learn_bot.latent.place_area.column_names import hdf5_id_columns, test_success_col, get_similarity_column
-from learn_bot.latent.place_area.create_test_data import create_zeros_train_data, create_similarity_data
+from learn_bot.latent.place_area.create_test_data import create_zeros_train_data, create_similarity_data, \
+    create_left_right_train_data
 from learn_bot.libs.hdf5_to_pd import load_hdf5_to_pd
 from learn_bot.libs.hdf5_wrapper import HDF5Wrapper, PDWrapper
 from learn_bot.libs.multi_hdf5_wrapper import MultiHDF5Wrapper, HDF5SourceOptions
@@ -78,7 +79,7 @@ class LoadDataResult:
         elif load_data_options.use_synthetic_data:
             self.dataset_comment = just_test_comment
             base_data = load_hdf5_to_pd(manual_latent_team_hdf5_data_path, rows_to_get=[1])
-            #synthetic_data_df = create_left_right_train_data(base_data)
+            #tmp_synthetic_data_df = create_left_right_train_data(base_data)
             #synthetic_data = PDWrapper('train', synthetic_data_df, hdf5_id_columns)
             #force_test_data_df = create_left_right_test_data(base_data)
             #force_test_data = PDWrapper('test', force_test_data_df, hdf5_id_columns)

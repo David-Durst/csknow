@@ -17,6 +17,7 @@ class MultiHDF5Wrapper:
     hdf5_wrappers: List[HDF5Wrapper]
     # subsets of main hdf5_wrappers for train/test splits
     diff_train_test: bool
+    force_test_hdf5: bool
     train_hdf5_wrappers: List[HDF5Wrapper]
     test_hdf5_wrappers: List[HDF5Wrapper]
     test_group_ids: Dict[Path, List[int]]
@@ -51,6 +52,7 @@ class MultiHDF5Wrapper:
         self.test_hdf5_wrappers = []
         self.test_group_ids = {}
         self.diff_train_test = diff_train_test
+        self.force_test_hdf5 = force_test_hdf5
         if split_train_test_on_init:
             self.train_test_split_by_col(force_test_hdf5)
         self.duplicate_last_hdf5_equal_to_rest = duplicate_last_hdf5_equal_to_rest
@@ -90,4 +92,9 @@ class MultiHDF5Wrapper:
     def create_np_arrays(self, cts: IOColumnTransformers, load_output_data: bool = True):
         for hdf5_wrapper in self.hdf5_wrappers:
             hdf5_wrapper.create_np_array(cts, load_output_data)
+        # if forcing test hdf5, load it's unique np arrays
+        if self.force_test_hdf5:
+            for hdf5_wrapper in self.test_hdf5_wrappers:
+                hdf5_wrapper.create_np_array(cts, load_output_data)
+
 

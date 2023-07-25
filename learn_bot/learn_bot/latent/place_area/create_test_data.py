@@ -89,18 +89,20 @@ def create_zeros_train_data(all_data_df: pd.DataFrame) -> pd.DataFrame:
     id_counter = 0
     # increasing x and
     for i in range(num_test_ticks):
-        add_tick_row(0, 0, 0, 0, 0., 0, 0, base_series, new_ticks)
+        add_tick_row(0, 1, 0, 0, 0., 0, 0, base_series, new_ticks)
 
     for i in range(num_test_ticks):
-        add_tick_row(0, 0, 0, 0, 0., 0, 1, base_series, new_ticks)
+        add_tick_row(0, 1, 0, 0, 0., 0, 1, base_series, new_ticks)
 
     for i in range(num_test_ticks):
-        add_tick_row(0, 0, 0, 0, 0., 0, 2, base_series, new_ticks)
+        add_tick_row(0, 1, 0, 0, 0., 0, 2, base_series, new_ticks)
 
     for i in range(num_test_ticks):
-        add_tick_row(0, 0, 0, 0, 0., 0, 3, base_series, new_ticks)
+        add_tick_row(0, 1, 0, 0, 0., 0, 3, base_series, new_ticks)
 
-    return pd.DataFrame(new_ticks)
+    result_df = pd.DataFrame(new_ticks)
+    result_df.reset_index(inplace=True)
+    return result_df
 
 
 def add_similarity_row(similarity_0_value: bool, similarity_1_value: bool, new_rows: List[Dict]):
