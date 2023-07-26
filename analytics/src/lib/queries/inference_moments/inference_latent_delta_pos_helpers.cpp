@@ -73,6 +73,12 @@ namespace csknow::inference_delta_pos {
                  */
                 result.rowCPP.push_back(static_cast<float>(columnPlayerData.alive[rowIndex]));
                 result.rowCPP.push_back(static_cast<float>(columnPlayerData.ctTeam[rowIndex]));
+                // decrease distance 5s
+                result.rowCPP.push_back(1.f);
+                // decrease distance 10s
+                result.rowCPP.push_back(1.f);
+                // decrease distance 20s
+                result.rowCPP.push_back(1.f);
             }
             ctColumnData = false;
         }
