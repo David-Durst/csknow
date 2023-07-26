@@ -89,6 +89,8 @@ namespace csknow::feature_store {
             array<vector<Vec3>, num_prior_ticks> priorFootPos;
             array<vector<bool>, num_prior_ticks> priorFootPosValid;
             vector<Vec3> velocity;
+            // control inputs
+            vector<bool> decreaseDistanceToC4Over5s, decreaseDistanceToC4Over10s, decreaseDistanceToC4Over20s;
             //vector<float> distanceToASite, distanceToBSite;
             //array<vector<float>, num_orders_per_site> distanceToNearestAOrderNavArea, distanceToNearestBOrderNavArea;
             //array<vector<bool>, num_places> curPlace;
@@ -146,6 +148,14 @@ namespace csknow::feature_store {
                                           */
         void computeDeltaPosACausalLabels(int64_t curTick, CircularBuffer<int64_t> & futureTracker,
                                           array<ColumnPlayerData,maxEnemies> & columnData);
+        enum class DecreaseTimingOption {
+            s5,
+            s10,
+            s20
+        };
+        void computeDecreaseDistanceToC4(int64_t curTick, CircularBuffer<int64_t> & futureTracker,
+                                          array<ColumnPlayerData,maxEnemies> & columnData,
+                                          DecreaseTimingOption decreaseTimingOption);
         void computeAcausalLabels(const Games & games, const Rounds & rounds, const Ticks & ticks,
                                   const Players & players, const DistanceToPlacesResult & distanceToPlacesResult,
                                   const nav_mesh::nav_file & navFile,

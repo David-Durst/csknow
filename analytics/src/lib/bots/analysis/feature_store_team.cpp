@@ -69,6 +69,12 @@ namespace csknow::feature_store {
                 columnCTData[i].priorVelocity[j].resize(size, zeroVec);
                 columnCTData[i].priorFootPosValid[j].resize(size, false);
             }
+            columnTData[i].decreaseDistanceToC4Over5s.resize(size, false);
+            columnCTData[i].decreaseDistanceToC4Over5s.resize(size, false);
+            columnTData[i].decreaseDistanceToC4Over10s.resize(size, false);
+            columnCTData[i].decreaseDistanceToC4Over10s.resize(size, false);
+            columnTData[i].decreaseDistanceToC4Over20s.resize(size, false);
+            columnCTData[i].decreaseDistanceToC4Over20s.resize(size, false);
             /*
             for (int j = 0; j < num_orders_per_site; j++) {
                 columnTData[i].distanceToNearestAOrderNavArea[j].resize(size, 2 * maxWorldDistance);
@@ -250,6 +256,12 @@ namespace csknow::feature_store {
                     columnCTData[i].priorVelocity[j][rowIndex] = zeroVec;
                     columnCTData[i].priorFootPosValid[j][rowIndex] = false;
                 }
+                columnTData[i].decreaseDistanceToC4Over5s[rowIndex] = false;
+                columnCTData[i].decreaseDistanceToC4Over5s[rowIndex] = false;
+                columnTData[i].decreaseDistanceToC4Over10s[rowIndex] = false;
+                columnCTData[i].decreaseDistanceToC4Over10s[rowIndex] = false;
+                columnTData[i].decreaseDistanceToC4Over20s[rowIndex] = false;
+                columnCTData[i].decreaseDistanceToC4Over20s[rowIndex] = false;
                 /*
                 for (int j = 0; j < num_orders_per_site; j++) {
                     columnTData[i].distanceToNearestAOrderNavArea[j][rowIndex] = 2 * maxWorldDistance;
@@ -479,290 +491,6 @@ namespace csknow::feature_store {
         return true;
     }
 
-    /*
-    void TeamFeatureStoreResult::computeOrderACausalLabels(int64_t internalTickId, CircularBuffer<int64_t> & futureTracker,
-                                                           array<ColumnPlayerData, maxEnemies> & columnData,
-                                                           ACausalTimingOption timingOption) {
-        for (size_t playerColumn = 0; playerColumn < maxEnemies; playerColumn++) {
-            if (columnData[playerColumn].playerId[internalTickId] == INVALID_ID) {
-                continue;
-            }
-            // clear out values for current tick
-            for (size_t orderPerSite = 0; orderPerSite < num_orders_per_site; orderPerSite++) {
-                if (timingOption == ACausalTimingOption::s6) {
-                    columnData[playerColumn].distributionNearestAOrders[orderPerSite][internalTickId] = 0;
-                    columnData[playerColumn].distributionNearestBOrders[orderPerSite][internalTickId] = 0;
-                }
-                else if (timingOption == ACausalTimingOption::s15) {
-                    //columnData[playerColumn].distributionNearestAOrders15s[orderPerSite][internalTickId] = 0;
-                    //columnData[playerColumn].distributionNearestBOrders15s[orderPerSite][internalTickId] = 0;
-                }
-                else {
-                    //columnData[playerColumn].distributionNearestAOrders30s[orderPerSite][internalTickId] = 0;
-                    //columnData[playerColumn].distributionNearestBOrders30s[orderPerSite][internalTickId] = 0;
-                }
-            }
-            // want all points where alive, and accounting for ties
-            size_t numPointsInDistribution = 0;
-            for (int64_t futureTickIndex = 0; futureTickIndex < futureTracker.getCurSize(); futureTickIndex++) {
-                int64_t futureTick = futureTracker.fromOldest(futureTickIndex);
-                if (futureTick != internalTickId &&
-                    columnData[playerColumn].playerId[internalTickId] == columnData[playerColumn].playerId[futureTick]) {
-                    vector<int64_t> minDistanceAOrders{}, minDistanceBOrders{};
-                    double minDistance = std::numeric_limits<double>::max();
-                    for (int64_t orderPerSite = 0; orderPerSite < num_orders_per_site; orderPerSite++) {
-                        double curADistance = columnData[playerColumn].distanceToNearestAOrderNavArea[orderPerSite][futureTick];
-                        if (curADistance < minDistance) {
-                            minDistanceAOrders.clear();
-                            minDistanceBOrders.clear();
-                            minDistanceAOrders.push_back(orderPerSite);
-                            minDistance = curADistance;
-                        }
-                        else if (curADistance == minDistance) {
-                            minDistanceAOrders.push_back(orderPerSite);
-                        }
-                        double curBDistance = columnData[playerColumn].distanceToNearestBOrderNavArea[orderPerSite][futureTick];
-                        if (curBDistance < minDistance) {
-                            minDistanceAOrders.clear();
-                            minDistanceBOrders.clear();
-                            minDistanceBOrders.push_back(orderPerSite);
-                            minDistance = curBDistance;
-                        }
-                        else if (curBDistance == minDistance) {
-                            minDistanceBOrders.push_back(orderPerSite);
-                        }
-                    }
-                    numPointsInDistribution += minDistanceAOrders.size() + minDistanceBOrders.size();
-                    for (const auto & orderPerSite : minDistanceAOrders) {
-                        if (timingOption == ACausalTimingOption::s6) {
-                            columnData[playerColumn].distributionNearestAOrders[orderPerSite][internalTickId]++;
-                        }
-                        else if (timingOption == ACausalTimingOption::s15) {
-                            //columnData[playerColumn].distributionNearestAOrders15s[orderPerSite][internalTickId]++;
-                        }
-                        else {
-                            //columnData[playerColumn].distributionNearestAOrders30s[orderPerSite][internalTickId]++;
-                        }
-                    }
-                    for (const auto & orderPerSite : minDistanceBOrders) {
-                        if (timingOption == ACausalTimingOption::s6) {
-                            columnData[playerColumn].distributionNearestBOrders[orderPerSite][internalTickId]++;
-                        }
-                        else if (timingOption == ACausalTimingOption::s15) {
-                            //columnData[playerColumn].distributionNearestBOrders15s[orderPerSite][internalTickId]++;
-                        }
-                        else {
-                            //columnData[playerColumn].distributionNearestBOrders30s[orderPerSite][internalTickId]++;
-                        }
-                    }
-                }
-            }
-            if (numPointsInDistribution != 0) {
-                for (size_t orderPerSite = 0; orderPerSite < num_orders_per_site; orderPerSite++) {
-                    if (timingOption == ACausalTimingOption::s6) {
-                        columnData[playerColumn].distributionNearestAOrders[orderPerSite][internalTickId] /=
-                            static_cast<double>(numPointsInDistribution);
-                        columnData[playerColumn].distributionNearestBOrders[orderPerSite][internalTickId] /=
-                            static_cast<double>(numPointsInDistribution);
-                    }
-                    else if (timingOption == ACausalTimingOption::s15) {
-                        //columnData[playerColumn].distributionNearestAOrders15s[orderPerSite][internalTickId] /=
-                        //    static_cast<double>(numPointsInDistribution);
-                        //columnData[playerColumn].distributionNearestBOrders15s[orderPerSite][internalTickId] /=
-                        //    static_cast<double>(numPointsInDistribution);
-                    }
-                    else {
-                        //columnData[playerColumn].distributionNearestAOrders30s[orderPerSite][internalTickId] /=
-                        //    static_cast<double>(numPointsInDistribution);
-                        //columnData[playerColumn].distributionNearestBOrders30s[orderPerSite][internalTickId] /=
-                        //    static_cast<double>(numPointsInDistribution);
-                    }
-                }
-            }
-        }
-    }
-
-    void TeamFeatureStoreResult::computePlaceACausalLabels(const Games & games, const Ticks & ticks, const TickRates & tickRates,
-                                                           int64_t curGame, int64_t curTick, CircularBuffer<int64_t> &futureTracker,
-                                                           array<ColumnPlayerData, maxEnemies> &columnData,
-                                                           double futureSecondsThreshold,
-                                                           const Players & players,
-                                                           const DistanceToPlacesResult & distanceToPlacesResult,
-                                                           const nav_mesh::nav_file & navFile) {
-        for (size_t playerColumn = 0; playerColumn < maxEnemies; playerColumn++) {
-            if (columnData[playerColumn].playerId[curTick] == INVALID_ID) {
-                continue;
-            }
-            // clear out values for current tick
-            for (size_t placeIndex = 0; placeIndex < num_places; placeIndex++) {
-                columnData[playerColumn].distributionNearestPlace[placeIndex][curTick] = 0;
-            }
-            // want all points where alive, and accounting for ties
-            size_t numPointsInDistribution = 0;
-            for (int64_t futureTickIndex = 0; futureTickIndex < futureTracker.getCurSize(); futureTickIndex++) {
-                int64_t futureTick = futureTracker.fromOldest(futureTickIndex);
-                bool inWindow = secondsBetweenTicks(ticks, tickRates, internalIdToTickId[curTick], internalIdToTickId[futureTick]) >=
-                        futureSecondsThreshold;
-                if (futureTick != curTick &&
-                    columnData[playerColumn].playerId[curTick] == columnData[playerColumn].playerId[futureTick] &&
-                    inWindow) {
-                    numPointsInDistribution++;
-                    for (size_t placeIndex = 0; placeIndex < num_places; placeIndex++) {
-                        if (columnData[playerColumn].curPlace[placeIndex][futureTick]) {
-                            columnData[playerColumn].distributionNearestPlace[placeIndex][curTick]++;
-                        }
-                    }
-                }
-                if (futureTick < curTick) {
-                    std::cout << "ticks going wrong direction " << curTick << " " << futureTick << std::endl;
-                    std::raise(SIGINT);
-                }
-            }
-            if (numPointsInDistribution != 0) {
-                for (size_t placeIndex = 0; placeIndex < num_places; placeIndex++) {
-                    columnData[playerColumn].distributionNearestPlace[placeIndex][curTick] /=
-                        static_cast<double>(numPointsInDistribution);
-                }
-
-                PlaceIndex curPlace = 50;
-                int numCurPlaces = 0;
-                for (size_t placeIndex = 0; placeIndex < num_places; placeIndex++) {
-                    if (columnData[playerColumn].curPlace[placeIndex][curTick]) {
-                        curPlace = placeIndex;
-                        numCurPlaces++;
-                    }
-                }
-                if (numCurPlaces != 1 || curPlace > 25) {
-                    std::cout << "bad tick not one cur place " << curTick << std::endl;
-                    std::raise(SIGINT);
-                }
-                (void) games;
-                (void) curGame;
-                (void) players;
-                (void) distanceToPlacesResult;
-                (void) navFile;
-                / *
-                int64_t curPlayerId = columnData[playerColumn].playerId[curTick];
-                for (size_t nextPlaceIndex = 0; nextPlaceIndex < num_places; nextPlaceIndex++) {
-                    if (columnData[playerColumn].distributionNearestPlace[nextPlaceIndex][curTick] > 0) {
-                        double distanceBetweenCurAndNextPlace =
-                                distanceToPlacesResult.getClosestDistance(distanceToPlacesResult.places[curPlace], distanceToPlacesResult.places[nextPlaceIndex], navFile);
-                        if (secondsAwayAtMaxSpeed(distanceBetweenCurAndNextPlace) > 10.) {
-                            std::cout << games.demoFile[curGame] << " bad tick reached (" << curPlace << ","
-                                << distanceToPlacesResult.places[curPlace] << ") to (" << nextPlaceIndex << ","
-                                << distanceToPlacesResult.places[nextPlaceIndex] << ") in under 2 seconds "
-                                << " for player (" << curPlayerId << "," << players.name[curPlayerId + players.idOffset] << ") on tick id "
-                                << curTick << " and game tick " << ticks.gameTickNumber[curTick] << " distance " << distanceBetweenCurAndNextPlace << std::endl;
-                            for (int64_t futureTickIndex = 0; futureTickIndex < futureTracker.getCurSize(); futureTickIndex++) {
-                                int64_t futureTick = futureTracker.fromOldest(futureTickIndex);
-                                bool inWindow = secondsBetweenTicks(ticks, tickRates, curTick, futureTick) >=
-                                                futureSecondsThreshold;
-                                if (futureTick != curTick &&
-                                    columnData[playerColumn].playerId[curTick] ==
-                                    columnData[playerColumn].playerId[futureTick] &&
-                                    inWindow && columnData[playerColumn].curPlace[nextPlaceIndex][futureTick]) {
-                                    std::cout << "future tick " << futureTick << " and game tick " << ticks.gameTickNumber[futureTick] << std::endl;
-                                }
-                            }
-                            std::raise(SIGINT);
-                        }
-                    }
-                }
-                 * /
-                int64_t curPlayerId = columnData[playerColumn].playerId[curTick];
-                for (const PlaceIndex badCurPlace : {18, 3, 5, 20, 25}) {
-                    for (const PlaceIndex badNextPlace : {11, 0})
-                    if (curPlace == badCurPlace && columnData[playerColumn].distributionNearestPlace[badNextPlace][curTick] > 0) {
-                        double distanceBetweenCurAndNextPlace =
-                                distanceToPlacesResult.getClosestDistance(distanceToPlacesResult.places[curPlace], distanceToPlacesResult.places[badNextPlace], navFile);
-                        std::cout << games.demoFile[curGame] << " bad tick reached (" << curPlace << ","
-                                  << distanceToPlacesResult.places[curPlace] << ") to (" << badNextPlace << ","
-                                  << distanceToPlacesResult.places[badNextPlace] << ") in under 2 seconds "
-                                  << " for player (" << curPlayerId << "," << players.name[curPlayerId + players.idOffset] << ") on tick id "
-                                  << internalIdToTickId[curTick] << " and game tick " << ticks.gameTickNumber[internalIdToTickId[curTick]] << " distance " << distanceBetweenCurAndNextPlace << std::endl;
-                        for (int64_t futureTickIndex = 0; futureTickIndex < futureTracker.getCurSize(); futureTickIndex++) {
-                            int64_t futureTick = futureTracker.fromOldest(futureTickIndex);
-                            bool inWindow = secondsBetweenTicks(ticks, tickRates, internalIdToTickId[curTick], internalIdToTickId[futureTick]) >=
-                                            futureSecondsThreshold;
-                            if (futureTick != curTick &&
-                                columnData[playerColumn].playerId[curTick] ==
-                                columnData[playerColumn].playerId[futureTick] &&
-                                inWindow && columnData[playerColumn].curPlace[badNextPlace][futureTick]) {
-                                std::cout << "future tick " << internalIdToTickId[futureTick] << std::endl;
-                            }
-                        }
-                        std::raise(SIGINT);
-                    }
-                }
-            }
-        }
-    }
-
-    void TeamFeatureStoreResult::computeAreaACausalLabels(const Ticks & ticks, const TickRates & tickRates,
-                                                          int64_t curTick, CircularBuffer<int64_t> &futureTracker,
-                                                          array<ColumnPlayerData, maxEnemies> &columnData,
-                                                          double futureSecondsTheshold) {
-        for (size_t playerColumn = 0; playerColumn < maxEnemies; playerColumn++) {
-            if (columnData[playerColumn].playerId[curTick] == INVALID_ID) {
-                continue;
-            }
-            // clear out values for current tick
-            for (size_t areaGridIndex = 0; areaGridIndex < area_grid_size; areaGridIndex++) {
-                columnData[playerColumn].distributionNearestAreaGridInPlace[areaGridIndex][curTick] = 0;
-                //columnData[playerColumn].distributionNearestAreaGridInPlace7to15s[areaGridIndex][curTick] = 0;
-            }
-            // want all points where alive, and accounting for ties
-            size_t numPointsInDistribution = 0;
-            for (int64_t futureTickIndex = 0; futureTickIndex < futureTracker.getCurSize(); futureTickIndex++) {
-                int64_t futureTick = futureTracker.fromOldest(futureTickIndex);
-                bool inWindow = secondsBetweenTicks(ticks, tickRates, internalIdToTickId[curTick], internalIdToTickId[futureTick]) >=
-                        futureSecondsTheshold;
-                if (futureTick != curTick &&
-                    columnData[playerColumn].playerId[curTick] == columnData[playerColumn].playerId[futureTick] &&
-                    inWindow) {
-                    numPointsInDistribution++;
-                    for (size_t areaGridIndex = 0; areaGridIndex < area_grid_size; areaGridIndex++) {
-                        if (columnData[playerColumn].areaGridCellInPlace[areaGridIndex][futureTick]) {
-                            columnData[playerColumn].distributionNearestAreaGridInPlace[areaGridIndex][curTick]++;
-                        }
-                    }
-                }
-            }
-            if (numPointsInDistribution != 0) {
-                for (size_t areaGridIndex = 0; areaGridIndex < area_grid_size; areaGridIndex++) {
-                    columnData[playerColumn].distributionNearestAreaGridInPlace[areaGridIndex][curTick] /=
-                            static_cast<double>(numPointsInDistribution);
-                    //columnData[playerColumn].distributionNearestAreaGridInPlace7to15s[areaGridIndex][curTick] /=
-                    //    static_cast<double>(numPointsInDistribution);
-                }
-            }
-        }
-    }
-    */
-
-    int getDeltaPosFlatIndex(Vec3 pos, AABB placeAABB, bool jumping, bool falling) {
-        double xPct = std::max(0., std::min(1., (pos.x - placeAABB.min.x) / (placeAABB.max.x - placeAABB.min.x)));
-        double yPct = std::max(0., std::min(1., (pos.y - placeAABB.min.y) / (placeAABB.max.y - placeAABB.min.y)));
-        int xValue = static_cast<int>(xPct * delta_pos_grid_num_cells_per_xy_dim);
-        if (xValue == delta_pos_grid_num_cells_per_xy_dim) {
-            xValue--;
-        }
-        int yValue = static_cast<int>(yPct * delta_pos_grid_num_cells_per_xy_dim);
-        if (yValue == delta_pos_grid_num_cells_per_xy_dim) {
-            yValue--;
-        }
-        int zValue = 1;
-        if (jumping) {
-            zValue = 2;
-        }
-        else if (falling) {
-            zValue = 0;
-        }
-        return xValue + yValue * delta_pos_grid_num_cells_per_xy_dim + zValue * delta_pos_grid_num_xy_cells_per_z_change;
-    }
-
-    //double max_z_delta = 0;
-
     void TeamFeatureStoreResult::computeDeltaPosACausalLabels(int64_t curTick, CircularBuffer<int64_t> & futureTracker,
                                                               array<ColumnPlayerData,maxEnemies> & columnData) {
         // skip if not enough history in the future
@@ -856,6 +584,54 @@ namespace csknow::feature_store {
         }
     }
 
+    void TeamFeatureStoreResult::computeDecreaseDistanceToC4(
+            int64_t curTick, CircularBuffer<int64_t> &futureTracker,
+            array<csknow::feature_store::TeamFeatureStoreResult::ColumnPlayerData, maxEnemies> &columnData,
+            DecreaseTimingOption decreaseTimingOption) {
+        // skip if not enough history in the future
+        if (futureTracker.getCurSize() < 2) {
+            return;
+        }
+        for (size_t playerColumn = 0; playerColumn < maxEnemies; playerColumn++) {
+            if (columnData[playerColumn].playerId[curTick] == INVALID_ID) {
+                continue;
+            }
+
+            // find farthest forward where player alive
+
+            int64_t futureTickIndex = INVALID_ID;
+            // don't look at current tick, need at least 1 tick in the future
+            for (int64_t i = 0; i < futureTracker.getCurSize() - 1; i++) {
+                futureTickIndex = futureTracker.fromOldest(i);
+                if (columnData[playerColumn].playerId[futureTickIndex] == columnData[playerColumn].playerId[curTick]) {
+                    break;
+                }
+            }
+            // default to false if this is last tick, this won't be used in training since no movement data
+            if (futureTickIndex == INVALID_ID) {
+                continue;
+            }
+
+            if (futureTickIndex < curTick) {
+                std::cout << "decreasing distance to c4 future tick in past" << std::endl;
+                std::raise(SIGINT);
+            }
+
+            double curDistanceToC4 = computeDistance(columnData[playerColumn].footPos[curTick], c4Pos[curTick]);
+            double futureDistanceToC4 = computeDistance(columnData[playerColumn].footPos[futureTickIndex],
+                                                        c4Pos[futureTickIndex]);
+            if (decreaseTimingOption == DecreaseTimingOption::s5) {
+                columnData[playerColumn].decreaseDistanceToC4Over5s[curTick] = futureDistanceToC4 < curDistanceToC4;
+            }
+            else if (decreaseTimingOption == DecreaseTimingOption::s10) {
+                columnData[playerColumn].decreaseDistanceToC4Over10s[curTick] = futureDistanceToC4 < curDistanceToC4;
+            }
+            else if (decreaseTimingOption == DecreaseTimingOption::s20) {
+                columnData[playerColumn].decreaseDistanceToC4Over20s[curTick] = futureDistanceToC4 < curDistanceToC4;
+            }
+        }
+    }
+
     void TeamFeatureStoreResult::computeAcausalLabels(const Games & games, const Rounds & rounds,
                                                       const Ticks & ticks,
                                                       const Players &,
@@ -876,7 +652,8 @@ namespace csknow::feature_store {
             TickRates tickRates = computeTickRates(games, rounds, roundIndex);
             CircularBuffer<int64_t> ticks1sFutureTracker(4), ticks2sFutureTracker(4), ticks6sFutureTracker(6),
                 // this one I add to every frame and remove when too far in the future, more accuracte
-                bothSidesTicks0_5sFutureTracker(20), bothSidesTicks1_5sFutureTracker(30);
+                bothSidesTicks0_5sFutureTracker(20), bothSidesTicks1_5sFutureTracker(30),
+                bothSidesTicks5sFutureTracker(200), bothSidesTicks10sFutureTracker(200), bothSidesTicks20sFutureTracker(400);
             //, ticks15sFutureTracker(15), ticks30sFutureTracker(30);
             for (int64_t unmodifiedTickIndex = rounds.ticksPerRound[roundIndex].maxId;
                  unmodifiedTickIndex >= rounds.ticksPerRound[roundIndex].minId; unmodifiedTickIndex--) {
@@ -914,6 +691,18 @@ namespace csknow::feature_store {
                 while (secondsBetweenTicks(ticks, tickRates, internalIdToTickId[tickIndex], internalIdToTickId[bothSidesTicks1_5sFutureTracker.fromOldest()]) > 1.5) {
                     bothSidesTicks1_5sFutureTracker.dequeue();
                 }
+                bothSidesTicks5sFutureTracker.enqueue(tickIndex);
+                while (secondsBetweenTicks(ticks, tickRates, internalIdToTickId[tickIndex], internalIdToTickId[bothSidesTicks5sFutureTracker.fromOldest()]) > 5.) {
+                    bothSidesTicks5sFutureTracker.dequeue();
+                }
+                bothSidesTicks10sFutureTracker.enqueue(tickIndex);
+                while (secondsBetweenTicks(ticks, tickRates, internalIdToTickId[tickIndex], internalIdToTickId[bothSidesTicks10sFutureTracker.fromOldest()]) > 10.) {
+                    bothSidesTicks10sFutureTracker.dequeue();
+                }
+                bothSidesTicks20sFutureTracker.enqueue(tickIndex);
+                while (secondsBetweenTicks(ticks, tickRates, internalIdToTickId[tickIndex], internalIdToTickId[bothSidesTicks20sFutureTracker.fromOldest()]) > 20.) {
+                    bothSidesTicks20sFutureTracker.dequeue();
+                }
                 /*
                 if (ticks15sFutureTracker.isEmpty() ||
                     secondsBetweenTicks(ticks, tickRates, tickIndex, ticks15sFutureTracker.fromNewest()) >= 1.) {
@@ -944,6 +733,18 @@ namespace csknow::feature_store {
                  */
                 computeDeltaPosACausalLabels(tickIndex, bothSidesTicks0_5sFutureTracker, columnCTData);
                 computeDeltaPosACausalLabels(tickIndex, bothSidesTicks0_5sFutureTracker, columnTData);
+                computeDecreaseDistanceToC4(tickIndex, bothSidesTicks5sFutureTracker, columnCTData,
+                                            DecreaseTimingOption::s5);
+                computeDecreaseDistanceToC4(tickIndex, bothSidesTicks5sFutureTracker, columnTData,
+                                            DecreaseTimingOption::s5);
+                computeDecreaseDistanceToC4(tickIndex, bothSidesTicks5sFutureTracker, columnCTData,
+                                            DecreaseTimingOption::s10);
+                computeDecreaseDistanceToC4(tickIndex, bothSidesTicks5sFutureTracker, columnTData,
+                                            DecreaseTimingOption::s10);
+                computeDecreaseDistanceToC4(tickIndex, bothSidesTicks5sFutureTracker, columnCTData,
+                                            DecreaseTimingOption::s20);
+                computeDecreaseDistanceToC4(tickIndex, bothSidesTicks5sFutureTracker, columnTData,
+                                            DecreaseTimingOption::s20);
                 //computePlaceAreaACausalLabels(ticks, tickRates, tickIndex, ticks15sFutureTracker, columnCTData);
                 //computePlaceAreaACausalLabels(ticks, tickRates, tickIndex, ticks15sFutureTracker, columnTData);
                 /*
@@ -1038,8 +839,14 @@ namespace csknow::feature_store {
                     file.createDataSet("/data/player history valid " + columnTeam + " " + iStr + " t-" + std::to_string(priorTick+1),
                                        columnData[columnPlayer].priorFootPosValid[priorTick], hdf5FlatCreateProps);
                 }
-                vector<string> deltaPosNames;
+                file.createDataSet("/data/player decrease distance to c4 over 5s " + columnTeam + " " + iStr,
+                                   columnData[columnPlayer].decreaseDistanceToC4Over5s, hdf5FlatCreateProps);
+                file.createDataSet("/data/player decrease distance to c4 over 10s " + columnTeam + " " + iStr,
+                                   columnData[columnPlayer].decreaseDistanceToC4Over10s, hdf5FlatCreateProps);
+                file.createDataSet("/data/player decrease distance to c4 over 20s " + columnTeam + " " + iStr,
+                                   columnData[columnPlayer].decreaseDistanceToC4Over20s, hdf5FlatCreateProps);
                 /*
+                vector<string> deltaPosNames;
                 for (size_t deltaPosIndex = 0; deltaPosIndex < delta_pos_grid_num_cells; deltaPosIndex++) {
                     string deltaPosIndexStr = std::to_string(deltaPosIndex);
                     file.createDataSet("/data/delta pos " + deltaPosIndexStr + " " + columnTeam + " " + iStr,
@@ -1103,14 +910,20 @@ namespace csknow::feature_store {
                     columnData[columnPlayer].priorFootPosValid[priorTick] =
                             file.getDataSet("/data/player history valid " + columnTeam + " " + iStr + " t-" + std::to_string(priorTick + 1)).read<std::vector<bool>>();
                 }
+                columnData[columnPlayer].decreaseDistanceToC4Over5s =
+                        file.getDataSet("/data/player decrease distance to c4 over 5s " + columnTeam + " " + iStr).read<std::vector<bool>>();
+                columnData[columnPlayer].decreaseDistanceToC4Over10s =
+                        file.getDataSet("/data/player decrease distance to c4 over 10s " + columnTeam + " " + iStr).read<std::vector<bool>>();
+                columnData[columnPlayer].decreaseDistanceToC4Over20s =
+                        file.getDataSet("/data/player decrease distance to c4 over 20s " + columnTeam + " " + iStr).read<std::vector<bool>>();
+                /*
                 vector<string> deltaPosNames;
                 for (size_t deltaPosIndex = 0; deltaPosIndex < delta_pos_grid_num_cells; deltaPosIndex++) {
                     string deltaPosIndexStr = std::to_string(deltaPosIndex);
-                    /*
                     columnData[columnPlayer].deltaPos[deltaPosIndex] =
                             file.getDataSet("/data/delta pos " + deltaPosIndexStr + " " + columnTeam + " " + iStr).read<std::vector<bool>>();
-                            */
                 }
+                 */
                 for (int radialVelindex = 0; radialVelindex < weapon_speed::num_radial_bins; radialVelindex++) {
                     columnData[columnPlayer].radialVel[radialVelindex] =
                             file.getDataSet("/data/radial vel " + std::to_string(radialVelindex) + " " + columnTeam + " " + iStr).read<std::vector<bool>>();

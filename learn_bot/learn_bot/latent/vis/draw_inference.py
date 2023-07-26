@@ -160,10 +160,14 @@ def draw_all_players(data_series: pd.Series, pred_series: Optional[pd.Series], i
             vel_per_player = Vec3(data_series[player_place_area_columns.vel[0]],
                                   data_series[player_place_area_columns.vel[1]],
                                   data_series[player_place_area_columns.vel[2]])
+            decrease_distance_to_c4_5s = data_series[player_place_area_columns.decrease_distance_to_c4_5s]
+            decrease_distance_to_c4_10s = data_series[player_place_area_columns.decrease_distance_to_c4_10s]
+            decrease_distance_to_c4_20s = data_series[player_place_area_columns.decrease_distance_to_c4_20s]
             player_str = f"{player_place_area_columns.player_id} pos {pos_coord.coords}, " \
                          f"data {data_coord.coords} {data_coord.z_index}, " \
                          f"pred {pred_coord.coords} {pred_coord.z_index}, " \
-                         f"vel {vel_per_player}, radial index {max_data_index}"
+                         f"vel {vel_per_player}, radial index {max_data_index}," \
+                         f"decrease distance to c4 5s {decrease_distance_to_c4_5s} 10s {decrease_distance_to_c4_10s} 20s {decrease_distance_to_c4_20s}"
             result += player_str + "\n"
             #print(player_str)
             if draw_max:

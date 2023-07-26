@@ -58,6 +58,9 @@ class PlayerPlaceAreaColumns:
     pos: list[str]
     prior_pos: list[str]
     vel: list[str]
+    decrease_distance_to_c4_5s: list[str]
+    decrease_distance_to_c4_10s: list[str]
+    decrease_distance_to_c4_20s: list[str]
     cur_place: list[str]
     #prior_place: list[str]
     area_grid_cell_in_place: list[str]
@@ -77,6 +80,9 @@ class PlayerPlaceAreaColumns:
         self.prior_pos = []
         self.vel = [get_player_velocity_columns(player_index, team_str, dim_str) for dim_str in ["x", "y", "z"]]
         self.prior_vel = []
+        self.decrease_distance_to_c4_5s = f"player decrease distance to c4 over 5s {team_str} {player_index}"
+        self.decrease_distance_to_c4_10s = f"player decrease distance to c4 over 10s {team_str} {player_index}"
+        self.decrease_distance_to_c4_20s = f"player decrease distance to c4 over 20s {team_str} {player_index}"
         self.cur_place = []
         #self.prior_place = []
         self.area_grid_cell_in_place = []
