@@ -584,6 +584,7 @@ namespace csknow::feature_store {
         }
     }
 
+    constexpr double c4_distance_threshold = 1000, c4_delta_distance_threshold = 150;
     void TeamFeatureStoreResult::computeDecreaseDistanceToC4(
             int64_t curTick, CircularBuffer<int64_t> &futureTracker,
             array<csknow::feature_store::TeamFeatureStoreResult::ColumnPlayerData, maxEnemies> &columnData,
@@ -620,14 +621,17 @@ namespace csknow::feature_store {
             double curDistanceToC4 = computeDistance(columnData[playerColumn].footPos[curTick], c4Pos[curTick]);
             double futureDistanceToC4 = computeDistance(columnData[playerColumn].footPos[futureTickIndex],
                                                         c4Pos[futureTickIndex]);
+
+            bool decreaseDistance = (curDistanceToC4 < c4_distance_threshold && futureDistanceToC4 < c4_distance_threshold) ||
+                    (futureDistanceToC4 + c4_delta_distance_threshold < curDistanceToC4);
             if (decreaseTimingOption == DecreaseTimingOption::s5) {
-                columnData[playerColumn].decreaseDistanceToC4Over5s[curTick] = futureDistanceToC4 < curDistanceToC4;
+                columnData[playerColumn].decreaseDistanceToC4Over5s[curTick] = decreaseDistance;
             }
             else if (decreaseTimingOption == DecreaseTimingOption::s10) {
-                columnData[playerColumn].decreaseDistanceToC4Over10s[curTick] = futureDistanceToC4 < curDistanceToC4;
+                columnData[playerColumn].decreaseDistanceToC4Over10s[curTick] = decreaseDistance;
             }
             else if (decreaseTimingOption == DecreaseTimingOption::s20) {
-                columnData[playerColumn].decreaseDistanceToC4Over20s[curTick] = futureDistanceToC4 < curDistanceToC4;
+                columnData[playerColumn].decreaseDistanceToC4Over20s[curTick] = decreaseDistance;
             }
         }
     }
@@ -737,13 +741,13 @@ namespace csknow::feature_store {
                                             DecreaseTimingOption::s5);
                 computeDecreaseDistanceToC4(tickIndex, bothSidesTicks5sFutureTracker, columnTData,
                                             DecreaseTimingOption::s5);
-                computeDecreaseDistanceToC4(tickIndex, bothSidesTicks5sFutureTracker, columnCTData,
+                computeDecreaseDistanceToC4(tickIndex, bothSidesTicks10sFutureTracker, columnCTData,
                                             DecreaseTimingOption::s10);
-                computeDecreaseDistanceToC4(tickIndex, bothSidesTicks5sFutureTracker, columnTData,
+                computeDecreaseDistanceToC4(tickIndex, bothSidesTicks10sFutureTracker, columnTData,
                                             DecreaseTimingOption::s10);
-                computeDecreaseDistanceToC4(tickIndex, bothSidesTicks5sFutureTracker, columnCTData,
+                computeDecreaseDistanceToC4(tickIndex, bothSidesTicks20sFutureTracker, columnCTData,
                                             DecreaseTimingOption::s20);
-                computeDecreaseDistanceToC4(tickIndex, bothSidesTicks5sFutureTracker, columnTData,
+                computeDecreaseDistanceToC4(tickIndex, bothSidesTicks20sFutureTracker, columnTData,
                                             DecreaseTimingOption::s20);
                 //computePlaceAreaACausalLabels(ticks, tickRates, tickIndex, ticks15sFutureTracker, columnCTData);
                 //computePlaceAreaACausalLabels(ticks, tickRates, tickIndex, ticks15sFutureTracker, columnTData);
