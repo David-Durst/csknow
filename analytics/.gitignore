@@ -7,3 +7,4 @@ manual_outputs
 bt_*.log
 external/libtorch
 *.vis
+*.log
