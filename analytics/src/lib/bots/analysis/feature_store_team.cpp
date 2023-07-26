@@ -628,12 +628,18 @@ namespace csknow::feature_store {
             }
 
             double curDistanceToC4 = reachableResult.getDistance(columnData[playerColumn].areaIndex[curTick],
-                                                                 c4AreaIndex[futureTickIndex]);
-            double futureDistanceToC4 = reachableResult.getDistance(columnData[playerColumn].areaIndex[curTick],
+                                                                 c4AreaIndex[curTick]);
+            double futureDistanceToC4 = reachableResult.getDistance(columnData[playerColumn].areaIndex[futureTickIndex],
                                                                     c4AreaIndex[futureTickIndex]);
 
             bool decreaseDistance = (curDistanceToC4 < c4_distance_threshold && futureDistanceToC4 < c4_distance_threshold) ||
                     (futureDistanceToC4 + c4_delta_distance_threshold < curDistanceToC4);
+            /*
+            if (curTick == 38 && playerColumn == 0) {
+                std::cout << "cur tick " << curTick << ", cur distance " << curDistanceToC4 << ", future tick " << futureTickIndex << ", future distance " << futureDistanceToC4 << std::endl;
+                std::cout << "hi" << std::endl;
+            }
+             */
             if (decreaseTimingOption == DecreaseTimingOption::s5) {
                 columnData[playerColumn].decreaseDistanceToC4Over5s[curTick] = decreaseDistance;
             }
