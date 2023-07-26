@@ -296,7 +296,7 @@ int main(int argc, char * argv[]) {
 
     std::cout << "processing team feature store" << std::endl;
     teamFeatureStoreResult.computeAcausalLabels(games, filteredRounds, ticks, players, d2DistanceToPlacesResult,
-                                                map_navs.at("de_dust2"), keyRetakeEvents);
+                                                d2ReachableResult, map_navs.at("de_dust2"), keyRetakeEvents);
     std::cout << "size: " << teamFeatureStoreResult.size << std::endl;
 
     /*

@@ -176,7 +176,7 @@ namespace csknow::compute_nav_area {
         }
          */
 
-        AreaId priorTargetAreaId = curPriority.targetAreaId;
+        //AreaId priorTargetAreaId = curPriority.targetAreaId;
         //Vec3 priorTargetPos = curPriority.targetPos;
 
         tryDeltaPosTargetPos(state, curClient, curPriority, modelNavData);

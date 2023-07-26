@@ -22,6 +22,7 @@ namespace csknow::feature_store {
         testName.resize(size, "INVALID");
         testSuccess.resize(size, false);
         baiting.resize(size, false);
+        c4AreaIndex.resize(size, INVALID_ID);
         c4Status.resize(size, C4Status::NotPlanted);
         c4PlantA.resize(size, false);
         c4PlantB.resize(size, false);
@@ -69,6 +70,8 @@ namespace csknow::feature_store {
                 columnCTData[i].priorVelocity[j].resize(size, zeroVec);
                 columnCTData[i].priorFootPosValid[j].resize(size, false);
             }
+            columnTData[i].areaIndex.resize(size, INVALID_ID);
+            columnCTData[i].areaIndex.resize(size, INVALID_ID);
             columnTData[i].decreaseDistanceToC4Over5s.resize(size, false);
             columnCTData[i].decreaseDistanceToC4Over5s.resize(size, false);
             columnTData[i].decreaseDistanceToC4Over10s.resize(size, false);
@@ -209,6 +212,7 @@ namespace csknow::feature_store {
             retakeSaveRoundTick[rowIndex] = false;
             testName[rowIndex] = "INVALID";
             testSuccess[rowIndex] = false;
+            c4AreaIndex[rowIndex] = INVALID_ID;
             c4Status[rowIndex] = C4Status::NotPlanted;
             c4PlantA[rowIndex] = false;
             c4PlantB[rowIndex] = false;
@@ -256,6 +260,8 @@ namespace csknow::feature_store {
                     columnCTData[i].priorVelocity[j][rowIndex] = zeroVec;
                     columnCTData[i].priorFootPosValid[j][rowIndex] = false;
                 }
+                columnTData[i].areaIndex[rowIndex] = INVALID_ID;
+                columnCTData[i].areaIndex[rowIndex] = INVALID_ID;
                 columnTData[i].decreaseDistanceToC4Over5s[rowIndex] = false;
                 columnCTData[i].decreaseDistanceToC4Over5s[rowIndex] = false;
                 columnTData[i].decreaseDistanceToC4Over10s[rowIndex] = false;
@@ -348,6 +354,7 @@ namespace csknow::feature_store {
         valid[internalTickIndex] = !buffer.btTeamPlayerData.empty();
 
         if (buffer.c4MapData.c4Planted) {
+            c4AreaIndex[internalTickIndex] = buffer.c4MapData.c4AreaIndex;
             double c4DistanceToASite =
                 distanceToPlaces.getClosestDistance(buffer.c4MapData.c4AreaId, a_site, navFile);
             double c4DistanceToBSite =
@@ -361,6 +368,7 @@ namespace csknow::feature_store {
             }
         }
         else {
+            c4AreaIndex[internalTickIndex] = INVALID_ID;
             c4Status[internalTickIndex] = C4Status::NotPlanted;
             c4NotPlanted[internalTickIndex] = true;
         }
@@ -424,6 +432,7 @@ namespace csknow::feature_store {
             columnData[columnIndex].footPos[internalTickIndex] = btTeamPlayerData.curFootPos;
             //columnData[columnIndex].alignedFootPos[internalTickIndex] = (btTeamPlayerData.curFootPos / delta_pos_grid_num_cells_per_xy_dim).trunc();
             columnData[columnIndex].velocity[internalTickIndex] = btTeamPlayerData.velocity;
+            columnData[columnIndex].areaIndex[internalTickIndex] = btTeamPlayerData.curAreaIndex;
             columnData[columnIndex].weaponId[internalTickIndex] = btTeamPlayerData.weaponId;
             columnData[columnIndex].scoped[internalTickIndex] = btTeamPlayerData.scoped;
             columnData[columnIndex].airborne[internalTickIndex] = btTeamPlayerData.airborne;
@@ -588,7 +597,7 @@ namespace csknow::feature_store {
     void TeamFeatureStoreResult::computeDecreaseDistanceToC4(
             int64_t curTick, CircularBuffer<int64_t> &futureTracker,
             array<csknow::feature_store::TeamFeatureStoreResult::ColumnPlayerData, maxEnemies> &columnData,
-            DecreaseTimingOption decreaseTimingOption) {
+            DecreaseTimingOption decreaseTimingOption, const ReachableResult & reachableResult) {
         // skip if not enough history in the future
         if (futureTracker.getCurSize() < 2) {
             return;
@@ -618,9 +627,10 @@ namespace csknow::feature_store {
                 std::raise(SIGINT);
             }
 
-            double curDistanceToC4 = computeDistance(columnData[playerColumn].footPos[curTick], c4Pos[curTick]);
-            double futureDistanceToC4 = computeDistance(columnData[playerColumn].footPos[futureTickIndex],
-                                                        c4Pos[futureTickIndex]);
+            double curDistanceToC4 = reachableResult.getDistance(columnData[playerColumn].areaIndex[curTick],
+                                                                 c4AreaIndex[futureTickIndex]);
+            double futureDistanceToC4 = reachableResult.getDistance(columnData[playerColumn].areaIndex[curTick],
+                                                                    c4AreaIndex[futureTickIndex]);
 
             bool decreaseDistance = (curDistanceToC4 < c4_distance_threshold && futureDistanceToC4 < c4_distance_threshold) ||
                     (futureDistanceToC4 + c4_delta_distance_threshold < curDistanceToC4);
@@ -640,6 +650,7 @@ namespace csknow::feature_store {
                                                       const Ticks & ticks,
                                                       const Players &,
                                                       const DistanceToPlacesResult &,
+                                                      const ReachableResult & reachableResult,
                                                       const nav_mesh::nav_file &,
                                                       const csknow::key_retake_events::KeyRetakeEvents & keyRetakeEvents) {
         std::atomic<int64_t> roundsProcessed = 0;
@@ -738,17 +749,17 @@ namespace csknow::feature_store {
                 computeDeltaPosACausalLabels(tickIndex, bothSidesTicks0_5sFutureTracker, columnCTData);
                 computeDeltaPosACausalLabels(tickIndex, bothSidesTicks0_5sFutureTracker, columnTData);
                 computeDecreaseDistanceToC4(tickIndex, bothSidesTicks5sFutureTracker, columnCTData,
-                                            DecreaseTimingOption::s5);
+                                            DecreaseTimingOption::s5, reachableResult);
                 computeDecreaseDistanceToC4(tickIndex, bothSidesTicks5sFutureTracker, columnTData,
-                                            DecreaseTimingOption::s5);
+                                            DecreaseTimingOption::s5, reachableResult);
                 computeDecreaseDistanceToC4(tickIndex, bothSidesTicks10sFutureTracker, columnCTData,
-                                            DecreaseTimingOption::s10);
+                                            DecreaseTimingOption::s10, reachableResult);
                 computeDecreaseDistanceToC4(tickIndex, bothSidesTicks10sFutureTracker, columnTData,
-                                            DecreaseTimingOption::s10);
+                                            DecreaseTimingOption::s10, reachableResult);
                 computeDecreaseDistanceToC4(tickIndex, bothSidesTicks20sFutureTracker, columnCTData,
-                                            DecreaseTimingOption::s20);
+                                            DecreaseTimingOption::s20, reachableResult);
                 computeDecreaseDistanceToC4(tickIndex, bothSidesTicks20sFutureTracker, columnTData,
-                                            DecreaseTimingOption::s20);
+                                            DecreaseTimingOption::s20, reachableResult);
                 //computePlaceAreaACausalLabels(ticks, tickRates, tickIndex, ticks15sFutureTracker, columnCTData);
                 //computePlaceAreaACausalLabels(ticks, tickRates, tickIndex, ticks15sFutureTracker, columnTData);
                 /*

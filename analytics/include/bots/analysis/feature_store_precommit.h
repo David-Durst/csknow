@@ -8,6 +8,7 @@
 #include "queries/query.h"
 #include "bots/load_save_bot_data.h"
 #include "geometryNavConversions.h"
+#include "queries/nearest_nav_cell.h"
 #include "circular_buffer.h"
 #include "weapon_id_converter.h"
 #include <map>
@@ -20,8 +21,8 @@ namespace csknow::feature_store {
     struct BTTeamPlayerData {
         int64_t playerId;
         TeamId teamId;
-        //AreaId curArea;
-        //int64_t curAreaIndex;
+        AreaId curArea;
+        int64_t curAreaIndex;
         Vec3 curFootPos;
         Vec3 velocity;
         EngineWeaponId weaponId;

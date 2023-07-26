@@ -66,6 +66,7 @@ namespace csknow::feature_store {
         vector<bool> testSuccess;
         vector<bool> baiting;
 
+        vector<int64_t> c4AreaIndex;
         vector<C4Status> c4Status;
         vector<bool> c4PlantA;
         vector<bool> c4PlantB;
@@ -90,6 +91,7 @@ namespace csknow::feature_store {
             array<vector<bool>, num_prior_ticks> priorFootPosValid;
             vector<Vec3> velocity;
             // control inputs
+            vector<int64_t> areaIndex;
             vector<bool> decreaseDistanceToC4Over5s, decreaseDistanceToC4Over10s, decreaseDistanceToC4Over20s;
             //vector<float> distanceToASite, distanceToBSite;
             //array<vector<float>, num_orders_per_site> distanceToNearestAOrderNavArea, distanceToNearestBOrderNavArea;
@@ -155,9 +157,11 @@ namespace csknow::feature_store {
         };
         void computeDecreaseDistanceToC4(int64_t curTick, CircularBuffer<int64_t> & futureTracker,
                                           array<ColumnPlayerData,maxEnemies> & columnData,
-                                          DecreaseTimingOption decreaseTimingOption);
+                                          DecreaseTimingOption decreaseTimingOption,
+                                          const ReachableResult & reachableResult);
         void computeAcausalLabels(const Games & games, const Rounds & rounds, const Ticks & ticks,
                                   const Players & players, const DistanceToPlacesResult & distanceToPlacesResult,
+                                  const ReachableResult & reachableResult,
                                   const nav_mesh::nav_file & navFile,
                                   const csknow::key_retake_events::KeyRetakeEvents & keyRetakeEvents);
         void toHDF5Inner(HighFive::File & file) override;
