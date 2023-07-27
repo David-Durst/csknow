@@ -53,9 +53,12 @@ void ServerState::loadGeneralState(const string& generalFilePath) {
         }
         else if (colNumber == 8) {
             enableAggressionControl = readCol(file, curStart, curDelimiter, rowNumber, colNumber);
+        }
+        else if (colNumber == 9) {
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, temperature);
             rowNumber++;
         }
-        colNumber = (colNumber + 1) % 9;
+        colNumber = (colNumber + 1) % 10;
     }
     closeMMapFile({fd, stats, file});
 }

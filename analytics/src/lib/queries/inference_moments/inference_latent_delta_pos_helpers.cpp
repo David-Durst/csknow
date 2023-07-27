@@ -74,18 +74,22 @@ namespace csknow::inference_delta_pos {
                  */
                 result.rowCPP.push_back(static_cast<float>(columnPlayerData.alive[rowIndex]));
                 result.rowCPP.push_back(static_cast<float>(columnPlayerData.ctTeam[rowIndex]));
-                // decrease distance 5s
-                result.rowCPP.push_back(
-                        teamSaveControlParameters.getPushModelValue(false, feature_store::DecreaseTimingOption::s5,
-                                                                    columnPlayerData.playerId[rowIndex]));
-                // decrease distance 10s
-                result.rowCPP.push_back(
-                        teamSaveControlParameters.getPushModelValue(false, feature_store::DecreaseTimingOption::s10,
-                                                                    columnPlayerData.playerId[rowIndex]));
-                // decrease distance 20s
-                result.rowCPP.push_back(
-                        teamSaveControlParameters.getPushModelValue(false, feature_store::DecreaseTimingOption::s20,
-                                                                    columnPlayerData.playerId[rowIndex]));
+                if (columnPlayerData.alive[rowIndex]) {
+                    result.rowCPP.push_back(
+                            teamSaveControlParameters.getPushModelValue(false, feature_store::DecreaseTimingOption::s5,
+                                                                        columnPlayerData.playerId[rowIndex]));
+                    result.rowCPP.push_back(
+                            teamSaveControlParameters.getPushModelValue(false, feature_store::DecreaseTimingOption::s10,
+                                                                        columnPlayerData.playerId[rowIndex]));
+                    result.rowCPP.push_back(
+                            teamSaveControlParameters.getPushModelValue(false, feature_store::DecreaseTimingOption::s20,
+                                                                        columnPlayerData.playerId[rowIndex]));
+                }
+                else {
+                    result.rowCPP.push_back(0.f);
+                    result.rowCPP.push_back(0.f);
+                    result.rowCPP.push_back(0.f);
+                }
             }
             ctColumnData = false;
         }

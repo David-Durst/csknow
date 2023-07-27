@@ -52,6 +52,7 @@ public:
     double tickInterval = defaultTickInterval, gameTime;
     CSKnowTime loadTime;
     bool pushRound, enableAggressionControl;
+    float temperature;
     //const static CSKnowTime defaultTime = std::chrono::system_clock::from_time_t(0);
 
     struct Client {

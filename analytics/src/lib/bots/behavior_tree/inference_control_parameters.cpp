@@ -42,6 +42,7 @@ namespace csknow {
     void TeamSaveControlParameters::update(const ServerState & state) {
         enable = state.enableAggressionControl;
         overallPush = state.pushRound;
+        temperature = state.temperature;
         playerPushControlParameters.clear();
         for (const auto & client : state.clients) {
             playerPushControlParameters[client.csgoId] = {client.push5s, client.push10s, client.push20s};
