@@ -4,7 +4,6 @@
 
 #include "queries/inference_moments/inference_latent_delta_pos_helpers.h"
 #include "bots/analysis/learned_models.h"
-#include "feature_store_precommit.h"
 
 namespace csknow::inference_delta_pos {
     InferenceDeltaPosTickValues extractFeatureStoreDeltaPosValues(

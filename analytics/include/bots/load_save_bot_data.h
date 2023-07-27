@@ -51,6 +51,7 @@ public:
     int32_t mapNumber;
     double tickInterval = defaultTickInterval, gameTime;
     CSKnowTime loadTime;
+    bool pushRound, enableAggressionControl;
     //const static CSKnowTime defaultTime = std::chrono::system_clock::from_time_t(0);
 
     struct Client {
@@ -112,6 +113,9 @@ public:
         int ping;
         float gameTime;
         bool inputSet;
+        bool push5s;
+        bool push10s;
+        bool push20s;
 
         // keyboard/mouse inputs sent to game engine
         int32_t buttons;

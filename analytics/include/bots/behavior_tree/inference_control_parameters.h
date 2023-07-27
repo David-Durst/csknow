@@ -11,7 +11,7 @@ namespace csknow {
     struct PlayerPushSaveControlParameters {
         bool push5s = true, push10s = true, push20s = true;
 
-        float getPushModelValue(feature_store::DecreaseTimingOption decreaseTimingOption);
+        float getPushModelValue(feature_store::DecreaseTimingOption decreaseTimingOption) const;
     };
 
     struct TeamSaveControlParameters {
@@ -23,7 +23,8 @@ namespace csknow {
                 ctPlayerPushControlParameters, tPlayerPushControlParameters;
 
         float getPushModelValue(bool overall, feature_store::DecreaseTimingOption decreaseTimingOption,
-                                bool ctTeam, size_t playerNum);
+                                bool ctTeam, size_t playerNum) const;
+        void update(ServerState state);
     };
 }
 

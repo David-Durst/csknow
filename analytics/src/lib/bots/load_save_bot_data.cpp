@@ -47,9 +47,15 @@ void ServerState::loadGeneralState(const string& generalFilePath) {
         }
         else if (colNumber == 6) {
             readCol(file, curStart, curDelimiter, rowNumber, colNumber, gameTime);
+        }
+        else if (colNumber == 7) {
+            pushRound = readCol(file, curStart, curDelimiter, rowNumber, colNumber);
+        }
+        else if (colNumber == 8) {
+            enableAggressionControl = readCol(file, curStart, curDelimiter, rowNumber, colNumber);
             rowNumber++;
         }
-        colNumber = (colNumber + 1) % 7;
+        colNumber = (colNumber + 1) % 9;
     }
     closeMMapFile({fd, stats, file});
 }
@@ -242,10 +248,19 @@ void ServerState::loadClientStates(const string& clientStatesFilePath) {
         }
         else if (colNumber == 56) {
             clients[arrayEntry].inputSet = readCol(file, curStart, curDelimiter, rowNumber, colNumber);
+        }
+        else if (colNumber == 57) {
+            clients[arrayEntry].push5s = readCol(file, curStart, curDelimiter, rowNumber, colNumber);
+        }
+        else if (colNumber == 58) {
+            clients[arrayEntry].push10s = readCol(file, curStart, curDelimiter, rowNumber, colNumber);
+        }
+        else if (colNumber == 59) {
+            clients[arrayEntry].push20s = readCol(file, curStart, curDelimiter, rowNumber, colNumber);
             rowNumber++;
             arrayEntry++;
         }
-        colNumber = (colNumber + 1) % 57;
+        colNumber = (colNumber + 1) % 60;
     }
     closeMMapFile({fd, stats, file});
 }

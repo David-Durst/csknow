@@ -5,7 +5,8 @@
 #include "bots/behavior_tree/inference_control_parameters.h"
 
 namespace csknow {
-    float PlayerPushSaveControlParameters::getPushModelValue(feature_store::DecreaseTimingOption decreaseTimingOption) {
+    float PlayerPushSaveControlParameters::getPushModelValue(feature_store::DecreaseTimingOption decreaseTimingOption)
+        const {
         bool param = false;
         if (decreaseTimingOption == feature_store::DecreaseTimingOption::s5) {
             param = push5s;
@@ -21,7 +22,7 @@ namespace csknow {
 
     float TeamSaveControlParameters::getPushModelValue(bool overall,
                                                        feature_store::DecreaseTimingOption decreaseTimingOption,
-                                                       bool ctTeam, size_t playerNum) {
+                                                       bool ctTeam, size_t playerNum) const {
         if (!enable) {
             return 0.5f;
         }
@@ -38,5 +39,10 @@ namespace csknow {
                 }
             }
         }
+    }
+
+    void TeamSaveControlParameters::update(ServerState state) {
+        enable = state.enableAggressionControl;
+
     }
 }
