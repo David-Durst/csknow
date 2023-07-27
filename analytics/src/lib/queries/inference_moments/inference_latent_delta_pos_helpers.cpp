@@ -77,15 +77,15 @@ namespace csknow::inference_delta_pos {
                 // decrease distance 5s
                 result.rowCPP.push_back(
                         teamSaveControlParameters.getPushModelValue(false, feature_store::DecreaseTimingOption::s5,
-                                                                    columnPlayerData.ctTeam[rowIndex], playerNum));
+                                                                    columnPlayerData.playerId[rowIndex]));
                 // decrease distance 10s
                 result.rowCPP.push_back(
                         teamSaveControlParameters.getPushModelValue(false, feature_store::DecreaseTimingOption::s10,
-                                                                    columnPlayerData.ctTeam[rowIndex], playerNum));
+                                                                    columnPlayerData.playerId[rowIndex]));
                 // decrease distance 20s
                 result.rowCPP.push_back(
                         teamSaveControlParameters.getPushModelValue(false, feature_store::DecreaseTimingOption::s20,
-                                                                    columnPlayerData.ctTeam[rowIndex], playerNum));
+                                                                    columnPlayerData.playerId[rowIndex]));
             }
             ctColumnData = false;
         }

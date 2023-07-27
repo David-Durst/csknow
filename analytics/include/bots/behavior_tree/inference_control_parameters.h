@@ -19,12 +19,11 @@ namespace csknow {
         bool overallPush = true;
         float temperature = 0.7;
 
-        std::array<PlayerPushSaveControlParameters, feature_store::max_enemies>
-                ctPlayerPushControlParameters, tPlayerPushControlParameters;
+        std::map<CSGOId, PlayerPushSaveControlParameters> playerPushControlParameters;
 
         float getPushModelValue(bool overall, feature_store::DecreaseTimingOption decreaseTimingOption,
-                                bool ctTeam, size_t playerNum) const;
-        void update(ServerState state);
+                                CSGOId playerId) const;
+        void update(const ServerState & state);
     };
 }
 

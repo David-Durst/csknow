@@ -161,6 +161,7 @@ void Tree::tick(ServerState & state, const string & mapsPath) {
 
         // update cur clients before global node so have playerToInferenceData ready
         inferenceManager.setCurClients(state.clients);
+        inferenceManager.teamSaveControlParameters.update(state);
 
         // update all nodes in tree
         // don't care about which player as order is for all players

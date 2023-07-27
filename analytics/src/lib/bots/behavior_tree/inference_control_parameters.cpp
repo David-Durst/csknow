@@ -22,7 +22,7 @@ namespace csknow {
 
     float TeamSaveControlParameters::getPushModelValue(bool overall,
                                                        feature_store::DecreaseTimingOption decreaseTimingOption,
-                                                       bool ctTeam, size_t playerNum) const {
+                                                       CSGOId playerId) const {
         if (!enable) {
             return 0.5f;
         }
@@ -31,18 +31,20 @@ namespace csknow {
                 return overallPush ? 1.f : 0.f;
             }
             else {
-                if (ctTeam) {
-                    return ctPlayerPushControlParameters[playerNum].getPushModelValue(decreaseTimingOption);
+                if (playerPushControlParameters.count(playerId) == 0) {
+                    throw std::runtime_error("invalid player id for push control parameters");
                 }
-                else {
-                    return tPlayerPushControlParameters[playerNum].getPushModelValue(decreaseTimingOption);
-                }
+                return playerPushControlParameters.at(playerId).getPushModelValue(decreaseTimingOption);
             }
         }
     }
 
-    void TeamSaveControlParameters::update(ServerState state) {
+    void TeamSaveControlParameters::update(const ServerState & state) {
         enable = state.enableAggressionControl;
-
+        overallPush = state.pushRound;
+        playerPushControlParameters.clear();
+        for (const auto & client : state.clients) {
+            playerPushControlParameters[client.csgoId] = {client.push5s, client.push10s, client.push20s};
+        }
     }
 }
