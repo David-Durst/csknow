@@ -8,8 +8,6 @@
 #include "queries/query.h"
 #include "bots/load_save_bot_data.h"
 #include "bots/analysis/feature_store_team.h"
-#include "feature_store_precommit.h"
-
 
 namespace csknow::feature_store {
     enum class NearestEnemyState {

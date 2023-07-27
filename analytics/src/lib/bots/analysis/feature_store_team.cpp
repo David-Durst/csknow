@@ -5,7 +5,6 @@
 #include "bots/analysis/feature_store_team.h"
 #include "circular_buffer.h"
 #include "file_helpers.h"
-#include "feature_store_precommit.h"
 #include <atomic>
 #include <cmath>
 #include <csignal>

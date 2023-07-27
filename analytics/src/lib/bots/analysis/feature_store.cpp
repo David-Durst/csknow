@@ -9,7 +9,6 @@
 #include "file_helpers.h"
 #include <atomic>
 #include "circular_buffer.h"
-#include "feature_store_precommit.h"
 
 namespace csknow::feature_store {
     void FeatureStoreResult::init(size_t size) {

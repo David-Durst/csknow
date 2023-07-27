@@ -6,7 +6,6 @@
 #include "file_helpers.h"
 #include "indices/build_indexes.h"
 #include "bots/analysis/learned_models.h"
-#include "feature_store_precommit.h"
 
 namespace csknow::inference_latent_engagement {
 

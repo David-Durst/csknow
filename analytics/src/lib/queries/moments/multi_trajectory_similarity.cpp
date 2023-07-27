@@ -4,7 +4,6 @@
 
 #include "queries/moments/multi_trajectory_similarity.h"
 #include "file_helpers.h"
-#include "feature_store_precommit.h"
 #include <atomic>
 #include <mutex>
 

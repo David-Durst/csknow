@@ -15,7 +15,6 @@
 #include "queries/orders.h"
 #include "circular_buffer.h"
 #include "queries/moments/key_retake_events.h"
-#include "feature_store_precommit.h"
 
 namespace csknow::feature_store {
     constexpr double invalidWorldPosDim = 8000.;
