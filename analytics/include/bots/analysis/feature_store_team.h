@@ -15,11 +15,11 @@
 #include "queries/orders.h"
 #include "circular_buffer.h"
 #include "queries/moments/key_retake_events.h"
+#include "feature_store_precommit.h"
 
 namespace csknow::feature_store {
     constexpr double invalidWorldPosDim = 8000.;
     const Vec3 invalidWorldPos = {invalidWorldPosDim, invalidWorldPosDim, invalidWorldPosDim};
-    constexpr int maxEnemies = 5;
     constexpr int num_orders_per_site = 3;
     constexpr int num_places = 26;
     constexpr int area_grid_dim = 5;
@@ -81,7 +81,7 @@ namespace csknow::feature_store {
         struct ColumnPlayerData {
             vector<int64_t> playerId;
             // inputs
-            array<vector<bool>, maxEnemies> indexOnTeam;
+            array<vector<bool>, max_enemies> indexOnTeam;
             vector<bool> ctTeam;
             vector<bool> alive;
             vector<Vec3> footPos;
@@ -109,11 +109,11 @@ namespace csknow::feature_store {
             vector<bool> ducking;
             array<vector<bool>, weapon_speed::num_radial_bins> radialVel;
         };
-        array<ColumnPlayerData, maxEnemies> columnCTData, columnTData;
-        vector<std::reference_wrapper<const array<ColumnPlayerData, maxEnemies>>> getAllColumnData() const {
+        array<ColumnPlayerData, max_enemies> columnCTData, columnTData;
+        vector<std::reference_wrapper<const array<ColumnPlayerData, max_enemies>>> getAllColumnData() const {
             return {columnCTData, columnTData};
         }
-        vector<std::reference_wrapper<array<ColumnPlayerData, maxEnemies>>> getAllColumnData() {
+        vector<std::reference_wrapper<array<ColumnPlayerData, max_enemies>>> getAllColumnData() {
             return {columnCTData, columnTData};
         }
         vector<string> allColumnDataTeam = {"CT", "T"};
@@ -149,14 +149,9 @@ namespace csknow::feature_store {
                                            double futureSecondsTheshold);
                                           */
         void computeDeltaPosACausalLabels(int64_t curTick, CircularBuffer<int64_t> & futureTracker,
-                                          array<ColumnPlayerData,maxEnemies> & columnData);
-        enum class DecreaseTimingOption {
-            s5,
-            s10,
-            s20
-        };
+                                          array<ColumnPlayerData,max_enemies> & columnData);
         void computeDecreaseDistanceToC4(int64_t curTick, CircularBuffer<int64_t> & futureTracker,
-                                          array<ColumnPlayerData,maxEnemies> & columnData,
+                                          array<ColumnPlayerData,max_enemies> & columnData,
                                           DecreaseTimingOption decreaseTimingOption,
                                           const ReachableResult & reachableResult);
         void computeAcausalLabels(const Games & games, const Rounds & rounds, const Ticks & ticks,

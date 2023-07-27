@@ -6,6 +6,7 @@
 #include "file_helpers.h"
 #include "indices/build_indexes.h"
 #include "bots/analysis/learned_models.h"
+#include "feature_store_precommit.h"
 
 namespace csknow::inference_latent_engagement {
 
@@ -110,9 +111,9 @@ namespace csknow::inference_latent_engagement {
                     }
                      */
                     // for distribution visualization
-                    for (size_t enemyNum = 0; enemyNum <= csknow::feature_store::maxEnemies; enemyNum++) {
+                    for (size_t enemyNum = 0; enemyNum <= feature_store::max_enemies; enemyNum++) {
                         int64_t enemyId = INVALID_ID;
-                        if (enemyNum < csknow::feature_store::maxEnemies) {
+                        if (enemyNum < feature_store::max_enemies) {
                             enemyId = behaviorTreeLatentStates.featureStoreResult.columnEnemyData[enemyNum].playerId[patIndex];
                         }
                         playerEngageProbs[patIndex][enemyNum] = {enemyId, output[0][enemyNum].item<float>()};
@@ -133,7 +134,7 @@ namespace csknow::inference_latent_engagement {
                     }
                      */
 
-                    bool engagement = probabilities.mostLikelyEnemyNum < csknow::feature_store::maxEnemies;
+                    bool engagement = probabilities.mostLikelyEnemyNum < feature_store::max_enemies;
                     int firstLikelyEnemy = INVALID_ID;
                     if (engagement) {
                         /*

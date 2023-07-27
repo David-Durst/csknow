@@ -5,6 +5,7 @@
 #include "bots/analysis/feature_store_team.h"
 #include "circular_buffer.h"
 #include "file_helpers.h"
+#include "feature_store_precommit.h"
 #include <atomic>
 #include <cmath>
 #include <csignal>
@@ -41,8 +42,8 @@ namespace csknow::feature_store {
             c4DistanceToNearestBOrderNavArea[j].resize(size, INVALID_ID);
         }
          */
-        for (int i = 0; i < maxEnemies; i++) {
-            for (int j = 0; j < maxEnemies; j++) {
+        for (int i = 0; i < max_enemies; i++) {
+            for (int j = 0; j < max_enemies; j++) {
                 columnTData[i].indexOnTeam[j].resize(size, j == i);
                 columnCTData[i].indexOnTeam[j].resize(size, j == i);
             }
@@ -231,8 +232,8 @@ namespace csknow::feature_store {
                 c4DistanceToNearestBOrderNavArea[j][rowIndex] = INVALID_ID;
             }
              */
-            for (int i = 0; i < maxEnemies; i++) {
-                for (int j = 0; j < maxEnemies; j++) {
+            for (int i = 0; i < max_enemies; i++) {
+                for (int j = 0; j < max_enemies; j++) {
                     columnTData[i].indexOnTeam[j][rowIndex] = j == i;
                     columnCTData[i].indexOnTeam[j][rowIndex] = j == i;
                 }
@@ -501,12 +502,12 @@ namespace csknow::feature_store {
     }
 
     void TeamFeatureStoreResult::computeDeltaPosACausalLabels(int64_t curTick, CircularBuffer<int64_t> & futureTracker,
-                                                              array<ColumnPlayerData,maxEnemies> & columnData) {
+                                                              array<ColumnPlayerData,max_enemies> & columnData) {
         // skip if not enough history in the future
         if (futureTracker.getCurSize() < 2) {
             return;
         }
-        for (size_t playerColumn = 0; playerColumn < maxEnemies; playerColumn++) {
+        for (size_t playerColumn = 0; playerColumn < max_enemies; playerColumn++) {
             if (columnData[playerColumn].playerId[curTick] == INVALID_ID) {
                 continue;
             }
@@ -596,13 +597,13 @@ namespace csknow::feature_store {
     constexpr double c4_distance_threshold = 1000, c4_delta_distance_threshold = 150;
     void TeamFeatureStoreResult::computeDecreaseDistanceToC4(
             int64_t curTick, CircularBuffer<int64_t> &futureTracker,
-            array<csknow::feature_store::TeamFeatureStoreResult::ColumnPlayerData, maxEnemies> &columnData,
+            array<csknow::feature_store::TeamFeatureStoreResult::ColumnPlayerData, max_enemies> &columnData,
             DecreaseTimingOption decreaseTimingOption, const ReachableResult & reachableResult) {
         // skip if not enough history in the future
         if (futureTracker.getCurSize() < 2) {
             return;
         }
-        for (size_t playerColumn = 0; playerColumn < maxEnemies; playerColumn++) {
+        for (size_t playerColumn = 0; playerColumn < max_enemies; playerColumn++) {
             if (columnData[playerColumn].playerId[curTick] == INVALID_ID) {
                 continue;
             }
@@ -832,13 +833,13 @@ namespace csknow::feature_store {
         file.createDataSet("/data/c4 distance to a site", c4DistanceToASite, hdf5FlatCreateProps);
         file.createDataSet("/data/c4 distance to b site", c4DistanceToBSite, hdf5FlatCreateProps);
         for (size_t columnDataIndex = 0; columnDataIndex < getAllColumnData().size(); columnDataIndex++) {
-            const array<ColumnPlayerData, maxEnemies> & columnData = getAllColumnData()[columnDataIndex];
+            const array<ColumnPlayerData, max_enemies> & columnData = getAllColumnData()[columnDataIndex];
             string columnTeam = allColumnDataTeam[columnDataIndex];
             for (size_t columnPlayer = 0; columnPlayer < columnData.size(); columnPlayer++) {
                 string iStr = std::to_string(columnPlayer);
                 file.createDataSet("/data/player id " + columnTeam + " " + iStr,
                                    columnData[columnPlayer].playerId, hdf5FlatCreateProps);
-                for (int indexOnTeam = 0; indexOnTeam < maxEnemies; indexOnTeam++) {
+                for (int indexOnTeam = 0; indexOnTeam < max_enemies; indexOnTeam++) {
                     file.createDataSet("/data/player index on team " + std::to_string(indexOnTeam) + " " + columnTeam + " " + iStr,
                                        columnData[columnPlayer].indexOnTeam[indexOnTeam], hdf5FlatCreateProps);
                 }
@@ -909,13 +910,13 @@ namespace csknow::feature_store {
         c4DistanceToASite = file.getDataSet("/data/c4 distance to a site").read<std::vector<float>>();
         c4DistanceToBSite = file.getDataSet("/data/c4 distance to b site").read<std::vector<float>>();
         for (size_t columnDataIndex = 0; columnDataIndex < getAllColumnData().size(); columnDataIndex++) {
-            array<ColumnPlayerData, maxEnemies> &columnData = getAllColumnData()[columnDataIndex];
+            array<ColumnPlayerData, max_enemies> &columnData = getAllColumnData()[columnDataIndex];
             string columnTeam = allColumnDataTeam[columnDataIndex];
             for (size_t columnPlayer = 0; columnPlayer < columnData.size(); columnPlayer++) {
                 string iStr = std::to_string(columnPlayer);
                 columnData[columnPlayer].playerId = file.getDataSet(
                         "/data/player id " + columnTeam + " " + iStr).read<std::vector<int64_t>>();
-                for (int indexOnTeam = 0; indexOnTeam < maxEnemies; indexOnTeam++) {
+                for (int indexOnTeam = 0; indexOnTeam < max_enemies; indexOnTeam++) {
                     columnData[columnPlayer].indexOnTeam[indexOnTeam] = file.getDataSet(
                             "/data/player index on team " + std::to_string(indexOnTeam) + " " + columnTeam + " " + iStr).read<std::vector<bool>>();
                 }

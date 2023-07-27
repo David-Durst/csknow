@@ -4,6 +4,7 @@
 
 #include "queries/moments/multi_trajectory_similarity.h"
 #include "file_helpers.h"
+#include "feature_store_precommit.h"
 #include <atomic>
 #include <mutex>
 
@@ -269,7 +270,7 @@ namespace csknow::multi_trajectory_similarity {
             int ctTrajectories = 0;
             int tTrajectories = 0;
             for (const auto & columnData : traces.getAllColumnData()) {
-                for (int columnDataIndex = 0; columnDataIndex < csknow::feature_store::maxEnemies; columnDataIndex++) {
+                for (int columnDataIndex = 0; columnDataIndex < feature_store::max_enemies; columnDataIndex++) {
                     // skip those not alive at start
                     if (!columnData.get()[columnDataIndex].alive[roundStartTraceIndex[roundIndex]]) {
                         continue;
@@ -333,10 +334,10 @@ namespace csknow::multi_trajectory_similarity {
     CTAliveTAliveToAgentMappingOptions generateAllPossibleMappings() {
         CTAliveTAliveToAgentMappingOptions ctAliveTAliveToAgentMapping;
         vector<PartialMapping> initialPartialMappings{{}};
-        for (int ctAlive = 0; ctAlive <= csknow::feature_store::maxEnemies; ctAlive++) {
+        for (int ctAlive = 0; ctAlive <= feature_store::max_enemies; ctAlive++) {
             vector<PartialMapping> ctPartialMappings = computePartialMappingsForCTorT(initialPartialMappings,
                                                                                       ctAlive, 0);
-            for (int tAlive = 0; tAlive <= csknow::feature_store::maxEnemies; tAlive++) {
+            for (int tAlive = 0; tAlive <= feature_store::max_enemies; tAlive++) {
                 vector<PartialMapping> partialMappings = computePartialMappingsForCTorT(ctPartialMappings,
                                                                                           tAlive, ctAlive);
                 vector<AgentMapping> mappingOptions;

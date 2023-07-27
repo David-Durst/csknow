@@ -6,6 +6,7 @@
 #define CSKNOW_INFERENCE_DELTA_POS_HELPERS_H
 
 #include "queries/inference_moments/inference_latent_engagement_helpers.h"
+#include "bots/behavior_tree/inference_control_parameters.h"
 
 namespace csknow::inference_delta_pos {
     struct InferenceDeltaPosTickValues {
@@ -13,7 +14,8 @@ namespace csknow::inference_delta_pos {
         map<int64_t, size_t> playerIdToColumnIndex;
     };
     InferenceDeltaPosTickValues extractFeatureStoreDeltaPosValues(
-            const csknow::feature_store::FeatureStoreResult & featureStoreResult, int64_t rowIndex);
+            const csknow::feature_store::FeatureStoreResult & featureStoreResult, int64_t rowIndex,
+            TeamSaveControlParameters teamSaveControlParameters);
     struct InferenceDeltaPosPlayerAtTickProbabilities {
         //vector<float> deltaPosProbabilities;
         //int64_t mostLikelyDeltaPos;

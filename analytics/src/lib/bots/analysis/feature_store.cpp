@@ -9,6 +9,7 @@
 #include "file_helpers.h"
 #include <atomic>
 #include "circular_buffer.h"
+#include "feature_store_precommit.h"
 
 namespace csknow::feature_store {
     void FeatureStoreResult::init(size_t size) {
@@ -18,7 +19,7 @@ namespace csknow::feature_store {
         roundId.resize(size, INVALID_ID);
         tickId.resize(size, INVALID_ID);
         playerId.resize(size, INVALID_ID);
-        for (int i = 0; i < maxEnemies; i++) {
+        for (int i = 0; i < max_enemies; i++) {
             columnEnemyData[i].playerId.resize(size, INVALID_ID);
             columnEnemyData[i].enemyEngagementStates.resize(size, EngagementEnemyState::None);
             columnEnemyData[i].timeSinceLastVisibleOrToBecomeVisible.resize(size, maxTimeToVis);
@@ -37,15 +38,15 @@ namespace csknow::feature_store {
         fireCurTick.resize(size, false);
         hitEngagement.resize(size, false);
         visibleEngagement.resize(size, false);
-        nearestCrosshairCurTick.resize(size, maxEnemies);
-        nearestCrosshairEnemy500ms.resize(size, maxEnemies);
-        nearestCrosshairEnemy1s.resize(size, maxEnemies);
-        nearestCrosshairEnemy2s.resize(size, maxEnemies);
+        nearestCrosshairCurTick.resize(size, max_enemies);
+        nearestCrosshairEnemy500ms.resize(size, max_enemies);
+        nearestCrosshairEnemy1s.resize(size, max_enemies);
+        nearestCrosshairEnemy2s.resize(size, max_enemies);
         positionOffset2sUpToThreshold.resize(size, 1.);
         viewAngleOffset2sUpToThreshold.resize(size, 1.);
         negPositionOffset2sUpToThreshold.resize(size, 0.);
         negViewAngleOffset2sUpToThreshold.resize(size, 0.);
-        for (int i = 0; i <= maxEnemies; i++) {
+        for (int i = 0; i <= max_enemies; i++) {
             pctNearestCrosshairEnemy2s[i].resize(size, 0.);
         }
         visibleEnemy2s.resize(size, 0.);
@@ -81,7 +82,7 @@ namespace csknow::feature_store {
             roundId[rowIndex] = INVALID_ID;
             tickId[rowIndex] = INVALID_ID;
             playerId[rowIndex] = INVALID_ID;
-            for (int i = 0; i < maxEnemies; i++) {
+            for (int i = 0; i < max_enemies; i++) {
                 columnEnemyData[i].playerId[rowIndex] = INVALID_ID;
                 columnEnemyData[i].enemyEngagementStates[rowIndex] = EngagementEnemyState::None;
                 columnEnemyData[i].timeSinceLastVisibleOrToBecomeVisible[rowIndex] = maxTimeToVis;
@@ -100,15 +101,15 @@ namespace csknow::feature_store {
             fireCurTick[rowIndex] = false;
             hitEngagement[rowIndex] = false;
             visibleEngagement[rowIndex] = false;
-            nearestCrosshairCurTick[rowIndex] = maxEnemies;
-            nearestCrosshairEnemy500ms[rowIndex] = maxEnemies;
-            nearestCrosshairEnemy1s[rowIndex] = maxEnemies;
-            nearestCrosshairEnemy2s[rowIndex] = maxEnemies;
+            nearestCrosshairCurTick[rowIndex] = max_enemies;
+            nearestCrosshairEnemy500ms[rowIndex] = max_enemies;
+            nearestCrosshairEnemy1s[rowIndex] = max_enemies;
+            nearestCrosshairEnemy2s[rowIndex] = max_enemies;
             positionOffset2sUpToThreshold[rowIndex] = 1.;
             viewAngleOffset2sUpToThreshold[rowIndex] = 1.;
             negPositionOffset2sUpToThreshold[rowIndex] = 0.;
             negViewAngleOffset2sUpToThreshold[rowIndex] = 0.;
-            for (int i = 0; i <= maxEnemies; i++) {
+            for (int i = 0; i <= max_enemies; i++) {
                 pctNearestCrosshairEnemy2s[i][rowIndex] = 0.;
             }
             visibleEnemy2s[rowIndex] = 0.;
@@ -132,7 +133,7 @@ namespace csknow::feature_store {
         tickId[rowIndex] = tickIndex;
         playerId[rowIndex] = playerIndex;
 
-        if (buffer.engagementPossibleEnemyBuffer.size() > maxEnemies) {
+        if (buffer.engagementPossibleEnemyBuffer.size() > max_enemies) {
             std::cerr << "committing row with wrong number of engagement players" << std::endl;
             throw std::runtime_error("committing row with wrong number of engagement players");
         }
@@ -246,14 +247,14 @@ namespace csknow::feature_store {
                     const int64_t & curPlayerId = playerAtTick.playerId[patIndex];
                     tickToPlayerToPATId[tickIndex][curPlayerId] = patIndex;
 
-                    std::array<bool, maxEnemies+1> validEnemyNums{};
-                    validEnemyNums[maxEnemies] = true;
+                    std::array<bool, max_enemies + 1> validEnemyNums{};
+                    validEnemyNums[max_enemies] = true;
 
                     double minCrosshairDistanceToEnemy = maxCrosshairDistance;
-                    int nearestCrosshairEnemy = maxEnemies;
+                    int nearestCrosshairEnemy = max_enemies;
                     double minWorldDistanceToEnemy = maxWorldDistance;
                     bool visibleEnemyThisFrame = false;
-                    for (size_t columnIndex = 0; columnIndex < maxEnemies; columnIndex++) {
+                    for (size_t columnIndex = 0; columnIndex < max_enemies; columnIndex++) {
                         int64_t enemyPlayerId = columnEnemyData[columnIndex].playerId[patIndex];
                         validEnemyNums[columnIndex] = enemyPlayerId != INVALID_ID;
                         if (!validEnemyNums[columnIndex]) {
@@ -350,7 +351,7 @@ namespace csknow::feature_store {
                     // compute labels based on future data
                     nearestCrosshairCurTick[patIndex] = nearestCrosshairEnemy;
                     int64_t maxTicksNearest = 0;
-                    int nearestEnemyOverWindow = maxEnemies;
+                    int nearestEnemyOverWindow = max_enemies;
                     for (const auto & [enemyNum, numTicksNearest] :
                         playerToEnemyNumToNumTicksNearestCrosshair500ms[curPlayerId]) {
                         if (numTicksNearest > maxTicksNearest && validEnemyNums[enemyNum]) {
@@ -360,7 +361,7 @@ namespace csknow::feature_store {
                     }
                     nearestCrosshairEnemy500ms[patIndex] = nearestEnemyOverWindow;
                     maxTicksNearest = 0;
-                    nearestEnemyOverWindow = maxEnemies;
+                    nearestEnemyOverWindow = max_enemies;
                     for (const auto & [enemyNum, numTicksNearest] :
                         playerToEnemyNumToNumTicksNearestCrosshair1s[curPlayerId]) {
                         if (numTicksNearest > maxTicksNearest && validEnemyNums[enemyNum]) {
@@ -370,7 +371,7 @@ namespace csknow::feature_store {
                     }
                     nearestCrosshairEnemy1s[patIndex] = nearestEnemyOverWindow;
                     maxTicksNearest = 0;
-                    nearestEnemyOverWindow = maxEnemies;
+                    nearestEnemyOverWindow = max_enemies;
                     int64_t totalNumTicksNearest = 0;
                     for (const auto & [enemyNum, numTicksNearest] :
                         playerToEnemyNumToNumTicksNearestCrosshair2s[curPlayerId]) {
@@ -643,7 +644,7 @@ namespace csknow::feature_store {
         file.createDataSet("/data/view angle offset 2s up to threshold", viewAngleOffset2sUpToThreshold, hdf5FlatCreateProps);
         file.createDataSet("/data/neg position offset 2s up to threshold", negPositionOffset2sUpToThreshold, hdf5FlatCreateProps);
         file.createDataSet("/data/neg view angle offset 2s up to threshold", negViewAngleOffset2sUpToThreshold, hdf5FlatCreateProps);
-        for (size_t i = 0; i <= maxEnemies; i++) {
+        for (size_t i = 0; i <= max_enemies; i++) {
             file.createDataSet("/data/pct nearest crosshair enemy 2s " + std::to_string(i),
                                pctNearestCrosshairEnemy2s[i], hdf5FlatCreateProps);
         }
@@ -662,7 +663,7 @@ namespace csknow::feature_store {
 
     void FeatureStoreResult::checkInvalid() const {
         for (int64_t i = 0; i < size; i++) {
-            for (size_t j = 0; j < maxEnemies; j++) {
+            for (size_t j = 0; j < max_enemies; j++) {
                 if (enumAsInt(columnEnemyData[j].enemyEngagementStates[i]) < 0 ||
                     enumAsInt(columnEnemyData[j].enemyEngagementStates[i]) > 5) {
                     std::cout << "invalid " << i << std::endl;

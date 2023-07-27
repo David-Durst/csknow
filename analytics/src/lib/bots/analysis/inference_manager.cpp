@@ -70,7 +70,8 @@ namespace csknow::inference_manager {
         placeValues = csknow::inference_latent_place::extractFeatureStorePlaceValues(featureStoreResult, 0);
         areaValues = csknow::inference_latent_area::extractFeatureStoreAreaValues(featureStoreResult, 0);
          */
-        deltaPosValues = csknow::inference_delta_pos::extractFeatureStoreDeltaPosValues(featureStoreResult, 0);
+        deltaPosValues = csknow::inference_delta_pos::extractFeatureStoreDeltaPosValues(featureStoreResult, 0,
+                                                                                        teamSaveControlParameters);
     }
 
     void InferenceManager::recordPlayerValues(csknow::feature_store::FeatureStoreResult &featureStoreResult,
@@ -190,10 +191,12 @@ namespace csknow::inference_manager {
                                                {1, static_cast<long>(deltaPosValues.rowCPP.size())},
                                                options);
         inputs.push_back(rowPT);
-        vector<float> similarityArr{1., 1.};
+        float overallPush =
+                teamSaveControlParameters.getPushModelValue(true, feature_store::DecreaseTimingOption::s5, false, 0);
+        vector<float> similarityArr{overallPush, overallPush};
         torch::Tensor similarityPt = torch::from_blob(similarityArr.data(), {1, 2}, options);
         inputs.push_back(similarityPt);
-        vector<float> temperatureArr{0.7};
+        vector<float> temperatureArr{teamSaveControlParameters.temperature};
         torch::Tensor temperaturePt = torch::from_blob(temperatureArr.data(), {1, 1}, options);
         inputs.push_back(temperaturePt);
 

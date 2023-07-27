@@ -12,6 +12,7 @@
 #include "queries/inference_moments/inference_latent_area_helpers.h"
 #include "queries/inference_moments/inference_latent_delta_pos_helpers.h"
 #include "bots/load_save_bot_data.h"
+#include "bots/behavior_tree/inference_control_parameters.h"
 #include <filesystem>
 
 namespace fs = std::filesystem;
@@ -56,6 +57,7 @@ namespace csknow::inference_manager {
         csknow::inference_latent_place::InferencePlaceTickValues placeValues;
         csknow::inference_latent_area::InferenceAreaTickValues areaValues;
         csknow::inference_delta_pos::InferenceDeltaPosTickValues deltaPosValues;
+        TeamSaveControlParameters teamSaveControlParameters;
 
         fs::path engagementModelPath, aggressionModelPath, orderModelPath, placeModelPath, areaModelPath, deltaPosModelPath;
         torch::jit::script::Module engagementModule, aggressionModule, orderModule, placeModule, areaModule, deltaPosModule;

@@ -4,10 +4,12 @@
 
 #include "queries/inference_moments/inference_latent_delta_pos_helpers.h"
 #include "bots/analysis/learned_models.h"
+#include "feature_store_precommit.h"
 
 namespace csknow::inference_delta_pos {
     InferenceDeltaPosTickValues extractFeatureStoreDeltaPosValues(
-            const csknow::feature_store::FeatureStoreResult & featureStoreResult, int64_t rowIndex) {
+            const csknow::feature_store::FeatureStoreResult & featureStoreResult, int64_t rowIndex,
+            TeamSaveControlParameters teamSaveControlParameters) {
         InferenceDeltaPosTickValues result;
         const csknow::feature_store::TeamFeatureStoreResult & teamFeatureStoreResult =
                 featureStoreResult.teamFeatureStoreResult;
@@ -25,10 +27,10 @@ namespace csknow::inference_delta_pos {
         bool ctColumnData = true;
         for (const auto & columnData :
                 featureStoreResult.teamFeatureStoreResult.getAllColumnData()) {
-            for (size_t playerNum = 0; playerNum < csknow::feature_store::maxEnemies; playerNum++) {
+            for (size_t playerNum = 0; playerNum < feature_store::max_enemies; playerNum++) {
                 const auto & columnPlayerData = columnData.get()[playerNum];
                 result.playerIdToColumnIndex[columnPlayerData.playerId[rowIndex]] =
-                        playerNum + (ctColumnData ? 0 : csknow::feature_store::maxEnemies);
+                        playerNum + (ctColumnData ? 0 : feature_store::max_enemies);
                 /*
                 result.rowCPP.push_back(static_cast<float>(columnPlayerData.alignedFootPos[rowIndex].x));
                 result.rowCPP.push_back(static_cast<float>(columnPlayerData.alignedFootPos[rowIndex].y));
@@ -57,10 +59,10 @@ namespace csknow::inference_delta_pos {
         ctColumnData = true;
         for (const auto & columnData :
             featureStoreResult.teamFeatureStoreResult.getAllColumnData()) {
-            for (size_t playerNum = 0; playerNum < csknow::feature_store::maxEnemies; playerNum++) {
+            for (size_t playerNum = 0; playerNum < feature_store::max_enemies; playerNum++) {
                 const auto & columnPlayerData = columnData.get()[playerNum];
                 result.playerIdToColumnIndex[columnPlayerData.playerId[rowIndex]] =
-                    playerNum + (ctColumnData ? 0 : csknow::feature_store::maxEnemies);
+                    playerNum + (ctColumnData ? 0 : feature_store::max_enemies);
                 /*
                 for (size_t placeIndex = 0; placeIndex < csknow::feature_store::num_places; placeIndex++) {
                     result.rowCPP.push_back(static_cast<float>(
@@ -74,11 +76,17 @@ namespace csknow::inference_delta_pos {
                 result.rowCPP.push_back(static_cast<float>(columnPlayerData.alive[rowIndex]));
                 result.rowCPP.push_back(static_cast<float>(columnPlayerData.ctTeam[rowIndex]));
                 // decrease distance 5s
-                result.rowCPP.push_back(1.f);
+                result.rowCPP.push_back(
+                        teamSaveControlParameters.getPushModelValue(false, feature_store::DecreaseTimingOption::s5,
+                                                                    columnPlayerData.ctTeam[rowIndex], playerNum));
                 // decrease distance 10s
-                result.rowCPP.push_back(1.f);
+                result.rowCPP.push_back(
+                        teamSaveControlParameters.getPushModelValue(false, feature_store::DecreaseTimingOption::s10,
+                                                                    columnPlayerData.ctTeam[rowIndex], playerNum));
                 // decrease distance 20s
-                result.rowCPP.push_back(1.f);
+                result.rowCPP.push_back(
+                        teamSaveControlParameters.getPushModelValue(false, feature_store::DecreaseTimingOption::s20,
+                                                                    columnPlayerData.ctTeam[rowIndex], playerNum));
             }
             ctColumnData = false;
         }

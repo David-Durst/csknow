@@ -4,6 +4,7 @@
 
 #include "queries/inference_moments/inference_latent_engagement_helpers.h"
 #include "bots/analysis/learned_models.h"
+#include "feature_store_precommit.h"
 
 namespace csknow::inference_latent_engagement {
     InferenceEngagementTickValues extractFeatureStoreEngagementValues(
@@ -11,7 +12,7 @@ namespace csknow::inference_latent_engagement {
         InferenceEngagementTickValues result;
         // seperate different input types
         //std::cout << "creating enemy ids: ";
-        for (size_t enemyNum = 0; enemyNum < csknow::feature_store::maxEnemies; enemyNum++) {
+        for (size_t enemyNum = 0; enemyNum < feature_store::max_enemies; enemyNum++) {
             const csknow::feature_store::FeatureStoreResult::ColumnEnemyData &columnEnemyData =
                 featureStoreResult.columnEnemyData[enemyNum];
             result.enemyIds.push_back(columnEnemyData.playerId[rowIndex]);
@@ -22,7 +23,7 @@ namespace csknow::inference_latent_engagement {
             result.rowCPP.push_back(static_cast<float>(columnEnemyData.crosshairDistanceToEnemy[rowIndex]));
         }
         //std::cout << std::endl;
-        for (size_t enemyNum = 0; enemyNum < csknow::feature_store::maxEnemies; enemyNum++) {
+        for (size_t enemyNum = 0; enemyNum < feature_store::max_enemies; enemyNum++) {
             const csknow::feature_store::FeatureStoreResult::ColumnEnemyData &columnEnemyData =
                 featureStoreResult.columnEnemyData[enemyNum];
             result.rowCPP.push_back(static_cast<float>(columnEnemyData.enemyEngagementStates[rowIndex]));
@@ -38,14 +39,14 @@ namespace csknow::inference_latent_engagement {
         const at::Tensor & output, const InferenceEngagementTickValues & values) {
         InferenceEngagementTickProbabilities result;
         float mostLikelyEnemyProb = -1;
-        result.mostLikelyEnemyNum = csknow::feature_store::maxEnemies + 1;
-        for (size_t enemyNum = 0; enemyNum <= csknow::feature_store::maxEnemies; enemyNum++) {
+        result.mostLikelyEnemyNum = feature_store::max_enemies + 1;
+        for (size_t enemyNum = 0; enemyNum <= feature_store::max_enemies; enemyNum++) {
             //std::cout << output[0][enemyNum].item<float>() << std::endl;
             if (false) {
                 result.enemyProbabilities.push_back(output[0][enemyNum].item<float>());
             }
             else {
-                result.enemyProbabilities.push_back(1. / csknow::feature_store::maxEnemies);
+                result.enemyProbabilities.push_back(1. / feature_store::max_enemies);
             }
             if (values.enemyStates[enemyNum] != csknow::feature_store::EngagementEnemyState::None &&
                 result.enemyProbabilities.back() > mostLikelyEnemyProb) {

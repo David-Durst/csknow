@@ -5,6 +5,12 @@
 #ifndef CSKNOW_FEATURE_STORE_PRECOMMIT_H
 #define CSKNOW_FEATURE_STORE_PRECOMMIT_H
 
+#include "queries/moments/key_retake_events.h"
+#include "queries/orders.h"
+#include "bots/analysis/weapon_speed.h"
+#include "bots/analysis/feature_store_precommit.h"
+#include "queries/distance_to_places.h"
+#include "queries/lookback.h"
 #include "queries/query.h"
 #include "bots/load_save_bot_data.h"
 #include "geometryNavConversions.h"
@@ -17,6 +23,14 @@ namespace csknow::feature_store {
     constexpr double maxWorldDistance = 4000.;
     constexpr int prior_tick_spacing = 64;
     constexpr int num_prior_ticks = 12;
+    constexpr int max_enemies = 5;
+
+    enum class DecreaseTimingOption {
+        s5,
+        s10,
+        s20
+    };
+
 
     struct BTTeamPlayerData {
         int64_t playerId;

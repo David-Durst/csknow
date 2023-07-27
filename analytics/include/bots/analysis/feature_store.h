@@ -8,6 +8,7 @@
 #include "queries/query.h"
 #include "bots/load_save_bot_data.h"
 #include "bots/analysis/feature_store_team.h"
+#include "feature_store_precommit.h"
 
 
 namespace csknow::feature_store {
@@ -49,14 +50,14 @@ namespace csknow::feature_store {
             vector<bool> hitTargetEnemy;
             vector<bool> visibleIn1s, visibleIn2s, visibleIn5s, visibleIn10s;
         };
-        array<ColumnEnemyData, maxEnemies> columnEnemyData;
+        array<ColumnEnemyData, max_enemies> columnEnemyData;
         struct ColumnTeammateData {
             vector<int64_t> playerId;
             // inputs
             vector<float> teammateWorldDistance;
             vector<float> crosshairDistanceToTeammate;
         };
-        array<ColumnTeammateData, maxEnemies> columnTeammateData;
+        array<ColumnTeammateData, max_enemies> columnTeammateData;
         vector<bool> fireCurTick;
         vector<bool> hitEngagement;
         vector<bool> visibleEngagement;
@@ -64,7 +65,7 @@ namespace csknow::feature_store {
         vector<float> positionOffset2sUpToThreshold, viewAngleOffset2sUpToThreshold;
         // these are just used to create binomial distributions
         vector<float> negPositionOffset2sUpToThreshold, negViewAngleOffset2sUpToThreshold;
-        array<vector<float>, maxEnemies+1> pctNearestCrosshairEnemy2s;
+        array<vector<float>, max_enemies + 1> pctNearestCrosshairEnemy2s;
         vector<float> visibleEnemy2s, negVisibleEnemy2s, fireNext2s, negFireNext2s;
         array<vector<float>, numNearestEnemyState> pctNearestEnemyChange2s;
         vector<int64_t> nextPATId2s;
