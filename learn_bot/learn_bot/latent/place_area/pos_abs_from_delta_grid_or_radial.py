@@ -87,14 +87,14 @@ def get_delta_pos_from_radial(pred_labels: torch.Tensor, stature_to_speed: torch
     per_batch_stature_index = \
         torch.floor(torch.remainder(dir_stature_pred_label, StatureOptions.NUM_STATURE_OPTIONS.value)).int()
     # necessary since index select expects 1d
-    flattened_stature_index = rearrange(per_batch_stature_index, 'b p -> (b p)',
-                                        p=len(specific_player_place_area_columns))
+    flattened_stature_index = rearrange(per_batch_stature_index, 'b pt -> (b pt)',
+                                        pt=len(specific_player_place_area_columns) * num_radial_ticks)
     dir_degrees = torch.floor(dir_stature_pred_label / StatureOptions.NUM_STATURE_OPTIONS.value) * direction_angle_range
     # stature to lookup table of speeds
     # divide by 2 since changes are per half second
     flattened_max_speed_per_stature = torch.index_select(stature_to_speed, 0, flattened_stature_index) / 2.
-    per_batch_max_speed_per_stature = rearrange(flattened_max_speed_per_stature, '(b p) -> b p',
-                                                p=len(specific_player_place_area_columns))
+    per_batch_max_speed_per_stature = rearrange(flattened_max_speed_per_stature, '(b pt) -> b pt',
+                                                pt=len(specific_player_place_area_columns) * num_radial_ticks)
     # return cos/sin of dir degre
     not_moving_zeros = torch.zeros_like(per_batch_max_speed_per_stature)
     delta_pos = torch.stack([
