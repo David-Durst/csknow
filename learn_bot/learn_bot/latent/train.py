@@ -18,7 +18,7 @@ from learn_bot.latent.analyze.comparison_column_names import small_human_good_ro
 from learn_bot.latent.dataset import *
 from learn_bot.latent.engagement.column_names import round_id_column
 from learn_bot.latent.latent_hdf5_dataset import MultipleLatentHDF5Dataset
-from learn_bot.latent.order.column_names import num_future_ticks
+from learn_bot.latent.order.column_names import num_future_ticks, num_radial_ticks
 from learn_bot.latent.place_area.load_data import human_latent_team_hdf5_data_path, manual_latent_team_hdf5_data_path, \
     LoadDataResult, LoadDataOptions
 from learn_bot.latent.place_area.pos_abs_from_delta_grid_or_radial import delta_pos_grid_num_cells
@@ -75,7 +75,7 @@ class HyperparameterOptions:
 
     def to_str(self, model: TransformerNestedHiddenLatentModel):
         return f"{now_str}_e_{self.num_epochs}_b_{self.batch_size}_lr_{self.learning_rate}_wd_{self.weight_decay}_" \
-               f"l_{self.layers}_h_{self.heads}_n_{self.noise_var}_t_{model.num_time_steps}_" \
+               f"l_{self.layers}_h_{self.heads}_n_{self.noise_var}_t_{model.num_input_time_steps}_" \
                f"c_{self.comment}"
 
     def get_checkpoints_path(self, model: TransformerNestedHiddenLatentModel) -> Path:
@@ -172,7 +172,7 @@ def train(train_type: TrainType, multi_hdf5_wrapper: MultiHDF5Wrapper,
                                                    multi_hdf5_wrapper.train_hdf5_wrappers[0].sample_df)
         # plus 1 on future ticks to include present tick
         model = TransformerNestedHiddenLatentModel(column_transformers, 2 * max_enemies,
-                                                   num_future_ticks + 1, num_radial_bins,
+                                                   num_radial_ticks, num_radial_bins,
                                                    hyperparameter_options.layers, hyperparameter_options.heads)
         if load_model_path:
             model_file = torch.load(load_model_path)
@@ -431,8 +431,8 @@ def train(train_type: TrainType, multi_hdf5_wrapper: MultiHDF5Wrapper,
     test_data = MultipleLatentHDF5Dataset(multi_hdf5_wrapper.test_hdf5_wrappers, column_transformers,
                                           multi_hdf5_wrapper.duplicate_last_hdf5_equal_to_rest)
     batch_size = min(hyperparameter_options.batch_size, min(len(train_data), len(test_data)))
-    train_dataloader = DataLoader(train_data, batch_size=batch_size, num_workers=3, shuffle=True, pin_memory=True)
-    test_dataloader = DataLoader(test_data, batch_size=batch_size, num_workers=3, shuffle=True, pin_memory=True)
+    train_dataloader = DataLoader(train_data, batch_size=batch_size, num_workers=0, shuffle=True, pin_memory=True)
+    test_dataloader = DataLoader(test_data, batch_size=batch_size, num_workers=0, shuffle=True, pin_memory=True)
 
     print(f"num train examples: {len(train_data)}")
     print(f"num test examples: {len(test_data)}")

@@ -11,7 +11,7 @@ from learn_bot.latent.place_area.pos_abs_from_delta_grid_or_radial import comput
     one_hot_max_to_index, one_hot_prob_to_index, max_speed_per_half_second, max_speed_per_second
 from learn_bot.libs.io_transforms import IOColumnTransformers, CUDA_DEVICE_STR, CPU_DEVICE_STR
 from learn_bot.libs.positional_encoding import *
-from einops import rearrange
+from einops import rearrange, repeat
 from positional_encodings.torch_encodings import PositionalEncoding1D, Summer
 
 
@@ -62,12 +62,14 @@ class TransformerNestedHiddenLatentModel(nn.Module):
 
         self.num_players = len(players_columns)
         self.num_dim = 3
-        self.num_time_steps = len(self.players_pos_columns) // self.num_dim // self.num_players
+        self.num_input_time_steps = len(self.players_pos_columns) // self.num_dim // self.num_players
+        self.num_output_time_steps = num_output_time_steps
+        assert self.num_output_time_steps <= self.num_input_time_steps
         assert self.num_players == num_players
         self.num_players_per_team = self.num_players // 2
 
         # only different players in same time step to talk to each other
-        num_temporal_tokens = self.num_players * self.num_time_steps
+        num_temporal_tokens = self.num_players * self.num_input_time_steps
         self.temporal_mask_cpu = torch.zeros([num_temporal_tokens, num_temporal_tokens])
         for i in range(num_temporal_tokens):
             for j in range(num_temporal_tokens):
@@ -101,7 +103,7 @@ class TransformerNestedHiddenLatentModel(nn.Module):
         # encoding matrices upfront and add them during inference
         temporal_positional_encoder = PositionalEncoding1D(self.internal_width)
         self.temporal_positional_encoding = \
-            temporal_positional_encoder(torch.zeros([self.num_players, self.num_time_steps, self.internal_width]))
+            temporal_positional_encoder(torch.zeros([self.num_players, self.num_input_time_steps, self.internal_width]))
 
         self.embedding_model = nn.Sequential(
             nn.Linear(self.columns_per_player_time_step, self.internal_width),
@@ -123,8 +125,7 @@ class TransformerNestedHiddenLatentModel(nn.Module):
                                                 custom_encoder=transformer_encoder, batch_first=True)
 
         self.decoder = nn.Sequential(
-            nn.Linear(self.internal_width, num_output_time_steps * num_radial_bins),
-            nn.Unflatten(0, [num_output_time_steps, num_radial_bins])
+            nn.Linear(self.internal_width, num_radial_bins),
         )
 
         # dim 0 is batch, 1 is players, 2 is output time step, 3 is probabilities/logits
@@ -144,7 +145,7 @@ class TransformerNestedHiddenLatentModel(nn.Module):
             pos_scaled[:, :, 0] = (pos[:, :, 0] - self.d2_min_gpu) / (self.d2_max_gpu - self.d2_min_gpu)
         else:
             pos_scaled[:, :, 0] = (pos[:, :, 0] - self.d2_min_cpu) / (self.d2_max_cpu - self.d2_min_cpu)
-        if self.num_time_steps > 1:
+        if self.num_input_time_steps > 1:
             pos_scaled[:, :, 1:] = (pos[:, :, 1:] - max_speed_per_half_second) / (2 * max_speed_per_half_second)
         pos_scaled = torch.clamp(pos_scaled, 0, 1)
         pos_scaled = (pos_scaled * 2) - 1
@@ -180,26 +181,28 @@ class TransformerNestedHiddenLatentModel(nn.Module):
     #    return self.embedding_model(y_gathered)
 
     def generate_tgt_mask(self, device: str) -> torch.Tensor:
+        num_player_time_steps = self.num_players * self.num_output_time_steps
         # base tgt mask that is diagonal to ensure only look at future teammates
-        tgt_mask = self.transformer_model.generate_square_subsequent_mask(self.num_players, device)
+        tgt_mask = self.transformer_model.generate_square_subsequent_mask(num_player_time_steps, device)
 
         # team-based mask
-        negs = torch.full((self.num_players, self.num_players), float('-inf'), device=device)
-        team_mask = torch.zeros((self.num_players, self.num_players), device=device)
-        team_mask[:self.num_players_per_team, self.num_players_per_team:] = \
-            negs[:self.num_players_per_team, self.num_players_per_team:]
-        team_mask[self.num_players_per_team:, :self.num_players_per_team] = \
-            negs[self.num_players_per_team:, :self.num_players_per_team]
+        negs = torch.full((num_player_time_steps, num_player_time_steps), float('-inf'), device=device)
+        team_mask = torch.zeros((num_player_time_steps, num_player_time_steps), device=device)
+        num_player_time_steps_per_team = self.num_players_per_team * self.num_output_time_steps
+        team_mask[:num_player_time_steps_per_team, num_player_time_steps_per_team:] = \
+            negs[:num_player_time_steps_per_team, num_player_time_steps_per_team:]
+        team_mask[num_player_time_steps_per_team:, :num_player_time_steps_per_team] = \
+            negs[num_player_time_steps_per_team:, :num_player_time_steps_per_team]
         team_mask = tgt_mask + team_mask
 
         return team_mask
 
     def forward(self, x, similarity, temperature):
-        if self.num_time_steps < 2:
+        if self.num_input_time_steps < 2:
             raise Exception("must have history")
 
         x_pos = rearrange(x[:, self.players_pos_columns], "b (p t d) -> b p t d", p=self.num_players,
-                          t=self.num_time_steps, d=self.num_dim)
+                          t=self.num_input_time_steps, d=self.num_dim)
         # delta encode prior pos
         x_pos_lagged = torch.roll(x_pos, 1, 2)
         x_pos[:, :, 1:] = x_pos_lagged[:, :, 1:] - x_pos[:, :, 1:]
@@ -212,9 +215,9 @@ class TransformerNestedHiddenLatentModel(nn.Module):
 
         x_non_pos_without_similarity = \
             rearrange(x[:, self.players_non_pos_vel_columns], "b (p d) -> b p 1 d", p=self.num_players) \
-            .repeat([1, 1, self.num_time_steps, 1])
+            .repeat([1, 1, self.num_input_time_steps, 1])
         similarity_expanded = rearrange(similarity, '(b p t) d -> b p t d', p=1, t=1) \
-            .repeat([1, self.num_players, self.num_time_steps, 1])
+            .repeat([1, self.num_players, self.num_input_time_steps, 1])
         x_non_pos = torch.concat([x_non_pos_without_similarity, similarity_expanded], dim=-1)
         x_gathered = torch.cat([x_pos_encoded, x_non_pos], -1)
         #x_gathered = torch.cat([x_pos_encoded, x_vel_scaled, x_non_pos], -1)
@@ -230,27 +233,35 @@ class TransformerNestedHiddenLatentModel(nn.Module):
         # from same players
         x_temporal_encoded_player_time_flattened = rearrange(x_temporal_encoded_batch_player_flattened,
                                                              "(b p) t d -> b (p t) d", p=self.num_players,
-                                                             t=self.num_time_steps)
+                                                             t=self.num_input_time_steps)
         x_temporal_embedded_player_time_flattened = \
             self.temporal_transformer_encoder(x_temporal_encoded_player_time_flattened,
                                               mask=self.temporal_mask_cpu.to(x.device.type))
         # take last token per player
         x_temporal_embedded = rearrange(x_temporal_embedded_player_time_flattened, "b (p t) d -> b p t d",
-                                        p=self.num_players, t=self.num_time_steps)
-        x_temporal_embedded_flattened = x_temporal_embedded[:, :, 0, :]
+                                        p=self.num_players, t=self.num_input_time_steps)
+        x_temporal_embedded_flattened = rearrange(x_temporal_embedded[:, :, 0:self.num_output_time_steps, :],
+                                                  "b p t d -> b (p t) d")
 
 
         alive_gathered = x[:, self.alive_columns]
-        dead_gathered = alive_gathered < 0.1
+        alive_gathered_temporal = rearrange(
+            repeat(rearrange(alive_gathered, 'b p -> b p 1'), 'b p i -> b p (i repeat)', repeat=self.num_output_time_steps),
+            'b p i -> b (p i)')
+        dead_gathered = alive_gathered_temporal < 0.1
 
         tgt_mask = self.generate_tgt_mask(x.device.type)
 
         x_pos_encoded_no_noise = self.encode_pos(x_pos, enable_noise=False)
-        x_gathered_no_noise = torch.cat([x_pos_encoded_no_noise, x_non_pos], -1)[:, :, 0, :]
+        x_gathered_no_noise = rearrange(
+            torch.cat([x_pos_encoded_no_noise, x_non_pos], -1)[:, :, 0:self.num_output_time_steps, :],
+            "b p t d -> b (p t) d")
         x_embedded_no_noise = self.embedding_model(x_gathered_no_noise)
         transformed = self.transformer_model(x_temporal_embedded_flattened, x_embedded_no_noise, tgt_mask=tgt_mask,
                                              src_key_padding_mask=dead_gathered)
-        latent = self.decoder(transformed)
+        transformed_nested = rearrange(transformed, "b (p t) d -> b p t d",
+                                       p=self.num_players, t=self.num_output_time_steps)
+        latent = self.decoder(transformed_nested)
         prob_output = self.prob_output(latent / temperature)
         return latent, prob_output, one_hot_prob_to_index(prob_output)
         #if y is not None:

@@ -4,7 +4,7 @@ from pathlib import Path
 import torch
 from einops import rearrange
 
-from learn_bot.latent.order.column_names import num_future_ticks
+from learn_bot.latent.order.column_names import num_future_ticks, num_radial_ticks
 from learn_bot.latent.place_area.column_names import specific_player_place_area_columns, delta_pos_grid_radius, \
     delta_pos_grid_cell_dim, delta_pos_z_num_cells, delta_pos_grid_num_cells, delta_pos_grid_num_cells_per_xy_dim, \
     delta_pos_grid_num_xy_cells_per_z_change, num_radial_bins, num_radial_bins_per_z_axis, direction_angle_range, \
@@ -161,8 +161,8 @@ def one_hot_max_to_index(pred: torch.Tensor) -> torch.Tensor:
 
 def one_hot_prob_to_index(pred: torch.Tensor) -> torch.Tensor:
     if pred.device.type == CUDA_DEVICE_STR:
-        probs = rearrange(pred, 'b p t d -> (b p t) d', p=len(specific_player_place_area_columns), t=num_future_ticks)
+        probs = rearrange(pred, 'b p t d -> (b p t) d', p=len(specific_player_place_area_columns), t=num_radial_ticks)
         return rearrange(torch.multinomial(probs, 1, replacement=True), '(b p t) d -> b p t d',
-                         p=len(specific_player_place_area_columns), t=num_future_ticks)
+                         p=len(specific_player_place_area_columns), t=num_radial_ticks)
     else:
         return one_hot_max_to_index(pred)

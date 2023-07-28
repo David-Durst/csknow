@@ -15,6 +15,7 @@ num_c4_status = 3
 num_orders_per_site = 3
 num_prior_ticks = 12
 num_future_ticks = 2
+num_radial_ticks = num_future_ticks + 1
 num_places = 26
 area_grid_dim = 5
 area_grid_size = area_grid_dim * area_grid_dim

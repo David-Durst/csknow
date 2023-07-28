@@ -5,6 +5,7 @@ from einops import rearrange, repeat, pack
 from torch.utils.tensorboard import SummaryWriter
 
 from learn_bot.latent.dataset import *
+from learn_bot.latent.order.column_names import num_radial_ticks
 from learn_bot.latent.place_area.pos_abs_from_delta_grid_or_radial import get_delta_indices_from_grid, \
     get_delta_pos_from_radial
 from learn_bot.libs.io_transforms import IOColumnTransformers, ColumnTransformerType, CPU_DEVICE_STR, \
@@ -57,28 +58,31 @@ def compute_loss(pred, Y, duplicated_last, num_players) -> LatentLosses:
     losses = LatentLosses()
 
     # merging time steps so can do filtering before cross entropy loss
-    Y_per_player = rearrange(Y, "b (p d) -> (b p) d", p=num_players)
-    pred_transformed_per_player = rearrange(pred_transformed, "b (p d) -> (b p) d", p=num_players)
-    duplicated_last_per_player = repeat(duplicated_last, "b -> (b repeat)", repeat=num_players)
-    valid_rows = Y_per_player.sum(axis=1) > 0.1
-    valid_Y_transformed = Y_per_player[valid_rows]
-    valid_pred_transformed = pred_transformed_per_player[valid_rows]
-    valid_duplicated_last_per_player = duplicated_last_per_player[valid_rows]
+    Y_per_player_time_step = rearrange(Y, "b (p t d) -> (b p t) d", p=num_players, t=num_radial_ticks)
+    pred_transformed_per_player_time_step = rearrange(pred_transformed, "b p t d -> (b p t) d",
+                                                      p=num_players, t=num_radial_ticks)
+    duplicated_last_per_player_time_step = rearrange(
+        repeat(rearrange(duplicated_last, "b -> b 1"), "b pt -> b (pt repeat)", repeat=num_players * num_radial_ticks),
+        "b pt -> (b pt)")
+    valid_rows = Y_per_player_time_step.sum(axis=1) > 0.1
+    valid_Y_transformed = Y_per_player_time_step[valid_rows]
+    valid_pred_transformed = pred_transformed_per_player_time_step[valid_rows]
+    valid_duplicated = duplicated_last_per_player_time_step[valid_rows]
     #cat_loss = cross_entropy_loss_fn(valid_pred_transformed, valid_Y_transformed)
     #if torch.isnan(cat_loss).any():
     #    print('bad loss')
     #losses.cat_loss += cat_loss
     losses_to_cat = []
-    if valid_Y_transformed[~valid_duplicated_last_per_player].shape[0] > 0:
-        cat_loss = cross_entropy_loss_fn(valid_pred_transformed[~valid_duplicated_last_per_player],
-                                         valid_Y_transformed[~valid_duplicated_last_per_player])
+    if valid_Y_transformed[~valid_duplicated].shape[0] > 0:
+        cat_loss = cross_entropy_loss_fn(valid_pred_transformed[~valid_duplicated],
+                                         valid_Y_transformed[~valid_duplicated])
         if torch.isnan(cat_loss).any():
             print('bad loss')
         losses.cat_loss = torch.mean(cat_loss)
         losses_to_cat.append(cat_loss)
-    if valid_Y_transformed[valid_duplicated_last_per_player].shape[0] > 0.:
-        duplicated_last_cat_loss = cross_entropy_loss_fn(valid_pred_transformed[valid_duplicated_last_per_player],
-                                                         valid_Y_transformed[valid_duplicated_last_per_player])
+    if valid_Y_transformed[valid_duplicated].shape[0] > 0.:
+        duplicated_last_cat_loss = cross_entropy_loss_fn(valid_pred_transformed[valid_duplicated],
+                                                         valid_Y_transformed[valid_duplicated])
         if torch.isnan(duplicated_last_cat_loss).any():
             print('bad loss')
         losses.duplicate_last_cat_loss = torch.mean(duplicated_last_cat_loss)
@@ -101,9 +105,10 @@ def compute_accuracy_and_delta_diff(pred, Y, duplicated_last, accuracy, delta_di
     name = column_transformers.output_types.categorical_distribution_first_sub_cols[0]
 
     # keeping time steps flattened since just summing across all at end
-    Y_per_player = rearrange(Y, "b (p d) -> b p d", p=num_players)
+    Y_per_player = rearrange(Y, "b (p t d) -> b (p t) d", p=num_players, t=num_radial_ticks)
     Y_label_per_player = torch.argmax(Y_per_player, -1)
-    pred_untransformed_per_player = rearrange(pred_untransformed, "b (p d) -> b p d", p=num_players)
+    pred_untransformed_per_player = rearrange(pred_untransformed, "b p t d -> b (p t) d",
+                                              p=num_players, t=num_radial_ticks)
     pred_untransformed_label_per_player = torch.argmax(pred_untransformed_per_player, -1)
     accuracy_per_player = (Y_label_per_player == pred_untransformed_label_per_player).type(torch.float)
     Y_valid_per_player_row = Y_per_player.sum(axis=2)
