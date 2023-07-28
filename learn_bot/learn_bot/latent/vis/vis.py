@@ -130,7 +130,8 @@ def vis(loaded_model: LoadedModel, inference_fn: Callable[[LoadedModel], None]):
                 player_to_color[i] = (4, 190, 196)
                 player_to_color[i+max_enemies] = (187, 142, 52)
         players_str = draw_all_players(data_series, pred_series, d2_img_draw, draw_max, players_to_draw,
-                                       player_to_color=player_to_color, draw_only_pos=not draw_pred)
+                                       player_to_color=player_to_color, draw_only_pos=not draw_pred,
+                                       radial_vel_time_step=radial_vel_time_step_slider.get())
 
         details_text_var.set(players_str)
         d2_img_copy.alpha_composite(d2_overlay_im)
@@ -230,6 +231,7 @@ def vis(loaded_model: LoadedModel, inference_fn: Callable[[LoadedModel], None]):
         game_ticks = selected_df.loc[:, 'game tick number'].tolist()
         tick_slider.configure(to=len(ticks)-1)
         tick_slider.set(0)
+        radial_vel_time_step_slider.set(0)
         tick_slider_changed(0)
         selected_retake_var.set(cur_round in selected_retake_rounds)
 
@@ -267,7 +269,7 @@ def vis(loaded_model: LoadedModel, inference_fn: Callable[[LoadedModel], None]):
         from_=0,
         to=len(rounds)-1,
         orient='horizontal',
-        showvalue=0,
+        showvalue=False,
         length=500,
         command=round_slider_changed
     )
@@ -303,7 +305,7 @@ def vis(loaded_model: LoadedModel, inference_fn: Callable[[LoadedModel], None]):
         from_=0,
         to=100,
         orient='horizontal',
-        showvalue=0,
+        showvalue=False,
         length=500,
         command=tick_slider_changed
     )
@@ -332,6 +334,17 @@ def vis(loaded_model: LoadedModel, inference_fn: Callable[[LoadedModel], None]):
     player_distributions_var = tk.StringVar(value="*")
     player_distributions_entry = tk.Entry(distribution_control_frame, width=30, textvariable=player_distributions_var)
     player_distributions_entry.pack(side="left")
+    radial_vel_time_step_label = tk.Label(distribution_control_frame, text="Radial Vel Time Step: ")
+    radial_vel_time_step_label.pack(side="left")
+    radial_vel_time_step_slider = tk.Scale(
+        distribution_control_frame,
+        from_=0,
+        to=2,
+        orient='horizontal',
+        showvalue=True,
+        length=120
+    )
+    radial_vel_time_step_slider.pack(side="left")
 
     round_label_frame = tk.Frame(window)
     round_label_frame.pack(pady=5)

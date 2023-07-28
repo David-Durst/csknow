@@ -116,7 +116,7 @@ class VisMapCoordinate():
 
 def draw_all_players(data_series: pd.Series, pred_series: Optional[pd.Series], im_draw: ImageDraw, draw_max: bool,
                      players_to_draw: List[int], draw_only_pos: bool = False, player_to_color: Dict[int, Tuple] = {},
-                     rectangle = True) -> str:
+                     rectangle = True, radial_vel_time_step: int = 0) -> str:
     result = ""
     # colors track by number of players drawn
     for player_index in range(len(specific_player_place_area_columns)):
@@ -146,11 +146,14 @@ def draw_all_players(data_series: pd.Series, pred_series: Optional[pd.Series], i
             max_pred_prob = -1
             max_pred_index = -1
             for i in range(num_radial_bins):
-                cur_data_prob = data_series[player_place_area_columns.radial_vel[i]]
+                radial_vel_column = player_place_area_columns.radial_vel[i]
+                if radial_vel_time_step > 0:
+                    radial_vel_column = player_place_area_columns.future_radial_vel[radial_vel_time_step-1][i]
+                cur_data_prob = data_series[radial_vel_column]
                 if cur_data_prob > max_data_prob:
                     max_data_prob = cur_data_prob
                     max_data_index = i
-                cur_pred_prob = pred_series[player_place_area_columns.radial_vel[i]]
+                cur_pred_prob = pred_series[radial_vel_column]
                 if cur_pred_prob > max_pred_prob:
                     max_pred_prob = cur_pred_prob
                     max_pred_index = i

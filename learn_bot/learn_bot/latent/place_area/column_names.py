@@ -91,6 +91,7 @@ class PlayerPlaceAreaColumns:
         self.distribution_nearest_grid_area = []
         self.delta_pos = []
         self.radial_vel = []
+        self.future_radial_vel: List[List] = []
         for place_index in range(num_places):
             self.cur_place \
                 .append(get_player_cur_place_columns(player_index, place_index, team_str))
@@ -107,6 +108,11 @@ class PlayerPlaceAreaColumns:
         for radial_vel_index in range(num_radial_bins):
             self.radial_vel \
                 .append(get_radial_vel_columns(player_index, radial_vel_index, team_str))
+        for future_tick in range(num_future_ticks):
+            self.future_radial_vel.append([])
+            for radial_vel_index in range(num_radial_bins):
+                self.future_radial_vel[future_tick] \
+                    .append(get_future_radial_vel_columns(player_index, radial_vel_index, team_str, future_tick+1))
         for prior_tick in range(1, num_prior_ticks+1):
             for dim_str in ["x", "y", "z"]:
                 self.prior_pos.append(get_player_pos_columns(player_index, team_str, dim_str, prior_tick))
@@ -149,6 +155,8 @@ class PlayerPlaceAreaColumns:
             result.append(self.delta_pos)
         if radial:
             result.append(self.radial_vel)
+            #for future_tick in range(num_future_ticks):
+            #    result.append(self.future_radial_vel[future_tick])
         return result
 
 

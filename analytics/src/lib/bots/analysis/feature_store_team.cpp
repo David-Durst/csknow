@@ -942,7 +942,7 @@ namespace csknow::feature_store {
                 for (int futureTick = 0; futureTick < num_future_ticks; futureTick++) {
                     for (int radialVelindex = 0; radialVelindex < weapon_speed::num_radial_bins; radialVelindex++) {
                         file.createDataSet("/data/radial vel " + std::to_string(radialVelindex) + " "
-                                            + columnTeam + " " + iStr + " t-" + std::to_string(futureTick+1),
+                                            + columnTeam + " " + iStr + " t+" + std::to_string(futureTick+1),
                                            columnData[columnPlayer].futureRadialVel[futureTick][radialVelindex], hdf5FlatCreateProps);
                     }
                 }
@@ -1021,7 +1021,7 @@ namespace csknow::feature_store {
                     for (int radialVelindex = 0; radialVelindex < weapon_speed::num_radial_bins; radialVelindex++) {
                         columnData[columnPlayer].futureRadialVel[futureTick][radialVelindex] =
                                 file.getDataSet("/data/radial vel " + std::to_string(radialVelindex) + " "
-                                           + columnTeam + " " + iStr + " t-" + std::to_string(futureTick+1))
+                                           + columnTeam + " " + iStr + " t+" + std::to_string(futureTick+1))
                                            .read<std::vector<bool>>();
                     }
                 }
