@@ -132,6 +132,12 @@ namespace csknow::feature_store {
                 columnTData[i].radialVel[j].resize(size, false);
                 columnCTData[i].radialVel[j].resize(size, false);
             }
+            for (int j = 0; j < num_future_ticks; j++) {
+                for (int k = 0; k < weapon_speed::num_radial_bins; k++) {
+                    columnTData[i].futureRadialVel[j][k].resize(size, false);
+                    columnCTData[i].futureRadialVel[j][k].resize(size, false);
+                }
+            }
         }
         this->size = size;
         //checkPossiblyBadValue();
@@ -322,6 +328,12 @@ namespace csknow::feature_store {
                     columnTData[i].radialVel[j][rowIndex] = false;
                     columnCTData[i].radialVel[j][rowIndex] = false;
                 }
+                for (int j = 0; j < num_future_ticks; j++) {
+                    for (int k = 0; k < weapon_speed::num_radial_bins; k++) {
+                        columnTData[i].futureRadialVel[j][k][rowIndex] = false;
+                        columnCTData[i].futureRadialVel[j][k][rowIndex] = false;
+                    }
+                }
             }
         }
     }
@@ -502,6 +514,10 @@ namespace csknow::feature_store {
 
     void TeamFeatureStoreResult::computeDeltaPosACausalLabels(int64_t curTick, CircularBuffer<int64_t> & futureTracker,
                                                               array<ColumnPlayerData,max_enemies> & columnData) {
+        if (futureTracker.isEmpty()) {
+            std::cout << "delta pos acausal label with no future ticks" << std::endl;
+            std::raise(SIGINT);
+        }
         // skip if not enough history in the future
         if (futureTracker.getCurSize() < 2) {
             return;
@@ -519,19 +535,14 @@ namespace csknow::feature_store {
             for (int radialVelIndex = 0; radialVelIndex < weapon_speed::num_radial_bins; radialVelIndex++) {
                 columnData[playerColumn].radialVel[radialVelIndex][curTick] = false;
             }
-            if (futureTracker.isEmpty()) {
-                std::cout << "delta pos acausal label with no future ticks" << std::endl;
-                std::raise(SIGINT);
-            }
 
             // ignore players who aren't alive far enough in the future
             // look at next tick;
-            int64_t futureTickIndex = futureTracker.fromNewest(1);//fromOldest();
+            int64_t futureTickIndex = futureTracker.fromNewest(1);
             if (columnData[playerColumn].playerId[futureTickIndex] != columnData[playerColumn].playerId[curTick]) {
                 continue;
             }
 
-            // if jumping, look twice as far in future
             bool jumping = false, falling = false;
             for (int64_t i = 0; i < futureTracker.getCurSize(); i++) {
                 if (columnData[playerColumn].velocity[futureTracker.fromNewest(i)].z > 10.) {
@@ -581,15 +592,68 @@ namespace csknow::feature_store {
                                                         columnData[playerColumn].scoped[curTick],
                                                         columnData[playerColumn].airborne[futureTickIndex],
                                                         jumping, falling);
-            /*
-            // if jumping and standing still in xy, look twice as far in future
-            if (deltaPosIndex == 12 && jumping) {
-                futureTickIndex = jumpFutureTracker.fromOldest();
-                deltaPosIndex = getDeltaPosFlatIndex(columnData[playerColumn].footPos[futureTickIndex], deltaPosRange);
-            }
-             */
-            //columnData[playerColumn].deltaPos[deltaPosIndex][curTick] = true;
             columnData[playerColumn].radialVel[movementStatus.toRadialMovementBin()][curTick] = true;
+        }
+    }
+
+    void TeamFeatureStoreResult::computeFutureDeltaPosACausalLabels(int64_t curTick, CircularBuffer<int64_t> & futureTracker0_5,
+                                                                    CircularBuffer<int64_t> & futureTracker1_0,
+                                                                    array<ColumnPlayerData,max_enemies> & columnData,
+                                                                    const TickRates & tickRates) {
+        if (futureTracker1_0.isEmpty() || futureTracker0_5.isEmpty()) {
+            std::cout << "future delta pos acausal label with no future ticks" << std::endl;
+            std::raise(SIGINT);
+        }
+
+        // if enough distance between present and future, then fill in
+        // otherwise disable future tick
+        if (secondsBetweenTicks(tickRates, gameTickNumber[curTick], gameTickNumber[futureTracker1_0.fromOldest()]) < 0.8) {
+            return;
+        }
+
+        for (size_t playerColumn = 0; playerColumn < max_enemies; playerColumn++) {
+            if (columnData[playerColumn].playerId[curTick] == INVALID_ID) {
+                continue;
+            }
+
+            // ignore players who aren't alive far enough in the future
+            // look at next tick;
+            int64_t futureTickIndex0_5 = futureTracker0_5.fromOldest(),
+                futureTickIndex1_0 = futureTracker1_0.fromOldest();
+            if (columnData[playerColumn].playerId[futureTickIndex1_0] != columnData[playerColumn].playerId[curTick]) {
+                continue;
+            }
+
+            for (int radialVelIndex = 0; radialVelIndex < weapon_speed::num_radial_bins; radialVelIndex++) {
+                columnData[playerColumn].futureRadialVel[0][radialVelIndex][curTick] =
+                        columnData[playerColumn].radialVel[radialVelIndex][futureTickIndex0_5];
+                columnData[playerColumn].futureRadialVel[1][radialVelIndex][curTick] =
+                        columnData[playerColumn].radialVel[radialVelIndex][futureTickIndex1_0];
+            }
+        }
+    }
+
+    void TeamFeatureStoreResult::removePartialACausalLabels(int64_t curTick,
+                                                            array<ColumnPlayerData,max_enemies> & columnData) {
+        for (size_t playerColumn = 0; playerColumn < max_enemies; playerColumn++) {
+            // valid if one output set (assume never more than 1 set)
+            bool curPlayerTickValid = false, futurePlayerTickValid0_5 = false, futurePlayerTickValid1_0 = false;
+            for (int radialVelIndex = 0; radialVelIndex < weapon_speed::num_radial_bins; radialVelIndex++) {
+                curPlayerTickValid = curPlayerTickValid || columnData[playerColumn].radialVel[radialVelIndex][curTick];
+                futurePlayerTickValid0_5 = futurePlayerTickValid0_5 ||
+                        columnData[playerColumn].futureRadialVel[0][radialVelIndex][curTick];
+                futurePlayerTickValid1_0 = futurePlayerTickValid0_5 ||
+                                           columnData[playerColumn].futureRadialVel[1][radialVelIndex][curTick];
+            }
+
+            // disable all labels if any one isn't set
+            if (!curPlayerTickValid || !futurePlayerTickValid0_5 || !futurePlayerTickValid1_0) {
+                for (int radialVelIndex = 0; radialVelIndex < weapon_speed::num_radial_bins; radialVelIndex++) {
+                    columnData[playerColumn].radialVel[radialVelIndex][curTick] = false;
+                    columnData[playerColumn].futureRadialVel[0][radialVelIndex][curTick] = false;
+                    columnData[playerColumn].futureRadialVel[1][radialVelIndex][curTick] = false;
+                }
+            }
         }
     }
 
@@ -671,9 +735,7 @@ namespace csknow::feature_store {
         for (int64_t roundIndex = 0; roundIndex < rounds.size; roundIndex++) {
             int64_t gameIndex = rounds.gameId[roundIndex];
             TickRates tickRates = computeTickRates(games, rounds, roundIndex);
-            CircularBuffer<int64_t> ticks1sFutureTracker(4), ticks2sFutureTracker(4), ticks6sFutureTracker(6),
-                // this one I add to every frame and remove when too far in the future, more accuracte
-                bothSidesTicks0_5sFutureTracker(20), bothSidesTicks1_5sFutureTracker(30),
+            CircularBuffer<int64_t> bothSidesTicks0_5sFutureTracker(20), bothSidesTicks1_0sFutureTracker(30),
                 bothSidesTicks5sFutureTracker(200), bothSidesTicks10sFutureTracker(200), bothSidesTicks20sFutureTracker(400);
             //, ticks15sFutureTracker(15), ticks30sFutureTracker(30);
             for (int64_t unmodifiedTickIndex = rounds.ticksPerRound[roundIndex].maxId;
@@ -691,51 +753,35 @@ namespace csknow::feature_store {
                 testName[tickIndex] = keyRetakeEvents.roundTestName[roundIndex];
                 testSuccess[tickIndex] = keyRetakeEvents.roundHasCompleteTest[roundIndex];
                 baiting[tickIndex] = keyRetakeEvents.roundBaiters[roundIndex];
-                // add a new tick every second
-                if (ticks1sFutureTracker.isEmpty() ||
-                    secondsBetweenTicks(ticks, tickRates, internalIdToTickId[tickIndex], internalIdToTickId[ticks1sFutureTracker.fromNewest()]) >= 0.25) {
-                    ticks1sFutureTracker.enqueue(tickIndex);
-                }
-                if (ticks2sFutureTracker.isEmpty() ||
-                    secondsBetweenTicks(ticks, tickRates, internalIdToTickId[tickIndex], internalIdToTickId[ticks2sFutureTracker.fromNewest()]) >= 0.5) {
-                    ticks2sFutureTracker.enqueue(tickIndex);
-                }
-                if (ticks6sFutureTracker.isEmpty() ||
-                    secondsBetweenTicks(ticks, tickRates, internalIdToTickId[tickIndex], internalIdToTickId[ticks6sFutureTracker.fromNewest()]) >= 1.) {
-                    ticks6sFutureTracker.enqueue(tickIndex);
-                }
+
                 bothSidesTicks0_5sFutureTracker.enqueue(tickIndex);
-                while (secondsBetweenTicks(ticks, tickRates, internalIdToTickId[tickIndex], internalIdToTickId[bothSidesTicks0_5sFutureTracker.fromOldest()]) > 0.5) {
+                while (bothSidesTicks0_5sFutureTracker.getCurSize() > 1 &&
+                    secondsBetweenTicks(ticks, tickRates, internalIdToTickId[tickIndex], internalIdToTickId[bothSidesTicks0_5sFutureTracker.fromOldest(1)]) > 0.5) {
                     bothSidesTicks0_5sFutureTracker.dequeue();
                 }
-                bothSidesTicks1_5sFutureTracker.enqueue(tickIndex);
-                while (secondsBetweenTicks(ticks, tickRates, internalIdToTickId[tickIndex], internalIdToTickId[bothSidesTicks1_5sFutureTracker.fromOldest()]) > 1.5) {
-                    bothSidesTicks1_5sFutureTracker.dequeue();
+                bothSidesTicks1_0sFutureTracker.enqueue(tickIndex);
+                while (bothSidesTicks1_0sFutureTracker.getCurSize() > 1 &&
+                       secondsBetweenTicks(ticks, tickRates, internalIdToTickId[tickIndex], internalIdToTickId[bothSidesTicks1_0sFutureTracker.fromOldest(1)]) > 0.5) {
+                    bothSidesTicks1_0sFutureTracker.dequeue();
                 }
                 bothSidesTicks5sFutureTracker.enqueue(tickIndex);
-                while (secondsBetweenTicks(ticks, tickRates, internalIdToTickId[tickIndex], internalIdToTickId[bothSidesTicks5sFutureTracker.fromOldest()]) > 5.) {
+                while (bothSidesTicks5sFutureTracker.getCurSize() > 1 &&
+                    secondsBetweenTicks(ticks, tickRates, internalIdToTickId[tickIndex], internalIdToTickId[bothSidesTicks5sFutureTracker.fromOldest(1)]) > 5.) {
                     bothSidesTicks5sFutureTracker.dequeue();
                 }
                 bothSidesTicks10sFutureTracker.enqueue(tickIndex);
-                while (secondsBetweenTicks(ticks, tickRates, internalIdToTickId[tickIndex], internalIdToTickId[bothSidesTicks10sFutureTracker.fromOldest()]) > 10.) {
+                while (bothSidesTicks10sFutureTracker.getCurSize() > 1 &&
+                    secondsBetweenTicks(ticks, tickRates, internalIdToTickId[tickIndex], internalIdToTickId[bothSidesTicks10sFutureTracker.fromOldest(1)]) > 10.) {
                     bothSidesTicks10sFutureTracker.dequeue();
                 }
                 bothSidesTicks20sFutureTracker.enqueue(tickIndex);
-                while (secondsBetweenTicks(ticks, tickRates, internalIdToTickId[tickIndex], internalIdToTickId[bothSidesTicks20sFutureTracker.fromOldest()]) > 20.) {
+                while (bothSidesTicks20sFutureTracker.getCurSize() > 1 &&
+                    secondsBetweenTicks(ticks, tickRates, internalIdToTickId[tickIndex], internalIdToTickId[bothSidesTicks20sFutureTracker.fromOldest(1)]) > 20.) {
                     bothSidesTicks20sFutureTracker.dequeue();
                 }
-                /*
-                if (ticks15sFutureTracker.isEmpty() ||
-                    secondsBetweenTicks(ticks, tickRates, tickIndex, ticks15sFutureTracker.fromNewest()) >= 1.) {
-                    ticks15sFutureTracker.enqueue(tickIndex);
-                }
-                if (ticks30sFutureTracker.isEmpty() ||
-                    secondsBetweenTicks(ticks, tickRates, tickIndex, ticks30sFutureTracker.fromNewest()) >= 1.) {
-                    ticks30sFutureTracker.enqueue(tickIndex);
-                }
-                 */
-                if (ticks.roundId[internalIdToTickId[ticks1sFutureTracker.fromOldest()]] != ticks.roundId[internalIdToTickId[tickIndex]]) {
-                    std::cout << "round id mismatch cur tick " << internalIdToTickId[tickIndex] << " future tick " << internalIdToTickId[ticks1sFutureTracker.fromOldest()] << std::endl;
+
+                if (ticks.roundId[internalIdToTickId[bothSidesTicks0_5sFutureTracker.fromOldest()]] != ticks.roundId[internalIdToTickId[tickIndex]]) {
+                    std::cout << "round id mismatch cur tick " << internalIdToTickId[tickIndex] << " future tick " << internalIdToTickId[bothSidesTicks0_5sFutureTracker.fromOldest()] << std::endl;
                     std::raise(SIGINT);
                 }
                 /*
@@ -754,6 +800,10 @@ namespace csknow::feature_store {
                  */
                 computeDeltaPosACausalLabels(tickIndex, bothSidesTicks0_5sFutureTracker, columnCTData);
                 computeDeltaPosACausalLabels(tickIndex, bothSidesTicks0_5sFutureTracker, columnTData);
+                computeFutureDeltaPosACausalLabels(tickIndex, bothSidesTicks0_5sFutureTracker,
+                                                   bothSidesTicks1_0sFutureTracker, columnCTData, tickRates);
+                computeFutureDeltaPosACausalLabels(tickIndex, bothSidesTicks0_5sFutureTracker,
+                                                   bothSidesTicks1_0sFutureTracker, columnTData, tickRates);
                 computeDecreaseDistanceToC4(tickIndex, bothSidesTicks5sFutureTracker, columnCTData,
                                             DecreaseTimingOption::s5, reachableResult);
                 computeDecreaseDistanceToC4(tickIndex, bothSidesTicks5sFutureTracker, columnTData,
@@ -796,6 +846,17 @@ namespace csknow::feature_store {
                     std::raise(SIGINT);
                 }
                  */
+            }
+            // after all is done, remove partial labels (where have next step but not 0.5 or 1.0 in future)
+            // do after computing all values so can use a value in past, then remove it without impacting past
+            for (int64_t unmodifiedTickIndex = rounds.ticksPerRound[roundIndex].minId;
+                 unmodifiedTickIndex <= rounds.ticksPerRound[roundIndex].maxId; unmodifiedTickIndex++) {
+                int64_t tickIndex = tickIdToInternalId[unmodifiedTickIndex];
+                if (tickIndex == INVALID_ID) {
+                    continue;
+                }
+                removePartialACausalLabels(tickIndex, columnCTData);
+                removePartialACausalLabels(tickIndex, columnTData);
             }
             roundsProcessed++;
             printProgress(roundsProcessed, rounds.size);
@@ -878,6 +939,13 @@ namespace csknow::feature_store {
                     file.createDataSet("/data/radial vel " + std::to_string(radialVelindex) + " " + columnTeam + " " + iStr,
                                        columnData[columnPlayer].radialVel[radialVelindex], hdf5FlatCreateProps);
                 }
+                for (int futureTick = 0; futureTick < num_future_ticks; futureTick++) {
+                    for (int radialVelindex = 0; radialVelindex < weapon_speed::num_radial_bins; radialVelindex++) {
+                        file.createDataSet("/data/radial vel " + std::to_string(radialVelindex) + " "
+                                            + columnTeam + " " + iStr + " t-" + std::to_string(futureTick+1),
+                                           columnData[columnPlayer].futureRadialVel[futureTick][radialVelindex], hdf5FlatCreateProps);
+                    }
+                }
             }
         }
     }
@@ -948,6 +1016,14 @@ namespace csknow::feature_store {
                 for (int radialVelindex = 0; radialVelindex < weapon_speed::num_radial_bins; radialVelindex++) {
                     columnData[columnPlayer].radialVel[radialVelindex] =
                             file.getDataSet("/data/radial vel " + std::to_string(radialVelindex) + " " + columnTeam + " " + iStr).read<std::vector<bool>>();
+                }
+                for (int futureTick = 0; futureTick < num_future_ticks; futureTick++) {
+                    for (int radialVelindex = 0; radialVelindex < weapon_speed::num_radial_bins; radialVelindex++) {
+                        columnData[columnPlayer].futureRadialVel[futureTick][radialVelindex] =
+                                file.getDataSet("/data/radial vel " + std::to_string(radialVelindex) + " "
+                                           + columnTeam + " " + iStr + " t-" + std::to_string(futureTick+1))
+                                           .read<std::vector<bool>>();
+                    }
                 }
             }
         }

@@ -107,6 +107,7 @@ namespace csknow::feature_store {
             vector<bool> walking;
             vector<bool> ducking;
             array<vector<bool>, weapon_speed::num_radial_bins> radialVel;
+            array<array<vector<bool>, weapon_speed::num_radial_bins>, num_future_ticks> futureRadialVel;
         };
         array<ColumnPlayerData, max_enemies> columnCTData, columnTData;
         vector<std::reference_wrapper<const array<ColumnPlayerData, max_enemies>>> getAllColumnData() const {
@@ -149,6 +150,11 @@ namespace csknow::feature_store {
                                           */
         void computeDeltaPosACausalLabels(int64_t curTick, CircularBuffer<int64_t> & futureTracker,
                                           array<ColumnPlayerData,max_enemies> & columnData);
+        void computeFutureDeltaPosACausalLabels(int64_t curTick, CircularBuffer<int64_t> & futureTracker0_5,
+                                                CircularBuffer<int64_t> & futureTracker1_0,
+                                                array<ColumnPlayerData,max_enemies> & columnData,
+                                                const TickRates & ticksRates);
+        void removePartialACausalLabels(int64_t curTick, array<ColumnPlayerData,max_enemies> & columnData);
         void computeDecreaseDistanceToC4(int64_t curTick, CircularBuffer<int64_t> & futureTracker,
                                           array<ColumnPlayerData,max_enemies> & columnData,
                                           DecreaseTimingOption decreaseTimingOption,
