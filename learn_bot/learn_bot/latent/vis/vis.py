@@ -197,6 +197,9 @@ def vis(loaded_model: LoadedModel, inference_fn: Callable[[LoadedModel], None]):
         draw_max = not draw_max
         tick_slider_changed(cur_tick_index)
 
+    def radial_vel_time_step_slider_changed(new_radial_vel_time_step):
+        tick_slider_changed(cur_tick_index)
+
     def select_all_retake_rounds():
         nonlocal selected_retake_rounds
         selected_retake_rounds = set(rounds)
@@ -342,7 +345,8 @@ def vis(loaded_model: LoadedModel, inference_fn: Callable[[LoadedModel], None]):
         to=2,
         orient='horizontal',
         showvalue=True,
-        length=120
+        length=120,
+        command=radial_vel_time_step_slider_changed
     )
     radial_vel_time_step_slider.pack(side="left")
 

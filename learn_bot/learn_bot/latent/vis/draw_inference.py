@@ -153,7 +153,8 @@ def draw_all_players(data_series: pd.Series, pred_series: Optional[pd.Series], i
                 if cur_data_prob > max_data_prob:
                     max_data_prob = cur_data_prob
                     max_data_index = i
-                cur_pred_prob = pred_series[radial_vel_column]
+                # TODO: use radial_vel_column
+                cur_pred_prob = pred_series[player_place_area_columns.radial_vel[i]]
                 if cur_pred_prob > max_pred_prob:
                     max_pred_prob = cur_pred_prob
                     max_pred_index = i

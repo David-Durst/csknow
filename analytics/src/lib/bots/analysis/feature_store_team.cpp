@@ -641,8 +641,8 @@ namespace csknow::feature_store {
             for (int radialVelIndex = 0; radialVelIndex < weapon_speed::num_radial_bins; radialVelIndex++) {
                 curPlayerTickValid = curPlayerTickValid || columnData[playerColumn].radialVel[radialVelIndex][curTick];
                 futurePlayerTickValid0_5 = futurePlayerTickValid0_5 ||
-                        columnData[playerColumn].futureRadialVel[0][radialVelIndex][curTick];
-                futurePlayerTickValid1_0 = futurePlayerTickValid0_5 ||
+                                           columnData[playerColumn].futureRadialVel[0][radialVelIndex][curTick];
+                futurePlayerTickValid1_0 = futurePlayerTickValid1_0 ||
                                            columnData[playerColumn].futureRadialVel[1][radialVelIndex][curTick];
             }
 
@@ -672,7 +672,6 @@ namespace csknow::feature_store {
             }
 
             // find farthest forward where player alive
-
             int64_t futureTickIndex = INVALID_ID;
             // don't look at current tick, need at least 1 tick in the future
             for (int64_t i = 0; i < futureTracker.getCurSize() - 1; i++) {
@@ -761,7 +760,7 @@ namespace csknow::feature_store {
                 }
                 bothSidesTicks1_0sFutureTracker.enqueue(tickIndex);
                 while (bothSidesTicks1_0sFutureTracker.getCurSize() > 1 &&
-                       secondsBetweenTicks(ticks, tickRates, internalIdToTickId[tickIndex], internalIdToTickId[bothSidesTicks1_0sFutureTracker.fromOldest(1)]) > 0.5) {
+                       secondsBetweenTicks(ticks, tickRates, internalIdToTickId[tickIndex], internalIdToTickId[bothSidesTicks1_0sFutureTracker.fromOldest(1)]) > 1.) {
                     bothSidesTicks1_0sFutureTracker.dequeue();
                 }
                 bothSidesTicks5sFutureTracker.enqueue(tickIndex);
