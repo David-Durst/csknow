@@ -155,8 +155,8 @@ class PlayerPlaceAreaColumns:
             result.append(self.delta_pos)
         if radial:
             result.append(self.radial_vel)
-            #for future_tick in range(num_future_ticks):
-            #    result.append(self.future_radial_vel[future_tick])
+            for future_tick in range(num_future_ticks):
+                result.append(self.future_radial_vel[future_tick])
         return result
 
 

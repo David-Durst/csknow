@@ -36,7 +36,8 @@ class TransformerNestedHiddenLatentModel(nn.Module):
     latent_to_distributions: Callable
     noise_var: float
 
-    def __init__(self, cts: IOColumnTransformers, outer_latent_size: int, inner_latent_size: int, num_layers, num_heads):
+    def __init__(self, cts: IOColumnTransformers, num_players: int, num_output_time_steps, num_radial_bins: int,
+                 num_layers, num_heads):
         super(TransformerNestedHiddenLatentModel, self).__init__()
         self.cts = cts
         c4_columns_ranges = range_list_to_index_list(cts.get_name_ranges(True, True, contained_str="c4"))
@@ -62,7 +63,7 @@ class TransformerNestedHiddenLatentModel(nn.Module):
         self.num_players = len(players_columns)
         self.num_dim = 3
         self.num_time_steps = len(self.players_pos_columns) // self.num_dim // self.num_players
-        assert self.num_players == outer_latent_size
+        assert self.num_players == num_players
         self.num_players_per_team = self.num_players // 2
 
         # only different players in same time step to talk to each other
@@ -122,16 +123,17 @@ class TransformerNestedHiddenLatentModel(nn.Module):
                                                 custom_encoder=transformer_encoder, batch_first=True)
 
         self.decoder = nn.Sequential(
-            nn.Linear(self.internal_width, inner_latent_size),
+            nn.Linear(self.internal_width, num_output_time_steps * num_radial_bins),
+            nn.Unflatten(0, [num_output_time_steps, num_radial_bins])
         )
 
-        self.logits_output = nn.Sequential(
-            nn.Flatten(1)
-        )
+        # dim 0 is batch, 1 is players, 2 is output time step, 3 is probabilities/logits
+        #self.logits_output = nn.Sequential(
+        #    nn.Flatten(1)
+        #)
 
         self.prob_output = nn.Sequential(
-            nn.Softmax(dim=2),
-            nn.Flatten(1)
+            nn.Softmax(dim=3),
         )
 
     def encode_pos(self, pos: torch.tensor, enable_noise=True):
@@ -250,7 +252,7 @@ class TransformerNestedHiddenLatentModel(nn.Module):
                                              src_key_padding_mask=dead_gathered)
         latent = self.decoder(transformed)
         prob_output = self.prob_output(latent / temperature)
-        return self.logits_output(latent), prob_output, one_hot_prob_to_index(prob_output)
+        return latent, prob_output, one_hot_prob_to_index(prob_output)
         #if y is not None:
         #    y_encoded = self.encode_y(x_pos, x_non_pos, y, True)
         #    transformed = self.transformer_model(x_temporal_embedded_flattened, y_encoded, tgt_mask=tgt_mask,

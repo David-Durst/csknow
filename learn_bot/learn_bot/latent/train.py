@@ -18,6 +18,7 @@ from learn_bot.latent.analyze.comparison_column_names import small_human_good_ro
 from learn_bot.latent.dataset import *
 from learn_bot.latent.engagement.column_names import round_id_column
 from learn_bot.latent.latent_hdf5_dataset import MultipleLatentHDF5Dataset
+from learn_bot.latent.order.column_names import num_future_ticks
 from learn_bot.latent.place_area.load_data import human_latent_team_hdf5_data_path, manual_latent_team_hdf5_data_path, \
     LoadDataResult, LoadDataOptions
 from learn_bot.latent.place_area.pos_abs_from_delta_grid_or_radial import delta_pos_grid_num_cells
@@ -169,7 +170,9 @@ def train(train_type: TrainType, multi_hdf5_wrapper: MultiHDF5Wrapper,
     if train_type == TrainType.DeltaPos:
         column_transformers = IOColumnTransformers(place_area_input_column_types, radial_vel_output_column_types,
                                                    multi_hdf5_wrapper.train_hdf5_wrappers[0].sample_df)
-        model = TransformerNestedHiddenLatentModel(column_transformers, 2 * max_enemies, num_radial_bins,
+        # plus 1 on future ticks to include present tick
+        model = TransformerNestedHiddenLatentModel(column_transformers, 2 * max_enemies,
+                                                   num_future_ticks + 1, num_radial_bins,
                                                    hyperparameter_options.layers, hyperparameter_options.heads)
         if load_model_path:
             model_file = torch.load(load_model_path)
