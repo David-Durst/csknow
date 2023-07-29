@@ -245,9 +245,8 @@ class TransformerNestedHiddenLatentModel(nn.Module):
 
 
         alive_gathered = x[:, self.alive_columns]
-        alive_gathered_temporal = rearrange(
-            repeat(rearrange(alive_gathered, 'b p -> b p 1'), 'b p i -> b p (i repeat)', repeat=self.num_output_time_steps),
-            'b p i -> b (p i)')
+        alive_gathered_temporal = repeat(alive_gathered, 'b p -> b (p repeat)', repeat=self.num_output_time_steps)
+            #'b p i -> b (p i)')
         dead_gathered = alive_gathered_temporal < 0.1
 
         tgt_mask = self.generate_tgt_mask(x.device.type)

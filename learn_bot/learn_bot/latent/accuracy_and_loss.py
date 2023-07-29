@@ -61,9 +61,7 @@ def compute_loss(pred, Y, duplicated_last, num_players) -> LatentLosses:
     Y_per_player_time_step = rearrange(Y, "b (p t d) -> (b p t) d", p=num_players, t=num_radial_ticks)
     pred_transformed_per_player_time_step = rearrange(pred_transformed, "b p t d -> (b p t) d",
                                                       p=num_players, t=num_radial_ticks)
-    duplicated_last_per_player_time_step = rearrange(
-        repeat(rearrange(duplicated_last, "b -> b 1"), "b pt -> b (pt repeat)", repeat=num_players * num_radial_ticks),
-        "b pt -> (b pt)")
+    duplicated_last_per_player_time_step = repeat(duplicated_last, "b -> (b repeat)", repeat=num_players * num_radial_ticks)
     valid_rows = Y_per_player_time_step.sum(axis=1) > 0.1
     valid_Y_transformed = Y_per_player_time_step[valid_rows]
     valid_pred_transformed = pred_transformed_per_player_time_step[valid_rows]
