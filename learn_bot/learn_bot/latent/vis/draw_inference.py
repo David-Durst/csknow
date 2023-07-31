@@ -4,7 +4,7 @@ from typing import Tuple, Optional, List, Dict
 from math import sqrt, pow, cos, sin, radians
 
 import pandas as pd
-from PIL import Image, ImageDraw, ImageTk as itk
+from PIL import Image, ImageDraw, ImageTk as itk, ImageFont
 
 from learn_bot.latent.place_area.pos_abs_from_delta_grid_or_radial import delta_pos_grid_num_cells, delta_pos_grid_num_cells_per_xy_dim, \
     delta_pos_grid_cell_dim, delta_pos_grid_num_xy_cells_per_z_change
@@ -81,7 +81,8 @@ class VisMapCoordinate():
             new_radial_cell.z_index = 1
         return new_radial_cell
 
-    def draw_vis(self, im_draw: ImageDraw, use_scale: bool, custom_color: Optional[Tuple] = None, rectangle = True):
+    def draw_vis(self, im_draw: ImageDraw, use_scale: bool, custom_color: Optional[Tuple] = None, rectangle = True,
+                 player_text: Optional[str] = None):
         half_width = delta_pos_grid_cell_dim / 2
         if use_scale:
             if not self.is_player and not self.is_prediction:
@@ -97,6 +98,10 @@ class VisMapCoordinate():
         y_max = self.coords.y + half_width
         canvas_max = VisMapCoordinate(x_max, y_max, self.coords.z)
         canvas_max_vec = canvas_max.get_canvas_coordinates()
+        canvas_avg_x = (canvas_max_vec.x + canvas_min_vec.x) / 2.
+        canvas_avg_y = (canvas_max_vec.y + canvas_min_vec.y) / 2.
+
+        fnt = ImageFont.truetype("Pillow/Tests/fonts/FreeMono.ttf", 20)
 
         if custom_color:
             cur_color = custom_color
@@ -110,13 +115,15 @@ class VisMapCoordinate():
         # flip as csgo has different coordinates from pillow
         if rectangle:
             im_draw.rectangle([canvas_min_vec.x, canvas_max_vec.y, canvas_max_vec.x, canvas_min_vec.y], fill=cur_color)
+        elif player_text:
+            im_draw.text([canvas_avg_x, canvas_avg_y], anchor="mm", text=player_text, font=fnt, fill=cur_color)
         else:
             im_draw.ellipse([canvas_min_vec.x, canvas_max_vec.y, canvas_max_vec.x, canvas_min_vec.y], fill=cur_color)
 
 
 def draw_all_players(data_series: pd.Series, pred_series: Optional[pd.Series], im_draw: ImageDraw, draw_max: bool,
                      players_to_draw: List[int], draw_only_pos: bool = False, player_to_color: Dict[int, Tuple] = {},
-                     rectangle = True, radial_vel_time_step: int = 0) -> str:
+                     rectangle = True, radial_vel_time_step: int = 0, player_to_text: Dict[int, str] = {}) -> str:
     result = ""
     # colors track by number of players drawn
     for player_index in range(len(specific_player_place_area_columns)):
@@ -133,7 +140,8 @@ def draw_all_players(data_series: pd.Series, pred_series: Optional[pd.Series], i
                 custom_color = None
                 if player_index in player_to_color:
                     custom_color = player_to_color[player_index]
-                pos_coord.draw_vis(im_draw, True, custom_color=custom_color, rectangle=rectangle)
+                pos_coord.draw_vis(im_draw, True, custom_color=custom_color, rectangle=rectangle,
+                                   player_text=player_to_text[player_index] if player_index in player_to_text else None)
                 player_str = f'''{player_place_area_columns.player_id} pos {pos_coord.coords}'''
                 result += player_str + "\n"
                 continue
@@ -236,10 +244,28 @@ def draw_player_connection_lines(src_data_series: pd.Series, tgt_data_series, im
                                              tgt_data_series[tgt_player_place_area_columns.pos[2]])
             distance = sqrt(pow(src_pos_coord.coords.x - tgt_pos_coord.coords.x, 2) +
                             pow(src_pos_coord.coords.y - tgt_pos_coord.coords.y, 2))
+            abs_distance_x = abs(src_pos_coord.coords.x - tgt_pos_coord.coords.x)
+            abs_distance_y = abs(src_pos_coord.coords.y - tgt_pos_coord.coords.y)
+            pct_distance_x = abs_distance_x / (abs_distance_x + abs_distance_y)
+            pct_distance_y = abs_distance_y / (abs_distance_x + abs_distance_y)
 
             if distance > 200.:
+                # a few pixels so line doesn't overlap with player text
+                non_overlap_adjustment = 10
                 src_canvas_coords = src_pos_coord.get_canvas_coordinates()
                 tgt_canvas_coords = tgt_pos_coord.get_canvas_coordinates()
+                if src_canvas_coords.x < tgt_canvas_coords.x:
+                    src_canvas_coords.x += non_overlap_adjustment * pct_distance_x
+                    tgt_canvas_coords.x -= non_overlap_adjustment * pct_distance_x
+                else:
+                    src_canvas_coords.x -= non_overlap_adjustment * pct_distance_x
+                    tgt_canvas_coords.x += non_overlap_adjustment * pct_distance_x
+                if src_canvas_coords.y < tgt_canvas_coords.y:
+                    src_canvas_coords.y += non_overlap_adjustment * pct_distance_y
+                    tgt_canvas_coords.y -= non_overlap_adjustment * pct_distance_y
+                else:
+                    src_canvas_coords.y -= non_overlap_adjustment * pct_distance_y
+                    tgt_canvas_coords.y += non_overlap_adjustment * pct_distance_y
                 im_draw.line([src_canvas_coords.x, src_canvas_coords.y, tgt_canvas_coords.x, tgt_canvas_coords.y],
                              fill=src_player_to_color[player_index], width=5)
 

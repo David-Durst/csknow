@@ -238,22 +238,34 @@ def vis_two(predicted_model: LoadedModel, ground_truth_model: LoadedModel,
                                                                   int(255 * ground_truth_color[2]))
 
             if draw_overlap:
+                draw_player_connection_lines(cur_predicted_row, cur_ground_truth_row, ground_truth_d2_img_draw,
+                                             player_index_mapping, predicted_players_to_draw, predicted_colors)
+                player_to_text = {}
+                for i in range(max_enemies):
+                    player_to_text[i] = 'PA'
+                    player_to_text[i + max_enemies] = 'PD'
                 predicted_players_str = \
                     draw_all_players(cur_predicted_row, None, predicted_d2_img_draw, draw_max,
-                                     predicted_players_to_draw, draw_only_pos=True, player_to_color=predicted_colors)
+                                     predicted_players_to_draw, draw_only_pos=True, player_to_color=predicted_colors,
+                                     rectangle=False, player_to_text=player_to_text)
+                for i in range(max_enemies):
+                    player_to_text[i] = 'GA'
+                    player_to_text[i + max_enemies] = 'GD'
                 ground_truth_players_str = \
                     draw_all_players(cur_ground_truth_row, None, ground_truth_d2_img_draw, draw_max,
                                      ground_truth_players_to_draw, draw_only_pos=True, player_to_color=ground_truth_colors,
-                                     rectangle=False)
-                draw_player_connection_lines(cur_predicted_row, cur_ground_truth_row, ground_truth_d2_img_draw,
-                                             player_index_mapping, predicted_players_to_draw, predicted_colors)
+                                     rectangle=False, player_to_text=player_to_text)
             else:
+                player_to_color = {}
+                for i in range(max_enemies):
+                    player_to_color[i] = (4, 190, 196)
+                    player_to_color[i + max_enemies] = (187, 142, 52)
                 predicted_players_str = \
                     draw_all_players(cur_predicted_row, None, predicted_d2_img_draw, draw_max,
-                                     predicted_players_to_draw, draw_only_pos=True)
+                                     predicted_players_to_draw, draw_only_pos=True, player_to_color=player_to_color)
                 ground_truth_players_str = \
                     draw_all_players(cur_ground_truth_row, None, ground_truth_d2_img_draw, draw_max,
-                                     ground_truth_players_to_draw, draw_only_pos=True)
+                                     ground_truth_players_to_draw, draw_only_pos=True, player_to_color=player_to_color)
             details_text_var.set("predicted\n" + predicted_players_str + "\nground_truth\n" + ground_truth_players_str)
 
             if draw_overlap:
