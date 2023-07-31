@@ -149,6 +149,16 @@ all_human_vs_small_human_config = ComparisonConfig(
     "All Human vs Small Human Distribution"
 )
 
+rollout_vs_all_human_config = ComparisonConfig(
+    rollout_vs_all_human_similarity_hdf5_data_path,
+    rollout_load_data_option,
+    all_human_load_data_option,
+    False,
+    False,
+    "rollout_vs_all_human_distribution",
+    "Rollout vs All Human Distribution"
+)
+
 
 just_plot_summaries = False
 
@@ -166,6 +176,8 @@ def compare_trajectories():
         config = all_human_vs_all_human_config
     elif config_case == 5:
         config = all_human_vs_small_human_config
+    elif config_case == 6:
+        config = rollout_vs_all_human_config
 
     os.makedirs(similarity_plots_path, exist_ok=True)
     similarity_df = load_hdf5_to_pd(config.similarity_data_path)

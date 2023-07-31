@@ -33,6 +33,7 @@ human_vs_human_similarity_hdf5_data_path = Path(__file__).parent / '..' / '..' /
 all_human_vs_all_human_similarity_hdf5_data_path = Path(__file__).parent / '..' / '..' / '..' / '..' / 'analytics' / 'all_train_outputs' / 'humanTrajectorySimilarity.hdf5'
 all_human_vs_small_human_similarity_hdf5_data_path = Path(__file__).parent / '..' / '..' / '..' / '..' / 'analytics' / 'all_train_outputs' / 'humanVsSmallHumanTrajectorySimilarity.hdf5'
 all_human_vs_human_28_similarity_hdf5_data_path = Path(__file__).parent / '..' / '..' / '..' / '..' / 'analytics' / 'all_train_outputs' / 'humanVsHuman28TrajectorySimilarity.hdf5'
+rollout_vs_all_human_similarity_hdf5_data_path = Path(__file__).parent / '..' / '..' / '..' / '..' / 'analytics' / 'rollout_outputs' / 'humanTrajectorySimilarity.hdf5'
 
 bot_good_rounds = [4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 33, 35, 37, 39, 41, 43, 45, 47, 49, 51, 53, 55,
                    57, 59, 61, 63, 65, 67, 69, 71, 73, 75, 78, 80, 82, 85, 87, 89, 91, 93, 95, 97, 99, 102, 104, 106, 108,
