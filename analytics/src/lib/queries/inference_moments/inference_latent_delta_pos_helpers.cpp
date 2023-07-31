@@ -121,11 +121,11 @@ namespace csknow::inference_delta_pos {
         */
 
         float mostLikelyRadialVelProb = -1;
-        size_t playerStartIndex = values.playerIdToColumnIndex.at(curPlayerId) * csknow::weapon_speed::num_radial_bins;
+        size_t columnIndex = values.playerIdToColumnIndex.at(curPlayerId);
         // std::cout << output.size(0) << "," << output.size(1) << std::endl;
         for (size_t radialVelIndex = 0; radialVelIndex < csknow::weapon_speed::num_radial_bins; radialVelIndex++) {
             if ((useRealProbT && teamId == ENGINE_TEAM_T) || (useRealProbCT && teamId == ENGINE_TEAM_CT)) {
-                result.radialVelProbabilities.push_back(output[0][playerStartIndex + radialVelIndex].item<float>());
+                result.radialVelProbabilities.push_back(output[0][columnIndex][0][radialVelIndex].item<float>());
             }
             else {
                 result.radialVelProbabilities.push_back(1. / csknow::weapon_speed::num_radial_bins);
