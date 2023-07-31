@@ -134,8 +134,13 @@ def compute_new_pos(input_pos_tensor: torch.Tensor, pred_labels: torch.Tensor, n
         z_jump_index = delta_pos_with_z.z_jump_index
 
     # apply to input pos
-    output_pos_tensor = input_pos_tensor[:, :, 0, :] + scaled_pos_change
-    output_pos_tensor[:, :, 2] += torch.where(z_jump_index == 2., max_jump_height, 0.)
+    # only want next pos change
+    next_scaled_pos_change = rearrange(scaled_pos_change, 'b (p t) d -> b p t d',
+                                       p=len(specific_player_place_area_columns), t=num_radial_ticks)[:, :, 0, :]
+    next_z_jump_index = rearrange(z_jump_index, 'b (p t) -> b p t',
+                                       p=len(specific_player_place_area_columns), t=num_radial_ticks)[:, :, 0]
+    output_pos_tensor = input_pos_tensor[:, :, 0, :] + next_scaled_pos_change
+    output_pos_tensor[:, :, 2] += torch.where(next_z_jump_index == 2., max_jump_height, 0.)
     output_pos_tensor[:, :, 0] = output_pos_tensor[:, :, 0].clamp(min=nav_data.nav_region.min.x,
                                                                   max=nav_data.nav_region.max.x)
     output_pos_tensor[:, :, 1] = output_pos_tensor[:, :, 1].clamp(min=nav_data.nav_region.min.y,
@@ -148,7 +153,7 @@ def compute_new_pos(input_pos_tensor: torch.Tensor, pred_labels: torch.Tensor, n
     nav_grid_index = rearrange(torch.sum(nav_data.num_steps * nav_grid_steps, dim=-1), 'b p -> (b p)')
     nav_above_below_per_player = rearrange(torch.index_select(nav_data.nav_above_below, 0, nav_grid_index),
                                            '(b p) o -> b p o', p=len(specific_player_place_area_columns))
-    output_pos_tensor[:, :, 2] = torch.where(z_jump_index == 1,
+    output_pos_tensor[:, :, 2] = torch.where(next_z_jump_index == 1,
                                              nav_above_below_per_player[:, :, 0], nav_above_below_per_player[:, :, 1])
     output_and_history_pos_tensor = torch.roll(input_pos_tensor, 1, 2)
     output_and_history_pos_tensor[:, :, 0, :] = output_pos_tensor

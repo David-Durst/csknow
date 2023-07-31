@@ -10,6 +10,7 @@ from torch import nn
 from learn_bot.latent.dataset import LatentDataset
 from learn_bot.latent.engagement.column_names import max_enemies
 from learn_bot.latent.latent_hdf5_dataset import MultipleLatentHDF5Dataset
+from learn_bot.latent.order.column_names import num_radial_ticks
 from learn_bot.latent.place_area.filter import filter_region
 from learn_bot.latent.place_area.load_data import LoadDataResult
 from learn_bot.latent.place_area.pos_abs_from_delta_grid_or_radial import delta_pos_grid_num_cells, AABB
@@ -73,7 +74,7 @@ def load_model_file(loaded_data: LoadDataResult) -> LoadedModel:
                                                loaded_data.multi_hdf5_wrapper.hdf5_wrappers[0].sample_df)
 
     model = TransformerNestedHiddenLatentModel(model_file['column_transformers'], 2 * max_enemies,
-                                               num_radial_bins, 2, 4)
+                                               num_radial_ticks, num_radial_bins, 2, 4)
     model.load_state_dict(model_file['model_state_dict'])
     model.to(CUDA_DEVICE_STR)
 

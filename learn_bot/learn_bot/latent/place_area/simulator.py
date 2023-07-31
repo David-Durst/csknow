@@ -68,8 +68,8 @@ def step(rollout_tensor: torch.Tensor, similarity_tensor: torch.Tensor, pred_ten
     temperature = torch.Tensor([1.]).to(CUDA_DEVICE_STR)
     pred = model(input_tensor, similarity_tensor, temperature)
     pred_prob = get_untransformed_outputs(pred)
-    pred_tensor[rollout_tensor_input_indices] = pred_prob.to(CPU_DEVICE_STR)
-    pred_labels = get_label_outputs(pred)
+    pred_tensor[rollout_tensor_input_indices] = rearrange(pred_prob, 'b p t d -> b (p t d)').to(CPU_DEVICE_STR)
+    pred_labels = rearrange(get_label_outputs(pred), 'b p t d -> b (p t d)')
 
     tmp_rollout = rollout_tensor[rollout_tensor_input_indices]
     tmp_rollout[:, model.players_pos_columns] = \
