@@ -83,6 +83,7 @@ namespace csknow::feature_store {
             array<vector<bool>, max_enemies> indexOnTeam;
             vector<bool> ctTeam;
             vector<bool> alive;
+            vector<Vec2> viewAngle;
             vector<Vec3> footPos;
             vector<Vec3> velocity;
             //vector<Vec3> alignedFootPos;

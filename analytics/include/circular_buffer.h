@@ -1,6 +1,8 @@
 #ifndef CSKNOW_CIRCULAR_BUFFER_H
 #define CSKNOW_CIRCULAR_BUFFER_H
 #include <vector>
+#include <cstdint>
+#include <iostream>
 
 static inline __attribute__((always_inline))
 int64_t positiveModulo(int64_t x, int64_t y) {

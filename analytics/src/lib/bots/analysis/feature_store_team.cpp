@@ -70,8 +70,12 @@ namespace csknow::feature_store {
                 columnCTData[i].priorVelocity[j].resize(size, zeroVec);
                 columnCTData[i].priorFootPosValid[j].resize(size, false);
             }
-            columnTData[i].nearestCrosshairDistanceToEnemy.resize(size, false);
-            columnCTData[i].nearestCrosshairDistanceToEnemy.resize(size, false);
+            columnTData[i].nearestCrosshairDistanceToEnemy.resize(size, 1.);
+            columnCTData[i].nearestCrosshairDistanceToEnemy.resize(size, 1.);
+            for (int j = 0; j < num_prior_ticks; j++) {
+                columnTData[i].priorNearestCrosshairDistanceToEnemy[j].resize(size, 1.);
+                columnCTData[i].priorNearestCrosshairDistanceToEnemy[j].resize(size, 1.);
+            }
             columnTData[i].shotInLast5s.resize(size, 0.);
             columnCTData[i].shotInLast5s.resize(size, 0.);
             columnTData[i].enemyVisibleInLast5s.resize(size, 0.);
@@ -276,8 +280,12 @@ namespace csknow::feature_store {
                     columnCTData[i].priorVelocity[j][rowIndex] = zeroVec;
                     columnCTData[i].priorFootPosValid[j][rowIndex] = false;
                 }
-                columnTData[i].nearestCrosshairDistanceToEnemy[rowIndex] = false;
-                columnCTData[i].nearestCrosshairDistanceToEnemy[rowIndex] = false;
+                columnTData[i].nearestCrosshairDistanceToEnemy[rowIndex] = 1.;
+                columnCTData[i].nearestCrosshairDistanceToEnemy[rowIndex] = 1.;
+                for (int j = 0; j < num_prior_ticks; j++) {
+                    columnTData[i].priorNearestCrosshairDistanceToEnemy[j].resize(size, 1.);
+                    columnCTData[i].priorNearestCrosshairDistanceToEnemy[j].resize(size, 1.);
+                }
                 columnTData[i].shotInLast5s[rowIndex] = 0.;
                 columnCTData[i].shotInLast5s[rowIndex] = 0.;;
                 columnTData[i].enemyVisibleInLast5s[rowIndex] = 0.;

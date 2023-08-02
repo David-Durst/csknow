@@ -9,6 +9,7 @@
 #include <cstdint>
 #include "queries/parser_constants.h"
 #include <string>
+#include <set>
 
 enum class EngineWeaponId {
     None = 0,
@@ -60,5 +61,12 @@ EngineWeaponId demoEquipmentTypeToEngineWeaponId(int16_t demoEquipmentType);
 EngineWeaponId demoEquipmentTypeToEngineWeaponId(DemoEquipmentType demoEquipmentType);
 std::string demoEquipmentTypeToString(int16_t demoEquipmentType);
 std::string demoEquipmentTypeToString(DemoEquipmentType demoEquipmentType);
+
+
+// c4 shows up as empty string, getting hit by incendiary or molotov shows molotov, fire from grenade is inferno
+const std::set<string> sourcemodNonGunWeaponNames{"hegrenade", "flashbang", "smokegrenade", "inferno", "molotov",
+                                             "decoy", ""};
+const std::set<string> demoNonGunWeaponNames{"None", "C4", "Decoy", "Molotov", "Incendiary", "Flashbang",  "Smoke",
+                                        "HEGrenade"};
 
 #endif //CSKNOW_WEAPON_ID_CONVERTER_H

@@ -8,7 +8,6 @@
 #include "queries/moments/key_retake_events.h"
 #include "queries/orders.h"
 #include "bots/analysis/weapon_speed.h"
-#include "bots/analysis/feature_store_precommit.h"
 #include "queries/distance_to_places.h"
 #include "queries/lookback.h"
 #include "queries/query.h"
@@ -32,8 +31,16 @@ namespace csknow::feature_store {
         s20
     };
 
+
     struct PlayerTickCounters {
-        int64_t ticksSinceShot, ticksSinceEnemyVisible;
+        int64_t ticksSinceHurt, ticksSinceFire, ticksSinceEnemyVisible;
+    };
+
+    // large enough to be a long time, small enough that it won't overflow in a round
+    constexpr int64_t default_many_ticks = 1e6;
+
+    constexpr PlayerTickCounters default_tick_counters {
+        default_many_ticks, default_many_ticks, default_many_ticks
     };
 
     struct BTTeamPlayerData {
@@ -41,10 +48,10 @@ namespace csknow::feature_store {
         TeamId teamId;
         AreaId curArea;
         int64_t curAreaIndex;
+        Vec2 curViewAngle;
         Vec3 curFootPos;
         Vec3 velocity;
-        float nearestCrosshairDistanceToEnemy;
-        PlayerTickCounters playerTickCounters;
+        double nearestCrosshairDistanceToEnemy;
         int health, armor;
         EngineWeaponId weaponId;
         bool scoped;
@@ -111,7 +118,9 @@ namespace csknow::feature_store {
         vector<BTTeamPlayerData> btTeamPlayerData;
         CircularBuffer<std::map<int64_t, BTTeamPlayerData>>
             historicalPlayerDataBuffer{prior_tick_spacing * num_prior_ticks + 1};
+        map<CSGOId, PlayerTickCounters> playerTickCounters;
 
+        void updatePlayerTickCounters(const ServerState & state);
         void updateCurTeamData(const ServerState & state, const nav_mesh::nav_file & navFile);
         void appendPlayerHistory();
         void clearHistory();
