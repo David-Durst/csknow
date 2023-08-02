@@ -481,7 +481,8 @@ namespace csknow::feature_store {
             columnData[columnIndex].footPos[internalTickIndex] = btTeamPlayerData.curFootPos;
             //columnData[columnIndex].alignedFootPos[internalTickIndex] = (btTeamPlayerData.curFootPos / delta_pos_grid_num_cells_per_xy_dim).trunc();
             columnData[columnIndex].velocity[internalTickIndex] = btTeamPlayerData.velocity;
-            columnData[columnIndex].nearestCrosshairDistanceToEnemy[internalTickIndex] = btTeamPlayerData.nearestCrosshairDistanceToEnemy;
+            columnData[columnIndex].nearestCrosshairDistanceToEnemy[internalTickIndex] =
+                    std::min(1.f, static_cast<float>(btTeamPlayerData.nearestCrosshairDistanceToEnemy) / crosshair_max_distance);
             columnData[columnIndex].health[internalTickIndex] = static_cast<float>(btTeamPlayerData.health) / 100.;
             columnData[columnIndex].armor[internalTickIndex] = static_cast<float>(btTeamPlayerData.armor) / 100.;
             columnData[columnIndex].areaIndex[internalTickIndex] = btTeamPlayerData.curAreaIndex;
@@ -531,7 +532,7 @@ namespace csknow::feature_store {
                         columnData[columnIndex].priorFootPos[j][internalTickIndex] = priorBTTeamPlayerData.curFootPos;
                         columnData[columnIndex].priorVelocity[j][internalTickIndex] = priorBTTeamPlayerData.velocity;
                         columnData[columnIndex].priorNearestCrosshairDistanceToEnemy[j][internalTickIndex] =
-                                static_cast<float>(priorBTTeamPlayerData.nearestCrosshairDistanceToEnemy);
+                                std::min(1.f, static_cast<float>(priorBTTeamPlayerData.nearestCrosshairDistanceToEnemy) / crosshair_max_distance);
                         if (isnan(priorBTTeamPlayerData.curFootPos.x) || isnan(priorBTTeamPlayerData.curFootPos.y) || isnan(priorBTTeamPlayerData.curFootPos.z) ) {
                             std::cout << "found nan" << std::endl;
                         }

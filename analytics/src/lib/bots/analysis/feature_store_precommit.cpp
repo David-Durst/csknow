@@ -123,7 +123,7 @@ namespace csknow::feature_store {
                 if (!victim.isAlive) {
                     continue;
                 }
-                Vec3 victimHeadPos = getCenterHeadCoordinatesForPlayer(attacker.getFootPosForPlayer(), victim.getCurrentViewAngles(), victim.duckAmount);
+                Vec3 victimHeadPos = getCenterHeadCoordinatesForPlayer(victim.getFootPosForPlayer(), victim.getCurrentViewAngles(), victim.duckAmount);
                 Vec2 deltaViewAngle = deltaViewFromOriginToDest(attacker.getEyePosForPlayer(), victimHeadPos, attacker.getCurrentViewAngles());
                 double newDeltaViewAngle = computeMagnitude(deltaViewAngle);
                 result[attacker.csgoId] = std::min(result[attacker.csgoId], newDeltaViewAngle);

@@ -38,6 +38,7 @@ namespace csknow::feature_store {
     const string a_site = "BombsiteA", b_site = "BombsiteB";
     const Vec3 zeroVec = {0., 0., 0.};
     const Vec2 zeroVec2D = {0., 0.};
+    constexpr float crosshair_max_distance = 30.f;
 
     enum class C4Status {
         PlantedA,
