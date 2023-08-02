@@ -8,3 +8,4 @@ bt_*.log
 external/libtorch
 *.vis
 *.log
+old_data/
