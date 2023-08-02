@@ -136,7 +136,7 @@ namespace csknow::behavior_tree_latent_states {
                 globalQueryNode->exec(curState, defaultThinker);
 
                 bool newCommitValidRowInRound =
-                        featureStoreResult.teamFeatureStoreResult.commitTeamRow(tmpPreCommitBuffer[threadNum],
+                        featureStoreResult.teamFeatureStoreResult.commitTeamRow(curState, tmpPreCommitBuffer[threadNum],
                                                                                 blackboard->distanceToPlaces,
                                                                                 blackboard->navFile,
                                                                                 roundIndex, tickIndex);

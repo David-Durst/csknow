@@ -64,9 +64,9 @@ std::string demoEquipmentTypeToString(DemoEquipmentType demoEquipmentType);
 
 
 // c4 shows up as empty string, getting hit by incendiary or molotov shows molotov, fire from grenade is inferno
-const std::set<string> sourcemodNonGunWeaponNames{"hegrenade", "flashbang", "smokegrenade", "inferno", "molotov",
+const std::set<std::string> sourcemodNonGunWeaponNames{"hegrenade", "flashbang", "smokegrenade", "inferno", "molotov",
                                              "decoy", ""};
-const std::set<string> demoNonGunWeaponNames{"None", "C4", "Decoy", "Molotov", "Incendiary", "Flashbang",  "Smoke",
+const std::set<std::string> demoNonGunWeaponNames{"None", "C4", "Decoy", "Molotov", "Incendiary", "Flashbang",  "Smoke",
                                         "HEGrenade"};
 
 #endif //CSKNOW_WEAPON_ID_CONVERTER_H

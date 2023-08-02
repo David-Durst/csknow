@@ -96,6 +96,7 @@ namespace csknow::feature_store {
     };
 
     struct FeatureStorePreCommitBuffer {
+
         std::map<int64_t, int> tPlayerIdToIndex, ctPlayerIdToIndex;
         C4MapData c4MapData;
 

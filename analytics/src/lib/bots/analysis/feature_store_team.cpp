@@ -49,6 +49,7 @@ namespace csknow::feature_store {
             columnTData[i].playerId.resize(size, INVALID_ID);
             columnTData[i].ctTeam.resize(size, false);
             columnTData[i].alive.resize(size, false);
+            columnTData[i].viewAngle.resize(size, zeroVec2D);
             columnTData[i].footPos.resize(size, zeroVec);
             //columnTData[i].alignedFootPos.resize(size, zeroVec);
             columnTData[i].velocity.resize(size, zeroVec);
@@ -57,6 +58,7 @@ namespace csknow::feature_store {
             columnCTData[i].playerId.resize(size, INVALID_ID);
             columnCTData[i].ctTeam.resize(size, true);
             columnCTData[i].alive.resize(size, false);
+            columnCTData[i].viewAngle.resize(size, zeroVec2D);
             columnCTData[i].footPos.resize(size, zeroVec);
             //columnCTData[i].alignedFootPos.resize(size, zeroVec);
             columnCTData[i].velocity.resize(size, zeroVec);
@@ -76,10 +78,12 @@ namespace csknow::feature_store {
                 columnTData[i].priorNearestCrosshairDistanceToEnemy[j].resize(size, 1.);
                 columnCTData[i].priorNearestCrosshairDistanceToEnemy[j].resize(size, 1.);
             }
-            columnTData[i].shotInLast5s.resize(size, 0.);
-            columnCTData[i].shotInLast5s.resize(size, 0.);
-            columnTData[i].enemyVisibleInLast5s.resize(size, 0.);
-            columnCTData[i].enemyVisibleInLast5s.resize(size, 0.);
+            columnTData[i].hurtInLast5s.resize(size, 1.);
+            columnCTData[i].hurtInLast5s.resize(size, 1.);
+            columnTData[i].fireInLast5s.resize(size, 1.);
+            columnCTData[i].fireInLast5s.resize(size, 1.);
+            columnTData[i].enemyVisibleInLast5s.resize(size, 1.);
+            columnCTData[i].enemyVisibleInLast5s.resize(size, 1.);
             columnTData[i].health.resize(size, 0.);
             columnCTData[i].health.resize(size, 0.);
             columnTData[i].armor.resize(size, 0.);
@@ -259,6 +263,7 @@ namespace csknow::feature_store {
                 columnTData[i].playerId[rowIndex] = INVALID_ID;
                 columnTData[i].ctTeam[rowIndex] = false;
                 columnTData[i].alive[rowIndex] = false;
+                columnTData[i].viewAngle[rowIndex] = zeroVec2D;
                 columnTData[i].footPos[rowIndex] = zeroVec;
                 //columnTData[i].alignedFootPos[rowIndex] = zeroVec;
                 columnTData[i].velocity[rowIndex] = zeroVec;
@@ -267,6 +272,7 @@ namespace csknow::feature_store {
                 columnCTData[i].playerId[rowIndex] = INVALID_ID;
                 columnCTData[i].ctTeam[rowIndex] = true;
                 columnCTData[i].alive[rowIndex] = false;
+                columnCTData[i].viewAngle[rowIndex] = zeroVec2D;
                 columnCTData[i].footPos[rowIndex] = zeroVec;
                 //columnCTData[i].alignedFootPos[rowIndex] = zeroVec;
                 columnCTData[i].velocity[rowIndex] = zeroVec;
@@ -286,10 +292,12 @@ namespace csknow::feature_store {
                     columnTData[i].priorNearestCrosshairDistanceToEnemy[j].resize(size, 1.);
                     columnCTData[i].priorNearestCrosshairDistanceToEnemy[j].resize(size, 1.);
                 }
-                columnTData[i].shotInLast5s[rowIndex] = 0.;
-                columnCTData[i].shotInLast5s[rowIndex] = 0.;;
-                columnTData[i].enemyVisibleInLast5s[rowIndex] = 0.;
-                columnCTData[i].enemyVisibleInLast5s[rowIndex] = 0.;
+                columnTData[i].hurtInLast5s[rowIndex] = 1.;
+                columnCTData[i].hurtInLast5s[rowIndex] = 1.;;
+                columnTData[i].fireInLast5s[rowIndex] = 1.;
+                columnCTData[i].fireInLast5s[rowIndex] = 1.;;
+                columnTData[i].enemyVisibleInLast5s[rowIndex] = 1.;
+                columnCTData[i].enemyVisibleInLast5s[rowIndex] = 1.;
                 columnTData[i].health[rowIndex] = 0.;
                 columnCTData[i].health[rowIndex] = 0.;
                 columnTData[i].armor[rowIndex] = 0.;
@@ -380,7 +388,7 @@ namespace csknow::feature_store {
         return xValue + yValue * area_grid_dim;
     }
 
-    bool TeamFeatureStoreResult::commitTeamRow(FeatureStorePreCommitBuffer & buffer,
+    bool TeamFeatureStoreResult::commitTeamRow(const ServerState & state, FeatureStorePreCommitBuffer & buffer,
                                                const DistanceToPlacesResult & distanceToPlaces,
                                                const nav_mesh::nav_file & navFile,
                                                int64_t roundIndex, int64_t tickIndex) {
@@ -469,9 +477,13 @@ namespace csknow::feature_store {
             }
             columnData[columnIndex].playerId[internalTickIndex] = btTeamPlayerData.playerId;
             columnData[columnIndex].alive[internalTickIndex] = true;
+            columnData[columnIndex].viewAngle[internalTickIndex] = btTeamPlayerData.curViewAngle;
             columnData[columnIndex].footPos[internalTickIndex] = btTeamPlayerData.curFootPos;
             //columnData[columnIndex].alignedFootPos[internalTickIndex] = (btTeamPlayerData.curFootPos / delta_pos_grid_num_cells_per_xy_dim).trunc();
             columnData[columnIndex].velocity[internalTickIndex] = btTeamPlayerData.velocity;
+            columnData[columnIndex].nearestCrosshairDistanceToEnemy[internalTickIndex] = btTeamPlayerData.nearestCrosshairDistanceToEnemy;
+            columnData[columnIndex].health[internalTickIndex] = btTeamPlayerData.health;
+            columnData[columnIndex].armor[internalTickIndex] = btTeamPlayerData.armor;
             columnData[columnIndex].areaIndex[internalTickIndex] = btTeamPlayerData.curAreaIndex;
             columnData[columnIndex].weaponId[internalTickIndex] = btTeamPlayerData.weaponId;
             columnData[columnIndex].scoped[internalTickIndex] = btTeamPlayerData.scoped;
@@ -518,6 +530,8 @@ namespace csknow::feature_store {
                                 priorBTTeamTickData.at(btTeamPlayerData.playerId);
                         columnData[columnIndex].priorFootPos[j][internalTickIndex] = priorBTTeamPlayerData.curFootPos;
                         columnData[columnIndex].priorVelocity[j][internalTickIndex] = priorBTTeamPlayerData.velocity;
+                        columnData[columnIndex].priorNearestCrosshairDistanceToEnemy[j][internalTickIndex] =
+                                static_cast<float>(priorBTTeamPlayerData.nearestCrosshairDistanceToEnemy);
                         if (isnan(priorBTTeamPlayerData.curFootPos.x) || isnan(priorBTTeamPlayerData.curFootPos.y) || isnan(priorBTTeamPlayerData.curFootPos.z) ) {
                             std::cout << "found nan" << std::endl;
                         }
@@ -525,7 +539,14 @@ namespace csknow::feature_store {
                 }
                 columnData[columnIndex].priorFootPosValid[j][internalTickIndex] = setPlayerPriorFootPos;
             }
+            columnData[columnIndex].hurtInLast5s[internalTickIndex] =
+                    std::min(1.f, static_cast<float>(secondsBetweenTicks(state.tickInterval, 0, buffer.playerTickCounters[btTeamPlayerData.playerId].ticksSinceHurt)) / 5.f);
+            columnData[columnIndex].fireInLast5s[internalTickIndex] =
+                    std::min(1.f, static_cast<float>(secondsBetweenTicks(state.tickInterval, 0, buffer.playerTickCounters[btTeamPlayerData.playerId].ticksSinceFire)) / 5.f);
+            columnData[columnIndex].enemyVisibleInLast5s[internalTickIndex] =
+                    std::min(1.f, static_cast<float>(secondsBetweenTicks(state.tickInterval, 0, buffer.playerTickCounters[btTeamPlayerData.playerId].ticksSinceEnemyVisible) / 5.f));
         }
+
 
         /*
         if (internalTickIndex == 1195) {
@@ -934,6 +955,8 @@ namespace csknow::feature_store {
                                    columnData[columnPlayer].alive, hdf5FlatCreateProps);
                 file.createDataSet("/data/player ctTeam " + columnTeam + " " + iStr,
                                    columnData[columnPlayer].ctTeam, hdf5FlatCreateProps);
+                saveVec2VectorToHDF5(columnData[columnPlayer].viewAngle, file,
+                                     "player view angle " + columnTeam + " " + iStr, hdf5FlatCreateProps);
                 saveVec3VectorToHDF5(columnData[columnPlayer].footPos, file,
                                      "player pos " + columnTeam + " " + iStr, hdf5FlatCreateProps);
                 saveVec3VectorToHDF5(columnData[columnPlayer].velocity, file,
@@ -948,6 +971,22 @@ namespace csknow::feature_store {
                     file.createDataSet("/data/player history valid " + columnTeam + " " + iStr + " t-" + std::to_string(priorTick+1),
                                        columnData[columnPlayer].priorFootPosValid[priorTick], hdf5FlatCreateProps);
                 }
+                file.createDataSet("/data/player nearest crosshair distance to enemy " + columnTeam + " " + iStr,
+                                   columnData[columnPlayer].nearestCrosshairDistanceToEnemy, hdf5FlatCreateProps);
+                for (int priorTick = 0; priorTick < num_prior_ticks; priorTick++) {
+                    file.createDataSet("/data/player nearest crosshair distance to enemy " + columnTeam + " " + iStr + " t-" + std::to_string(priorTick+1),
+                                       columnData[columnPlayer].priorNearestCrosshairDistanceToEnemy[priorTick], hdf5FlatCreateProps);
+                }
+                file.createDataSet("/data/player hurt in last 5s " + columnTeam + " " + iStr,
+                                   columnData[columnPlayer].hurtInLast5s, hdf5FlatCreateProps);
+                file.createDataSet("/data/player fire in last 5s " + columnTeam + " " + iStr,
+                                   columnData[columnPlayer].fireInLast5s, hdf5FlatCreateProps);
+                file.createDataSet("/data/player enemy visible in last 5s " + columnTeam + " " + iStr,
+                                   columnData[columnPlayer].enemyVisibleInLast5s, hdf5FlatCreateProps);
+                file.createDataSet("/data/player health " + columnTeam + " " + iStr,
+                                   columnData[columnPlayer].health, hdf5FlatCreateProps);
+                file.createDataSet("/data/player armor " + columnTeam + " " + iStr,
+                                   columnData[columnPlayer].armor, hdf5FlatCreateProps);
                 file.createDataSet("/data/player decrease distance to c4 over 5s " + columnTeam + " " + iStr,
                                    columnData[columnPlayer].decreaseDistanceToC4Over5s, hdf5FlatCreateProps);
                 file.createDataSet("/data/player decrease distance to c4 over 10s " + columnTeam + " " + iStr,

@@ -102,7 +102,7 @@ void StreamingManager::update(const Games & games, const RoundPlantDefusal & rou
     newState.tScore = rounds.tWins[gameIndex];
     newState.ctScore = rounds.ctWins[gameIndex];
     newState.mapNumber = gameIndex;
-    newState.tickInterval = games.gameTickRate[gameIndex];
+    newState.tickInterval = 1. / games.gameTickRate[gameIndex];
     newState.gameTime = ticks.gameTime[gameIndex];
 
     map<int64_t, int64_t> playerToPATindex;

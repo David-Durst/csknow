@@ -129,6 +129,7 @@ namespace csknow::feature_store {
                 result[attacker.csgoId] = std::min(result[attacker.csgoId], newDeltaViewAngle);
             }
         }
+        return result;
     }
     /*
      */

@@ -37,6 +37,7 @@ namespace csknow::feature_store {
     constexpr int every_nth_row = 10;
     const string a_site = "BombsiteA", b_site = "BombsiteB";
     const Vec3 zeroVec = {0., 0., 0.};
+    const Vec2 zeroVec2D = {0., 0.};
 
     enum class C4Status {
         PlantedA,
@@ -94,7 +95,7 @@ namespace csknow::feature_store {
             vector<float> nearestCrosshairDistanceToEnemy;
             array<vector<float>, num_prior_ticks> priorNearestCrosshairDistanceToEnemy;
             // 0 means not shot or visible, 1 means shot cur frame or enemy currently visible
-            vector<float> shotInLast5s, enemyVisibleInLast5s;
+            vector<float> hurtInLast5s, fireInLast5s, enemyVisibleInLast5s;
             vector<float> health, armor;
             // control inputs
             vector<int64_t> areaIndex;
@@ -133,7 +134,8 @@ namespace csknow::feature_store {
                                std::optional<std::reference_wrapper<const csknow::key_retake_events::KeyRetakeEvents>> keyRetakeEvents = std::nullopt);
         virtual ~TeamFeatureStoreResult() = default;
         void reinit();
-        bool commitTeamRow(FeatureStorePreCommitBuffer & buffer, const DistanceToPlacesResult & distanceToPlaces,
+        bool commitTeamRow(const ServerState & state, FeatureStorePreCommitBuffer & buffer,
+                           const DistanceToPlacesResult & distanceToPlaces,
                            const nav_mesh::nav_file & navFile,
                            int64_t roundIndex = 0, int64_t tickIndex = 0);
         enum class ACausalTimingOption {

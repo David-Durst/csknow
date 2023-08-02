@@ -54,7 +54,7 @@ namespace csknow::feature_store {
                 tmpPreCommitBuffer[threadNum].updateCurTeamData(curState, navFile);
 
                 bool newCommitValidRowInRound =
-                        teamFeatureStoreResult.commitTeamRow(tmpPreCommitBuffer[threadNum],
+                        teamFeatureStoreResult.commitTeamRow(curState, tmpPreCommitBuffer[threadNum],
                                                              distanceToPlaces, navFile, roundIndex, tickIndex);
                 commitValidRowInRound = commitValidRowInRound || newCommitValidRowInRound;
             }

@@ -58,6 +58,10 @@ static double secondsBetweenTicks(TickRates tickRates, int64_t startGameTickNumb
     return (endGameTickNumber - startGameTickNumber) / static_cast<double>(tickRates.gameTickRate);
 }
 
+static double secondsBetweenTicks(double tickInterval, int64_t startGameTickNumber, int64_t endGameTickNumber) {
+    return (endGameTickNumber - startGameTickNumber) * tickInterval;
+}
+
 static int64_t getLookbackDemoTick(const Rounds & rounds, const Ticks & ticks, int64_t tickIndex,
                                    int64_t lookbackGameTicks, int64_t bufferTicks = 0) {
     int lookbackDemoTicks = 0;
