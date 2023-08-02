@@ -84,11 +84,17 @@ namespace csknow::feature_store {
             vector<bool> ctTeam;
             vector<bool> alive;
             vector<Vec3> footPos;
+            vector<Vec3> velocity;
             //vector<Vec3> alignedFootPos;
             array<vector<Vec3>, num_prior_ticks> priorVelocity;
             array<vector<Vec3>, num_prior_ticks> priorFootPos;
             array<vector<bool>, num_prior_ticks> priorFootPosValid;
-            vector<Vec3> velocity;
+            // state inputs
+            vector<float> nearestCrosshairDistanceToEnemy;
+            array<vector<float>, num_prior_ticks> priorNearestCrosshairDistanceToEnemy;
+            // 0 means not shot or visible, 1 means shot cur frame or enemy currently visible
+            vector<float> shotInLast5s, enemyVisibleInLast5s;
+            vector<float> health, armor;
             // control inputs
             vector<int64_t> areaIndex;
             vector<bool> decreaseDistanceToC4Over5s, decreaseDistanceToC4Over10s, decreaseDistanceToC4Over20s;

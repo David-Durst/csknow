@@ -38,7 +38,15 @@ namespace csknow::feature_store {
         engagementTeammateBuffer.push_back(engagementTeammate);
     }
 
+    /*
+        Vec3 victimHeadPos = getCenterHeadCoordinatesForPlayer(victimEyePos, victimViewAngle, victimDuckAmount);
+        Vec2 deltaViewAngle = deltaViewFromOriginToDest(attackerEyePos, victimHeadPos, attackerViewAngle);
+        engagementPossibleEnemy.worldDistanceToEnemy = computeDistance(attackerEyePos, victimEyePos);
+        engagementPossibleEnemy.crosshairDistanceToEnemyHead = computeMagnitude(deltaViewAngle);
+     */
+
     void FeatureStorePreCommitBuffer::updateCurTeamData(const ServerState & state, const nav_mesh::nav_file & navFile) {
+        map<CSGOId,
         btTeamPlayerData.clear();
         for (const auto & client : state.clients) {
             if (!client.isAlive) {
@@ -51,6 +59,8 @@ namespace csknow::feature_store {
             int64_t curAreaIndex = navFile.m_area_ids_to_indices.at(curAreaId);
             btTeamPlayerData.push_back({client.csgoId, client.team, curAreaId, curAreaIndex,
                                         client.getFootPosForPlayer(), client.getVelocity(),
+
+                                        client.health, client.armor,
                                         static_cast<EngineWeaponId>(client.currentWeaponId),
                                         client.isScoped, client.isAirborne, client.isWalking, client.duckKeyPressed});
         }

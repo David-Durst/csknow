@@ -70,6 +70,16 @@ namespace csknow::feature_store {
                 columnCTData[i].priorVelocity[j].resize(size, zeroVec);
                 columnCTData[i].priorFootPosValid[j].resize(size, false);
             }
+            columnTData[i].nearestCrosshairDistanceToEnemy.resize(size, false);
+            columnCTData[i].nearestCrosshairDistanceToEnemy.resize(size, false);
+            columnTData[i].shotInLast5s.resize(size, 0.);
+            columnCTData[i].shotInLast5s.resize(size, 0.);
+            columnTData[i].enemyVisibleInLast5s.resize(size, 0.);
+            columnCTData[i].enemyVisibleInLast5s.resize(size, 0.);
+            columnTData[i].health.resize(size, 0.);
+            columnCTData[i].health.resize(size, 0.);
+            columnTData[i].armor.resize(size, 0.);
+            columnCTData[i].armor.resize(size, 0.);
             columnTData[i].areaIndex.resize(size, INVALID_ID);
             columnCTData[i].areaIndex.resize(size, INVALID_ID);
             columnTData[i].decreaseDistanceToC4Over5s.resize(size, false);
@@ -266,6 +276,16 @@ namespace csknow::feature_store {
                     columnCTData[i].priorVelocity[j][rowIndex] = zeroVec;
                     columnCTData[i].priorFootPosValid[j][rowIndex] = false;
                 }
+                columnTData[i].nearestCrosshairDistanceToEnemy[rowIndex] = false;
+                columnCTData[i].nearestCrosshairDistanceToEnemy[rowIndex] = false;
+                columnTData[i].shotInLast5s[rowIndex] = 0.;
+                columnCTData[i].shotInLast5s[rowIndex] = 0.;;
+                columnTData[i].enemyVisibleInLast5s[rowIndex] = 0.;
+                columnCTData[i].enemyVisibleInLast5s[rowIndex] = 0.;
+                columnTData[i].health[rowIndex] = 0.;
+                columnCTData[i].health[rowIndex] = 0.;
+                columnTData[i].armor[rowIndex] = 0.;
+                columnCTData[i].armor[rowIndex] = 0.;
                 columnTData[i].areaIndex[rowIndex] = INVALID_ID;
                 columnCTData[i].areaIndex[rowIndex] = INVALID_ID;
                 columnTData[i].decreaseDistanceToC4Over5s[rowIndex] = false;

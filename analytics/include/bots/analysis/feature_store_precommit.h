@@ -32,6 +32,9 @@ namespace csknow::feature_store {
         s20
     };
 
+    struct PlayerTickCounters {
+        int64_t ticksSinceShot, ticksSinceEnemyVisible;
+    };
 
     struct BTTeamPlayerData {
         int64_t playerId;
@@ -40,6 +43,9 @@ namespace csknow::feature_store {
         int64_t curAreaIndex;
         Vec3 curFootPos;
         Vec3 velocity;
+        float nearestCrosshairDistanceToEnemy;
+        PlayerTickCounters playerTickCounters;
+        int health, armor;
         EngineWeaponId weaponId;
         bool scoped;
         bool airborne;
