@@ -1,10 +1,12 @@
 import tkinter as tk
+from dataclasses import dataclass
 from tkinter import ttk, font
 from typing import Tuple, Optional, List, Dict
 from math import sqrt, pow, cos, sin, radians
 
 import pandas as pd
 from PIL import Image, ImageDraw, ImageTk as itk, ImageFont
+from numpy import deg2rad
 
 from learn_bot.latent.place_area.pos_abs_from_delta_grid_or_radial import delta_pos_grid_num_cells, delta_pos_grid_num_cells_per_xy_dim, \
     delta_pos_grid_cell_dim, delta_pos_grid_num_xy_cells_per_z_change
@@ -82,7 +84,7 @@ class VisMapCoordinate():
         return new_radial_cell
 
     def draw_vis(self, im_draw: ImageDraw, use_scale: bool, custom_color: Optional[Tuple] = None, rectangle = True,
-                 player_text: Optional[str] = None):
+                 player_text: Optional[str] = None, view_angle: Optional[float] = None):
         half_width = delta_pos_grid_cell_dim / 2
         if use_scale:
             if not self.is_player and not self.is_prediction:
@@ -120,11 +122,25 @@ class VisMapCoordinate():
         else:
             im_draw.ellipse([canvas_min_vec.x, canvas_max_vec.y, canvas_max_vec.x, canvas_min_vec.y], fill=cur_color)
 
+        if view_angle and not player_text:
+            view_angle_length = 15
+            canvas_x_view = canvas_avg_x + cos(deg2rad(view_angle)) * view_angle_length
+            # flipping y axis to match pillow coordinates
+            canvas_y_view = canvas_avg_y + sin(deg2rad(view_angle)) * view_angle_length * -1.
+            im_draw.line([canvas_avg_x, canvas_avg_y, canvas_x_view, canvas_y_view],
+                         fill=cur_color, width=5)
+
+
+@dataclass
+class PlayerStatus:
+    status: str = ""
+    temporal: str = ""
+
 
 def draw_all_players(data_series: pd.Series, pred_series: Optional[pd.Series], im_draw: ImageDraw, draw_max: bool,
                      players_to_draw: List[int], draw_only_pos: bool = False, player_to_color: Dict[int, Tuple] = {},
-                     rectangle = True, radial_vel_time_step: int = 0, player_to_text: Dict[int, str] = {}) -> str:
-    result = ""
+                     rectangle = True, radial_vel_time_step: int = 0, player_to_text: Dict[int, str] = {}) -> PlayerStatus:
+    result = PlayerStatus()
     # colors track by number of players drawn
     for player_index in range(len(specific_player_place_area_columns)):
         player_place_area_columns = specific_player_place_area_columns[player_index]
@@ -136,14 +152,35 @@ def draw_all_players(data_series: pd.Series, pred_series: Optional[pd.Series], i
             pos_coord = VisMapCoordinate(data_series[player_place_area_columns.pos[0]],
                                          data_series[player_place_area_columns.pos[1]],
                                          data_series[player_place_area_columns.pos[2]])
+            vel_per_player = Vec3(data_series[player_place_area_columns.vel[0]],
+                                  data_series[player_place_area_columns.vel[1]],
+                                  data_series[player_place_area_columns.vel[2]])
+
+            # temporal data that this function always receives
+            decrease_distance_to_c4_5s = data_series[player_place_area_columns.decrease_distance_to_c4_5s]
+            decrease_distance_to_c4_10s = data_series[player_place_area_columns.decrease_distance_to_c4_10s]
+            decrease_distance_to_c4_20s = data_series[player_place_area_columns.decrease_distance_to_c4_20s]
+            nearest_crosshair_distance_to_enemy = data_series[player_place_area_columns.nearest_crosshair_distance_to_enemy]
+            hurt_last_5s = data_series[player_place_area_columns.player_hurt_in_last_5s]
+            fire_last_5s = data_series[player_place_area_columns.player_fire_in_last_5s]
+            enemy_visible_last_5s = data_series[player_place_area_columns.player_enemy_visible_in_last_5s]
+            health = data_series[player_place_area_columns.player_health]
+            armor = data_series[player_place_area_columns.player_armor]
+            temporal_str = f"{player_place_area_columns.player_id_uniform_space} " \
+                           f"decrease distance to c4 5s {decrease_distance_to_c4_5s} 10s {decrease_distance_to_c4_10s} 20s {decrease_distance_to_c4_20s}, " \
+                           f"nearest crosshair distance to enemy {nearest_crosshair_distance_to_enemy:3.2f}, " \
+                           f"hurt last 5s {hurt_last_5s:3.2f}, fire last 5s {fire_last_5s:3.2f}, enemy visible last 5s {enemy_visible_last_5s:3.2f}"
+            result.temporal += temporal_str + "\n"
+
             if draw_only_pos:
                 custom_color = None
                 if player_index in player_to_color:
                     custom_color = player_to_color[player_index]
                 pos_coord.draw_vis(im_draw, True, custom_color=custom_color, rectangle=rectangle,
-                                   player_text=player_to_text[player_index] if player_index in player_to_text else None)
-                player_str = f'''{player_place_area_columns.player_id} pos {pos_coord.coords}'''
-                result += player_str + "\n"
+                                   player_text=player_to_text[player_index] if player_index in player_to_text else None,
+                                   view_angle=data_series[player_place_area_columns.view_angle[0]])
+                result.status += f"{player_place_area_columns.player_id} pos {pos_coord.coords}, " \
+                                 f"vel {vel_per_player}, health {health:3.2f}, armor {armor:3.2f}\n"
                 continue
             elif draw_max:
                 pos_coord.draw_vis(im_draw, True)
@@ -166,20 +203,15 @@ def draw_all_players(data_series: pd.Series, pred_series: Optional[pd.Series], i
                     max_pred_prob = cur_pred_prob
                     max_pred_index = i
 
+            # pred_coord only sometimes included
             data_coord = pos_coord.get_radial_cell(max_data_index, False)
             pred_coord = pos_coord.get_radial_cell(max_pred_index, True)
-            vel_per_player = Vec3(data_series[player_place_area_columns.vel[0]],
-                                  data_series[player_place_area_columns.vel[1]],
-                                  data_series[player_place_area_columns.vel[2]])
-            decrease_distance_to_c4_5s = data_series[player_place_area_columns.decrease_distance_to_c4_5s]
-            decrease_distance_to_c4_10s = data_series[player_place_area_columns.decrease_distance_to_c4_10s]
-            decrease_distance_to_c4_20s = data_series[player_place_area_columns.decrease_distance_to_c4_20s]
-            player_str = f"{player_place_area_columns.player_id} pos {pos_coord.coords}, " \
+            status_str = f"{player_place_area_columns.player_id_uniform_space} pos {pos_coord.coords}, " \
                          f"data {data_coord.coords} {data_coord.z_index}, " \
                          f"pred {pred_coord.coords} {pred_coord.z_index}, " \
-                         f"vel {vel_per_player}, radial index {max_data_index}," \
-                         f"decrease distance to c4 5s {decrease_distance_to_c4_5s} 10s {decrease_distance_to_c4_10s} 20s {decrease_distance_to_c4_20s}"
-            result += player_str + "\n"
+                         f"vel {vel_per_player}, radial index {max_data_index:3}, " \
+                         f"health {health:3.2f}, armor {armor:3.2f}"
+            result.status += status_str + "\n"
             #print(player_str)
             if draw_max:
                 # filter out ends of players lives when there is no pred prob
@@ -249,7 +281,8 @@ def draw_player_connection_lines(src_data_series: pd.Series, tgt_data_series, im
             pct_distance_x = abs_distance_x / (abs_distance_x + abs_distance_y)
             pct_distance_y = abs_distance_y / (abs_distance_x + abs_distance_y)
 
-            if distance > 200.:
+            # disabling line threshold for now
+            if True or distance > 200.:
                 # a few pixels so line doesn't overlap with player text
                 non_overlap_adjustment = 10
                 src_canvas_coords = src_pos_coord.get_canvas_coordinates()

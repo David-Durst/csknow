@@ -70,16 +70,27 @@ class PlayerPlaceAreaColumns:
 
     def __init__(self, team_str: str, player_index: int):
         self.player_id = player_id_column + " " + player_team_str(team_str, player_index)
+        self.player_id_uniform_space = player_id_column + " " + player_team_str(team_str, player_index,
+                                                                                uniform_space=True)
         self.index_on_team = get_player_index_on_team_column(player_index, team_str)
         self.ct_team = get_player_ctteam_column(player_index, team_str)
         self.alive = get_player_alive_column(player_index, team_str)
         self.distance_to_a_site = "distance to a site " + player_team_str(team_str, player_index)
         self.distance_to_b_site = "distance to b site " + player_team_str(team_str, player_index)
+        self.view_angle = [get_player_view_angle_columns(player_index, team_str, dim_str) for dim_str in ["x", "y"]]
         self.pos = [get_player_pos_columns(player_index, team_str, dim_str) for dim_str in ["x", "y", "z"]]
         self.aligned_pos = [get_player_aligned_pos_columns(player_index, team_str, dim_str) for dim_str in ["x", "y", "z"]]
         self.prior_pos = []
         self.vel = [get_player_velocity_columns(player_index, team_str, dim_str) for dim_str in ["x", "y", "z"]]
         self.prior_vel = []
+        self.nearest_crosshair_distance_to_enemy = \
+            get_player_nearest_crosshair_distance_to_enemy_columns(player_index, team_str)
+        self.prior_nearest_crosshair_distance_to_enemy = []
+        self.player_hurt_in_last_5s = get_player_hurt_in_last_5s_columns(player_index, team_str)
+        self.player_fire_in_last_5s = get_player_fire_in_last_5s_columns(player_index, team_str)
+        self.player_enemy_visible_in_last_5s = get_player_enemy_visible_in_last_5s_columns(player_index, team_str)
+        self.player_health = get_player_health_columns(player_index, team_str)
+        self.player_armor = get_player_armor_columns(player_index, team_str)
         self.decrease_distance_to_c4_5s = f"player decrease distance to c4 over 5s {team_str} {player_index}"
         self.decrease_distance_to_c4_10s = f"player decrease distance to c4 over 10s {team_str} {player_index}"
         self.decrease_distance_to_c4_20s = f"player decrease distance to c4 over 20s {team_str} {player_index}"
@@ -114,6 +125,8 @@ class PlayerPlaceAreaColumns:
                 self.future_radial_vel[future_tick] \
                     .append(get_future_radial_vel_columns(player_index, radial_vel_index, team_str, future_tick+1))
         for prior_tick in range(1, num_prior_ticks+1):
+            self.prior_nearest_crosshair_distance_to_enemy.append(
+                get_player_nearest_crosshair_distance_to_enemy_columns(player_index, team_str, prior_tick))
             for dim_str in ["x", "y", "z"]:
                 self.prior_pos.append(get_player_pos_columns(player_index, team_str, dim_str, prior_tick))
                 self.prior_vel.append(get_player_velocity_columns(player_index, team_str, dim_str, prior_tick))

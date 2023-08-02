@@ -65,10 +65,37 @@ def get_player_ctteam_column(player_index: int, team_str: str) -> str:
 def get_player_alive_column(player_index: int, team_str: str) -> str:
     return "alive " + team_str + " " + str(player_index)
 
+def get_player_view_angle_columns(player_index: int, team_str: str, dim_str: str, history_index: int = 0) -> str:
+    return "player view angle " + team_str + " " + str(player_index) + \
+        ("" if history_index == 0 else " t-" + str(history_index)) + " " + dim_str
+
 def get_player_pos_columns(player_index: int, team_str: str, dim_str: str, history_index: int = 0) -> str:
     return "player pos " + team_str + " " + str(player_index) + \
         ("" if history_index == 0 else " t-" + str(history_index)) + " " + dim_str
 
+def get_player_nearest_crosshair_distance_to_enemy_columns(player_index: int, team_str: str, history_index: int = 0) -> str:
+    return "player nearest crosshair distance to enemy " + team_str + " " + str(player_index) + \
+        ("" if history_index == 0 else " t-" + str(history_index))
+
+def get_player_hurt_in_last_5s_columns(player_index: int, team_str: str, history_index: int = 0) -> str:
+    return "player hurt in last 5s " + team_str + " " + str(player_index) + \
+        ("" if history_index == 0 else " t-" + str(history_index))
+
+def get_player_fire_in_last_5s_columns(player_index: int, team_str: str, history_index: int = 0) -> str:
+    return "player fire in last 5s " + team_str + " " + str(player_index) + \
+        ("" if history_index == 0 else " t-" + str(history_index))
+
+def get_player_enemy_visible_in_last_5s_columns(player_index: int, team_str: str, history_index: int = 0) -> str:
+    return "player enemy visible in last 5s " + team_str + " " + str(player_index) + \
+        ("" if history_index == 0 else " t-" + str(history_index))
+
+def get_player_health_columns(player_index: int, team_str: str, history_index: int = 0) -> str:
+    return "player health " + team_str + " " + str(player_index) + \
+        ("" if history_index == 0 else " t-" + str(history_index))
+
+def get_player_armor_columns(player_index: int, team_str: str, history_index: int = 0) -> str:
+    return "player armor " + team_str + " " + str(player_index) + \
+        ("" if history_index == 0 else " t-" + str(history_index))
 
 def get_player_aligned_pos_columns(player_index: int, team_str: str, dim_str: str, history_index: int = 0) -> str:
     return "player aligned pos " + team_str + " " + str(player_index) + \
@@ -115,8 +142,11 @@ def flatten_list(xss: list[list[T]]) -> list[T]:
     return [xi for xs in xss for xi in xs]
 
 
-def player_team_str(team_str: str, player_index: int) -> str:
-    return team_str + " " + str(player_index)
+def player_team_str(team_str: str, player_index: int, uniform_space: str = False) -> str:
+    if uniform_space and team_str == "T":
+        return team_str + "  " + str(player_index)
+    else:
+        return team_str + " " + str(player_index)
 
 
 class PlayerOrderColumns:

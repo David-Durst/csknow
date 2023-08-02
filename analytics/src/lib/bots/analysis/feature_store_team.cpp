@@ -482,8 +482,8 @@ namespace csknow::feature_store {
             //columnData[columnIndex].alignedFootPos[internalTickIndex] = (btTeamPlayerData.curFootPos / delta_pos_grid_num_cells_per_xy_dim).trunc();
             columnData[columnIndex].velocity[internalTickIndex] = btTeamPlayerData.velocity;
             columnData[columnIndex].nearestCrosshairDistanceToEnemy[internalTickIndex] = btTeamPlayerData.nearestCrosshairDistanceToEnemy;
-            columnData[columnIndex].health[internalTickIndex] = btTeamPlayerData.health;
-            columnData[columnIndex].armor[internalTickIndex] = btTeamPlayerData.armor;
+            columnData[columnIndex].health[internalTickIndex] = static_cast<float>(btTeamPlayerData.health) / 100.;
+            columnData[columnIndex].armor[internalTickIndex] = static_cast<float>(btTeamPlayerData.armor) / 100.;
             columnData[columnIndex].areaIndex[internalTickIndex] = btTeamPlayerData.curAreaIndex;
             columnData[columnIndex].weaponId[internalTickIndex] = btTeamPlayerData.weaponId;
             columnData[columnIndex].scoped[internalTickIndex] = btTeamPlayerData.scoped;
@@ -1055,6 +1055,7 @@ namespace csknow::feature_store {
                 }
                 columnData[columnPlayer].alive = file.getDataSet("/data/alive " + columnTeam + " " + iStr).read<std::vector<bool>>();
                 columnData[columnPlayer].ctTeam = file.getDataSet("/data/player ctTeam " + columnTeam + " " + iStr).read<std::vector<bool>>();
+                loadVec2VectorFromHDF5(columnData[columnPlayer].viewAngle, file, "player view angle " + columnTeam + " " + iStr);
                 loadVec3VectorFromHDF5(columnData[columnPlayer].footPos, file, "player pos " + columnTeam + " " + iStr);
                 loadVec3VectorFromHDF5(columnData[columnPlayer].velocity, file, "player velocity " + columnTeam + " " + iStr);
                 for (int priorTick = 0; priorTick < num_prior_ticks; priorTick++) {
@@ -1065,6 +1066,17 @@ namespace csknow::feature_store {
                     columnData[columnPlayer].priorFootPosValid[priorTick] =
                             file.getDataSet("/data/player history valid " + columnTeam + " " + iStr + " t-" + std::to_string(priorTick + 1)).read<std::vector<bool>>();
                 }
+                columnData[columnPlayer].nearestCrosshairDistanceToEnemy =
+                        file.getDataSet("/data/player nearest crosshair distance to enemy " + columnTeam + " " + iStr).read<std::vector<float>>();
+                for (int priorTick = 0; priorTick < num_prior_ticks; priorTick++) {
+                    columnData[columnPlayer].priorNearestCrosshairDistanceToEnemy[priorTick] =
+                            file.getDataSet("/data/player nearest crosshair distance to enemy " + columnTeam + " " + iStr + " t-" + std::to_string(priorTick+1)).read<std::vector<float>>();
+                }
+                columnData[columnPlayer].hurtInLast5s = file.getDataSet("/data/player hurt in last 5s " + columnTeam + " " + iStr).read<std::vector<float>>();
+                columnData[columnPlayer].fireInLast5s = file.getDataSet("/data/player fire in last 5s " + columnTeam + " " + iStr).read<std::vector<float>>();
+                columnData[columnPlayer].enemyVisibleInLast5s = file.getDataSet("/data/player enemy visible in last 5s " + columnTeam + " " + iStr).read<std::vector<float>>();
+                columnData[columnPlayer].health = file.getDataSet("/data/player health " + columnTeam + " " + iStr).read<std::vector<float>>();
+                columnData[columnPlayer].armor = file.getDataSet("/data/player armor " + columnTeam + " " + iStr).read<std::vector<float>>();
                 columnData[columnPlayer].decreaseDistanceToC4Over5s =
                         file.getDataSet("/data/player decrease distance to c4 over 5s " + columnTeam + " " + iStr).read<std::vector<bool>>();
                 columnData[columnPlayer].decreaseDistanceToC4Over10s =

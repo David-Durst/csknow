@@ -129,11 +129,11 @@ def vis(loaded_model: LoadedModel, inference_fn: Callable[[LoadedModel], None]):
             for i in range(max_enemies):
                 player_to_color[i] = (4, 190, 196)
                 player_to_color[i+max_enemies] = (187, 142, 52)
-        players_str = draw_all_players(data_series, pred_series, d2_img_draw, draw_max, players_to_draw,
-                                       player_to_color=player_to_color, draw_only_pos=not draw_pred,
-                                       radial_vel_time_step=radial_vel_time_step_slider.get())
+        players_status = draw_all_players(data_series, pred_series, d2_img_draw, draw_max, players_to_draw,
+                                          player_to_color=player_to_color, draw_only_pos=not draw_pred,
+                                          radial_vel_time_step=radial_vel_time_step_slider.get())
 
-        details_text_var.set(players_str)
+        details_text_var.set(players_status.status + "\n\n" + players_status.temporal)
         d2_img_copy.alpha_composite(d2_overlay_im)
         updated_d2_photo_img = itk.PhotoImage(d2_img_copy)
         img_label.configure(image=updated_d2_photo_img)
