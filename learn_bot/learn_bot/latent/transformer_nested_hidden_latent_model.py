@@ -23,10 +23,19 @@ def range_list_to_index_list(range_list: list[range]) -> list[int]:
     return result
 
 
+def get_player_columns_by_str(cts: IOColumnTransformers, contained_str: str) -> List[int]:
+    return flatten_list(
+        [range_list_to_index_list(
+            cts.get_name_ranges(True, False, contained_str=contained_str + " " + player_team_str(team_str, player_index)))
+            for team_str in team_strs for player_index in range(max_enemies)]
+    )
+
+
 d2_min = [-2257., -1207., -204.128]
 d2_max = [1832., 3157., 236.]
 stature_to_speed_list = [max_speed_per_second, max_speed_per_second * walking_modifier,
                          max_speed_per_second * ducking_modifier]
+
 
 
 class TransformerNestedHiddenLatentModel(nn.Module):
@@ -40,22 +49,28 @@ class TransformerNestedHiddenLatentModel(nn.Module):
                  num_layers, num_heads):
         super(TransformerNestedHiddenLatentModel, self).__init__()
         self.cts = cts
+        # transformed/transformed doesn't matter since no angles and all categorical variables are
+        # "distirbution" type meaning pre one hot encoded
         c4_columns_ranges = range_list_to_index_list(cts.get_name_ranges(True, True, contained_str="c4"))
         #baiting_columns_ranges = range_list_to_index_list(cts.get_name_ranges(True, True, contained_str="baiting"))
         players_columns = [c4_columns_ranges + #baiting_columns_ranges +
                           range_list_to_index_list(cts.get_name_ranges(True, True, contained_str=" " + player_team_str(team_str, player_index)))
                           for team_str in team_strs for player_index in range(max_enemies)]
-        self.players_pos_columns = flatten_list(
-            [range_list_to_index_list(cts.get_name_ranges(True, False, contained_str="player pos " + player_team_str(team_str, player_index)))
-             for team_str in team_strs for player_index in range(max_enemies)]
-        )
+        self.players_pos_columns = get_player_columns_by_str(cts, "player pos")
+        self.players_nearest_crosshair_to_enemy_columns = \
+            get_player_columns_by_str(cts, "player nearest crosshair distance to enemy")
+        #self.players_hurt_in_last_5s_columns = get_player_columns_by_str(cts, "player hurt in last 5s")
+        #self.players_fire_in_last_5s_columns = get_player_columns_by_str(cts, "player fire in last 5s")
+        #self.players_enemy_visible_in_last_5s_columns = get_player_columns_by_str(cts, "player enemy visible in last 5s")
+        #self.players_health_columns = get_player_columns_by_str(cts, "player health")
+        #self.players_armor_columns = get_player_columns_by_str(cts, "player armor")
         #self.players_vel_columns = flatten_list(
         #    [range_list_to_index_list(cts.get_name_ranges(True, False, contained_str="player velocity " + player_team_str(team_str, player_index)))
         #     for team_str in team_strs for player_index in range(max_enemies)]
         #)
-        pos_and_vel_columns = self.players_pos_columns + [] #self.players_vel_columns
-        self.players_non_pos_vel_columns = flatten_list([
-            [player_column for player_column in player_columns if player_column not in pos_and_vel_columns]
+        self.player_temporal_columns = self.players_pos_columns + self.players_nearest_crosshair_to_enemy_columns
+        self.players_non_temporal_columns = flatten_list([
+            [player_column for player_column in player_columns if player_column not in self.player_temporal_columns]
             for player_columns in players_columns
         ])
         self.num_similarity_columns = 2
@@ -94,9 +109,10 @@ class TransformerNestedHiddenLatentModel(nn.Module):
 
         # NERF code calls it positional embedder, but it's encoder since not learned
         self.spatial_positional_encoder, self.spatial_positional_encoder_out_dim = get_embedder()
-        self.columns_per_player_time_step = (len(self.players_non_pos_vel_columns) // self.num_players) + \
+        self.columns_per_player_time_step = (len(self.players_non_temporal_columns) // self.num_players) + \
                                             self.num_similarity_columns + \
-                                            self.spatial_positional_encoder_out_dim # + \
+                                            self.spatial_positional_encoder_out_dim + \
+                                            len(self.players_nearest_crosshair_to_enemy_columns) // self.num_players // self.num_input_time_steps # + \
                                             #(len(self.players_vel_columns) // self.num_players // self.num_time_steps)
 
         # positional encoding library doesn't play well with torchscript, so I'll just make the
@@ -203,6 +219,8 @@ class TransformerNestedHiddenLatentModel(nn.Module):
 
         x_pos = rearrange(x[:, self.players_pos_columns], "b (p t d) -> b p t d", p=self.num_players,
                           t=self.num_input_time_steps, d=self.num_dim)
+        x_crosshair = rearrange(x[:, self.players_nearest_crosshair_to_enemy_columns], "b (p t) -> b p t 1",
+                                p=self.num_players, t=self.num_input_time_steps)
         # delta encode prior pos
         x_pos_lagged = torch.roll(x_pos, 1, 2)
         x_pos[:, :, 1:] = x_pos_lagged[:, :, 1:] - x_pos[:, :, 1:]
@@ -214,12 +232,12 @@ class TransformerNestedHiddenLatentModel(nn.Module):
 
 
         x_non_pos_without_similarity = \
-            rearrange(x[:, self.players_non_pos_vel_columns], "b (p d) -> b p 1 d", p=self.num_players) \
+            rearrange(x[:, self.players_non_temporal_columns], "b (p d) -> b p 1 d", p=self.num_players) \
             .repeat([1, 1, self.num_input_time_steps, 1])
         similarity_expanded = rearrange(similarity, '(b p t) d -> b p t d', p=1, t=1) \
             .repeat([1, self.num_players, self.num_input_time_steps, 1])
         x_non_pos = torch.concat([x_non_pos_without_similarity, similarity_expanded], dim=-1)
-        x_gathered = torch.cat([x_pos_encoded, x_non_pos], -1)
+        x_gathered = torch.cat([x_pos_encoded, x_crosshair, x_non_pos], -1)
         #x_gathered = torch.cat([x_pos_encoded, x_vel_scaled, x_non_pos], -1)
         x_embedded = self.embedding_model(x_gathered)
 
@@ -253,7 +271,7 @@ class TransformerNestedHiddenLatentModel(nn.Module):
 
         x_pos_encoded_no_noise = self.encode_pos(x_pos, enable_noise=False)
         x_gathered_no_noise = rearrange(
-            torch.cat([x_pos_encoded_no_noise, x_non_pos], -1)[:, :, 0:self.num_output_time_steps, :],
+            torch.cat([x_pos_encoded_no_noise, x_crosshair, x_non_pos], -1)[:, :, 0:self.num_output_time_steps, :],
             "b p t d -> b (p t) d")
         x_embedded_no_noise = self.embedding_model(x_gathered_no_noise)
         transformed = self.transformer_model(x_temporal_embedded_flattened, x_embedded_no_noise, tgt_mask=tgt_mask,

@@ -148,7 +148,10 @@ class PlayerPlaceAreaColumns:
         #    flatten_list([self.pos, self.prior_pos, self.vel])
         #return flatten_list([self.pos, self.prior_pos, self.vel])
         #return flatten_list([self.pos, self.vel, self.prior_pos, self.prior_vel])
-        return flatten_list([self.pos, self.prior_pos])
+        return flatten_list([self.pos, self.prior_pos,
+                             [self.nearest_crosshair_distance_to_enemy], self.prior_nearest_crosshair_distance_to_enemy,
+                             [self.player_hurt_in_last_5s], [self.player_fire_in_last_5s], [self.player_enemy_visible_in_last_5s],
+                             [self.player_health], [self.player_armor]])
         #return flatten_list([self.pos])
         #return flatten_list([self.aligned_pos])
 
