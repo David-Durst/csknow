@@ -180,6 +180,7 @@ namespace csknow::feature_store {
                                                    std::optional<std::reference_wrapper<const Ticks>> ticks,
                                                    std::optional<std::reference_wrapper<const csknow::key_retake_events::KeyRetakeEvents>> keyRetakeEvents) {
         tickIdToInternalId.resize(size, INVALID_ID);
+        nonDecimatedValidRetakeTicks.resize(size, false);
         size_t internalSize = 0;
         if (keyRetakeEvents && ticks) {
             int64_t nextTickId = 0;
@@ -197,6 +198,7 @@ namespace csknow::feature_store {
                         refKeyRetakeEvents.plantFinishedBeforeOrDuringThisTick[i] && refKeyRetakeEvents.ctAlive[i] && refKeyRetakeEvents.tAlive[i] &&
                         !(refKeyRetakeEvents.explosionBeforeOrDuringThisTick[i] || refKeyRetakeEvents.defusalFinishedBeforeOrDuringThisTick[i]);
                 if (testCondition || nonTestCondition) {
+                    nonDecimatedValidRetakeTicks[i] = true;
                     if (i % every_nth_row != 0) {
                         continue;
                     }

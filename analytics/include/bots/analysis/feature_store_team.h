@@ -55,6 +55,8 @@ namespace csknow::feature_store {
 
         vector<int64_t> tickIdToInternalId;
         vector<int64_t> internalIdToTickId;
+        // tracks valid ticks (even if not used for training due to decimation)
+        vector<bool> nonDecimatedValidRetakeTicks;
         vector<int64_t> gameId;
         vector<int64_t> roundId;
         vector<int64_t> roundNumber;
