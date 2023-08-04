@@ -53,6 +53,14 @@ namespace csknow::feature_store {
         std::vector<csknow::orders::QueryOrder> aOrders, bOrders;
         bool curBaiting = false;
 
+        // the following are tracked for all ticks so humanness metrics can use them
+        struct NonDecimatedPlayerData {
+            vector<int64_t> playerId;
+            vector<int64_t> areaIndex;
+            vector<int64_t> areaId;
+        };
+        array<NonDecimatedPlayerData, max_enemies> nonDecimatedCTData, nonDecimatedTData;
+
         vector<int64_t> tickIdToInternalId;
         vector<int64_t> internalIdToTickId;
         // tracks valid ticks (even if not used for training due to decimation)

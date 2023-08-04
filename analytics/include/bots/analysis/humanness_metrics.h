@@ -10,10 +10,14 @@
 namespace csknow::humanness_metrics {
     class HumannessMetrics : QueryResult {
         // per key event metrics
-        vector<float> distanceToNearestTeammateWhenFiring;
-        vector<float> distanceToNearestTeammateWhenShot;
         vector<float> velocityWhenFiring;
         vector<float> velocityWhenShot;
+
+        vector<float> distanceToNearestTeammateWhenFiring;
+        vector<float> distanceToNearestEnemyWhenFiring;
+        vector<float> distanceToNearestTeammateWhenShot;
+        vector<float> distanceToAttackerWhenShot;
+
         vector<float> distanceToCoverWhenFiring;
         vector<float> distanceToCoverWhenShot;
 
@@ -24,7 +28,8 @@ namespace csknow::humanness_metrics {
 
         HumannessMetrics(const csknow::feature_store::TeamFeatureStoreResult & teamFeatureStoreResult,
                          const Rounds & rounds, const Ticks & ticks, const PlayerAtTick & playerAtTick,
-                         const Hurt & hurt, const WeaponFire & weaponFire);
+                         const Hurt & hurt, const WeaponFire & weaponFire, const ReachableResult & reachable,
+                         const VisPoints & visPoints);
 
         void toHDF5Inner(HighFive::File & file) override;
 

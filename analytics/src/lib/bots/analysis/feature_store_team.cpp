@@ -181,6 +181,14 @@ namespace csknow::feature_store {
                                                    std::optional<std::reference_wrapper<const csknow::key_retake_events::KeyRetakeEvents>> keyRetakeEvents) {
         tickIdToInternalId.resize(size, INVALID_ID);
         nonDecimatedValidRetakeTicks.resize(size, false);
+        for (int i = 0; i < max_enemies; i++) {
+            nonDecimatedCTData[i].playerId.resize(size, INVALID_ID);
+            nonDecimatedCTData[i].areaIndex.resize(size, INVALID_ID);
+            nonDecimatedCTData[i].areaId.resize(size, INVALID_ID);
+            nonDecimatedTData[i].playerId.resize(size, INVALID_ID);
+            nonDecimatedTData[i].areaIndex.resize(size, INVALID_ID);
+            nonDecimatedTData[i].areaId.resize(size, INVALID_ID);
+        }
         size_t internalSize = 0;
         if (keyRetakeEvents && ticks) {
             int64_t nextTickId = 0;
@@ -394,6 +402,18 @@ namespace csknow::feature_store {
                                                const DistanceToPlacesResult & distanceToPlaces,
                                                const nav_mesh::nav_file & navFile,
                                                int64_t roundIndex, int64_t tickIndex) {
+
+        for (size_t i = 0; i < buffer.btTeamPlayerData.size(); i++) {
+            const BTTeamPlayerData &btTeamPlayerData = buffer.btTeamPlayerData[i];
+            auto &nonDecimatedData = btTeamPlayerData.teamId == ENGINE_TEAM_T ? nonDecimatedTData : nonDecimatedCTData;
+            size_t columnIndex = btTeamPlayerData.teamId == ENGINE_TEAM_T ?
+                                 buffer.tPlayerIdToIndex[btTeamPlayerData.playerId]
+                                 : buffer.ctPlayerIdToIndex[btTeamPlayerData.playerId];
+            nonDecimatedData[columnIndex].playerId[tickIndex] = btTeamPlayerData.playerId;
+            nonDecimatedData[columnIndex].areaIndex[tickIndex] = btTeamPlayerData.curAreaIndex;
+            nonDecimatedData[columnIndex].areaId[tickIndex] = btTeamPlayerData.curArea;
+        }
+
         int64_t internalTickIndex = tickIdToInternalId[tickIndex];
         if (internalTickIndex == INVALID_ID) {
             return false;
