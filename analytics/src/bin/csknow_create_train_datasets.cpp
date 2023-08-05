@@ -301,7 +301,7 @@ int main(int argc, char * argv[]) {
     std::cout << "size: " << teamFeatureStoreResult.size << std::endl;
 
     std::cout << "processing humanness metrics" << std::endl;
-    string humannessMetricsName = "humanessMetrics";
+    string humannessMetricsName = "humannessMetrics";
     csknow::humanness_metrics::HumannessMetrics humannessMetrics(teamFeatureStoreResult, filteredRounds, ticks,
                                                                  playerAtTick, hurt, weaponFire, d2ReachableResult,
                                                                  map_visPoints.at("de_dust2"));
