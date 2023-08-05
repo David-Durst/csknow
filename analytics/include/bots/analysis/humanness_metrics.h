@@ -8,7 +8,8 @@
 #include "bots/analysis/feature_store_team.h"
 
 namespace csknow::humanness_metrics {
-    class HumannessMetrics : QueryResult {
+    class HumannessMetrics : public QueryResult {
+    public:
         // per key event metrics
         vector<float> velocityWhenFiring;
         vector<float> velocityWhenShot;
@@ -22,9 +23,9 @@ namespace csknow::humanness_metrics {
         vector<float> distanceToCoverWhenShot;
 
         // per round metrics
-        vector<float> pctTimeMaxVelocityCT, pctTimeMaxVelocityT;
+        vector<float> pctTimeMaxSpeedCT, pctTimeMaxSpeedT;
         vector<float> pctTimeStillCT, pctTimeStillT;
-        vector<float> ctWinRate;
+        vector<bool> ctWins;
 
         HumannessMetrics(const csknow::feature_store::TeamFeatureStoreResult & teamFeatureStoreResult,
                          const Rounds & rounds, const Ticks & ticks, const PlayerAtTick & playerAtTick,

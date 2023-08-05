@@ -28,6 +28,7 @@
 #include "queries/training_moments/training_navigation.h"
 #include "queries/moments/key_retake_events.h"
 #include "queries/moments/feature_store_team_extractor.h"
+#include "bots/analysis/humanness_metrics.h"
 #define CPPHTTPLIB_OPENSSL_SUPPORT
 #include "httplib.h"
 #include <cerrno>
@@ -299,6 +300,12 @@ int main(int argc, char * argv[]) {
                                                 d2ReachableResult, map_navs.at("de_dust2"), keyRetakeEvents);
     std::cout << "size: " << teamFeatureStoreResult.size << std::endl;
 
+    std::cout << "processing humanness metrics" << std::endl;
+    string humannessMetricsName = "humanessMetrics";
+    csknow::humanness_metrics::HumannessMetrics humannessMetrics(teamFeatureStoreResult, filteredRounds, ticks,
+                                                                 playerAtTick, hurt, weaponFire, d2ReachableResult,
+                                                                 map_visPoints.at("de_dust2"));
+
     /*
     std::cout << "processing behavior tree window feature store" << std::endl;
     csknow::feature_store::FeatureStoreResult windowFeatureStoreResult =
@@ -360,7 +367,8 @@ int main(int argc, char * argv[]) {
             //{latentEngagementAimName, latentEngagementAimResult},
             //{behaviorTreeFeatureStoreName, behaviorTreeLatentEvents.featureStoreResult},
             //{behaviorTreeTeamFeatureStoreName + outputNameAppendix, behaviorTreeLatentEvents.featureStoreResult.teamFeatureStoreResult}
-            {behaviorTreeTeamFeatureStoreName + outputNameAppendix, teamFeatureStoreResult}
+            {behaviorTreeTeamFeatureStoreName + outputNameAppendix, teamFeatureStoreResult},
+            {humannessMetricsName + outputNameAppendix, humannessMetrics}
             //{trainingNavigationName, trainingNavigationResult},
     };
 
