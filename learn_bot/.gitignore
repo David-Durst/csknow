@@ -2,4 +2,5 @@ data/
 models/
 plots/
 similarity_plots/
+humanness_plots/
 saved_models/
