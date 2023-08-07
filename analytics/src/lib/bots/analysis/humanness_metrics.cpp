@@ -116,10 +116,12 @@ namespace csknow::humanness_metrics {
                     }
 
                     map<int64_t, int16_t> playerToTeam;
+                    map<int64_t, bool> playerToAlive;
                     vector<AreaId> ctAreaIds, tAreaIds;
                     for (int64_t patIndex = ticks.patPerTick[tickIndex].minId;
                          patIndex != -1 && patIndex <= ticks.patPerTick[tickIndex].maxId; patIndex++) {
                         playerToTeam[playerAtTick.playerId[patIndex]] = playerAtTick.team[patIndex];
+                        playerToAlive[playerAtTick.playerId[patIndex]] = playerAtTick.isAlive[patIndex];
                         if (playerAtTick.isAlive[patIndex] && playerToAreaId.count(playerAtTick.playerId[patIndex])) {
                             if (playerAtTick.team[patIndex] == ENGINE_TEAM_CT) {
                                 ctAreaIds.push_back(playerToAreaId[playerAtTick.playerId[patIndex]]);
@@ -141,8 +143,8 @@ namespace csknow::humanness_metrics {
                         int16_t teamId = playerAtTick.team[patIndex];
 
                         // compute velocity metrics
-                        float playerVelocity = static_cast<float>(computeMagnitude(Vec3{
-                            playerAtTick.velX[tickIndex], playerAtTick.velY[tickIndex], playerAtTick.velZ[tickIndex]}));
+                        float playerVelocity = static_cast<float>(computeMagnitude(Vec2{
+                            playerAtTick.velX[tickIndex], playerAtTick.velY[tickIndex]}));
                         if (shootersThisTick.count(playerId) > 0) {
                             velocityWhenFiring.push_back(playerVelocity);
                         }
@@ -157,6 +159,14 @@ namespace csknow::humanness_metrics {
                             float attackerForVictimDistance = std::numeric_limits<float>::max();
 
                             for (const auto & [otherPlayerId, otherTeamId] : playerToTeam) {
+                                if (playerId == otherPlayerId) {
+                                    continue;
+                                }
+                                if (!playerToAlive[otherPlayerId] && !victimsThisTick.count(otherPlayerId) &&
+                                    !shootersThisTick.count(otherPlayerId)) {
+                                    continue;
+                                }
+
                                 float otherPlayerDistance = static_cast<float>(
                                         reachable.getDistance(playerToAreaIndex[playerId], playerToAreaIndex[otherPlayerId]));
 
@@ -174,11 +184,16 @@ namespace csknow::humanness_metrics {
                             }
 
                             if (shootersThisTick.count(playerId)) {
-                                distanceToNearestTeammateWhenFiring.push_back(nearestTeammateDistance);
+                                // filter out times when no teammate exists
+                                if (nearestTeammateDistance != std::numeric_limits<float>::max()) {
+                                    distanceToNearestTeammateWhenFiring.push_back(nearestTeammateDistance);
+                                }
                                 distanceToNearestEnemyWhenFiring.push_back(nearestEnemyDistance);
                             }
                             if (victimsThisTick.count(playerId)) {
-                                distanceToNearestTeammateWhenShot.push_back(nearestTeammateDistance);
+                                if (nearestTeammateDistance != std::numeric_limits<float>::max()) {
+                                    distanceToNearestTeammateWhenShot.push_back(nearestTeammateDistance);
+                                }
                                 distanceToAttackerWhenShot.push_back(attackerForVictimDistance);
                             }
 
@@ -187,8 +202,12 @@ namespace csknow::humanness_metrics {
                             const AreaBits & cover = teamId == ENGINE_TEAM_CT ? coverForCT : coverForT;
                             for (size_t i = 0; i < visPoints.getAreaVisPoints().size(); i++) {
                                 if (cover[i]) {
-                                    minDistanceToCover = std::min(minDistanceToCover, static_cast<float>(
-                                            reachable.getDistance(playerToAreaIndex[playerId], i)));
+                                    float newDistanceToCover =
+                                            static_cast<float>( reachable.getDistance(playerToAreaIndex[playerId], i));
+                                    // filter out invalid distances
+                                    if (newDistanceToCover >= 0.) {
+                                        minDistanceToCover = std::min(minDistanceToCover, newDistanceToCover);
+                                    }
                                 }
                             }
                             if (shootersThisTick.count(playerId)) {

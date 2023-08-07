@@ -32,7 +32,7 @@ def plot_metric(axs, metric_index: int, human_metric: np.ndarray, bot_metric: np
 
 
 def plot_sums(axs, metric_index: int, human_metric: np.ndarray, bot_metric: np.ndarray, metric_name: str):
-    axs[metric_index, 0].set_title(velocity_when_firing_name)
+    axs[metric_index, 0].set_title(metric_name)
     bot_value = bot_metric.sum()
     human_value = human_metric.sum()
     players = [bot_name + metric_name, human_name + metric_name]
@@ -59,30 +59,30 @@ def run_humanness():
                 all_train_humanness_metrics.velocity_when_shot,
                 rollout_humanness_metrics.velocity_when_shot,
                 velocity_when_shot_name)
-    #plot_metric(axs, 2,
-    #            all_train_humanness_metrics.distance_to_nearest_teammate_when_firing,
-    #            rollout_humanness_metrics.distance_to_nearest_teammate_when_firing,
-    #            distance_to_nearest_teammate_when_firing_name)
+    plot_metric(axs, 2,
+                all_train_humanness_metrics.distance_to_nearest_teammate_when_firing,
+                rollout_humanness_metrics.distance_to_nearest_teammate_when_firing,
+                distance_to_nearest_teammate_when_firing_name)
     plot_metric(axs, 3,
                 all_train_humanness_metrics.distance_to_nearest_enemy_when_firing,
                 rollout_humanness_metrics.distance_to_nearest_enemy_when_firing,
                 distance_to_nearest_enemy_when_firing_name)
-    #plot_metric(axs, 4,
-    #            all_train_humanness_metrics.distance_to_nearest_teammate_when_shot,
-    #            rollout_humanness_metrics.distance_to_nearest_teammate_when_shot,
-    #            distance_to_nearest_teammate_when_shot_name)
+    plot_metric(axs, 4,
+                all_train_humanness_metrics.distance_to_nearest_teammate_when_shot,
+                rollout_humanness_metrics.distance_to_nearest_teammate_when_shot,
+                distance_to_nearest_teammate_when_shot_name)
     plot_metric(axs, 5,
                 all_train_humanness_metrics.distance_to_attacker_when_shot,
                 rollout_humanness_metrics.distance_to_attacker_when_shot,
                 distance_to_attacker_when_shot_name)
-    #plot_metric(axs, 6,
-    #            all_train_humanness_metrics.distance_to_cover_when_firing,
-    #            rollout_humanness_metrics.distance_to_cover_when_firing,
-    #            distance_to_cover_when_firing_name)
-    #plot_metric(axs, 7,
-    #            all_train_humanness_metrics.distance_to_cover_when_shot,
-    #            rollout_humanness_metrics.distance_to_cover_when_shot,
-    #            distance_to_cover_when_shot_name)
+    plot_metric(axs, 6,
+                all_train_humanness_metrics.distance_to_cover_when_firing,
+                rollout_humanness_metrics.distance_to_cover_when_firing,
+                distance_to_cover_when_firing_name)
+    plot_metric(axs, 7,
+                all_train_humanness_metrics.distance_to_cover_when_shot,
+                rollout_humanness_metrics.distance_to_cover_when_shot,
+                distance_to_cover_when_shot_name)
     plot_metric(axs, 8,
                 all_train_humanness_metrics.pct_time_max_speed_ct,
                 rollout_humanness_metrics.pct_time_still_ct,
