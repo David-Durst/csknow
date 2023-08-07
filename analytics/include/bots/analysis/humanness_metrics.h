@@ -11,14 +11,29 @@ namespace csknow::humanness_metrics {
     class HumannessMetrics : public QueryResult {
     public:
         // per key event metrics
-        vector<float> velocityWhenFiring;
-        vector<float> velocityWhenShot;
+        vector<float> unscaledSpeed;
+        vector<float> unscaledSpeedWhenFiring;
+        vector<float> unscaledSpeedWhenShot;
 
+        vector<float> scaledSpeed;
+        vector<float> scaledSpeedWhenFiring;
+        vector<float> scaledSpeedWhenShot;
+
+        vector<float> weaponOnlyScaledSpeed;
+        vector<float> weaponOnlyScaledSpeedWhenFiring;
+        vector<float> weaponOnlyScaledSpeedWhenShot;
+
+        vector<float> distanceToNearestTeammate;
         vector<float> distanceToNearestTeammateWhenFiring;
-        vector<float> distanceToNearestEnemyWhenFiring;
         vector<float> distanceToNearestTeammateWhenShot;
+
+        vector<float> distanceToNearestEnemy;
+        vector<float> distanceToNearestEnemyWhenFiring;
+        vector<float> distanceToNearestEnemyWhenShot;
+
         vector<float> distanceToAttackerWhenShot;
 
+        vector<float> distanceToCover;
         vector<float> distanceToCoverWhenFiring;
         vector<float> distanceToCoverWhenShot;
 
