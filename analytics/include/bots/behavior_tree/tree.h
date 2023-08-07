@@ -43,7 +43,6 @@ public:
     Tree(const std::string & modelsDir) : inferenceManager(modelsDir) { };
 
     void tick(ServerState & state, const string & mapsPath);
-    void updateStateVisibility(ServerState & state, Blackboard & blackboard);
     void readFilterNames();
 };
 void addTreeThinkersToBlackboard(const ServerState & state, Blackboard * blackboard);

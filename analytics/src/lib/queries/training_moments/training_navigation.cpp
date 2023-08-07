@@ -4,7 +4,7 @@
 
 #include "queries/training_moments/training_navigation.h"
 #include "bots/analysis/save_map_state.h"
-#include "bots/analysis/vis_geometry.h"
+#include "bots/analysis/vis_cell_geometry.h"
 #include "queries/lookback.h"
 #include "queries/rolling_window.h"
 #include <atomic>

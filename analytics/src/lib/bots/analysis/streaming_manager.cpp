@@ -199,9 +199,16 @@ void StreamingManager::update(const Games & games, const RoundPlantDefusal & rou
             for (size_t innerClientIndex = 0; innerClientIndex < newState.clients.size();
                  innerClientIndex++) {
                 const ServerState::Client & innerClient = newState.clients[innerClientIndex];
-                if (demoIsVisible(playerAtTick, playerToPATindex[outerClient.csgoId],
-                                  playerToPATindex[innerClient.csgoId], nearestNavCell, visPoints)) {
-                    newState.visibilityClientPairs.insert({outerClient.csgoId, innerClient.csgoId});
+                VisibilityResult visibilityResult = demoIsVisible(playerAtTick, playerToPATindex[outerClient.csgoId],
+                                                                  playerToPATindex[innerClient.csgoId],
+                                                                  nearestNavCell, visPoints);
+
+                if (visibilityResult.noFOV) {
+                    newState.noFOVVisibilityClientPairs.insert({std::min(outerClient.csgoId, innerClient.csgoId),
+                                                                std::max(outerClient.csgoId, innerClient.csgoId)});
+                }
+                if (visibilityResult.fov) {
+                    newState.fovVisibilityClientPairs.insert({outerClient.csgoId, innerClient.csgoId});
                 }
             }
         }
@@ -256,9 +263,9 @@ void StreamingManager::update(const Games & games, const RoundPlantDefusal & rou
     update(newState);
 }
 
-bool demoIsVisible(const PlayerAtTick & playerAtTick, int64_t attackerPATId, int64_t victimPATId,
-                   const csknow::nearest_nav_cell::NearestNavCell & nearestNavCell,
-                   const VisPoints & visPoints) {
+VisibilityResult demoIsVisible(const PlayerAtTick & playerAtTick, int64_t attackerPATId, int64_t victimPATId,
+                               const csknow::nearest_nav_cell::NearestNavCell & nearestNavCell,
+                               const VisPoints & visPoints) {
 
     Vec3 attackerEyePos {
             playerAtTick.posX[attackerPATId],
@@ -279,9 +286,9 @@ bool demoIsVisible(const PlayerAtTick & playerAtTick, int64_t attackerPATId, int
     return vecIsVisible(attackerEyePos, victimEyePos, curViewAngle, nearestNavCell, visPoints);
 }
 
-bool vecIsVisible(Vec3 attackerEyePos, Vec3 victimEyePos, Vec2 curViewAngle,
-                   const csknow::nearest_nav_cell::NearestNavCell & nearestNavCell,
-                   const VisPoints & visPoints) {
+VisibilityResult vecIsVisible(Vec3 attackerEyePos, Vec3 victimEyePos, Vec2 curViewAngle,
+                              const csknow::nearest_nav_cell::NearestNavCell & nearestNavCell,
+                              const VisPoints & visPoints) {
 
     vector<CellIdAndDistance> attackerCellIdsByDistances = nearestNavCell.getNearestCells(attackerEyePos);
     vector<CellIdAndDistance> victimCellIdsByDistances = nearestNavCell.getNearestCells(victimEyePos);
@@ -297,8 +304,7 @@ bool vecIsVisible(Vec3 attackerEyePos, Vec3 victimEyePos, Vec2 curViewAngle,
             visPoints.getCellVisPoints()[victimCellIdsByDistances[0].cellId],
             visPoints.getCellVisPoints()[victimCellIdsByDistances[1].cellId]
     };
-    bool victimInFOV = getCellsInFOV(victimTwoClosestCellVisPoints, attackerEyePos,
-                                     curViewAngle);
+    bool victimInFOV = getPointInFOV(victimEyePos, attackerEyePos, curViewAngle);
     // vis from either of attackers two closest cell vis points
     bool victimVisNoFOV = false;
     for (size_t i = 0; i < 2; i++) {
@@ -307,5 +313,5 @@ bool vecIsVisible(Vec3 attackerEyePos, Vec3 victimEyePos, Vec2 curViewAngle,
                     .visibleFromCurPoint[victimCellIdsByDistances[j].cellId];
         }
     }
-    return victimInFOV && victimVisNoFOV;
+    return {victimVisNoFOV, victimInFOV};
 }

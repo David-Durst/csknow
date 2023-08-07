@@ -2,6 +2,7 @@
 // Created by durst on 12/29/21.
 //
 #include "bots/load_save_bot_data.h"
+#include "bots/analysis/vis_geometry.h"
 #include <thread>
 #include "queries/query.h"
 #include "load_data.h"
@@ -268,7 +269,7 @@ void ServerState::loadClientStates(const string& clientStatesFilePath) {
     closeMMapFile({fd, stats, file});
 }
 
-void ServerState::loadVisibilityClientPairs(const string& visibilityFilePath) {
+void ServerState::loadNoFOVVisibilityClientPairs(const string& visibilityFilePath) {
     // mmap the file
     auto [fd, stats, file] = openMMapFile(visibilityFilePath);
 
@@ -288,12 +289,24 @@ void ServerState::loadVisibilityClientPairs(const string& visibilityFilePath) {
         }
         else if (colNumber == 1) {
             readCol(file, curStart, curDelimiter, rowNumber, colNumber, visClients[1]);
-            visibilityClientPairs.insert({visClients[0], visClients[1]});
+            noFOVVisibilityClientPairs.insert({visClients[0], visClients[1]});
             rowNumber++;
         }
         colNumber = (colNumber + 1) % 2;
     }
     closeMMapFile({fd, stats, file});
+}
+
+void ServerState::buildFOVVisibilityClientPairs() {
+    for (const auto & outerClient : clients) {
+        for (const auto & innerClient : clients) {
+            if (isVisible(outerClient.csgoId, innerClient.csgoId, false) &&
+                getPointInFOV(innerClient.getEyePosForPlayer(), outerClient.getEyePosForPlayer(),
+                              outerClient.getCurrentViewAngles())) {
+                fovVisibilityClientPairs.insert({outerClient.csgoId, innerClient.csgoId});
+            }
+        }
+    }
 }
 
 void ServerState::loadC4State(const string& visibilityFilePath) {
@@ -580,13 +593,15 @@ CSGOFileTime ServerState::loadServerState() {
     clients.resize(rows);
     inputsValid.resize(rows, false);
     
-    visibilityClientPairs.clear();
+    noFOVVisibilityClientPairs.clear();
+    fovVisibilityClientPairs.clear();
     weaponFireEvents.clear();
     hurtEvents.clear();
 
     loadGeneralState(tmpGeneralFilePath);
     loadClientStates(tmpClientStatesFilePath);
-    loadVisibilityClientPairs(tmpVisibilityFilePath);
+    loadNoFOVVisibilityClientPairs(tmpVisibilityFilePath);
+    buildFOVVisibilityClientPairs();
     loadC4State(tmpC4FilePath);
     loadWeaponFireEvents(tmpWeaponFireFilePath);
     loadHurtEvents(tmpHurtFilePath);

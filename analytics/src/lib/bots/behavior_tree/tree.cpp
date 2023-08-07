@@ -235,23 +235,6 @@ void Tree::tick(ServerState & state, const string & mapsPath) {
     }
 }
 
-void Tree::updateStateVisibility(ServerState &state, Blackboard &blackboard) {
-    state.visibilityClientPairs.clear();
-    for (size_t outerClientIndex = 0; outerClientIndex < state.clients.size(); outerClientIndex++) {
-        const ServerState::Client & outerClient = state.clients[outerClientIndex];
-        for (size_t innerClientIndex = outerClientIndex + 1; innerClientIndex < state.clients.size();
-             innerClientIndex++) {
-            const ServerState::Client & innerClient = state.clients[innerClientIndex];
-            Vec3 attackerEyePos = outerClient.getEyePosForPlayer();
-            Vec3 victimEyePos = innerClient.getEyePosForPlayer();
-            Vec2 curViewAngle = outerClient.getCurrentViewAngles();
-            if (vecIsVisible(attackerEyePos, victimEyePos, curViewAngle, blackboard.nearestNavCell, blackboard.visPoints)) {
-                state.visibilityClientPairs.insert({outerClient.csgoId, innerClient.csgoId});
-            }
-        }
-    }
-}
-
 void Tree::readFilterNames() {
     string line, value;
 #pragma GCC diagnostic push

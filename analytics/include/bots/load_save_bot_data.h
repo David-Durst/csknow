@@ -38,7 +38,8 @@ class ServerState {
 private:
     void loadGeneralState(const string& generalFilePath);
     void loadClientStates(const string& clientStatesFilePath);
-    void loadVisibilityClientPairs(const string& visibilityFilePath);
+    void loadNoFOVVisibilityClientPairs(const string& visibilityFilePath);
+    void buildFOVVisibilityClientPairs();
     void loadC4State(const string& c4FilePath);
     void loadHurtEvents(const string& hurtFilePath);
     void loadWeaponFireEvents(const string& weaponFireFilePath);
@@ -203,24 +204,24 @@ public:
     }
 
     // visibility state
-    std::set<std::pair<int32_t, int32_t>> visibilityClientPairs;
+    std::set<std::pair<int32_t, int32_t>> noFOVVisibilityClientPairs, fovVisibilityClientPairs;
     [[nodiscard]]
-    bool isVisible(CSGOId src, CSGOId target, bool directed = false) const {
-        if (directed) {
-            return visibilityClientPairs.find({src, target}) != visibilityClientPairs.end();
+    bool isVisible(CSGOId src, CSGOId target, bool fov = false) const {
+        if (fov) {
+            return fovVisibilityClientPairs.find({src, target}) != fovVisibilityClientPairs.end();
         }
         else {
-            return visibilityClientPairs.find({std::min(src, target), std::max(src, target)}) != visibilityClientPairs.end();
+            return noFOVVisibilityClientPairs.find({std::min(src, target), std::max(src, target)}) != noFOVVisibilityClientPairs.end();
         }
     }
     [[nodiscard]]
-    vector<std::reference_wrapper<const ServerState::Client>> getVisibleEnemies(CSGOId srcId, bool directed = false) const {
+    vector<std::reference_wrapper<const ServerState::Client>> getVisibleEnemies(CSGOId srcId, bool fov = false) const {
         const ServerState::Client & srcClient = getClient(srcId);
         vector<std::reference_wrapper<const ServerState::Client>> visibleEnemies;
         if (srcClient.isAlive) {
             for (const auto & otherClient : clients) {
                 if (otherClient.team != srcClient.team && otherClient.isAlive &&
-                    isVisible(srcClient.csgoId, otherClient.csgoId, directed)) {
+                    isVisible(srcClient.csgoId, otherClient.csgoId, fov)) {
                     visibleEnemies.push_back(otherClient);
                 }
             }
