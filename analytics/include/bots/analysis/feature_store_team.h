@@ -58,7 +58,8 @@ namespace csknow::feature_store {
             vector<int64_t> playerId;
             vector<int64_t> areaIndex;
             vector<int64_t> areaId;
-            vector<bool> enemyVisible;
+            vector<bool> noFOVEnemyVisible;
+            vector<bool> fovEnemyVisible;
         };
         array<NonDecimatedPlayerData, max_enemies> nonDecimatedCTData, nonDecimatedTData;
 
@@ -107,7 +108,7 @@ namespace csknow::feature_store {
             vector<float> nearestCrosshairDistanceToEnemy;
             array<vector<float>, num_prior_ticks> priorNearestCrosshairDistanceToEnemy;
             // 0 means not shot or visible, 1 means shot cur frame or enemy currently visible
-            vector<float> hurtInLast5s, fireInLast5s, enemyVisibleInLast5s;
+            vector<float> hurtInLast5s, fireInLast5s, noFOVEnemyVisibleInLast5s, fovEnemyVisibleInLast5s;
             vector<float> health, armor;
             // control inputs
             vector<int64_t> areaIndex;

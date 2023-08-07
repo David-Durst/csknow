@@ -34,6 +34,8 @@ namespace csknow::humanness_metrics {
         vector<float> distanceToAttackerWhenShot;
 
         vector<float> distanceToCover;
+        vector<float> distanceToCoverWhenEnemyVisibleNoFOV;
+        vector<float> distanceToCoverWhenEnemyVisibleFOV;
         vector<float> distanceToCoverWhenFiring;
         vector<float> distanceToCoverWhenShot;
 

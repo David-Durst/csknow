@@ -55,7 +55,7 @@ namespace csknow::humanness_metrics {
                     // get positions in area id form and enemy visible
                     map<int64_t, int64_t> playerToAreaIndex;
                     map<int64_t, int64_t> playerToAreaId;
-                    set<int64_t> playerCanSeeEnemy;
+                    set<int64_t> playerCanSeeEnemyNoFOV, playerCanSeeEnemyFOV;
                     for (int i = 0; i < csknow::feature_store::max_enemies; i++) {
                         if (teamFeatureStoreResult.nonDecimatedCTData[i].playerId[tickIndex] != INVALID_ID) {
                             playerToAreaIndex[teamFeatureStoreResult.nonDecimatedCTData[i].playerId[tickIndex]] =
@@ -69,8 +69,17 @@ namespace csknow::humanness_metrics {
                             playerToAreaId[teamFeatureStoreResult.nonDecimatedTData[i].playerId[tickIndex]] =
                                     teamFeatureStoreResult.nonDecimatedTData[i].areaId[tickIndex];
                         }
-                        if (teamFeatureStoreResult.nonDecimatedCTData[i].enemyVisible[tickIndex]) {
-                            playerCanSeeEnemy
+                        if (teamFeatureStoreResult.nonDecimatedCTData[i].noFOVEnemyVisible[tickIndex]) {
+                            playerCanSeeEnemyNoFOV.insert(teamFeatureStoreResult.nonDecimatedCTData[i].playerId[tickIndex]);
+                        }
+                        if (teamFeatureStoreResult.nonDecimatedCTData[i].fovEnemyVisible[tickIndex]) {
+                            playerCanSeeEnemyFOV.insert(teamFeatureStoreResult.nonDecimatedCTData[i].playerId[tickIndex]);
+                        }
+                        if (teamFeatureStoreResult.nonDecimatedTData[i].noFOVEnemyVisible[tickIndex]) {
+                            playerCanSeeEnemyNoFOV.insert(teamFeatureStoreResult.nonDecimatedTData[i].playerId[tickIndex]);
+                        }
+                        if (teamFeatureStoreResult.nonDecimatedTData[i].fovEnemyVisible[tickIndex]) {
+                            playerCanSeeEnemyFOV.insert(teamFeatureStoreResult.nonDecimatedTData[i].playerId[tickIndex]);
                         }
                     }
 
@@ -243,6 +252,12 @@ namespace csknow::humanness_metrics {
                                 }
                             }
                             distanceToCover.push_back(minDistanceToCover);
+                            if (playerCanSeeEnemyNoFOV.count(playerId)) {
+                                distanceToCoverWhenEnemyVisibleNoFOV.push_back(minDistanceToCover);
+                            }
+                            if (playerCanSeeEnemyFOV.count(playerId)) {
+                                distanceToCoverWhenEnemyVisibleFOV.push_back(minDistanceToCover);
+                            }
                             if (shootersThisTick.count(playerId)) {
                                 distanceToCoverWhenFiring.push_back(minDistanceToCover);
                             }
@@ -297,6 +312,8 @@ namespace csknow::humanness_metrics {
         file.createDataSet("/data/distance to attacker when shot", distanceToAttackerWhenShot, hdf5FlatCreateProps);
 
         file.createDataSet("/data/distance to cover", distanceToCover, hdf5FlatCreateProps);
+        file.createDataSet("/data/distance to cover when enemy visible no fov", distanceToCoverWhenEnemyVisibleNoFOV, hdf5FlatCreateProps);
+        file.createDataSet("/data/distance to cover when enemy visible fov", distanceToCoverWhenEnemyVisibleFOV, hdf5FlatCreateProps);
         file.createDataSet("/data/distance to cover when firing", distanceToCoverWhenFiring, hdf5FlatCreateProps);
         file.createDataSet("/data/distance to cover when shot", distanceToCoverWhenShot, hdf5FlatCreateProps);
 

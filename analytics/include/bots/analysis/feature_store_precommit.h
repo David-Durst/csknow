@@ -33,14 +33,14 @@ namespace csknow::feature_store {
 
 
     struct PlayerTickCounters {
-        int64_t ticksSinceHurt, ticksSinceFire, ticksSinceEnemyVisible;
+        int64_t ticksSinceHurt, ticksSinceFire, ticksSinceNoFOVEnemyVisible, ticksSinceFOVEnemyVisible;
     };
 
     // large enough to be a long time, small enough that it won't overflow in a round
     constexpr int64_t default_many_ticks = 1e6;
 
     constexpr PlayerTickCounters default_tick_counters {
-        default_many_ticks, default_many_ticks, default_many_ticks
+        default_many_ticks, default_many_ticks, default_many_ticks, default_many_ticks
     };
 
     struct BTTeamPlayerData {

@@ -82,8 +82,10 @@ namespace csknow::feature_store {
             columnCTData[i].hurtInLast5s.resize(size, 1.);
             columnTData[i].fireInLast5s.resize(size, 1.);
             columnCTData[i].fireInLast5s.resize(size, 1.);
-            columnTData[i].enemyVisibleInLast5s.resize(size, 1.);
-            columnCTData[i].enemyVisibleInLast5s.resize(size, 1.);
+            columnTData[i].noFOVEnemyVisibleInLast5s.resize(size, 1.);
+            columnTData[i].fovEnemyVisibleInLast5s.resize(size, 1.);
+            columnCTData[i].noFOVEnemyVisibleInLast5s.resize(size, 1.);
+            columnCTData[i].fovEnemyVisibleInLast5s.resize(size, 1.);
             columnTData[i].health.resize(size, 0.);
             columnCTData[i].health.resize(size, 0.);
             columnTData[i].armor.resize(size, 0.);
@@ -185,9 +187,13 @@ namespace csknow::feature_store {
             nonDecimatedCTData[i].playerId.resize(size, INVALID_ID);
             nonDecimatedCTData[i].areaIndex.resize(size, INVALID_ID);
             nonDecimatedCTData[i].areaId.resize(size, INVALID_ID);
+            nonDecimatedCTData[i].noFOVEnemyVisible.resize(size, INVALID_ID);
+            nonDecimatedCTData[i].fovEnemyVisible.resize(size, INVALID_ID);
             nonDecimatedTData[i].playerId.resize(size, INVALID_ID);
             nonDecimatedTData[i].areaIndex.resize(size, INVALID_ID);
             nonDecimatedTData[i].areaId.resize(size, INVALID_ID);
+            nonDecimatedTData[i].noFOVEnemyVisible.resize(size, INVALID_ID);
+            nonDecimatedTData[i].fovEnemyVisible.resize(size, INVALID_ID);
         }
         size_t internalSize = 0;
         if (keyRetakeEvents && ticks) {
@@ -306,8 +312,10 @@ namespace csknow::feature_store {
                 columnCTData[i].hurtInLast5s[rowIndex] = 1.;;
                 columnTData[i].fireInLast5s[rowIndex] = 1.;
                 columnCTData[i].fireInLast5s[rowIndex] = 1.;;
-                columnTData[i].enemyVisibleInLast5s[rowIndex] = 1.;
-                columnCTData[i].enemyVisibleInLast5s[rowIndex] = 1.;
+                columnTData[i].noFOVEnemyVisibleInLast5s[rowIndex] = 1.;
+                columnTData[i].fovEnemyVisibleInLast5s[rowIndex] = 1.;
+                columnCTData[i].noFOVEnemyVisibleInLast5s[rowIndex] = 1.;
+                columnCTData[i].fovEnemyVisibleInLast5s[rowIndex] = 1.;
                 columnTData[i].health[rowIndex] = 0.;
                 columnCTData[i].health[rowIndex] = 0.;
                 columnTData[i].armor[rowIndex] = 0.;
@@ -412,8 +420,10 @@ namespace csknow::feature_store {
             nonDecimatedData[columnIndex].playerId[tickIndex] = btTeamPlayerData.playerId;
             nonDecimatedData[columnIndex].areaIndex[tickIndex] = btTeamPlayerData.curAreaIndex;
             nonDecimatedData[columnIndex].areaId[tickIndex] = btTeamPlayerData.curArea;
-            nonDecimatedData[columnIndex].enemyVisible[tickIndex] =
-                    buffer.playerTickCounters[btTeamPlayerData.playerId].ticksSinceEnemyVisible == 0;
+            nonDecimatedData[columnIndex].noFOVEnemyVisible[tickIndex] =
+                    buffer.playerTickCounters[btTeamPlayerData.playerId].ticksSinceNoFOVEnemyVisible == 0;
+            nonDecimatedData[columnIndex].fovEnemyVisible[tickIndex] =
+                    buffer.playerTickCounters[btTeamPlayerData.playerId].ticksSinceFOVEnemyVisible == 0;
         }
 
         int64_t internalTickIndex = tickIdToInternalId[tickIndex];
@@ -568,8 +578,10 @@ namespace csknow::feature_store {
                     std::min(1.f, static_cast<float>(secondsBetweenTicks(state.tickInterval, 0, buffer.playerTickCounters[btTeamPlayerData.playerId].ticksSinceHurt)) / 5.f);
             columnData[columnIndex].fireInLast5s[internalTickIndex] =
                     std::min(1.f, static_cast<float>(secondsBetweenTicks(state.tickInterval, 0, buffer.playerTickCounters[btTeamPlayerData.playerId].ticksSinceFire)) / 5.f);
-            columnData[columnIndex].enemyVisibleInLast5s[internalTickIndex] =
-                    std::min(1.f, static_cast<float>(secondsBetweenTicks(state.tickInterval, 0, buffer.playerTickCounters[btTeamPlayerData.playerId].ticksSinceEnemyVisible) / 5.f));
+            columnData[columnIndex].noFOVEnemyVisibleInLast5s[internalTickIndex] =
+                    std::min(1.f, static_cast<float>(secondsBetweenTicks(state.tickInterval, 0, buffer.playerTickCounters[btTeamPlayerData.playerId].ticksSinceNoFOVEnemyVisible) / 5.f));
+            columnData[columnIndex].fovEnemyVisibleInLast5s[internalTickIndex] =
+                    std::min(1.f, static_cast<float>(secondsBetweenTicks(state.tickInterval, 0, buffer.playerTickCounters[btTeamPlayerData.playerId].ticksSinceFOVEnemyVisible) / 5.f));
         }
 
 
@@ -1006,8 +1018,10 @@ namespace csknow::feature_store {
                                    columnData[columnPlayer].hurtInLast5s, hdf5FlatCreateProps);
                 file.createDataSet("/data/player fire in last 5s " + columnTeam + " " + iStr,
                                    columnData[columnPlayer].fireInLast5s, hdf5FlatCreateProps);
-                file.createDataSet("/data/player enemy visible in last 5s " + columnTeam + " " + iStr,
-                                   columnData[columnPlayer].enemyVisibleInLast5s, hdf5FlatCreateProps);
+                file.createDataSet("/data/player no fov enemy visible in last 5s " + columnTeam + " " + iStr,
+                                   columnData[columnPlayer].noFOVEnemyVisibleInLast5s, hdf5FlatCreateProps);
+                file.createDataSet("/data/player fov enemy visible in last 5s " + columnTeam + " " + iStr,
+                                   columnData[columnPlayer].fovEnemyVisibleInLast5s, hdf5FlatCreateProps);
                 file.createDataSet("/data/player health " + columnTeam + " " + iStr,
                                    columnData[columnPlayer].health, hdf5FlatCreateProps);
                 file.createDataSet("/data/player armor " + columnTeam + " " + iStr,
@@ -1099,7 +1113,8 @@ namespace csknow::feature_store {
                 }
                 columnData[columnPlayer].hurtInLast5s = file.getDataSet("/data/player hurt in last 5s " + columnTeam + " " + iStr).read<std::vector<float>>();
                 columnData[columnPlayer].fireInLast5s = file.getDataSet("/data/player fire in last 5s " + columnTeam + " " + iStr).read<std::vector<float>>();
-                columnData[columnPlayer].enemyVisibleInLast5s = file.getDataSet("/data/player enemy visible in last 5s " + columnTeam + " " + iStr).read<std::vector<float>>();
+                columnData[columnPlayer].noFOVEnemyVisibleInLast5s = file.getDataSet("/data/player no fov enemy visible in last 5s " + columnTeam + " " + iStr).read<std::vector<float>>();
+                columnData[columnPlayer].fovEnemyVisibleInLast5s = file.getDataSet("/data/player fov enemy visible in last 5s " + columnTeam + " " + iStr).read<std::vector<float>>();
                 columnData[columnPlayer].health = file.getDataSet("/data/player health " + columnTeam + " " + iStr).read<std::vector<float>>();
                 columnData[columnPlayer].armor = file.getDataSet("/data/player armor " + columnTeam + " " + iStr).read<std::vector<float>>();
                 columnData[columnPlayer].decreaseDistanceToC4Over5s =

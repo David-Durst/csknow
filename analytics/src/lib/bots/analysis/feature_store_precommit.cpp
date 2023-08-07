@@ -58,10 +58,14 @@ namespace csknow::feature_store {
             }
         }
 
-        set<CSGOId> enemiesVisible;
+        set<CSGOId> noFOVEnemiesVisible;
+        set<CSGOId> fovEnemiesVisible;
         for (const auto & client : state.clients) {
-            if (state.getVisibleEnemies(client.csgoId, true).size() > 0) {
-                enemiesVisible.insert(client.csgoId);
+            if (!state.getVisibleEnemies(client.csgoId, false).empty()) {
+                noFOVEnemiesVisible.insert(client.csgoId);
+            }
+            if (!state.getVisibleEnemies(client.csgoId, true).empty()) {
+                fovEnemiesVisible.insert(client.csgoId);
             }
         }
 
@@ -102,12 +106,20 @@ namespace csknow::feature_store {
                 playerCounter.ticksSinceFire = std::min(playerCounter.ticksSinceFire + 1, default_many_ticks);
             }
 
-            if (enemiesVisible.count(playerId) > 0) {
-                playerCounter.ticksSinceEnemyVisible = 0;
+            if (noFOVEnemiesVisible.count(playerId) > 0) {
+                playerCounter.ticksSinceNoFOVEnemyVisible = 0;
             }
             else {
-                playerCounter.ticksSinceEnemyVisible =
-                        std::min(playerCounter.ticksSinceEnemyVisible + 1, default_many_ticks);
+                playerCounter.ticksSinceNoFOVEnemyVisible =
+                        std::min(playerCounter.ticksSinceNoFOVEnemyVisible + 1, default_many_ticks);
+            }
+
+            if (fovEnemiesVisible.count(playerId) > 0) {
+                playerCounter.ticksSinceFOVEnemyVisible = 0;
+            }
+            else {
+                playerCounter.ticksSinceFOVEnemyVisible =
+                        std::min(playerCounter.ticksSinceFOVEnemyVisible + 1, default_many_ticks);
             }
         }
     }
