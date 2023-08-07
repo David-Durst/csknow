@@ -136,7 +136,7 @@ namespace csknow::humanness_metrics {
 
                             double maxRunSpeed = csknow::weapon_speed::engineWeaponIdToMaxSpeed(
                                     demoEquipmentTypeToEngineWeaponId(playerAtTick.activeWeapon[patIndex]),
-                                    csknow::weapon_speed::StatureOptions::Standing, playerAtTick.isScoped[patIndex]);
+                                    csknow::weapon_speed::StatureOptions::Standing, false);
                             float curWeaponOnlyScaledSpeed = static_cast<float>(curUnscaledSpeed / maxRunSpeed);
 
                             bool runningAtMaxSpeed = curScaledSpeed >= csknow::weapon_speed::speed_threshold;
