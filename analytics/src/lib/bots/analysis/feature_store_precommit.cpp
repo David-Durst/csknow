@@ -61,11 +61,17 @@ namespace csknow::feature_store {
         set<CSGOId> noFOVEnemiesVisible;
         set<CSGOId> fovEnemiesVisible;
         for (const auto & client : state.clients) {
+            bool a = false, b = false;
             if (!state.getVisibleEnemies(client.csgoId, false).empty()) {
                 noFOVEnemiesVisible.insert(client.csgoId);
+                a = true;
             }
             if (!state.getVisibleEnemies(client.csgoId, true).empty()) {
                 fovEnemiesVisible.insert(client.csgoId);
+                b = true;
+            }
+            if (!a && b) {
+                std::cout << "bad" << std::endl;
             }
         }
 

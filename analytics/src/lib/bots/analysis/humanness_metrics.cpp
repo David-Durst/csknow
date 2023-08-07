@@ -16,7 +16,7 @@ namespace csknow::humanness_metrics {
     }
 
     HumannessMetrics::HumannessMetrics(const csknow::feature_store::TeamFeatureStoreResult &teamFeatureStoreResult,
-                                       const Games & games, const Rounds & rounds, const Players & players, const Ticks & ticks,
+                                       const Games &, const Rounds & rounds, const Players &, const Ticks & ticks,
                                        const PlayerAtTick & playerAtTick, const Hurt & hurt, const WeaponFire & weaponFire,
                                        const ReachableResult & reachable, const VisPoints & visPoints) {
         std::atomic<int64_t> roundsProcessed = 0;
@@ -161,6 +161,7 @@ namespace csknow::humanness_metrics {
                                 }
                             }
 
+                            /*
                             if (curUnscaledSpeed > 400.) {
                                 std::cout << "demo file " << games.demoFile[rounds.gameId[roundIndex]]
                                           << ", game tick number " << ticks.gameTickNumber[tickIndex]
@@ -171,6 +172,7 @@ namespace csknow::humanness_metrics {
                                           << ", weapon id " << playerAtTick.activeWeapon[patIndex]
                                           << ", player alive " << playerAtTick.isAlive[patIndex] << std::endl;
                             }
+                            */
                             unscaledSpeed.push_back(curUnscaledSpeed);
                             scaledSpeed.push_back(curScaledSpeed);
                             weaponOnlyScaledSpeed.push_back(curWeaponOnlyScaledSpeed);

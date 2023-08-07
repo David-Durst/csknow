@@ -313,5 +313,5 @@ VisibilityResult vecIsVisible(Vec3 attackerEyePos, Vec3 victimEyePos, Vec2 curVi
                     .visibleFromCurPoint[victimCellIdsByDistances[j].cellId];
         }
     }
-    return {victimVisNoFOV, victimInFOV};
+    return {victimVisNoFOV, victimVisNoFOV && victimInFOV};
 }

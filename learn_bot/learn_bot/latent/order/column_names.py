@@ -85,8 +85,12 @@ def get_player_fire_in_last_5s_columns(player_index: int, team_str: str, history
     return "player fire in last 5s " + team_str + " " + str(player_index) + \
         ("" if history_index == 0 else " t-" + str(history_index))
 
-def get_player_enemy_visible_in_last_5s_columns(player_index: int, team_str: str, history_index: int = 0) -> str:
-    return "player enemy visible in last 5s " + team_str + " " + str(player_index) + \
+def get_player_no_fov_enemy_visible_in_last_5s_columns(player_index: int, team_str: str, history_index: int = 0) -> str:
+    return "player enemy visible in last 5s no fov " + team_str + " " + str(player_index) + \
+        ("" if history_index == 0 else " t-" + str(history_index))
+
+def get_player_fov_enemy_visible_in_last_5s_columns(player_index: int, team_str: str, history_index: int = 0) -> str:
+    return "player enemy visible in last 5s fov " + team_str + " " + str(player_index) + \
         ("" if history_index == 0 else " t-" + str(history_index))
 
 def get_player_health_columns(player_index: int, team_str: str, history_index: int = 0) -> str:

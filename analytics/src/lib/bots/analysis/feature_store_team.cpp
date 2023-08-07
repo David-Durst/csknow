@@ -1018,9 +1018,9 @@ namespace csknow::feature_store {
                                    columnData[columnPlayer].hurtInLast5s, hdf5FlatCreateProps);
                 file.createDataSet("/data/player fire in last 5s " + columnTeam + " " + iStr,
                                    columnData[columnPlayer].fireInLast5s, hdf5FlatCreateProps);
-                file.createDataSet("/data/player no fov enemy visible in last 5s " + columnTeam + " " + iStr,
+                file.createDataSet("/data/player enemy visible in last 5s no fov " + columnTeam + " " + iStr,
                                    columnData[columnPlayer].noFOVEnemyVisibleInLast5s, hdf5FlatCreateProps);
-                file.createDataSet("/data/player fov enemy visible in last 5s " + columnTeam + " " + iStr,
+                file.createDataSet("/data/player enemy visible in last 5s fov " + columnTeam + " " + iStr,
                                    columnData[columnPlayer].fovEnemyVisibleInLast5s, hdf5FlatCreateProps);
                 file.createDataSet("/data/player health " + columnTeam + " " + iStr,
                                    columnData[columnPlayer].health, hdf5FlatCreateProps);
@@ -1113,8 +1113,8 @@ namespace csknow::feature_store {
                 }
                 columnData[columnPlayer].hurtInLast5s = file.getDataSet("/data/player hurt in last 5s " + columnTeam + " " + iStr).read<std::vector<float>>();
                 columnData[columnPlayer].fireInLast5s = file.getDataSet("/data/player fire in last 5s " + columnTeam + " " + iStr).read<std::vector<float>>();
-                columnData[columnPlayer].noFOVEnemyVisibleInLast5s = file.getDataSet("/data/player no fov enemy visible in last 5s " + columnTeam + " " + iStr).read<std::vector<float>>();
-                columnData[columnPlayer].fovEnemyVisibleInLast5s = file.getDataSet("/data/player fov enemy visible in last 5s " + columnTeam + " " + iStr).read<std::vector<float>>();
+                columnData[columnPlayer].noFOVEnemyVisibleInLast5s = file.getDataSet("/data/player enemy visible in last 5s no fov " + columnTeam + " " + iStr).read<std::vector<float>>();
+                columnData[columnPlayer].fovEnemyVisibleInLast5s = file.getDataSet("/data/player enemy visible in last 5s fov " + columnTeam + " " + iStr).read<std::vector<float>>();
                 columnData[columnPlayer].health = file.getDataSet("/data/player health " + columnTeam + " " + iStr).read<std::vector<float>>();
                 columnData[columnPlayer].armor = file.getDataSet("/data/player armor " + columnTeam + " " + iStr).read<std::vector<float>>();
                 columnData[columnPlayer].decreaseDistanceToC4Over5s =

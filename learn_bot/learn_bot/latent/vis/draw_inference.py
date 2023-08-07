@@ -163,13 +163,15 @@ def draw_all_players(data_series: pd.Series, pred_series: Optional[pd.Series], i
             nearest_crosshair_distance_to_enemy = data_series[player_place_area_columns.nearest_crosshair_distance_to_enemy]
             hurt_last_5s = data_series[player_place_area_columns.player_hurt_in_last_5s]
             fire_last_5s = data_series[player_place_area_columns.player_fire_in_last_5s]
-            enemy_visible_last_5s = data_series[player_place_area_columns.player_enemy_visible_in_last_5s]
+            no_fov_enemy_visible_last_5s = data_series[player_place_area_columns.player_no_fov_enemy_visible_in_last_5s]
+            fov_enemy_visible_last_5s = data_series[player_place_area_columns.player_fov_enemy_visible_in_last_5s]
             health = data_series[player_place_area_columns.player_health]
             armor = data_series[player_place_area_columns.player_armor]
             temporal_str = f"{player_place_area_columns.player_id_uniform_space} " \
                            f"decrease distance to c4 5s {decrease_distance_to_c4_5s} 10s {decrease_distance_to_c4_10s} 20s {decrease_distance_to_c4_20s}, " \
                            f"nearest crosshair distance to enemy {nearest_crosshair_distance_to_enemy:3.2f}, " \
-                           f"hurt last 5s {hurt_last_5s:3.2f}, fire last 5s {fire_last_5s:3.2f}, enemy visible last 5s {enemy_visible_last_5s:3.2f}"
+                           f"hurt last 5s {hurt_last_5s:3.2f}, fire last 5s {fire_last_5s:3.2f}, " \
+                           f"enemy visible last 5s (no fov) {no_fov_enemy_visible_last_5s:3.2f}, (fov) {fov_enemy_visible_last_5s:3.2f}"
             result.temporal += temporal_str + "\n"
 
             if draw_only_pos:
