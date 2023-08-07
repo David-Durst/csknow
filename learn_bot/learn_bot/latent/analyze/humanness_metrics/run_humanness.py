@@ -33,8 +33,8 @@ def plot_metric(axs, metric_index: int, human_metric: np.ndarray, bot_metric: np
 
 def plot_sums(axs, metric_index: int, human_metric: np.ndarray, bot_metric: np.ndarray, metric_name: str):
     axs[metric_index, 0].set_title(metric_name)
-    bot_value = bot_metric.sum()
-    human_value = human_metric.sum()
+    bot_value = bot_metric.sum() / len(bot_metric)
+    human_value = human_metric.sum() / len(human_metric)
     players = [bot_name + metric_name, human_name + metric_name]
     values = [bot_value, human_value]
     axs[metric_index, 0].bar(players, values)

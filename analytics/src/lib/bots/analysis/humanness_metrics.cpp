@@ -14,8 +14,8 @@ namespace csknow::humanness_metrics {
     }
 
     HumannessMetrics::HumannessMetrics(const csknow::feature_store::TeamFeatureStoreResult &teamFeatureStoreResult,
-                                       const Rounds & rounds, const Ticks & ticks, const PlayerAtTick & playerAtTick,
-                                       const Hurt & hurt, const WeaponFire & weaponFire,
+                                       const Games &, const Rounds & rounds, const Players &, const Ticks & ticks,
+                                       const PlayerAtTick & playerAtTick, const Hurt & hurt, const WeaponFire & weaponFire,
                                        const ReachableResult & reachable, const VisPoints & visPoints) {
         for (int64_t roundIndex = 0; roundIndex < rounds.size; roundIndex++) {
             // record round metrics only if round has at least one valid tick
@@ -144,10 +144,22 @@ namespace csknow::humanness_metrics {
 
                         // compute velocity metrics
                         float playerVelocity = static_cast<float>(computeMagnitude(Vec2{
-                            playerAtTick.velX[tickIndex], playerAtTick.velY[tickIndex]}));
+                            playerAtTick.velX[patIndex], playerAtTick.velY[patIndex]}));
+                        /*
                         if (shootersThisTick.count(playerId) > 0) {
+                            if (playerVelocity > 260.) {
+                                std::cout << "demo file " << games.demoFile[rounds.gameId[roundIndex]]
+                                          << ", game tick number " << ticks.gameTickNumber[tickIndex]
+                                          << ", player "  << players.name[players.idOffset + playerAtTick.playerId[patIndex]]
+                                          << ", cur speed " << playerVelocity
+                                          << ", vel x " << playerAtTick.velX[patIndex] << ", vel y " << playerAtTick.velY[patIndex]
+                                          << ", weapon " << demoEquipmentTypeToString(playerAtTick.activeWeapon[patIndex])
+                                          << ", weapon id " << playerAtTick.activeWeapon[patIndex]
+                                          << ", player alive " << playerAtTick.isAlive[patIndex] << std::endl;
+                            }
                             velocityWhenFiring.push_back(playerVelocity);
                         }
+                         */
                         if (victimsThisTick.count(playerId) > 0) {
                             velocityWhenShot.push_back(playerVelocity);
                         }

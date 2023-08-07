@@ -28,9 +28,9 @@ namespace csknow::humanness_metrics {
         vector<bool> ctWins;
 
         HumannessMetrics(const csknow::feature_store::TeamFeatureStoreResult & teamFeatureStoreResult,
-                         const Rounds & rounds, const Ticks & ticks, const PlayerAtTick & playerAtTick,
-                         const Hurt & hurt, const WeaponFire & weaponFire, const ReachableResult & reachable,
-                         const VisPoints & visPoints);
+                         const Games & games, const Rounds & rounds, const Players & players, const Ticks & ticks,
+                         const PlayerAtTick & playerAtTick, const Hurt & hurt, const WeaponFire & weaponFire,
+                         const ReachableResult & reachable, const VisPoints & visPoints);
 
         void toHDF5Inner(HighFive::File & file) override;
 
