@@ -131,7 +131,7 @@ namespace csknow::humanness_metrics {
                                     demoEquipmentTypeToEngineWeaponId(playerAtTick.activeWeapon[patIndex]),
                                     statureOption, playerAtTick.isScoped[patIndex]);
                             // anything over max speed is due to jump strafing, just cap at regular max
-                            curUnscaledSpeed = std::max(static_cast<float>(maxSpeed), curUnscaledSpeed);
+                            curUnscaledSpeed = std::min(static_cast<float>(maxSpeed), curUnscaledSpeed);
                             float curScaledSpeed = static_cast<float>(curUnscaledSpeed / maxSpeed);
 
                             double maxRunSpeed = csknow::weapon_speed::engineWeaponIdToMaxSpeed(

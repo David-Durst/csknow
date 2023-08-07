@@ -8,7 +8,7 @@ from learn_bot.latent.analyze.process_trajectory_comparison import set_pd_print_
 import matplotlib.pyplot as plt
 
 fig_length = 6
-num_figs = 24
+num_figs = 26
 num_player_types = 2
 bot_name = "Bot "
 human_name = "Human "
@@ -126,31 +126,39 @@ def run_humanness():
                 rollout_humanness_metrics.distance_to_cover,
                 distance_to_cover_name)
     plot_metric(axs, 17,
+                all_train_humanness_metrics.distance_to_cover_when_enemy_visible_no_fov,
+                rollout_humanness_metrics.distance_to_cover_when_enemy_visible_no_fov,
+                distance_to_cover_when_enemy_visible_no_fov_name)
+    plot_metric(axs, 18,
+                all_train_humanness_metrics.distance_to_cover_when_enemy_visible_fov,
+                rollout_humanness_metrics.distance_to_cover_when_enemy_visible_fov,
+                distance_to_cover_when_enemy_visible_fov_name)
+    plot_metric(axs, 19,
                 all_train_humanness_metrics.distance_to_cover_when_firing,
                 rollout_humanness_metrics.distance_to_cover_when_firing,
                 distance_to_cover_when_firing_name)
-    plot_metric(axs, 18,
+    plot_metric(axs, 20,
                 all_train_humanness_metrics.distance_to_cover_when_shot,
                 rollout_humanness_metrics.distance_to_cover_when_shot,
                 distance_to_cover_when_shot_name)
 
-    plot_metric(axs, 19,
+    plot_metric(axs, 21,
                 all_train_humanness_metrics.pct_time_max_speed_ct,
                 rollout_humanness_metrics.pct_time_still_ct,
                 pct_time_max_speed_ct_name, pct_bins=True)
-    plot_metric(axs, 20,
+    plot_metric(axs, 22,
                 all_train_humanness_metrics.pct_time_max_speed_t,
                 rollout_humanness_metrics.pct_time_max_speed_t,
                 pct_time_max_speed_t_name, pct_bins=True)
-    plot_metric(axs, 21,
+    plot_metric(axs, 23,
                 all_train_humanness_metrics.pct_time_still_ct,
                 rollout_humanness_metrics.pct_time_still_ct,
                 pct_time_still_ct_name, pct_bins=True)
-    plot_metric(axs, 22,
+    plot_metric(axs, 24,
                 all_train_humanness_metrics.pct_time_still_t,
                 rollout_humanness_metrics.pct_time_still_t,
                 pct_time_still_t_name, pct_bins=True)
-    plot_sums(axs, 23,
+    plot_sums(axs, 25,
                 all_train_humanness_metrics.ct_wins,
                 rollout_humanness_metrics.ct_wins,
                 ct_wins_name)

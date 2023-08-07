@@ -26,6 +26,8 @@ distance_to_nearest_enemy_when_shot_name = "distance to nearest enemy when shot"
 distance_to_attacker_when_shot_name = "distance to attacker when shot"
 
 distance_to_cover_name = "distance to cover"
+distance_to_cover_when_enemy_visible_no_fov_name = "distance to cover when enemy visible no fov"
+distance_to_cover_when_enemy_visible_fov_name = "distance to cover when enemy visible fov"
 distance_to_cover_when_firing_name = "distance to cover when firing"
 distance_to_cover_when_shot_name = "distance to cover when shot"
 

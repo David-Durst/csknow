@@ -36,6 +36,8 @@ class HumannessMetrics:
     distance_to_attacker_when_shot: np.ndarray
 
     distance_to_cover: np.ndarray
+    distance_to_cover_when_enemy_visible_no_fov: np.ndarray
+    distance_to_cover_when_enemy_visible_fov: np.ndarray
     distance_to_cover_when_firing: np.ndarray
     distance_to_cover_when_shot: np.ndarray
 
@@ -83,6 +85,10 @@ class HumannessMetrics:
                     self.distance_to_attacker_when_shot = hdf5_data[distance_to_attacker_when_shot_name][...]
 
                     self.distance_to_cover = hdf5_data[distance_to_cover_name][...]
+                    self.distance_to_cover_when_enemy_visible_no_fov = \
+                        hdf5_data[distance_to_cover_when_enemy_visible_no_fov_name][...]
+                    self.distance_to_cover_when_enemy_visible_fov = \
+                        hdf5_data[distance_to_cover_when_enemy_visible_fov_name][...]
                     self.distance_to_cover_when_firing = hdf5_data[distance_to_cover_when_firing_name][...]
                     self.distance_to_cover_when_shot = hdf5_data[distance_to_cover_when_shot_name][...]
 
@@ -139,6 +145,12 @@ class HumannessMetrics:
 
                     self.distance_to_cover = \
                         np.append(self.distance_to_cover, hdf5_data[distance_to_cover_name][...])
+                    self.distance_to_cover_when_enemy_visible_no_fov = \
+                        np.append(self.distance_to_cover_when_enemy_visible_no_fov,
+                                  hdf5_data[distance_to_cover_when_enemy_visible_no_fov_name][...])
+                    self.distance_to_cover_when_enemy_visible_fov = \
+                        np.append(self.distance_to_cover_when_enemy_visible_fov,
+                                  hdf5_data[distance_to_cover_when_enemy_visible_fov_name][...])
                     self.distance_to_cover_when_firing = \
                         np.append(self.distance_to_cover_when_firing,
                                   hdf5_data[distance_to_cover_when_firing_name][...])
