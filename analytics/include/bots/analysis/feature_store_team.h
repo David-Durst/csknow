@@ -58,6 +58,7 @@ namespace csknow::feature_store {
             vector<int64_t> playerId;
             vector<int64_t> areaIndex;
             vector<int64_t> areaId;
+            vector<bool> enemyVisible;
         };
         array<NonDecimatedPlayerData, max_enemies> nonDecimatedCTData, nonDecimatedTData;
 

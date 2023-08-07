@@ -16,7 +16,7 @@ namespace csknow::humanness_metrics {
     }
 
     HumannessMetrics::HumannessMetrics(const csknow::feature_store::TeamFeatureStoreResult &teamFeatureStoreResult,
-                                       const Games &, const Rounds & rounds, const Players &, const Ticks & ticks,
+                                       const Games & games, const Rounds & rounds, const Players & players, const Ticks & ticks,
                                        const PlayerAtTick & playerAtTick, const Hurt & hurt, const WeaponFire & weaponFire,
                                        const ReachableResult & reachable, const VisPoints & visPoints) {
         std::atomic<int64_t> roundsProcessed = 0;
@@ -52,9 +52,10 @@ namespace csknow::humanness_metrics {
                         }
                     }
 
-                    // get positions in area id form
+                    // get positions in area id form and enemy visible
                     map<int64_t, int64_t> playerToAreaIndex;
                     map<int64_t, int64_t> playerToAreaId;
+                    set<int64_t> playerCanSeeEnemy;
                     for (int i = 0; i < csknow::feature_store::max_enemies; i++) {
                         if (teamFeatureStoreResult.nonDecimatedCTData[i].playerId[tickIndex] != INVALID_ID) {
                             playerToAreaIndex[teamFeatureStoreResult.nonDecimatedCTData[i].playerId[tickIndex]] =
@@ -67,6 +68,9 @@ namespace csknow::humanness_metrics {
                                     teamFeatureStoreResult.nonDecimatedTData[i].areaIndex[tickIndex];
                             playerToAreaId[teamFeatureStoreResult.nonDecimatedTData[i].playerId[tickIndex]] =
                                     teamFeatureStoreResult.nonDecimatedTData[i].areaId[tickIndex];
+                        }
+                        if (teamFeatureStoreResult.nonDecimatedCTData[i].enemyVisible[tickIndex]) {
+                            playerCanSeeEnemy
                         }
                     }
 
@@ -117,6 +121,8 @@ namespace csknow::humanness_metrics {
                             double maxSpeed = csknow::weapon_speed::engineWeaponIdToMaxSpeed(
                                     demoEquipmentTypeToEngineWeaponId(playerAtTick.activeWeapon[patIndex]),
                                     statureOption, playerAtTick.isScoped[patIndex]);
+                            // anything over max speed is due to jump strafing, just cap at regular max
+                            curUnscaledSpeed = std::max(static_cast<float>(maxSpeed), curUnscaledSpeed);
                             float curScaledSpeed = static_cast<float>(curUnscaledSpeed / maxSpeed);
 
                             double maxRunSpeed = csknow::weapon_speed::engineWeaponIdToMaxSpeed(
@@ -146,22 +152,20 @@ namespace csknow::humanness_metrics {
                                 }
                             }
 
+                            if (curUnscaledSpeed > 400.) {
+                                std::cout << "demo file " << games.demoFile[rounds.gameId[roundIndex]]
+                                          << ", game tick number " << ticks.gameTickNumber[tickIndex]
+                                          << ", player "  << players.name[players.idOffset + playerAtTick.playerId[patIndex]]
+                                          << ", cur speed " << curUnscaledSpeed
+                                          << ", vel x " << playerAtTick.velX[patIndex] << ", vel y " << playerAtTick.velY[patIndex]
+                                          << ", weapon " << demoEquipmentTypeToString(playerAtTick.activeWeapon[patIndex])
+                                          << ", weapon id " << playerAtTick.activeWeapon[patIndex]
+                                          << ", player alive " << playerAtTick.isAlive[patIndex] << std::endl;
+                            }
                             unscaledSpeed.push_back(curUnscaledSpeed);
                             scaledSpeed.push_back(curScaledSpeed);
                             weaponOnlyScaledSpeed.push_back(curWeaponOnlyScaledSpeed);
                             if (shootersThisTick.count(playerId) > 0) {
-                                /*
-                                if (playerVelocity > 260.) {
-                                    std::cout << "demo file " << games.demoFile[rounds.gameId[roundIndex]]
-                                              << ", game tick number " << ticks.gameTickNumber[tickIndex]
-                                              << ", player "  << players.name[players.idOffset + playerAtTick.playerId[patIndex]]
-                                              << ", cur speed " << playerVelocity
-                                              << ", vel x " << playerAtTick.velX[patIndex] << ", vel y " << playerAtTick.velY[patIndex]
-                                              << ", weapon " << demoEquipmentTypeToString(playerAtTick.activeWeapon[patIndex])
-                                              << ", weapon id " << playerAtTick.activeWeapon[patIndex]
-                                              << ", player alive " << playerAtTick.isAlive[patIndex] << std::endl;
-                                }
-                                */
                                 unscaledSpeedWhenFiring.push_back(curUnscaledSpeed);
                                 scaledSpeedWhenFiring.push_back(curScaledSpeed);
                                 weaponOnlyScaledSpeedWhenFiring.push_back(curWeaponOnlyScaledSpeed);

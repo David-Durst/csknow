@@ -205,17 +205,22 @@ public:
     // visibility state
     std::set<std::pair<int32_t, int32_t>> visibilityClientPairs;
     [[nodiscard]]
-    bool isVisible(CSGOId src, CSGOId target) const {
-        return visibilityClientPairs.find({std::min(src, target), std::max(src, target)}) != visibilityClientPairs.end();
+    bool isVisible(CSGOId src, CSGOId target, bool directed = false) const {
+        if (directed) {
+            return visibilityClientPairs.find({src, target}) != visibilityClientPairs.end();
+        }
+        else {
+            return visibilityClientPairs.find({std::min(src, target), std::max(src, target)}) != visibilityClientPairs.end();
+        }
     }
     [[nodiscard]]
-    vector<std::reference_wrapper<const ServerState::Client>> getVisibleEnemies(CSGOId srcId) const {
+    vector<std::reference_wrapper<const ServerState::Client>> getVisibleEnemies(CSGOId srcId, bool directed = false) const {
         const ServerState::Client & srcClient = getClient(srcId);
         vector<std::reference_wrapper<const ServerState::Client>> visibleEnemies;
         if (srcClient.isAlive) {
             for (const auto & otherClient : clients) {
                 if (otherClient.team != srcClient.team && otherClient.isAlive &&
-                    isVisible(srcClient.csgoId, otherClient.csgoId)) {
+                    isVisible(srcClient.csgoId, otherClient.csgoId, directed)) {
                     visibleEnemies.push_back(otherClient);
                 }
             }

@@ -412,6 +412,8 @@ namespace csknow::feature_store {
             nonDecimatedData[columnIndex].playerId[tickIndex] = btTeamPlayerData.playerId;
             nonDecimatedData[columnIndex].areaIndex[tickIndex] = btTeamPlayerData.curAreaIndex;
             nonDecimatedData[columnIndex].areaId[tickIndex] = btTeamPlayerData.curArea;
+            nonDecimatedData[columnIndex].enemyVisible[tickIndex] =
+                    buffer.playerTickCounters[btTeamPlayerData.playerId].ticksSinceEnemyVisible == 0;
         }
 
         int64_t internalTickIndex = tickIdToInternalId[tickIndex];

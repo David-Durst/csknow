@@ -60,7 +60,7 @@ namespace csknow::feature_store {
 
         set<CSGOId> enemiesVisible;
         for (const auto & client : state.clients) {
-            if (state.getVisibleEnemies(client.csgoId).size() > 0) {
+            if (state.getVisibleEnemies(client.csgoId, true).size() > 0) {
                 enemiesVisible.insert(client.csgoId);
             }
         }

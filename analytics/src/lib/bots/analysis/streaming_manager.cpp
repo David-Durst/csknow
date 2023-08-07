@@ -196,7 +196,7 @@ void StreamingManager::update(const Games & games, const RoundPlantDefusal & rou
     if (computeVisibility) {
         for (size_t outerClientIndex = 0; outerClientIndex < newState.clients.size(); outerClientIndex++) {
             const ServerState::Client & outerClient = newState.clients[outerClientIndex];
-            for (size_t innerClientIndex = outerClientIndex + 1; innerClientIndex < newState.clients.size();
+            for (size_t innerClientIndex = 0; innerClientIndex < newState.clients.size();
                  innerClientIndex++) {
                 const ServerState::Client & innerClient = newState.clients[innerClientIndex];
                 if (demoIsVisible(playerAtTick, playerToPATindex[outerClient.csgoId],
