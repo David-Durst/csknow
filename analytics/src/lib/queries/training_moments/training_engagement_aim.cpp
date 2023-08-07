@@ -322,7 +322,7 @@ TrainingEngagementAimResult queryTrainingEngagementAim(const Games & games, cons
 
 
                     bool curTickVictimVisible = demoIsVisible(playerAtTick, attackerPATId, victimPATId,
-                                                              nearestNavCell, visPoints);
+                                                              nearestNavCell, visPoints).fov;
                     tmpVictimVisible[threadNum].back()[i] = curTickVictimVisible;
                     if (curTickVictimVisible &&
                         engagementToVictimFirstVisiblePATId.find(engagementIndex) ==
