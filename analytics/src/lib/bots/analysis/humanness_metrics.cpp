@@ -145,8 +145,8 @@ namespace csknow::humanness_metrics {
                         // compute velocity metrics
                         float playerVelocity = static_cast<float>(computeMagnitude(Vec2{
                             playerAtTick.velX[patIndex], playerAtTick.velY[patIndex]}));
-                        /*
                         if (shootersThisTick.count(playerId) > 0) {
+                            /*
                             if (playerVelocity > 260.) {
                                 std::cout << "demo file " << games.demoFile[rounds.gameId[roundIndex]]
                                           << ", game tick number " << ticks.gameTickNumber[tickIndex]
@@ -157,9 +157,9 @@ namespace csknow::humanness_metrics {
                                           << ", weapon id " << playerAtTick.activeWeapon[patIndex]
                                           << ", player alive " << playerAtTick.isAlive[patIndex] << std::endl;
                             }
+                            */
                             velocityWhenFiring.push_back(playerVelocity);
                         }
-                         */
                         if (victimsThisTick.count(playerId) > 0) {
                             velocityWhenShot.push_back(playerVelocity);
                         }

@@ -26,9 +26,8 @@ def plot_metric(axs, metric_index: int, human_metric: np.ndarray, bot_metric: np
         bins = generate_bins(0, max_value, max_value // 20)
     plot_hist(axs[metric_index, 0], pd.Series(bot_metric), bins)
     plot_hist(axs[metric_index, 1], pd.Series(human_metric), bins)
-    max_ylim = max(axs[metric_index, 0].get_ylim()[1], axs[metric_index, 1].get_ylim()[1])
-    axs[metric_index, 0].set_ylim(0, max_ylim)
-    axs[metric_index, 1].set_ylim(0, max_ylim)
+    axs[metric_index, 0].set_ylim(0., 1.)
+    axs[metric_index, 1].set_ylim(0., 1.)
 
 
 def plot_sums(axs, metric_index: int, human_metric: np.ndarray, bot_metric: np.ndarray, metric_name: str):
@@ -38,6 +37,7 @@ def plot_sums(axs, metric_index: int, human_metric: np.ndarray, bot_metric: np.n
     players = [bot_name + metric_name, human_name + metric_name]
     values = [bot_value, human_value]
     axs[metric_index, 0].bar(players, values)
+    axs[metric_index, 0].set_ylim(0., 1.)
 
 
 def run_humanness():
