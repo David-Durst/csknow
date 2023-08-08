@@ -756,6 +756,11 @@ namespace csknow::feature_store {
             if (columnData[playerColumn].playerId[curTick] == INVALID_ID) {
                 continue;
             }
+            // skip if no future tick when alive
+            int64_t nextTickIndex = futureTracker.fromNewest(1);
+            if (columnData[playerColumn].playerId[nextTickIndex] != columnData[playerColumn].playerId[curTick]) {
+                continue;
+            }
 
             // find farthest forward where player alive
             int64_t futureTickIndex = INVALID_ID;
@@ -770,7 +775,6 @@ namespace csknow::feature_store {
             if (futureTickIndex == INVALID_ID) {
                 continue;
             }
-
             if (futureTickIndex < curTick) {
                 std::cout << "decreasing distance to c4 future tick in past" << std::endl;
                 std::raise(SIGINT);
@@ -778,6 +782,21 @@ namespace csknow::feature_store {
 
             double curDistanceToC4 = reachableResult.getDistance(columnData[playerColumn].areaIndex[curTick],
                                                                  c4AreaIndex[curTick]);
+            /*
+            if (futureTickIndex >= c4AreaIndex.size() || futureTickIndex >= columnData[playerColumn].areaIndex.size()) {
+                std::cout << "bad future tick index" << std::endl;
+            }
+            if (columnData[playerColumn].areaIndex[futureTickIndex] < 0 || columnData[playerColumn].areaIndex[futureTickIndex] > reachableResult.numAreas) {
+                std::cout << "bad area index " << columnData[playerColumn].areaIndex[futureTickIndex] << " cur tick " << curTick << " future tick " << futureTickIndex << " pos " <<
+                    columnData[playerColumn].footPos[futureTickIndex].toString() <<
+                    " player id " << columnData[playerColumn].playerId[futureTickIndex] << " alive " << columnData[playerColumn].alive[futureTickIndex] <<
+                    " player column " << playerColumn << " " << x << std::endl;
+                raise(SIGINT);
+            }
+            if (c4AreaIndex[futureTickIndex] < 0 || c4AreaIndex[futureTickIndex] > reachableResult.numAreas) {
+                std::cout << "bad c4 area index" << std::endl;
+            }
+             */
             double futureDistanceToC4 = reachableResult.getDistance(columnData[playerColumn].areaIndex[futureTickIndex],
                                                                     c4AreaIndex[futureTickIndex]);
 

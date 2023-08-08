@@ -166,6 +166,9 @@ namespace csknow::feature_store {
                     .get_id();
             //AreaId curAreaId = nearestNavCell.getNearestArea(client.getFootPosForPlayer());
             int64_t curAreaIndex = navFile.m_area_ids_to_indices.at(curAreaId);
+            if (curAreaIndex == -1) {
+                std::cout << "bad pos " << client.getFootPosForPlayer().toString() << std::endl;
+            }
             btTeamPlayerData.push_back({client.csgoId, client.team, curAreaId, curAreaIndex,
                                         client.getCurrentViewAngles(),
                                         client.getFootPosForPlayer(), client.getVelocity(),

@@ -104,6 +104,8 @@ void StreamingManager::update(const Games & games, const RoundPlantDefusal & rou
     newState.mapNumber = gameIndex;
     newState.tickInterval = 1. / games.gameTickRate[gameIndex];
     newState.gameTime = ticks.gameTime[gameIndex];
+    newState.pushRound = false;
+    newState.enableAggressionControl = false;
 
     map<int64_t, int64_t> playerToPATindex;
     // loadClientStates equivelent
@@ -183,6 +185,9 @@ void StreamingManager::update(const Games & games, const RoundPlantDefusal & rou
         newClient.ping = static_cast<int>(playerAtTick.ping[patIndex]);
         newClient.gameTime = static_cast<float>(playerAtTick.gameTime[patIndex]);
         newClient.inputSet = true;
+        newClient.push5s = true;
+        newClient.push10s = true;
+        newClient.push20s = true;
         newClient.intendedToFire = false;
         newClient.inputAngleAbsolute = false;
         newClient.forceInput = false;
