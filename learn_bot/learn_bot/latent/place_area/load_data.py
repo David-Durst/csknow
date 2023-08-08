@@ -117,8 +117,7 @@ class LoadDataResult:
             raise Exception("Must call LoadDataResult with something True")
         self.multi_hdf5_wrapper = MultiHDF5Wrapper(hdf5_sources, hdf5_id_columns, diff_train_test=self.diff_train_test,
                                                    force_test_hdf5=force_test_data,
-                                                   duplicate_last_hdf5_equal_to_rest=duplicate_last_hdf5_equal_to_rest,
-                                                   split_train_test_on_init=False)
+                                                   duplicate_last_hdf5_equal_to_rest=duplicate_last_hdf5_equal_to_rest)
         if not load_data_options.use_synthetic_data and \
                 load_data_options.small_good_rounds is not None and load_data_options.similarity_dfs is not None:
             for i in range(len(load_data_options.similarity_dfs)):

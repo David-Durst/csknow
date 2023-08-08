@@ -27,8 +27,7 @@ class MultiHDF5Wrapper:
 
     # each source is a path to an hdf5, a directory with hdf5, or an hdf5 wrapper
     def __init__(self, hdf5_sources: List[HDF5SourceOptions], id_cols: List[str], diff_train_test: bool,
-                 split_train_test_on_init: bool = True, force_test_hdf5: Optional[HDF5Wrapper] = None,
-                 duplicate_last_hdf5_equal_to_rest: bool = False):
+                 force_test_hdf5: Optional[HDF5Wrapper] = None, duplicate_last_hdf5_equal_to_rest: bool = False):
         self.hdf5_wrappers = []
         for hdf5_source in hdf5_sources:
             if isinstance(hdf5_source, Path):
@@ -40,8 +39,8 @@ class MultiHDF5Wrapper:
                         self.hdf5_wrappers.append(HDF5Wrapper(hdf5_file, id_cols, sample_df=empty_like_first_sample_df))
                         if empty_like_first_sample_df is None:
                             empty_like_first_sample_df = pd.DataFrame().reindex_like(self.hdf5_wrappers[0].sample_df)
-                        #if len(self.hdf5_wrappers) > 0:
-                        #    break
+                        if len(self.hdf5_wrappers) > 0:
+                            break
                 elif hdf5_source.is_file() and hdf5_source.name.endswith('.hdf5'):
                     self.hdf5_wrappers.append(HDF5Wrapper(hdf5_source, id_cols))
             elif isinstance(hdf5_source, HDF5Wrapper):
@@ -53,8 +52,6 @@ class MultiHDF5Wrapper:
         self.test_group_ids = {}
         self.diff_train_test = diff_train_test
         self.force_test_hdf5 = force_test_hdf5
-        if split_train_test_on_init:
-            self.train_test_split_by_col(force_test_hdf5)
         self.duplicate_last_hdf5_equal_to_rest = duplicate_last_hdf5_equal_to_rest
 
     def train_test_split_by_col(self, force_test_hdf5: Optional[HDF5Wrapper]):
