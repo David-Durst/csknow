@@ -448,6 +448,8 @@ def train(train_type: TrainType, multi_hdf5_wrapper: MultiHDF5Wrapper,
 
 latent_id_cols = ['id', round_id_column, test_success_col]
 
+train_test_split_file_name = 'all_human_and_manual.pickle'
+
 load_data_options = LoadDataOptions(
     use_manual_data=False,
     use_rollout_data=False,
@@ -463,7 +465,7 @@ load_data_options = LoadDataOptions(
     similarity_dfs=[load_hdf5_to_pd(all_human_vs_small_human_similarity_hdf5_data_path),
                     load_hdf5_to_pd(all_human_vs_human_28_similarity_hdf5_data_path)],
     limit_by_similarity=False,
-    train_test_split_file_name='all_human_and_manual.pickle'
+    train_test_split_file_name=train_test_split_file_name
 )
 
 

@@ -139,6 +139,36 @@ namespace csknow::plant_states {
             size = plantTickId.size();
         }
 
+        void loadFromPython(const string& filePath) {
+            // We open the file as read-only:
+            HighFive::File file(filePath, HighFive::File::ReadOnly);
+
+            plantTickId = file.getDataSet("/data/plant tick id").read<std::vector<int64_t>>();
+            roundEndTickId = file.getDataSet("/data/round end tick id").read<std::vector<int64_t>>();
+            tickLength = file.getDataSet("/data/tick length").read<std::vector<int64_t>>();
+            roundId = file.getDataSet("/data/round id").read<std::vector<int64_t>>();
+            plantId = file.getDataSet("/data/plant id").read<std::vector<int64_t>>();
+            defusalId = file.getDataSet("/data/defusal id").read<std::vector<int64_t>>();
+            loadVec3VectorFromHDF5(c4Pos, file, "c4 pos");
+            winnerTeam = file.getDataSet("/data/winner team").read<std::vector<TeamId>>();
+            c4Defused = file.getDataSet("/data/c4 defused").read<std::vector<bool>>();
+
+            for (size_t i = 0; i < max_players_per_team; i++) {
+                string iStr = std::to_string(i);
+                ctPlayerStates[i].alive = file.getDataSet("/data/alive CT " + iStr).read<std::vector<bool>>();
+                loadVec3VectorFromHDF5(ctPlayerStates[i].pos, file, "player pos CT " + iStr);
+                loadVec2VectorFromHDF5(ctPlayerStates[i].viewAngle, file, "player view angle CT " + iStr);
+            }
+            for (size_t i = 0; i < max_players_per_team; i++) {
+                string iStr = std::to_string(i);
+                tPlayerStates[i].alive = file.getDataSet("/data/alive T " + iStr).read<std::vector<bool>>();
+                loadVec3VectorFromHDF5(tPlayerStates[i].pos, file, "player pos T " + iStr);
+                loadVec2VectorFromHDF5(tPlayerStates[i].viewAngle, file, "player view angle T " + iStr);
+            }
+
+            size = plantTickId.size();
+        }
+
         void runQuery(const Rounds & rounds, const Ticks & ticks, const PlayerAtTick & playerAtTick,
                       const Plants & plants, const Defusals & defusals);
     };

@@ -70,6 +70,7 @@ class MultiHDF5Wrapper:
             else:
                 raise Exception("must have different train and test to repeat")
 
+        new_train_test_split = False
         # split data according to train_test_splits (and create train_test_splits if required)
         for hdf5_wrapper in self.hdf5_wrappers:
             if self.diff_train_test:
@@ -80,6 +81,7 @@ class MultiHDF5Wrapper:
                                                     self.train_test_splits[hdf5_wrapper.hdf5_path].train_group_ids)
                 else:
                     train_test_split = train_test_split_by_col(hdf5_wrapper.id_df, round_id_column)
+                    new_train_test_split = True
                 self.record_train_test_split(hdf5_wrapper, train_test_split)
             else:
                 self.train_hdf5_wrappers.append(hdf5_wrapper)
@@ -90,7 +92,7 @@ class MultiHDF5Wrapper:
                 self.test_hdf5_wrappers = self.train_hdf5_wrappers
 
         # save train_test_splits if required
-        if self.train_test_split_path is not None and not self.train_test_split_path.exists():
+        if new_train_test_split and self.train_test_split_path is not None and not self.train_test_split_path.exists():
             with open(self.train_test_split_path, "wb") as pickle_file:
                 pickle.dump(self.train_test_splits, pickle_file)
 
