@@ -417,9 +417,17 @@ namespace csknow::feature_store {
             size_t columnIndex = btTeamPlayerData.teamId == ENGINE_TEAM_T ?
                                  buffer.tPlayerIdToIndex[btTeamPlayerData.playerId]
                                  : buffer.ctPlayerIdToIndex[btTeamPlayerData.playerId];
+            // occasionally will have extra player on a team (for a few frames), just don't take extra player
+            if (columnIndex >= max_enemies) {
+                continue;
+            }
             nonDecimatedData[columnIndex].playerId[tickIndex] = btTeamPlayerData.playerId;
             nonDecimatedData[columnIndex].areaIndex[tickIndex] = btTeamPlayerData.curAreaIndex;
             nonDecimatedData[columnIndex].areaId[tickIndex] = btTeamPlayerData.curArea;
+            if (!buffer.playerTickCounters.count(btTeamPlayerData.playerId)) {
+                raise(SIGINT);
+            }
+            //std::cout << "column index " << columnIndex << " tick index " << tickIndex << std::endl;
             nonDecimatedData[columnIndex].noFOVEnemyVisible[tickIndex] =
                     buffer.playerTickCounters[btTeamPlayerData.playerId].ticksSinceNoFOVEnemyVisible == 0;
             nonDecimatedData[columnIndex].fovEnemyVisible[tickIndex] =
@@ -496,6 +504,10 @@ namespace csknow::feature_store {
             auto & columnData = btTeamPlayerData.teamId == ENGINE_TEAM_T ? columnTData : columnCTData;
             size_t columnIndex = btTeamPlayerData.teamId == ENGINE_TEAM_T ?
                 buffer.tPlayerIdToIndex[btTeamPlayerData.playerId] : buffer.ctPlayerIdToIndex[btTeamPlayerData.playerId];
+            // occasionally will have extra player on a team (for a few frames), just don't take extra player
+            if (columnIndex >= max_enemies) {
+                continue;
+            }
             int64_t oldestHistoryIndex = buffer.getPlayerOldestContiguousHistoryIndex(btTeamPlayerData.playerId);
 
             /*

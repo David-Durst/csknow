@@ -144,7 +144,7 @@ def run_humanness():
 
     plot_metric(axs, 21,
                 all_train_humanness_metrics.pct_time_max_speed_ct,
-                rollout_humanness_metrics.pct_time_still_ct,
+                rollout_humanness_metrics.pct_time_max_speed_ct,
                 pct_time_max_speed_ct_name, pct_bins=True)
     plot_metric(axs, 22,
                 all_train_humanness_metrics.pct_time_max_speed_t,

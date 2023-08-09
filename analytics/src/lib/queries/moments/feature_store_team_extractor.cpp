@@ -53,6 +53,25 @@ namespace csknow::feature_store {
                 tmpPreCommitBuffer[threadNum].updateFeatureStoreBufferPlayers(curState);
                 tmpPreCommitBuffer[threadNum].updateCurTeamData(curState, navFile);
 
+                /*
+                for (const auto & [csgoId, tIndex] : tmpPreCommitBuffer[threadNum].tPlayerIdToIndex) {
+                    if (tIndex == 5) {
+                        std::cout << "invalid tIndex at " << tickIndex << " game tick number " << ticks.gameTickNumber[tickIndex] <<
+                            " player id " << csgoId << " player " << players.name[csgoId + players.idOffset] << " demo " << games.demoFile[rounds.gameId[roundIndex]] << std::endl;
+                        for (const auto & [csgoId, tIndex] : tmpPreCommitBuffer[threadNum].tPlayerIdToIndex) {
+                            std::cout << "csgo id " << csgoId << " player " << players.name[csgoId + players.idOffset] << std::endl;
+                        }
+                        for (const auto &client: curState.clients) {
+                            std::cout << "client name " << client.name << " team " << client.team << " alive " << client.isAlive << std::endl;
+                        }
+                        for (int64_t patIndex = ticks.patPerTick[tickIndex].minId;
+                             patIndex < ticks.patPerTick[tickIndex].maxId; patIndex++) {
+                            std::cout << "player " << players.name[players.idOffset + playerAtTick.playerId[patIndex]] << " team " << playerAtTick.team[patIndex] << std::endl;
+                        }
+                    }
+                }
+                */
+
                 bool newCommitValidRowInRound =
                         teamFeatureStoreResult.commitTeamRow(curState, tmpPreCommitBuffer[threadNum],
                                                              distanceToPlaces, navFile, roundIndex, tickIndex);
