@@ -48,6 +48,9 @@ class LoadDataOptions:
     # limit or add feature based on matches
     limit_by_similarity: bool = True
     limit_manual_data_to_only_enemies_no_nav: bool = False
+    # train test split file name
+    train_test_split_file_name: Optional[str] = None
+
 
 
 
@@ -117,7 +120,8 @@ class LoadDataResult:
             raise Exception("Must call LoadDataResult with something True")
         self.multi_hdf5_wrapper = MultiHDF5Wrapper(hdf5_sources, hdf5_id_columns, diff_train_test=self.diff_train_test,
                                                    force_test_hdf5=force_test_data,
-                                                   duplicate_last_hdf5_equal_to_rest=duplicate_last_hdf5_equal_to_rest)
+                                                   duplicate_last_hdf5_equal_to_rest=duplicate_last_hdf5_equal_to_rest,
+                                                   train_test_split_file_name=load_data_options.train_test_split_file_name)
         if not load_data_options.use_synthetic_data and \
                 load_data_options.small_good_rounds is not None and load_data_options.similarity_dfs is not None:
             for i in range(len(load_data_options.similarity_dfs)):

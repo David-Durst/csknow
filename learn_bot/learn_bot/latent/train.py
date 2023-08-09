@@ -462,7 +462,8 @@ load_data_options = LoadDataOptions(
     small_good_rounds=[small_human_good_rounds, all_human_28_second_filter_good_rounds],
     similarity_dfs=[load_hdf5_to_pd(all_human_vs_small_human_similarity_hdf5_data_path),
                     load_hdf5_to_pd(all_human_vs_human_28_similarity_hdf5_data_path)],
-    limit_by_similarity=False
+    limit_by_similarity=False,
+    train_test_split_file_name='all_human_and_manual.pickle'
 )
 
 

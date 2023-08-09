@@ -1,7 +1,8 @@
 from pathlib import Path
 from typing import List, Dict, Union, Optional
 from dataclasses import dataclass
-
+from pathlib import Path
+import pickle
 import pandas as pd
 
 from learn_bot.latent.engagement.column_names import round_id_column
@@ -12,6 +13,7 @@ from learn_bot.libs.io_transforms import IOColumnTransformers
 
 HDF5SourceOptions = Union[Path, HDF5Wrapper]
 
+train_test_split_folder_path = Path(__file__).parent / 'saved_train_test_splits'
 
 class MultiHDF5Wrapper:
     hdf5_wrappers: List[HDF5Wrapper]
@@ -27,7 +29,8 @@ class MultiHDF5Wrapper:
 
     # each source is a path to an hdf5, a directory with hdf5, or an hdf5 wrapper
     def __init__(self, hdf5_sources: List[HDF5SourceOptions], id_cols: List[str], diff_train_test: bool,
-                 force_test_hdf5: Optional[HDF5Wrapper] = None, duplicate_last_hdf5_equal_to_rest: bool = False):
+                 force_test_hdf5: Optional[HDF5Wrapper] = None, duplicate_last_hdf5_equal_to_rest: bool = False,
+                 train_test_split_file_name: Optional[str] = None):
         self.hdf5_wrappers = []
         for hdf5_source in hdf5_sources:
             if isinstance(hdf5_source, Path):
@@ -39,8 +42,8 @@ class MultiHDF5Wrapper:
                         self.hdf5_wrappers.append(HDF5Wrapper(hdf5_file, id_cols, sample_df=empty_like_first_sample_df))
                         if empty_like_first_sample_df is None:
                             empty_like_first_sample_df = pd.DataFrame().reindex_like(self.hdf5_wrappers[0].sample_df)
-                        if len(self.hdf5_wrappers) > 0:
-                            break
+                        #if len(self.hdf5_wrappers) > 0:
+                        #    break
                 elif hdf5_source.is_file() and hdf5_source.name.endswith('.hdf5'):
                     self.hdf5_wrappers.append(HDF5Wrapper(hdf5_source, id_cols))
             elif isinstance(hdf5_source, HDF5Wrapper):
@@ -53,12 +56,30 @@ class MultiHDF5Wrapper:
         self.diff_train_test = diff_train_test
         self.force_test_hdf5 = force_test_hdf5
         self.duplicate_last_hdf5_equal_to_rest = duplicate_last_hdf5_equal_to_rest
+        if train_test_split_file_name is not None:
+            self.train_test_split_path = train_test_split_folder_path / train_test_split_file_name
 
     def train_test_split_by_col(self, force_test_hdf5: Optional[HDF5Wrapper]):
         self.train_test_splits = {}
+
+        # load train_test_splits if required
+        if self.train_test_split_path is not None and self.train_test_split_path.exists():
+            if self.diff_train_test:
+                with open(self.train_test_split_path, "rb") as pickle_file:
+                    self.train_test_splits = pickle.load(pickle_file)
+            else:
+                raise Exception("must have different train and test to repeat")
+
+        # split data according to train_test_splits (and create train_test_splits if required)
         for hdf5_wrapper in self.hdf5_wrappers:
             if self.diff_train_test:
-                train_test_split = train_test_split_by_col(hdf5_wrapper.id_df, round_id_column)
+                # if already loaded, use that, otherwise create new ones
+                if hdf5_wrapper.hdf5_path in self.train_test_splits:
+                    train_test_split = \
+                        train_test_split_by_col_ids(hdf5_wrapper.id_df, round_id_column,
+                                                    self.train_test_splits[hdf5_wrapper.hdf5_path].train_group_ids)
+                else:
+                    train_test_split = train_test_split_by_col(hdf5_wrapper.id_df, round_id_column)
                 self.record_train_test_split(hdf5_wrapper, train_test_split)
             else:
                 self.train_hdf5_wrappers.append(hdf5_wrapper)
@@ -68,13 +89,10 @@ class MultiHDF5Wrapper:
             else:
                 self.test_hdf5_wrappers = self.train_hdf5_wrappers
 
-    def train_test_split_by_col_id(self, train_test_splits):
-        self.train_test_splits = train_test_splits
-        for hdf5_wrapper in self.hdf5_wrappers:
-            if self.diff_train_test:
-                train_test_split = train_test_split_by_col_ids(hdf5_wrapper.id_df, round_id_column,
-                                                               train_test_splits[hdf5_wrapper.hdf5_path])
-                self.record_train_test_split(hdf5_wrapper, train_test_split)
+        # save train_test_splits if required
+        if self.train_test_split_path is not None and not self.train_test_split_path.exists():
+            with open(self.train_test_split_path, "wb") as pickle_file:
+                pickle.dump(self.train_test_splits, pickle_file)
 
     def record_train_test_split(self, hdf5_wrapper: HDF5Wrapper, train_test_split: TrainTestSplit):
         self.train_test_splits[hdf5_wrapper.hdf5_path] = train_test_split
