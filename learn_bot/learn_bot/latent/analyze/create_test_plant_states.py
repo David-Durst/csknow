@@ -29,9 +29,12 @@ def create_test_plant_states():
     load_data_result = LoadDataResult(load_data_options)
 
     cols_to_gets = [round_id_column, tick_id_column] + c4_pos_cols
+    alive_cols = []
 
     for player_place_area_columns in specific_player_place_area_columns:
-        cols_to_gets += player_place_area_columns.pos + player_place_area_columns.view_angle
+        cols_to_gets += player_place_area_columns.pos + player_place_area_columns.view_angle + \
+                        [player_place_area_columns.alive]
+        alive_cols.append(player_place_area_columns.alive)
 
     test_start_dfs = []
     for hdf5_wrapper in load_data_result.multi_hdf5_wrapper.hdf5_wrappers:
@@ -51,6 +54,10 @@ def create_test_plant_states():
     concat_test_start_df.loc[:, "defusal id"] = -1
     concat_test_start_df.loc[:, "winner team"] = 0
     concat_test_start_df.loc[:, "c4 defused"] = False
+
+    # cast all alive columns to bools
+    for alive_col in alive_cols:
+        concat_test_start_df.loc[:, alive_col] = concat_test_start_df.loc[:, alive_col].astype('bool')
 
     test_plant_states_path = \
         load_data_result.multi_hdf5_wrapper.train_test_split_path.parent / test_plant_states_file_name
