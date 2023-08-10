@@ -3,6 +3,7 @@ from learn_bot.latent.place_area.simulator import *
 
 num_time_steps = 10
 
+
 def delta_pos_open_rollout(loaded_model: LoadedModel):
     round_lengths = get_round_lengths(loaded_model.cur_loaded_df)
     rollout_tensor, similarity_tensor = \
