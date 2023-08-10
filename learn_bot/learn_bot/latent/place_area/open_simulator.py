@@ -3,28 +3,10 @@ from learn_bot.latent.place_area.simulator import *
 
 num_time_steps = 10
 
-
-# src tensor is variable length per round, rollout tensor is fixed length for efficiency
-# fillout rollout tensor for as much as possible for each round so have ground truth for open loop predictions
-def build_open_rollout_and_similarity_tensors(round_lengths: RoundLengths, dataset: LatentDataset) -> \
-        Tuple[torch.Tensor,torch.Tensor]:
-    rollout_tensor = torch.zeros([round_lengths.num_rounds * round_lengths.max_length_per_round, dataset.X.shape[1]])
-
-    # get indices to copy into in rollout tensor, no indices for dataset as taking everything
-    rollout_ticks_in_round = flatten_list(
-        [[round_index * round_lengths.max_length_per_round + i for i in range(round_lengths.round_to_length[round_id])]
-         for round_index, round_id in enumerate(round_lengths.round_ids)])
-    rollout_tensor[rollout_ticks_in_round] = dataset.X
-
-    src_first_tick_in_round = [tick_range.start for _, tick_range in round_lengths.round_to_subset_tick_indices.items()]
-    similarity_tensor = dataset.similarity_tensor[src_first_tick_in_round].to(CUDA_DEVICE_STR)
-    return rollout_tensor, similarity_tensor
-
-
 def delta_pos_open_rollout(loaded_model: LoadedModel):
     round_lengths = get_round_lengths(loaded_model.cur_loaded_df)
     rollout_tensor, similarity_tensor = \
-        build_open_rollout_and_similarity_tensors(round_lengths, loaded_model.cur_dataset)
+        build_rollout_and_similarity_tensors(round_lengths, loaded_model.cur_dataset)
     pred_tensor = torch.zeros(rollout_tensor.shape[0], loaded_model.cur_dataset.Y.shape[1])
     loaded_model.model.eval()
     with torch.no_grad():

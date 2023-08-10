@@ -57,22 +57,26 @@ def get_round_lengths(df: pd.DataFrame) -> RoundLengths:
 
 
 # src tensor is variable length per round, rollout tensor is fixed length for efficiency
+# fillout rollout tensor for as much as possible for each round so have non-sim input features (like visibility)
 def build_rollout_and_similarity_tensors(round_lengths: RoundLengths, dataset: LatentDataset) -> \
         Tuple[torch.Tensor,torch.Tensor]:
     rollout_tensor = torch.zeros([round_lengths.num_rounds * round_lengths.max_length_per_round, dataset.X.shape[1]])
+
+    rollout_ticks_in_round = flatten_list(
+        [[round_index * round_lengths.max_length_per_round + i for i in range(round_lengths.round_to_length[round_id])]
+         for round_index, round_id in enumerate(round_lengths.round_ids)])
+    rollout_tensor[rollout_ticks_in_round] = dataset.X
+
     src_first_tick_in_round = [tick_range.start for _, tick_range in round_lengths.round_to_subset_tick_indices.items()]
-    rollout_first_tick_in_round = [round_index * round_lengths.max_length_per_round
-                                   for round_index in range(round_lengths.num_rounds)]
-    rollout_tensor[rollout_first_tick_in_round] = dataset.X[src_first_tick_in_round]
     similarity_tensor = dataset.similarity_tensor[src_first_tick_in_round].to(CUDA_DEVICE_STR)
-    similarity_tensor[:, :] = 1.
     return rollout_tensor, similarity_tensor
 
 
 def step(rollout_tensor: torch.Tensor, all_similarity_tensor: torch.Tensor, pred_tensor: torch.Tensor,
          model: TransformerNestedHiddenLatentModel, round_lengths: RoundLengths, step_index: int, nav_data: NavData):
-    # skip rounds that are over, I know we have space, but not going to use computation
-    # and cause problem in open loop where ground truth doesnt exist so everyone is 0
+    # skip rounds that are over, I know we have space, but wasteful as just going to filter out extra rows later
+    # and cause problems as don't have non-computed input features (like visibility) at those time steps
+    # and will crash open loop as everyone is 0
     rounds_containing_step_index = [step_index < round_lengths.round_to_length[round_lengths.round_ids[round_index]]
                                     for round_index in range(round_lengths.num_rounds)]
     rollout_tensor_input_indices = [step_index + round_lengths.max_length_per_round * round_index
@@ -90,7 +94,7 @@ def step(rollout_tensor: torch.Tensor, all_similarity_tensor: torch.Tensor, pred
     pred_tensor[rollout_tensor_input_indices] = rearrange(pred_prob, 'b p t d -> b (p t d)').to(CPU_DEVICE_STR)
     pred_labels = rearrange(get_label_outputs(pred), 'b p t d -> b (p t d)')
 
-    tmp_rollout = rollout_tensor[rollout_tensor_input_indices]
+    tmp_rollout = rollout_tensor[rollout_tensor_output_indices]
     tmp_rollout[:, model.players_pos_columns] = \
         rearrange(compute_new_pos(input_pos_tensor, pred_labels, nav_data, False,
                                   model.stature_to_speed_gpu).to(CPU_DEVICE_STR), "b p t d -> b (p t d)")
