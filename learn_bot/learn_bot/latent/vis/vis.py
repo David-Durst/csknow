@@ -18,6 +18,7 @@ def get_rounds_for_cur_hdf5(loaded_model: LoadedModel) -> List[int]:
 def index_cur_hdf5(loaded_model: LoadedModel):
     make_index_column(loaded_model.cur_loaded_df)
     make_index_column(loaded_model.cur_inference_df)
+    make_index_column(loaded_model.get_cur_id_df())
 
 
 def vis(loaded_model: LoadedModel, inference_fn: Callable[[LoadedModel], None]):

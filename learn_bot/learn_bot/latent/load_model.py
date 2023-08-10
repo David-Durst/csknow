@@ -61,7 +61,7 @@ class LoadedModel:
         return str(self.dataset.data_hdf5s[self.cur_hdf5_index].hdf5_path.name)
 
 
-def load_model_file(loaded_data: LoadDataResult) -> LoadedModel:
+def load_model_file(loaded_data: LoadDataResult, use_test_data_only: bool = False) -> LoadedModel:
     if len(sys.argv) < 2:
         raise Exception("must pass checkpoint folder name as argument, like "
                         "07_02_2023__14_32_51_e_60_b_512_lr_4e-05_wd_0.0_l_2_h_4_n_20.0_t_5_c_human_with_added_bot_nav")
@@ -70,13 +70,15 @@ def load_model_file(loaded_data: LoadDataResult) -> LoadedModel:
         cur_checkpoints_path = cur_checkpoints_path / sys.argv[1]
     model_file = torch.load(cur_checkpoints_path / "delta_pos_checkpoint.pt")
 
+    hdf5_wrappers = loaded_data.multi_hdf5_wrapper.test_hdf5_wrappers if use_test_data_only else \
+        loaded_data.multi_hdf5_wrapper.hdf5_wrappers
+
     column_transformers = IOColumnTransformers(place_area_input_column_types, radial_vel_output_column_types,
-                                               loaded_data.multi_hdf5_wrapper.hdf5_wrappers[0].sample_df)
+                                               hdf5_wrappers[0].sample_df)
 
     model = TransformerNestedHiddenLatentModel(model_file['column_transformers'], 2 * max_enemies,
                                                num_radial_ticks, num_radial_bins, 2, 4)
     model.load_state_dict(model_file['model_state_dict'])
     model.to(CUDA_DEVICE_STR)
 
-    return LoadedModel(column_transformers, model,
-                       MultipleLatentHDF5Dataset(loaded_data.multi_hdf5_wrapper.hdf5_wrappers, column_transformers))
+    return LoadedModel(column_transformers, model, MultipleLatentHDF5Dataset(hdf5_wrappers, column_transformers))

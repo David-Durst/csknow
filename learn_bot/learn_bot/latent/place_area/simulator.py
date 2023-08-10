@@ -18,8 +18,10 @@ from learn_bot.latent.place_area.pos_abs_from_delta_grid_or_radial import delta_
     delta_pos_grid_num_xy_cells_per_z_change, compute_new_pos, NavData
 from learn_bot.latent.place_area.load_data import human_latent_team_hdf5_data_path, manual_latent_team_hdf5_data_path, \
     rollout_latent_team_hdf5_data_path, LoadDataResult, LoadDataOptions
+from learn_bot.latent.train import train_test_split_file_name
 from learn_bot.latent.transformer_nested_hidden_latent_model import *
 from learn_bot.latent.vis.vis import vis
+from learn_bot.libs.df_grouping import make_index_column
 from learn_bot.libs.hdf5_to_pd import load_hdf5_to_pd, load_hdf5_extra_to_list
 from learn_bot.libs.io_transforms import get_untransformed_outputs, CPU_DEVICE_STR, get_label_outputs
 
@@ -28,18 +30,29 @@ from learn_bot.libs.io_transforms import get_untransformed_outputs, CPU_DEVICE_S
 class RoundLengths:
     num_rounds: int
     max_length_per_round: int
+    round_ids: List[int]
     round_to_tick_ids: Dict[int, range]
+    round_to_subset_tick_indices: Dict[int, range]
+    round_to_length: Dict[int, int]
     round_id_to_list_id: Dict[int, int]
 
 
 def get_round_lengths(df: pd.DataFrame) -> RoundLengths:
-    grouped_df = df.groupby([round_id_column]).agg({tick_id_column: ['count', 'min', 'max']})
-    result = RoundLengths(len(grouped_df), max(grouped_df[tick_id_column]['count']), {}, {})
+    make_index_column(df)
+    grouped_df = df.groupby([round_id_column]).agg({tick_id_column: ['count', 'min', 'max'],
+                                                    'index': ['count', 'min', 'max']})
+    result = RoundLengths(len(grouped_df), max(grouped_df[tick_id_column]['count']), [], {}, {}, {}, {})
     list_id = 0
     for round_id, round_row in grouped_df[tick_id_column].iterrows():
+        result.round_ids.append(round_id)
         result.round_to_tick_ids[round_id] = range(round_row['min'], round_row['max']+1)
+        result.round_to_length[round_id] = len(result.round_to_tick_ids[round_id])
         result.round_id_to_list_id[round_id] = list_id
         list_id += 1
+
+    for round_id, round_row in grouped_df['index'].iterrows():
+        result.round_to_subset_tick_indices[round_id] = range(round_row['min'], round_row['max']+1)
+
     return result
 
 
@@ -47,7 +60,7 @@ def get_round_lengths(df: pd.DataFrame) -> RoundLengths:
 def build_rollout_and_similarity_tensors(round_lengths: RoundLengths, dataset: LatentDataset) -> \
         Tuple[torch.Tensor,torch.Tensor]:
     rollout_tensor = torch.zeros([round_lengths.num_rounds * round_lengths.max_length_per_round, dataset.X.shape[1]])
-    src_first_tick_in_round = [tick_range.start for _, tick_range in round_lengths.round_to_tick_ids.items()]
+    src_first_tick_in_round = [tick_range.start for _, tick_range in round_lengths.round_to_subset_tick_indices.items()]
     rollout_first_tick_in_round = [round_index * round_lengths.max_length_per_round
                                    for round_index in range(round_lengths.num_rounds)]
     rollout_tensor[rollout_first_tick_in_round] = dataset.X[src_first_tick_in_round]
@@ -56,10 +69,16 @@ def build_rollout_and_similarity_tensors(round_lengths: RoundLengths, dataset: L
     return rollout_tensor, similarity_tensor
 
 
-def step(rollout_tensor: torch.Tensor, similarity_tensor: torch.Tensor, pred_tensor: torch.Tensor,
+def step(rollout_tensor: torch.Tensor, all_similarity_tensor: torch.Tensor, pred_tensor: torch.Tensor,
          model: TransformerNestedHiddenLatentModel, round_lengths: RoundLengths, step_index: int, nav_data: NavData):
-    rollout_tensor_input_indices = [step_index + round_lengths.max_length_per_round * round_id
-                                    for round_id in range(round_lengths.num_rounds)]
+    # skip rounds that are over, I know we have space, but not going to use computation
+    # and cause problem in open loop where ground truth doesnt exist so everyone is 0
+    rounds_containing_step_index = [step_index < round_lengths.round_to_length[round_lengths.round_ids[round_index]]
+                                    for round_index in range(round_lengths.num_rounds)]
+    rollout_tensor_input_indices = [step_index + round_lengths.max_length_per_round * round_index
+                                    for round_index in range(round_lengths.num_rounds)
+                                    if rounds_containing_step_index[round_index]]
+    similarity_tensor = all_similarity_tensor[rounds_containing_step_index]
     rollout_tensor_output_indices = [index + 1 for index in rollout_tensor_input_indices]
 
     input_tensor = rollout_tensor[rollout_tensor_input_indices].to(CUDA_DEVICE_STR)
@@ -78,6 +97,7 @@ def step(rollout_tensor: torch.Tensor, similarity_tensor: torch.Tensor, pred_ten
     rollout_tensor[rollout_tensor_output_indices] = tmp_rollout
 
 
+# undo the fixed length across all rounds, just get right length for each round
 def match_round_lengths(df: pd.DataFrame, rollout_tensor: torch.Tensor, pred_tensor: torch.Tensor,
                         round_lengths: RoundLengths, cts: IOColumnTransformers) -> Tuple[pd.DataFrame, pd.DataFrame]:
     complete_matched_rollout_df = df.copy()
@@ -123,7 +143,8 @@ load_data_options = LoadDataOptions(
     small_good_rounds=[small_human_good_rounds, all_human_28_second_filter_good_rounds],
     similarity_dfs=[load_hdf5_to_pd(all_human_vs_small_human_similarity_hdf5_data_path),
                     load_hdf5_to_pd(all_human_vs_human_28_similarity_hdf5_data_path)],
-    limit_by_similarity=False
+    limit_by_similarity=False,
+    train_test_split_file_name=train_test_split_file_name
 )
 
 nav_data = None
@@ -143,5 +164,5 @@ if __name__ == "__main__":
 
     #load_result = load_model_file_for_rollout(all_data_df, "delta_pos_checkpoint.pt")
 
-    loaded_model = load_model_file(load_data_result)
+    loaded_model = load_model_file(load_data_result, use_test_data_only=True)
     vis(loaded_model, delta_pos_rollout)

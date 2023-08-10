@@ -58,6 +58,8 @@ class MultiHDF5Wrapper:
         self.duplicate_last_hdf5_equal_to_rest = duplicate_last_hdf5_equal_to_rest
         if train_test_split_file_name is not None:
             self.train_test_split_path = train_test_split_folder_path / train_test_split_file_name
+        else:
+            self.train_test_split_path = None
 
     def train_test_split_by_col(self, force_test_hdf5: Optional[HDF5Wrapper]):
         self.train_test_splits = {}
