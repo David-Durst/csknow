@@ -60,7 +60,7 @@ int main(int argc, char * argv[]) {
 
     bool finishedTests = false;
     csknow::plant_states::PlantStatesResult plantStatesResult;
-    plantStatesResult.load(savedDatasetsDir + "/plantStates.hdf5");
+    plantStatesResult.loadFromPython(savedDatasetsDir + "/test_plant_states.hdf5");
     ScriptsRunner roundScriptsRunner(createRoundScripts(plantStatesResult, true), false);
 
     ScriptsRunner learnedNavDataGenerator(csknow::tests::learned::createLearnedNavScripts(200, true), false);

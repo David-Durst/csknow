@@ -262,7 +262,7 @@ namespace csknow::inference_manager {
             runDeltaPosInference();
             ranDeltaPosInference = true;
         }
-        overallModelToRun = (overallModelToRun + 1) % 12;
+        overallModelToRun = (overallModelToRun + 1) % 64;
         auto end = std::chrono::system_clock::now();
         std::chrono::duration<double> inferenceTime = end - start;
         inferenceSeconds = inferenceTime.count();
