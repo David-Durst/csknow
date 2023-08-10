@@ -30,6 +30,7 @@ def delta_pos_open_rollout(loaded_model: LoadedModel):
 
 ground_truth_counter_column = 'ground truth counter'
 index_in_trajectory_column = 'index in trajectory'
+index_in_trajectory_if_alive_column = 'index in trajectory if alive'
 is_ground_truth_column = 'is ground truth'
 last_pred_column = 'last pred'
 is_last_pred_column = 'is last pred'
@@ -39,6 +40,7 @@ is_last_pred_column = 'is last pred'
 class DisplacementErrors:
     ade: float
     fde: float
+    num_elements_in_sum: int
 
 
 # compute indices in open rollout that are actually predicted
@@ -51,25 +53,21 @@ def compare_predicted_rollout_indices(orig_df: pd.DataFrame, pred_df: pd.DataFra
     # (pred delta + ground truth) - (orig delta + ground truth) = pred delta - orig delta
     # but need to determine which ground turth rows to filter out for ADE and what are last rows for FDE
     ground_truth_tick_indices = flatten_list([
-        [idx for idx in round_subset_tick_indices if idx - round_subset_tick_indices.start % num_time_steps == 0]
+        [idx for idx in round_subset_tick_indices if (idx - round_subset_tick_indices.start) % num_time_steps == 0]
         for _, round_subset_tick_indices in round_lengths.round_to_subset_tick_indices.items()
     ])
-    ground_truth_tick_indicators = pd.Series([0]).repeat(len(orig_df))
-    ground_truth_tick_indicators[ground_truth_tick_indices] = 1
+    ground_truth_tick_indicators = orig_df[tick_id_column] * 0
+    ground_truth_tick_indicators.iloc[ground_truth_tick_indices] = 1
     ground_truth_counter = ground_truth_tick_indicators.cumsum()
 
     # use counter to compute first/last in each trajectory
     orig_df[ground_truth_counter_column] = ground_truth_counter
     orig_df[index_in_trajectory_column] = \
-        orig_df.groupby(ground_truth_counter_column)[ground_truth_counter_column].transform('count')
+        orig_df.groupby(ground_truth_counter_column)[ground_truth_counter_column].transform('cumcount')
     # first if counter in trajectory is 0
     orig_df[is_ground_truth_column] = orig_df[index_in_trajectory_column] == 0
-    orig_df[last_pred_column] = \
-        orig_df.groupby(ground_truth_counter_column)[index_in_trajectory_column].transform('max')
-    # last if counter in trajectory equals max index
-    orig_df[is_last_pred_column] = orig_df[last_pred_column] == orig_df[index_in_trajectory_column]
 
-    result = DisplacementErrors(0., 0.)
+    result = DisplacementErrors(0., 0., 0)
 
     # compute deltas
     for player_columns in specific_player_place_area_columns:
@@ -83,14 +81,26 @@ def compare_predicted_rollout_indices(orig_df: pd.DataFrame, pred_df: pd.DataFra
 
         pred_vs_orig_total_delta = (pred_vs_orig_delta_x ** 2. + pred_vs_orig_delta_y ** 2. +
                                     pred_vs_orig_delta_z ** 2.).pow(0.5)
-        result.ade += pred_vs_orig_total_delta[~orig_df[is_ground_truth_column]].mean()
-        result.fde += pred_vs_orig_total_delta[orig_df[is_last_pred_column]].mean()
+
+        # last if counter in trajectory equals max index - need to recompute this for every player
+        # as last will be different if die in middle of trajectory
+        orig_df[index_in_trajectory_if_alive_column] = orig_df[index_in_trajectory_column]
+        orig_df[index_in_trajectory_if_alive_column].where(orig_df[player_columns.alive], -1)
+        orig_df[last_pred_column] = \
+            orig_df.groupby(ground_truth_counter_column)[index_in_trajectory_if_alive_column].transform('max')
+        orig_df[is_last_pred_column] = orig_df[last_pred_column] == orig_df[index_in_trajectory_if_alive_column]
+
+        result.ade += pred_vs_orig_total_delta[~orig_df[is_ground_truth_column] & orig_df[player_columns.alive]].mean()
+        result.fde += pred_vs_orig_total_delta[orig_df[is_last_pred_column] & orig_df[player_columns.alive]].mean()
+        # doing averaging for variable length sequences here (different number of ticks where each player column alive)
+        # do fixed length averaging across players in one place at end
+        result.num_elements_in_sum += 1
 
     return result
 
 
 def run_analysis(loaded_model: LoadedModel):
-    displacement_errors = DisplacementErrors(0., 0.)
+    displacement_errors = DisplacementErrors(0., 0., 0)
     for i, hdf5_wrapper in enumerate(loaded_model.dataset.data_hdf5s):
         print(f"Processing hdf5 {i + 1} / {len(loaded_model.dataset.data_hdf5s)}: {hdf5_wrapper.hdf5_path}")
         loaded_model.cur_hdf5_index = i
@@ -103,6 +113,11 @@ def run_analysis(loaded_model: LoadedModel):
         hdf5_displacement_errors = compare_predicted_rollout_indices(orig_loaded_df, loaded_model.cur_loaded_df)
         displacement_errors.ade += hdf5_displacement_errors.ade
         displacement_errors.fde += hdf5_displacement_errors.fde
+        displacement_errors.num_elements_in_sum += hdf5_displacement_errors.num_elements_in_sum
+
+    displacement_errors.ade /= displacement_errors.num_elements_in_sum
+    displacement_errors.fde /= displacement_errors.num_elements_in_sum
+
     print(f"ADE: {displacement_errors.ade}, FDE: {displacement_errors.fde}")
 
 
