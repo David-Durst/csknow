@@ -1,3 +1,6 @@
+import pandas as pd
+import torch
+
 from learn_bot.latent.place_area.simulator import *
 # this is a open loop version of the simulator for computing metrics based on short time horizons
 
@@ -23,7 +26,40 @@ def delta_pos_open_rollout(loaded_model: LoadedModel):
                             loaded_model.column_transformers)
 
 
+class DistanceError
+
+# compute indices in open rollout that are actually predicted
+def compare_predicted_rollout_indices(orig_df: pd.DataFrame, predicted_df: pd.DataFrame) -> List[int]:
+    round_lengths = get_round_lengths(loaded_model.cur_loaded_df)
+    return flatten_list([
+        [idx for idx in round_subset_tick_indices if idx % num_time_steps != 0]
+        for _, round_subset_tick_indices in round_lengths.round_to_subset_tick_indices
+    ])
+
+
+def run_analysis(loaded_model: LoadedModel):
+    for i, hdf5_wrapper in enumerate(loaded_model.dataset.data_hdf5s):
+        print(f"Processing hdf5 {i}: {hdf5_wrapper.hdf5_path}")
+        loaded_model.cur_hdf5_index = i
+        loaded_model.load_cur_hdf5_as_pd()
+
+        # running rollout updates df, so keep original copy for analysis
+        orig_loaded_df = loaded_model.cur_loaded_df.copy()
+        delta_pos_open_rollout(loaded_model)
+
+        predicted_rollout_indices = compare_predicted_rollout_indices(loaded_model)
+
+
+        print(rollout_tensor.shape)
+        print(loaded_model.cur_dataset.X.shape)
+        print('hi')
+
+
+
+
 nav_data = None
+
+perform_analysis = True
 
 if __name__ == "__main__":
     nav_data = NavData(CUDA_DEVICE_STR)
@@ -41,4 +77,8 @@ if __name__ == "__main__":
     #load_result = load_model_file_for_rollout(all_data_df, "delta_pos_checkpoint.pt")
 
     loaded_model = load_model_file(load_data_result, use_test_data_only=True)
-    vis(loaded_model, delta_pos_open_rollout)
+
+    if perform_analysis:
+        run_analysis(loaded_model)
+    else:
+        vis(loaded_model, delta_pos_open_rollout)

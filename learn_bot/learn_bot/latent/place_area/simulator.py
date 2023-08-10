@@ -21,7 +21,6 @@ from learn_bot.latent.place_area.load_data import human_latent_team_hdf5_data_pa
 from learn_bot.latent.train import train_test_split_file_name
 from learn_bot.latent.transformer_nested_hidden_latent_model import *
 from learn_bot.latent.vis.vis import vis
-from learn_bot.libs.df_grouping import make_index_column
 from learn_bot.libs.hdf5_to_pd import load_hdf5_to_pd, load_hdf5_extra_to_list
 from learn_bot.libs.io_transforms import get_untransformed_outputs, CPU_DEVICE_STR, get_label_outputs
 
@@ -32,13 +31,13 @@ class RoundLengths:
     max_length_per_round: int
     round_ids: List[int]
     round_to_tick_ids: Dict[int, range]
+    # tick indices for subset (ie. if just test data or entire data, different indices)
     round_to_subset_tick_indices: Dict[int, range]
     round_to_length: Dict[int, int]
     round_id_to_list_id: Dict[int, int]
 
 
 def get_round_lengths(df: pd.DataFrame) -> RoundLengths:
-    make_index_column(df)
     grouped_df = df.groupby([round_id_column]).agg({tick_id_column: ['count', 'min', 'max'],
                                                     'index': ['count', 'min', 'max']})
     result = RoundLengths(len(grouped_df), max(grouped_df[tick_id_column]['count']), [], {}, {}, {}, {})

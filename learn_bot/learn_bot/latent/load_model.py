@@ -16,6 +16,7 @@ from learn_bot.latent.place_area.load_data import LoadDataResult
 from learn_bot.latent.place_area.pos_abs_from_delta_grid_or_radial import delta_pos_grid_num_cells, AABB
 from learn_bot.latent.place_area.column_names import round_id_column, place_area_input_column_types, \
     radial_vel_output_column_types, test_success_col, num_radial_bins
+from learn_bot.libs.df_grouping import make_index_column
 from learn_bot.libs.hdf5_to_pd import load_hdf5_to_pd
 from learn_bot.libs.hdf5_wrapper import HDF5Wrapper
 from learn_bot.libs.io_transforms import IOColumnTransformers, CUDA_DEVICE_STR
@@ -50,6 +51,7 @@ class LoadedModel:
         self.cur_loaded_df = load_hdf5_to_pd(self.dataset.data_hdf5s[self.cur_hdf5_index].hdf5_path)
         # done to apply limit on hdf5 wrapper's id df to actual df
         self.cur_loaded_df = self.cur_loaded_df.iloc[self.dataset.data_hdf5s[self.cur_hdf5_index].id_df['id'], :]
+        make_index_column(self.cur_loaded_df)
         if load_cur_dataset:
             self.cur_dataset = LatentDataset(self.cur_loaded_df, self.column_transformers,
                                              self.dataset.data_hdf5s[self.cur_hdf5_index].id_df)
