@@ -67,6 +67,8 @@ namespace csknow::feature_store {
         vector<int64_t> internalIdToTickId;
         // tracks valid ticks (even if not used for training due to decimation)
         vector<bool> nonDecimatedValidRetakeTicks;
+        // demo file names are only stored once per demo, not for all ticks, use gameId to lookup into them
+        vector<string> demoFile;
         vector<int64_t> gameId;
         vector<int64_t> roundId;
         vector<int64_t> roundNumber;

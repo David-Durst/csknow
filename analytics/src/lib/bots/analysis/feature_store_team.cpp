@@ -839,6 +839,7 @@ namespace csknow::feature_store {
                                                       const ReachableResult & reachableResult,
                                                       const nav_mesh::nav_file &,
                                                       const csknow::key_retake_events::KeyRetakeEvents & keyRetakeEvents) {
+        demoFile = games.demoFile;
         std::atomic<int64_t> roundsProcessed = 0;
         /*
         for (size_t i = 0; i < columnTData[4].distributionNearestAOrders15s[0].size(); i++) {
@@ -985,6 +986,8 @@ namespace csknow::feature_store {
         //hdf5FlatCreateProps.add(HighFive::Deflate(6));
         //hdf5FlatCreateProps.add(HighFive::Chunking(roundId.size()));
 
+        file.createDataSet("/extra/demo file", demoFile, hdf5FlatCreateProps);
+
         file.createDataSet("/data/game id", gameId, hdf5FlatCreateProps);
         file.createDataSet("/data/round id", roundId, hdf5FlatCreateProps);
         file.createDataSet("/data/tick id", tickId, hdf5FlatCreateProps);
@@ -1089,6 +1092,8 @@ namespace csknow::feature_store {
     void TeamFeatureStoreResult::load(const std::string &filePath) {
         HighFive::File file(filePath, HighFive::File::ReadOnly);
         fileName = std::filesystem::path(filePath).filename();
+
+        demoFile = file.getDataSet("/extra/demo file").read<std::vector<string>>();
 
         roundId = file.getDataSet("/data/round id").read<std::vector<int64_t>>();
         roundNumber = file.getDataSet("/data/round number").read<std::vector<int64_t>>();
