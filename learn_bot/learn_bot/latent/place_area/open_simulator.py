@@ -1,6 +1,8 @@
+import numpy as np
 import pandas as pd
 import torch
 
+from learn_bot.latent.place_area.column_names import PlayerPlaceAreaColumns
 from learn_bot.latent.place_area.simulator import *
 # this is a open loop version of the simulator for computing metrics based on short time horizons
 
@@ -26,20 +28,71 @@ def delta_pos_open_rollout(loaded_model: LoadedModel):
                             loaded_model.column_transformers)
 
 
-class DistanceError
+ground_truth_counter_column = 'ground truth counter'
+index_in_trajectory_column = 'index in trajectory'
+is_ground_truth_column = 'is ground truth'
+last_pred_column = 'last pred'
+is_last_pred_column = 'is last pred'
+
+
+@dataclass
+class DisplacementErrors:
+    ade: float
+    fde: float
+
 
 # compute indices in open rollout that are actually predicted
-def compare_predicted_rollout_indices(orig_df: pd.DataFrame, predicted_df: pd.DataFrame) -> List[int]:
+def compare_predicted_rollout_indices(orig_df: pd.DataFrame, pred_df: pd.DataFrame) -> DisplacementErrors:
     round_lengths = get_round_lengths(loaded_model.cur_loaded_df)
-    return flatten_list([
-        [idx for idx in round_subset_tick_indices if idx % num_time_steps != 0]
-        for _, round_subset_tick_indices in round_lengths.round_to_subset_tick_indices
+
+    # get a counter for the ground truth group for each trajectory
+    # first row will be ground truth, and rest will be relative to it
+    # don't need this when comparing pred/orig since subtracting from each other will implicitly remove ground truth:
+    # (pred delta + ground truth) - (orig delta + ground truth) = pred delta - orig delta
+    # but need to determine which ground turth rows to filter out for ADE and what are last rows for FDE
+    ground_truth_tick_indices = flatten_list([
+        [idx for idx in round_subset_tick_indices if idx - round_subset_tick_indices.start % num_time_steps == 0]
+        for _, round_subset_tick_indices in round_lengths.round_to_subset_tick_indices.items()
     ])
+    ground_truth_tick_indicators = pd.Series([0]).repeat(len(orig_df))
+    ground_truth_tick_indicators[ground_truth_tick_indices] = 1
+    ground_truth_counter = ground_truth_tick_indicators.cumsum()
+
+    # use counter to compute first/last in each trajectory
+    orig_df[ground_truth_counter_column] = ground_truth_counter
+    orig_df[index_in_trajectory_column] = \
+        orig_df.groupby(ground_truth_counter_column)[ground_truth_counter_column].transform('count')
+    # first if counter in trajectory is 0
+    orig_df[is_ground_truth_column] = orig_df[index_in_trajectory_column] == 0
+    orig_df[last_pred_column] = \
+        orig_df.groupby(ground_truth_counter_column)[index_in_trajectory_column].transform('max')
+    # last if counter in trajectory equals max index
+    orig_df[is_last_pred_column] = orig_df[last_pred_column] == orig_df[index_in_trajectory_column]
+
+    result = DisplacementErrors(0., 0.)
+
+    # compute deltas
+    for player_columns in specific_player_place_area_columns:
+        # orig_df[player_columns.pos[1]] - orig_df_grouped[player_columns.pos[1]].transform('first')
+        pred_vs_orig_delta_x = \
+            pred_df[player_columns.pos[0]] - orig_df[player_columns.pos[0]]
+        pred_vs_orig_delta_y = \
+            pred_df[player_columns.pos[1]] - orig_df[player_columns.pos[1]]
+        pred_vs_orig_delta_z = \
+            pred_df[player_columns.pos[2]] - orig_df[player_columns.pos[2]]
+
+        pred_vs_orig_total_delta = (pred_vs_orig_delta_x ** 2. + pred_vs_orig_delta_y ** 2. +
+                                    pred_vs_orig_delta_z ** 2.).pow(0.5)
+        result.ade += pred_vs_orig_total_delta[~orig_df[is_ground_truth_column]].mean()
+        result.fde += pred_vs_orig_total_delta[orig_df[is_last_pred_column]].mean()
+
+    return result
 
 
 def run_analysis(loaded_model: LoadedModel):
+    displacement_errors = DisplacementErrors(0., 0.)
     for i, hdf5_wrapper in enumerate(loaded_model.dataset.data_hdf5s):
-        print(f"Processing hdf5 {i}: {hdf5_wrapper.hdf5_path}")
+        print(f"Processing hdf5 {i + 1} / {len(loaded_model.dataset.data_hdf5s)}: {hdf5_wrapper.hdf5_path}")
         loaded_model.cur_hdf5_index = i
         loaded_model.load_cur_hdf5_as_pd()
 
@@ -47,14 +100,10 @@ def run_analysis(loaded_model: LoadedModel):
         orig_loaded_df = loaded_model.cur_loaded_df.copy()
         delta_pos_open_rollout(loaded_model)
 
-        predicted_rollout_indices = compare_predicted_rollout_indices(loaded_model)
-
-
-        print(rollout_tensor.shape)
-        print(loaded_model.cur_dataset.X.shape)
-        print('hi')
-
-
+        hdf5_displacement_errors = compare_predicted_rollout_indices(orig_loaded_df, loaded_model.cur_loaded_df)
+        displacement_errors.ade += hdf5_displacement_errors.ade
+        displacement_errors.fde += hdf5_displacement_errors.fde
+    print(f"ADE: {displacement_errors.ade}, FDE: {displacement_errors.fde}")
 
 
 nav_data = None
