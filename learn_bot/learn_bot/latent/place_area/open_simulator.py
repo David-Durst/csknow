@@ -85,7 +85,7 @@ def compare_predicted_rollout_indices(orig_df: pd.DataFrame, pred_df: pd.DataFra
         # last if counter in trajectory equals max index - need to recompute this for every player
         # as last will be different if die in middle of trajectory
         orig_df[index_in_trajectory_if_alive_column] = orig_df[index_in_trajectory_column]
-        orig_df[index_in_trajectory_if_alive_column].where(orig_df[player_columns.alive], -1)
+        orig_df[index_in_trajectory_if_alive_column].where(orig_df[player_columns.alive].astype('bool'), -1)
         orig_df[last_pred_column] = \
             orig_df.groupby(ground_truth_counter_column)[index_in_trajectory_if_alive_column].transform('max')
         orig_df[is_last_pred_column] = orig_df[last_pred_column] == orig_df[index_in_trajectory_if_alive_column]
