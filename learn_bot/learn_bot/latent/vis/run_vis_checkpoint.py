@@ -5,6 +5,7 @@ from learn_bot.latent.analyze.process_trajectory_comparison import set_pd_print_
 from learn_bot.latent.load_model import load_model_file
 from learn_bot.latent.place_area.load_data import human_latent_team_hdf5_data_path, manual_latent_team_hdf5_data_path, \
     rollout_latent_team_hdf5_data_path, LoadDataResult, LoadDataOptions
+from learn_bot.latent.train import train_test_split_file_name
 from learn_bot.libs.df_grouping import make_index_column, train_test_split_by_col_ids
 from learn_bot.latent.vis.off_policy_inference import off_policy_inference
 from learn_bot.latent.vis.vis import vis
@@ -24,7 +25,8 @@ load_data_options = LoadDataOptions(
     small_good_rounds=[small_human_good_rounds, all_human_28_second_filter_good_rounds],
     similarity_dfs=[load_hdf5_to_pd(all_human_vs_small_human_similarity_hdf5_data_path),
                     load_hdf5_to_pd(all_human_vs_human_28_similarity_hdf5_data_path)],
-    limit_by_similarity=False
+    limit_by_similarity=False,
+    train_test_split_file_name=train_test_split_file_name
 )
 
 if __name__ == "__main__":
@@ -55,4 +57,11 @@ if __name__ == "__main__":
     #data_series = load_data_result.multi_hdf5_wrapper.hdf5_wrappers[0].sample_df.iloc[0].loc[non_delta_pos_cols]
     #print(data_series)
     loaded_model = load_model_file(load_data_result)
+    num_ticks = 0
+    num_alive_ticks
+    for data_hdf5 in loaded_model.dataset.data_hdf5s:
+        num_ticks += len(data_hdf5.id_df)
+    print(f"num ticks {num_ticks}")
+    exit(0)
+
     vis(loaded_model, off_policy_inference)

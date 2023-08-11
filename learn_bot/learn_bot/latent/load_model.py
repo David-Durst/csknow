@@ -3,6 +3,7 @@ from dataclasses import dataclass
 import sys
 from typing import Optional, Dict
 
+import numpy as np
 import pandas as pd
 import torch
 from torch import nn
@@ -17,7 +18,7 @@ from learn_bot.latent.place_area.pos_abs_from_delta_grid_or_radial import delta_
 from learn_bot.latent.place_area.column_names import round_id_column, place_area_input_column_types, \
     radial_vel_output_column_types, test_success_col, num_radial_bins
 from learn_bot.libs.df_grouping import make_index_column
-from learn_bot.libs.hdf5_to_pd import load_hdf5_to_pd
+from learn_bot.libs.hdf5_to_pd import load_hdf5_to_pd, load_hdf5_extra_column
 from learn_bot.libs.hdf5_wrapper import HDF5Wrapper
 from learn_bot.libs.io_transforms import IOColumnTransformers, CUDA_DEVICE_STR
 from learn_bot.latent.transformer_nested_hidden_latent_model import TransformerNestedHiddenLatentModel
@@ -31,6 +32,7 @@ class LoadedModel:
     filename_to_hdf5_index: Dict[str, int]
     cur_hdf5_index: int
     cur_loaded_df: pd.DataFrame
+    cur_demo_names: np.ndarray
     cur_dataset: LatentDataset
     cur_inference_df: Optional[pd.DataFrame]
 
@@ -52,6 +54,8 @@ class LoadedModel:
         # done to apply limit on hdf5 wrapper's id df to actual df
         self.cur_loaded_df = self.cur_loaded_df.iloc[self.dataset.data_hdf5s[self.cur_hdf5_index].id_df['id'], :]
         make_index_column(self.cur_loaded_df)
+        self.cur_demo_names = \
+            load_hdf5_extra_column(self.dataset.data_hdf5s[self.cur_hdf5_index].hdf5_path, 'demo file')
         if load_cur_dataset:
             self.cur_dataset = LatentDataset(self.cur_loaded_df, self.column_transformers,
                                              self.dataset.data_hdf5s[self.cur_hdf5_index].id_df)

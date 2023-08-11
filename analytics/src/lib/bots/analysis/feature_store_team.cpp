@@ -1095,6 +1095,7 @@ namespace csknow::feature_store {
 
         demoFile = file.getDataSet("/extra/demo file").read<std::vector<string>>();
 
+        gameId = file.getDataSet("/data/game id").read<std::vector<int64_t>>();
         roundId = file.getDataSet("/data/round id").read<std::vector<int64_t>>();
         roundNumber = file.getDataSet("/data/round number").read<std::vector<int64_t>>();
         tickId = file.getDataSet("/data/tick id").read<std::vector<int64_t>>();

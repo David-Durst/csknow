@@ -110,7 +110,10 @@ def vis(loaded_model: LoadedModel, inference_fn: Callable[[LoadedModel], None]):
         extra_round_data_str = ""
         if get_similarity_column(0) in id_df.columns:
             extra_round_data_str = f"similarity 0: {id_df.loc[cur_index, get_similarity_column(0)]}, similarity 1: {id_df.loc[cur_index, get_similarity_column(1)]}"
-        round_id_text_var.set(f"Round ID: {int(cur_round)}, Round Number: {selected_df.loc[cur_index, 'round number']}, {extra_round_data_str}")
+        game_id = selected_df.loc[cur_index, 'game id']
+        demo_file_text_var.set(loaded_model.cur_demo_names[game_id].decode('utf-8'))
+        round_id_text_var.set(f"Round ID: {int(cur_round)}, "
+                              f"Round Number: {selected_df.loc[cur_index, 'round number']}, {extra_round_data_str}")
         other_state_text_var.set(f"Planted A {data_series[c4_plant_a_col]}, "
                                  f"Planted B {data_series[c4_plant_b_col]}, "
                                  f"Not Planted {data_series[c4_not_planted_col]}, "
@@ -261,6 +264,11 @@ def vis(loaded_model: LoadedModel, inference_fn: Callable[[LoadedModel], None]):
     # round id slider
     round_id_frame = tk.Frame(window)
     round_id_frame.pack(pady=5)
+    demo_file_label = tk.Label(round_id_frame, text="Demo File:")
+    demo_file_label.pack(side="left")
+    demo_file_text_var = tk.StringVar()
+    demo_file_entry = tk.Entry(round_id_frame, width=50, textvariable=demo_file_text_var, state='disabled')
+    demo_file_entry.pack(side="left")
     round_id_text_var = tk.StringVar()
     round_id_label = tk.Label(round_id_frame, textvariable=round_id_text_var)
     round_id_label.pack(side="left")

@@ -73,5 +73,12 @@ def load_hdf5_extra_to_list(hdf5_path: Path) -> List[List[int]]:
             result.append(np_arr.tolist())
     return result
 
+
+def load_hdf5_extra_column(hdf5_path: Path, column_name: str) -> np.ndarray:
+    with h5py.File(hdf5_path) as hdf5_file:
+        hdf5_data = hdf5_file['extra']
+        result = hdf5_data[column_name][...]
+    return result
+
 # make a pandas dataframe look like an HDF5 wrapper
 
