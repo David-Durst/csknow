@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 import torch
 from matplotlib import pyplot as plt
+from matplotlib.colors import TwoSlopeNorm, LinearSegmentedColormap
 
 from learn_bot.latent.place_area.column_names import PlayerPlaceAreaColumns
 from learn_bot.latent.place_area.simulator import *
@@ -10,8 +11,11 @@ from learn_bot.latent.place_area.simulator import *
 def compute_coverage_metrics(loaded_model: LoadedModel):
     num_ticks = 0
     num_alive_pats = 0
-    x_pos_nps = []
-    y_pos_nps = []
+
+    sum_pos_heatmap = None
+    x_pos_bins = None
+    y_pos_bins = None
+
     for i, hdf5_wrapper in enumerate(loaded_model.dataset.data_hdf5s):
         print(f"Processing hdf5 {i + 1} / {len(loaded_model.dataset.data_hdf5s)}: {hdf5_wrapper.hdf5_path}")
         loaded_model.cur_hdf5_index = i
@@ -21,24 +25,36 @@ def compute_coverage_metrics(loaded_model: LoadedModel):
         for player_columns in specific_player_place_area_columns:
             num_alive_pats += loaded_model.cur_loaded_df[player_columns.alive].sum()
             alive_df = loaded_model.cur_loaded_df[loaded_model.cur_loaded_df[player_columns.alive].astype('bool')]
-            x_pos_nps.append(alive_df[player_columns.pos[0]].to_numpy())
-            y_pos_nps.append(alive_df[player_columns.pos[1]].to_numpy())
+            x_pos = alive_df[player_columns.pos[0]].to_numpy()
+            y_pos = alive_df[player_columns.pos[1]].to_numpy()
+            if x_pos_bins is None:
+                sum_pos_heatmap, x_pos_bins, y_pos_bins = np.histogram2d(x_pos, y_pos, bins=125,
+                                                                         range=[[d2_min[0], d2_max[0]], [d2_min[1], d2_max[1]]])
+            else:
+                pos_heatmap, _, _ = np.histogram2d(x_pos, y_pos, bins=[x_pos_bins, y_pos_bins])
+                sum_pos_heatmap += pos_heatmap
 
-    x_pos_np_concat = np.concatenate(x_pos_nps)
-    y_pos_np_concat = np.concatenate(y_pos_nps)
+        if i == 4:
+            break
 
-    pos_heatmap, x_pos_bins, y_pos_bins = np.histogram2d(x_pos_np_concat, y_pos_np_concat, bins=250,
-                                                         range=[[d2_min[0], d2_max[0]], [d2_min[1], d2_max[1]]])
 
     fig = plt.figure(figsize=(10, 10), constrained_layout=True)
     fig.suptitle("Bot vs Human Metrics")
     ax = fig.subplots(1, 1)
 
-    pos_heatmap = pos_heatmap.T
+    sum_pos_heatmap = sum_pos_heatmap.T
 
     grid_x, grid_y = np.meshgrid(x_pos_bins, y_pos_bins)
-    hit_im = ax.pcolormesh(grid_x, grid_y, pos_heatmap)
-    fig.colorbar(hit_im, ax=ax)
+    colors_not_occupied = plt.cm.magma(np.linspace(0, 0.25, 256))
+    colors_occupied = plt.cm.viridis(np.linspace(0.25, 1, 256))
+    all_colors = np.vstack((colors_not_occupied, colors_occupied))
+    not_to_occupied_map = LinearSegmentedColormap.from_list(
+        'not_to_occupied_map', all_colors)
+
+    heatmap_im = ax.pcolormesh(grid_x, grid_y, sum_pos_heatmap,
+                           norm=TwoSlopeNorm(vmin=0, vcenter=2, vmax=sum_pos_heatmap.max()),
+                           cmap=not_to_occupied_map)
+    fig.colorbar(heatmap_im, ax=ax)
     ax.set_title(f"Hit Aim With Recoil Distribution")
     ax.set_xlabel("Normalized Yaw Distance (1 = AABB width)")
     ax.set_ylabel("Normalized Pitch Distance (1 = AABB height)")
