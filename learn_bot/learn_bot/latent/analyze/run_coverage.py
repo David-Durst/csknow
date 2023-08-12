@@ -1,3 +1,4 @@
+import os
 import pickle
 
 import numpy as np
@@ -19,6 +20,7 @@ def compute_coverage_metrics(loaded_model: LoadedModel):
     x_pos_bins = None
     y_pos_bins = None
 
+    os.makedirs(tmp_file.parent, exist_ok=True)
     if True:
         for i, hdf5_wrapper in enumerate(loaded_model.dataset.data_hdf5s):
             print(f"Processing hdf5 {i + 1} / {len(loaded_model.dataset.data_hdf5s)}: {hdf5_wrapper.hdf5_path}")
@@ -47,7 +49,7 @@ def compute_coverage_metrics(loaded_model: LoadedModel):
 
 
     fig = plt.figure(figsize=(10, 10), constrained_layout=True)
-    fig.suptitle("Data Set Coverage Of de_dust2 Map")
+    fig.suptitle("Data Set Coverage Of de_dust2 Map", fontsize=16)
     ax = fig.subplots(1, 1)
 
     sum_pos_heatmap = sum_pos_heatmap.T
@@ -56,7 +58,9 @@ def compute_coverage_metrics(loaded_model: LoadedModel):
 
     heatmap_im = ax.pcolormesh(grid_x, grid_y, sum_pos_heatmap, norm=LogNorm(vmin=1, vmax=sum_pos_heatmap.max()),
                                cmap='viridis')
-    fig.colorbar(heatmap_im, ax=ax)
+    cbar = fig.colorbar(heatmap_im, ax=ax)
+    cbar.ax.set_ylabel('Number of Per-Player Data Points', rotation=270, labelpad=15, fontsize=14)
+
 
     plt.savefig(Path(__file__).parent / 'plots' / 'coverage.png')
 
