@@ -187,7 +187,7 @@ def compute_hit_fire_attack_distributions(player_name: str, bins: HitFireAttackB
     child_window.figure.colorbar(fire_im, ax=fire_ax)
     fire_ax.set_title(f"Fire Aim With Recoil Distribution")
     fire_ax.set_xlabel("Normalized Yaw Distance (1 = AABB width)")
-    fire_ax.set_ylabel("Normalized Pitch Distance (1 = AABB height)")
+    fire_ax.set_ylabel("nOrmalized Pitch Distance (1 = AABB height)")
 
 
     attack_df = bins.attack_df[bins.attack_df['attacker player name'] == player_name].copy() \

@@ -267,7 +267,7 @@ def vis(loaded_model: LoadedModel, inference_fn: Callable[[LoadedModel], None]):
     demo_file_label = tk.Label(round_id_frame, text="Demo File:")
     demo_file_label.pack(side="left")
     demo_file_text_var = tk.StringVar()
-    demo_file_entry = tk.Entry(round_id_frame, width=50, textvariable=demo_file_text_var, state='disabled')
+    demo_file_entry = tk.Entry(round_id_frame, width=50, textvariable=demo_file_text_var)
     demo_file_entry.pack(side="left")
     round_id_text_var = tk.StringVar()
     round_id_label = tk.Label(round_id_frame, textvariable=round_id_text_var)

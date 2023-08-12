@@ -56,12 +56,5 @@ if __name__ == "__main__":
     #        non_delta_pos_cols.append(col)
     #data_series = load_data_result.multi_hdf5_wrapper.hdf5_wrappers[0].sample_df.iloc[0].loc[non_delta_pos_cols]
     #print(data_series)
-    loaded_model = load_model_file(load_data_result)
-    num_ticks = 0
-    num_alive_ticks
-    for data_hdf5 in loaded_model.dataset.data_hdf5s:
-        num_ticks += len(data_hdf5.id_df)
-    print(f"num ticks {num_ticks}")
-    exit(0)
-
+    loaded_model = load_model_file(load_data_result, use_test_data_only=True)
     vis(loaded_model, off_policy_inference)
