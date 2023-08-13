@@ -10,6 +10,8 @@ from learn_bot.latent.analyze.humanness_metrics.column_names import *
 class HumannessDataOptions(Enum):
     ROLLOUT = 1
     ALL_TRAIN = 2
+    HEURISTIC = 3
+    DEFAULT = 4
 
 
 class HumannessMetrics:
@@ -52,8 +54,12 @@ class HumannessMetrics:
         hdf5_paths: List[Path]
         if data_option == HumannessDataOptions.ROLLOUT:
             hdf5_paths = [rollout_humanness_hdf5_data_path]
-        else:
+        elif data_option == HumannessDataOptions.ALL_TRAIN:
             hdf5_paths = all_train_humanness_hdf5_data_paths
+        elif data_option == HumannessDataOptions.HEURISTIC:
+            hdf5_paths = heuristic_humanness_hdf5_data_path
+        else:
+            hdf5_paths = default_humanness_hdf5_data_path
 
         first_file: bool = True
         for hdf5_path in hdf5_paths:

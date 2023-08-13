@@ -38,6 +38,8 @@ pct_time_still_t_name = "pct time still t"
 ct_wins_name = "ct wins"
 
 rollout_humanness_hdf5_data_path = Path(__file__).parent / '..' / '..' / '..' / '..' / '..' / 'analytics' / 'rollout_outputs' / 'humannessMetrics.hdf5'
+heuristic_humanness_hdf5_data_path = Path(__file__).parent / '..' / '..' / '..' / '..' / '..' / 'analytics' / 'rollout_outputs' / 'heuristics300HumannessMetrics.hdf5'
+default_humanness_hdf5_data_path = Path(__file__).parent / '..' / '..' / '..' / '..' / '..' / 'analytics' / 'rollout_outputs' / 'heuristics300HumannessMetrics.hdf5' #'default300HumannessMetrics.hdf5'
 all_train_humanness_folder_path = Path(__file__).parent / '..' / '..' / '..' / '..' / '..' / 'analytics' / 'all_train_outputs'
 
 all_train_humanness_hdf5_data_paths: List[Path] = []

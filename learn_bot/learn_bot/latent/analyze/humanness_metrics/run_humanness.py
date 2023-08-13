@@ -9,33 +9,45 @@ import matplotlib.pyplot as plt
 
 fig_length = 6
 num_figs = 26
-num_player_types = 2
-bot_name = "Bot "
+num_player_types = 4
+learned_bot_name = "Learned Bot "
 human_name = "Human "
+heuristic_bot_name = "Hand-Crafted Bot "
+default_bot_name = "Default Bot "
 
 
-def plot_metric(axs, metric_index: int, human_metric: np.ndarray, bot_metric: np.ndarray, metric_name: str,
-                pct_bins: bool = False):
-    max_value = int(ceil(max(human_metric.max(), bot_metric.max())))
-    axs[metric_index, 0].set_title(bot_name + metric_name)
+def plot_metric(axs, metric_index: int, human_metric: np.ndarray, learned_bot_metric: np.ndarray,
+                heuristic_bot_metric: np.ndarray, default_bot_metric: np.ndarray,
+                metric_name: str, pct_bins: bool = False):
+    max_value = int(ceil(max(human_metric.max(), learned_bot_metric.max(),
+                             heuristic_bot_metric.max(), default_bot_metric.max())))
+    axs[metric_index, 0].set_title(learned_bot_name + metric_name)
     axs[metric_index, 1].set_title(human_name + metric_name)
+    axs[metric_index, 2].set_title(heuristic_bot_name + metric_name)
+    axs[metric_index, 3].set_title(default_bot_name + metric_name)
     bins: List
     if pct_bins:
         bins = [i * 0.1 for i in range(11)]
     else:
         bins = generate_bins(0, max_value, max_value // 20)
-    plot_hist(axs[metric_index, 0], pd.Series(bot_metric), bins)
+    plot_hist(axs[metric_index, 0], pd.Series(learned_bot_metric), bins)
     plot_hist(axs[metric_index, 1], pd.Series(human_metric), bins)
+    plot_hist(axs[metric_index, 2], pd.Series(heuristic_bot_metric), bins)
+    plot_hist(axs[metric_index, 3], pd.Series(default_bot_metric), bins)
     axs[metric_index, 0].set_ylim(0., 1.)
     axs[metric_index, 1].set_ylim(0., 1.)
+    axs[metric_index, 2].set_ylim(0., 1.)
+    axs[metric_index, 3].set_ylim(0., 1.)
 
 
-def plot_sums(axs, metric_index: int, human_metric: np.ndarray, bot_metric: np.ndarray, metric_name: str):
+def plot_sums(axs, metric_index: int, human_metric: np.ndarray, learned_bot_metric: np.ndarray,
+              heuristic_bot_metric: np.ndarray, default_bot_metric: np.ndarray, metric_name: str):
     axs[metric_index, 0].set_title(metric_name)
-    bot_value = bot_metric.sum() / len(bot_metric)
+    bot_value = learned_bot_metric.sum() / len(learned_bot_metric)
     human_value = human_metric.sum() / len(human_metric)
-    players = [bot_name + metric_name, human_name + metric_name]
-    values = [bot_value, human_value]
+    players = [learned_bot_name + metric_name, human_name + metric_name, heuristic_bot_name + metric_name,
+               default_bot_name + metric_name]
+    values = [bot_value, human_value, heuristic_bot_metric, default_bot_metric]
     axs[metric_index, 0].bar(players, values)
     axs[metric_index, 0].set_ylim(0., 1.)
 
@@ -43,43 +55,59 @@ def plot_sums(axs, metric_index: int, human_metric: np.ndarray, bot_metric: np.n
 def run_humanness():
     all_train_humanness_metrics = HumannessMetrics(HumannessDataOptions.ALL_TRAIN)
     rollout_humanness_metrics = HumannessMetrics(HumannessDataOptions.ROLLOUT)
+    heuristics_humanness_metrics = HumannessMetrics(HumannessDataOptions.HEURISTIC)
+    default_humanness_metrics = HumannessMetrics(HumannessDataOptions.DEFAULT)
 
     set_pd_print_options()
 
 
     fig = plt.figure(figsize=(fig_length*num_player_types, fig_length*num_figs), constrained_layout=True)
-    fig.suptitle("Bot vs Human Metrics")
+    fig.suptitle("Learned Bot vs Human vs Hand-Crafted Bot vs Default Bot Metrics")
     axs = fig.subplots(num_figs, num_player_types, squeeze=False)
 
     plot_metric(axs, 0,
                 all_train_humanness_metrics.unscaled_speed,
                 rollout_humanness_metrics.unscaled_speed,
+                heuristics_humanness_metrics.unscaled_speed,
+                default_humanness_metrics.unscaled_speed,
                 unscaled_speed_name)
     plot_metric(axs, 1,
                 all_train_humanness_metrics.unscaled_speed_when_firing,
                 rollout_humanness_metrics.unscaled_speed_when_firing,
+                heuristics_humanness_metrics.unscaled_speed_when_firing,
+                default_humanness_metrics.unscaled_speed_when_firing,
                 unscaled_speed_when_firing_name)
     plot_metric(axs, 2,
                 all_train_humanness_metrics.unscaled_speed_when_shot,
                 rollout_humanness_metrics.unscaled_speed_when_shot,
+                heuristics_humanness_metrics.unscaled_speed_when_shot,
+                default_humanness_metrics.unscaled_speed_when_shot,
                 unscaled_speed_when_shot_name)
 
     plot_metric(axs, 3,
                 all_train_humanness_metrics.scaled_speed,
                 rollout_humanness_metrics.scaled_speed,
+                heuristics_humanness_metrics.scaled_speed,
+                default_humanness_metrics.scaled_speed,
                 scaled_speed_name, pct_bins=True)
     plot_metric(axs, 4,
                 all_train_humanness_metrics.scaled_speed_when_firing,
                 rollout_humanness_metrics.scaled_speed_when_firing,
+                heuristics_humanness_metrics.scaled_speed_when_firing,
+                default_humanness_metrics.scaled_speed_when_firing,
                 scaled_speed_when_firing_name, pct_bins=True)
     plot_metric(axs, 5,
                 all_train_humanness_metrics.scaled_speed_when_shot,
                 rollout_humanness_metrics.scaled_speed_when_shot,
+                heuristics_humanness_metrics.scaled_speed_when_shot,
+                default_humanness_metrics.scaled_speed_when_shot,
                 scaled_speed_when_shot_name, pct_bins=True)
 
     plot_metric(axs, 6,
                 all_train_humanness_metrics.weapon_only_scaled_speed,
                 rollout_humanness_metrics.weapon_only_scaled_speed,
+                heuristics_humanness_metrics.weapon_only_scaled_speed,
+                default_humanness_metrics.weapon_only_scaled_speed,
                 weapon_only_scaled_speed_name, pct_bins=True)
     plot_metric(axs, 7,
                 all_train_humanness_metrics.weapon_only_scaled_speed_when_firing,
