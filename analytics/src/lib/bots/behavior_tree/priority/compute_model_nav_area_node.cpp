@@ -233,8 +233,20 @@ namespace csknow::compute_nav_area {
 
     NodeState ComputeModelNavAreaNode::exec(const ServerState &state, TreeThinker &treeThinker) {
         const ServerState::Client & curClient = state.getClient(treeThinker.csgoId);
+
+        bool ctAlive = false, tAlive = false;
+        for (const auto & client : state.clients) {
+            if (client.isAlive && client.team == ENGINE_TEAM_CT) {
+                ctAlive = true;
+            }
+            if (client.isAlive && client.team == ENGINE_TEAM_T) {
+                tAlive = true;
+            }
+        }
+        bool bothTeamsAlive = ctAlive && tAlive;
+
         if (blackboard.inAnalysis || !getPlaceAreaModelProbabilities(curClient.team) ||
-            !blackboard.inferenceManager.haveValidData()) {
+            !blackboard.inferenceManager.haveValidData() || !bothTeamsAlive) {
             playerNodeState[treeThinker.csgoId] = NodeState::Failure;
             return playerNodeState[treeThinker.csgoId];
         }
@@ -319,15 +331,6 @@ namespace csknow::compute_nav_area {
                     }
                 }
             }
-            /*
-            // if CT defuser and in bombsite, then move to c4
-            if (blackboard.isPlayerDefuser(treeThinker.csgoId) &&
-                blackboard.navFile.get_place(curArea.m_place) == curOrder.waypoints.back().placeName) {
-                curPriority.targetPos = state.getC4Pos();
-                curPriority.targetAreaId = blackboard.navFile.get_nearest_area_by_position(vec3Conv(curPriority.targetPos)).get_id();
-            }
-             */
-
             // if in the target area (and not moving to c4), don't move
             /*
             if ((!blackboard.isPlayerDefuser(treeThinker.csgoId) || state.c4IsDefused) && curAreaId == curPriority.targetAreaId) {

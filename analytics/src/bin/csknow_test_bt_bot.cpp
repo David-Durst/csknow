@@ -81,12 +81,11 @@ int main(int argc, char * argv[]) {
             make_unique<GooseToCatShortScript>(state)
             make_unique<CTPushLongScript>(state),
             make_unique<CTPushBDoorsScript>(state),
-             */
             //make_unique<CTPushBHoleScript>(state),
             make_unique<CTPushMidToBHoleScript>(state),
+             */
+            make_unique<DefuseScript>(state)
                     /*
-            make_unique<DefuseScript>(state),
-            // * /
             make_unique<InterruptedDefuseScript>(state)
             make_unique<NavInsideNodeScript>(state)
             make_unique<HoldLongScript>(state),
@@ -112,8 +111,8 @@ int main(int argc, char * argv[]) {
             make_unique<DiffusionPossibleNavAreasCheck>(state),
             make_unique<VisibilityPossibleNavAreasCheck>(state),
             make_unique<DangerOnePlayerCheck>(state),
-              */
             make_unique<DangerTwoPlayerCheck>(state)
+              */
     ), true);
     ScriptsRunner scenarioRunner(variable_aim_test::makeBotTests(), false, 0);
     ScriptsRunner humanScenarioRunner(variable_aim_test::makeHumanTests(), false, 1);
