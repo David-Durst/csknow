@@ -58,7 +58,10 @@ NumAheadResult computeNumAhead(Blackboard & blackboard, const ServerState & stat
             int32_t otherPlayerEntryIndex = blackboard.strategy.playerToEntryIndex[followerId];
             bool otherPlayerFinishedAndInFront = otherPlayerEntryIndex < curPlayerEntryIndex &&
                     blackboard.strategy.playersFinishedStrategy.count(followerId) > 0;
-            if (distanceInFront > 0 || otherPlayerFinishedAndInFront) {
+            bool otherPlayerFinishedAndInBack = otherPlayerEntryIndex > curPlayerEntryIndex &&
+                    blackboard.strategy.playersFinishedStrategy.count(curClient.csgoId) > 0 &&
+                    blackboard.strategy.playersFinishedStrategy.count(followerId) > 0;
+            if (!otherPlayerFinishedAndInBack && (distanceInFront > 0 || otherPlayerFinishedAndInFront)) {
                 result.numAhead++;
             }
             else {

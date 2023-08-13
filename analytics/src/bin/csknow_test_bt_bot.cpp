@@ -84,9 +84,10 @@ int main(int argc, char * argv[]) {
             //make_unique<CTPushBHoleScript>(state),
             make_unique<CTPushMidToBHoleScript>(state),
              */
-            make_unique<DefuseScript>(state)
+            make_unique<DefuseScript>(state),
+            make_unique<InterruptedDefuseScript>(state),
+            make_unique<SwapOrderDefuseScript>(state)
                     /*
-            make_unique<InterruptedDefuseScript>(state)
             make_unique<NavInsideNodeScript>(state)
             make_unique<HoldLongScript>(state),
             make_unique<HoldASitePushScript>(state),

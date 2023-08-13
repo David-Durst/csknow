@@ -41,6 +41,7 @@ namespace follow::spacing {
         // stop only when ready and too far ahead (so this player is not the problem, need to wait for others to catch up)
         return blackboard.strategy.isPlayerReady(treeThinker.csgoId) ||
                (blackboard.strategy.isPlayerExecuting(treeThinker.csgoId) &&
-               curOrderFollowers.size() > 1 && numAheadResult.nearestBehind > MAX_PUSH_DISTANCE);
+               curOrderFollowers.size() > 1 && numAheadResult.nearestBehind > MAX_PUSH_DISTANCE &&
+               blackboard.defuserId != curClient.csgoId);
     }
 }
