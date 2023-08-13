@@ -141,7 +141,6 @@ struct Blackboard {
     // order data (movedC4 is for debugging, need to reset orders)
     bool newOrderThisFrame, recomputeOrders = false;
     Strategy strategy;
-    bool modelOrdersT = false, modelOrdersCT = false;
     std::set<PlaceIndex> placesVisibleFromDestination;
 
     bool executeIfAllFinishedSetup(const ServerState & state) {

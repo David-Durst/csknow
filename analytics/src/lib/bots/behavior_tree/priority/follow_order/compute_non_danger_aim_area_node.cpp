@@ -12,7 +12,7 @@ namespace follow {
         AreaId curAreaId = blackboard.navFile.get_nearest_area_by_position(
                 vec3Conv(state.clients[state.csgoIdToCSKnowId[treeThinker.csgoId]].getFootPosForPlayer())).get_id();
         size_t lastWaypointIndex;
-        if (curClient.team == ENGINE_TEAM_CT || blackboard.modelOrdersT) {
+        if (curClient.team == ENGINE_TEAM_CT) {
             lastWaypointIndex = curOrder.waypoints.size() - 1;
         }
         else {

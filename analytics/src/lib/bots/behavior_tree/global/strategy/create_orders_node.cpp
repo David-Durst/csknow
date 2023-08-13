@@ -22,39 +22,10 @@ namespace strategy {
             }
         }
 
-        blackboard.ticksSinceLastProbOrderAssignment++;
-        bool ctPlayersAlive = false, tPlayersAlive = false;
-        for (const auto & client : state.clients) {
-            if (client.isAlive && client.team == ENGINE_TEAM_CT) {
-                ctPlayersAlive = true;
-            }
-            if (client.isAlive && client.team == ENGINE_TEAM_T) {
-                tPlayersAlive = true;
-            }
-        }
-        bool useOrderModelProbabilitiesEitherTeam = useOrderModelProbabilitiesT || useOrderModelProbabilitiesCT;
-        bool defuserNearC4 = false;
-        if (blackboard.defuserId) {
-            const nav_mesh::nav_area & c4Area = blackboard.navFile
-                    .get_nearest_area_by_position(vec3Conv(state.getC4Pos()));
-            const nav_mesh::nav_area & playerArea = blackboard.navFile
-                    .get_nearest_area_by_position(vec3Conv(state.getClient(blackboard.defuserId.value()).getFootPosForPlayer()));
-            defuserNearC4 = c4Area.m_place == playerArea.m_place;
-        }
-        bool probOrderChange = useOrderModelProbabilitiesEitherTeam &&
-            !blackboard.inTest && !blackboard.inAnalysis &&
-            blackboard.ticksSinceLastProbOrderAssignment >= newOrderTicks && ctPlayersAlive && tPlayersAlive &&
-            !defuserNearC4; // if have a defuser, don't interrup them
-        // as soon as have valid inference data, need to get model orders, as rest of tree will assume switching to models
-        bool switchToModelOrders = useOrderModelProbabilitiesEitherTeam && !blackboard.inTest && !blackboard.inAnalysis &&
-            !blackboard.modelOrdersT && !blackboard.modelOrdersCT && blackboard.inferenceManager.haveValidData();
-        // if start with model orders and switch off, then need to remove model orders immediately
-        bool switchFromModelOrders = (blackboard.modelOrdersT || blackboard.modelOrdersCT) && (blackboard.inTest || blackboard.inAnalysis);
         if (playerNodeState.find(treeThinker.csgoId) == playerNodeState.end() ||
             state.roundNumber != planRoundNumber || state.numPlayersAlive() != playersAliveLastPlan ||
             state.getPlayersOnTeam(ENGINE_TEAM_CT) != ctPlayers || state.getPlayersOnTeam(ENGINE_TEAM_T) != tPlayers ||
-            botNeedsAnOrder ||
-            blackboard.recomputeOrders || probOrderChange || switchToModelOrders || switchFromModelOrders) {
+            botNeedsAnOrder || blackboard.recomputeOrders) {
             planRoundNumber = state.roundNumber;
             playersAliveLastPlan = state.numPlayersAlive();
             ctPlayers = state.getPlayersOnTeam(ENGINE_TEAM_CT);
@@ -71,57 +42,20 @@ namespace strategy {
             bool plantedA = blackboard.navFile.get_place(
                     blackboard.navFile.get_nearest_area_by_position(vec3Conv(state.getC4Pos())).m_place) == "BombsiteA";
 
-            bool eitherTeamModelRequirements = !blackboard.inTest && !blackboard.inAnalysis &&
-                blackboard.inferenceManager.haveValidData();
             if (plantedA) {
                 blackboard.placesVisibleFromDestination = blackboard.ordersResult.aPlacesVisibleFromDestination;
             }
             else {
                 blackboard.placesVisibleFromDestination = blackboard.ordersResult.bPlacesVisibleFromDestination;
             }
-            if (eitherTeamModelRequirements && getPlaceAreaModelProbabilities(ENGINE_TEAM_CT)) {
-                blackboard.modelOrdersCT = true;
-                createModelOrders();
-                //std::cout << (plantedA ? "A " : "B ") << "CT orders: " << std::endl;
-                for (const auto & order : plantedA ? blackboard.strategy.aModelCTOrders : blackboard.strategy.bModelCTOrders) {
-                    blackboard.strategy.addOrder(ENGINE_TEAM_CT, order, blackboard.navFile, blackboard.reachability,
-                                                 blackboard.visPoints, blackboard.distanceToPlaces);
-                    /*
-                    for (const auto & waypoint : order.waypoints) {
-                        std::cout << waypoint.placeName << ", ";
-                    }
-                    std::cout << std::endl;
-                     */
-                }
+
+            for (const auto & order : plantedA ? aOffenseOrders : bOffenseOrders) {
+                blackboard.strategy.addOrder(ENGINE_TEAM_CT, order, blackboard.navFile, blackboard.reachability,
+                                             blackboard.visPoints, blackboard.distanceToPlaces);
             }
-            else {
-                blackboard.modelOrdersCT = false;
-                for (const auto & order : plantedA ? aOffenseOrders : bOffenseOrders) {
-                    blackboard.strategy.addOrder(ENGINE_TEAM_CT, order, blackboard.navFile, blackboard.reachability,
-                                                 blackboard.visPoints, blackboard.distanceToPlaces);
-                }
-            }
-            if (eitherTeamModelRequirements && getPlaceAreaModelProbabilities(ENGINE_TEAM_T)) {
-                blackboard.modelOrdersT = true;
-                createModelOrders();
-                // std::cout << (plantedA ? "A " : "B ") << "T orders: ";
-                for (const auto & order : plantedA ? blackboard.strategy.aModelTOrders : blackboard.strategy.bModelTOrders) {
-                    blackboard.strategy.addOrder(ENGINE_TEAM_T, order, blackboard.navFile, blackboard.reachability,
-                                                 blackboard.visPoints, blackboard.distanceToPlaces);
-                    /*
-                    for (const auto & waypoint : order.waypoints) {
-                        std::cout << waypoint.placeName << ", ";
-                    }
-                    std::cout << std::endl;
-                     */
-                }
-            }
-            else {
-                blackboard.modelOrdersT = false;
-                for (const auto & order : plantedA ? aDefenseOrders : bDefenseOrders) {
-                    blackboard.strategy.addOrder(ENGINE_TEAM_T, order, blackboard.navFile, blackboard.reachability,
-                                                 blackboard.visPoints, blackboard.distanceToPlaces);
-                }
+            for (const auto & order : plantedA ? aDefenseOrders : bDefenseOrders) {
+                blackboard.strategy.addOrder(ENGINE_TEAM_T, order, blackboard.navFile, blackboard.reachability,
+                                             blackboard.visPoints, blackboard.distanceToPlaces);
             }
         }
         else {
