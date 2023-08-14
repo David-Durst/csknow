@@ -17,8 +17,9 @@ namespace csknow::feature_store {
                                                       const Ticks & ticks, const PlayerAtTick & playerAtTick,
                                                       const WeaponFire & weaponFire, const Hurt & hurt,
                                                       const Plants & plants, const Defusals & defusals,
-                                                      const csknow::key_retake_events::KeyRetakeEvents & keyRetakeEvents) {
-        TeamFeatureStoreResult teamFeatureStoreResult(ticks.size, orders, ticks, keyRetakeEvents);
+                                                      const csknow::key_retake_events::KeyRetakeEvents & keyRetakeEvents,
+                                                      bool requireBothTeamsAlive) {
+        TeamFeatureStoreResult teamFeatureStoreResult(ticks.size, orders, ticks, keyRetakeEvents, requireBothTeamsAlive);
         int numThreads = omp_get_max_threads();
         std::atomic<int64_t> roundsProcessed = 0;
         vector<feature_store::FeatureStorePreCommitBuffer> tmpPreCommitBuffer(numThreads);

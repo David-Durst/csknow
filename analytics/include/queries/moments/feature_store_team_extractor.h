@@ -19,7 +19,8 @@ namespace csknow::feature_store {
                                                       const Ticks & ticks, const PlayerAtTick & playerAtTick,
                                                       const WeaponFire & weaponFire, const Hurt & hurt,
                                                       const Plants & plants, const Defusals & defusals,
-                                                      const csknow::key_retake_events::KeyRetakeEvents & keyRetakeEvents);
+                                                      const csknow::key_retake_events::KeyRetakeEvents & keyRetakeEvents,
+                                                      bool requireBothTeamsAlive);
 }
 
 #endif //CSKNOW_FEATURE_STORE_TEAM_EXTRACTOR_H

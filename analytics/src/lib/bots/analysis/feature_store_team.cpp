@@ -180,7 +180,8 @@ namespace csknow::feature_store {
 
     TeamFeatureStoreResult::TeamFeatureStoreResult(size_t size, const std::vector<csknow::orders::QueryOrder> & orders,
                                                    std::optional<std::reference_wrapper<const Ticks>> ticks,
-                                                   std::optional<std::reference_wrapper<const csknow::key_retake_events::KeyRetakeEvents>> keyRetakeEvents) {
+                                                   std::optional<std::reference_wrapper<const csknow::key_retake_events::KeyRetakeEvents>> keyRetakeEvents,
+                                                   bool requireBothTeamsAlive) {
         tickIdToInternalId.resize(size, INVALID_ID);
         nonDecimatedValidRetakeTicks.resize(size, false);
         for (int i = 0; i < max_enemies; i++) {
@@ -205,8 +206,10 @@ namespace csknow::feature_store {
                 if (roundIndex == INVALID_ID) {
                     continue;
                 }
+                bool testAliveCondition = requireBothTeamsAlive ? (refKeyRetakeEvents.tAlive[i] && refKeyRetakeEvents.ctAlive[i]) : (refKeyRetakeEvents.tAlive[i] || refKeyRetakeEvents.ctAlive[i]);
                 bool testCondition = (refKeyRetakeEvents.roundHasCompleteTest[roundIndex] || refKeyRetakeEvents.roundHasFailedTest[roundIndex]) &&
-                        (refKeyRetakeEvents.tAlive[i] || refKeyRetakeEvents.ctAlive[i]) &&
+                        // turn into an || for base navigation
+                        testAliveCondition &&
                         refKeyRetakeEvents.testStartBeforeOrDuringThisTick[i] && !refKeyRetakeEvents.testEndBeforeOrDuringThisTick[i];
                 bool nonTestCondition = refKeyRetakeEvents.enableNonTestPlantRounds && refKeyRetakeEvents.roundHasPlant[roundIndex] &&
                         refKeyRetakeEvents.plantFinishedBeforeOrDuringThisTick[i] && refKeyRetakeEvents.ctAlive[i] && refKeyRetakeEvents.tAlive[i] &&

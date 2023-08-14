@@ -50,7 +50,7 @@ int main(int argc, char * argv[]) {
         std::cout << "1. path/to/local_data" << std::endl;
         std::cout << "2. path/to/nav_meshes" << std::endl;
         std::cout << "3. path/to/output/dir" << std::endl;
-        std::cout << "4. y to enable non-test plant rounds" << std::endl;
+        std::cout << "4. y to enable non-test plant rounds, b to require both players alive in test rounds" << std::endl;
         std::cout << "5. appendix for output name" << std::endl;
         return 1;
     }
@@ -58,7 +58,12 @@ int main(int argc, char * argv[]) {
     string dataPath = argv[1];
     string navPath = argv[2];
     string outputDir = argv[3];
-    bool enableNonTestPlantRounds = argc >= 5;
+    bool enableNonTestPlantRounds = false;
+    bool requireBothTeamsAlive = false;
+    if (argc >= 5) {
+        enableNonTestPlantRounds = argv[4][0] == 'y';
+        requireBothTeamsAlive = argv[4][0] == 'b';
+    }
     string outputNameAppendix = "";
     if (argc == 6) {
         outputNameAppendix = argv[5];
@@ -290,7 +295,7 @@ int main(int argc, char * argv[]) {
                                                               nearestNavCellResult,
                                                               players, games, filteredRounds, ticks,
                                                               playerAtTick, weaponFire, hurt, plants, defusals,
-                                                              keyRetakeEvents);
+                                                              keyRetakeEvents, requireBothTeamsAlive);
     auto teamFeatureStoreTimeEnd = std::chrono::system_clock::now();
     std::chrono::duration<double> behaviorTreeLatentEventsTime = teamFeatureStoreTimeEnd - teamFeatureStoreTimeStart;
     std::cout << "team feature store time " << behaviorTreeLatentEventsTime.count() << std::endl;
