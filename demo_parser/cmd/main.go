@@ -49,6 +49,7 @@ func main() {
 	botRetakesDataFlag := flag.Bool("brd", false, "set if using retakes data")
 	manualDataFlag := flag.Bool("m", false, "set if using manual data")
 	rolloutDataFlag := flag.Bool("ro", false, "set if using rollout data")
+	dataNameSuffixFlag := flag.String("dn", "", "set for appending extra suffix in output hdf5 file")
 	uploadFlag := flag.Bool("u", false, "set to true if uploading results to s3")
 	// if running locally, skip the aws stuff and just return
 	localFlag := flag.Bool("l", false, "set for non-aws (aka local) runs")
@@ -88,6 +89,7 @@ func main() {
 	demosS3FolderKey := path.Join(dataS3FolderKey, d.DemosS3KeyPrefixSuffix)
 	//badDemosS3FolderKey := path.Join(dataS3FolderKey, d.BadDemosS3KeyPrefixSuffix)
 	hdf5S3FolderKey := path.Join(dataS3FolderKey, d.HDF5KeySuffix)
+	dataName += *dataNameSuffixFlag
 
 	// create demo directory if not exists
 	err := os.MkdirAll(c.DemoDirectory, 0777)
@@ -136,7 +138,7 @@ func main() {
 				validDemos++
 				localDemosAsCSV++
 				if localDemosAsCSV >= maxDemosPerHDF5 {
-					covertCSVToHDF5(dataName, *uploadFlag, dataS3FolderKey, hdf5S3FolderKey, hdf5Index, false)
+					convertCSVToHDF5(dataName, *uploadFlag, dataS3FolderKey, hdf5S3FolderKey, hdf5Index, false)
 					clearTmpCSVFolder()
 					hdf5Index++
 					localDemosAsCSV = 0
@@ -176,7 +178,7 @@ func main() {
 		}
 	*/
 
-	covertCSVToHDF5(dataName, *uploadFlag, dataS3FolderKey, hdf5S3FolderKey, hdf5Index, true)
+	convertCSVToHDF5(dataName, *uploadFlag, dataS3FolderKey, hdf5S3FolderKey, hdf5Index, true)
 	hdf5Index++
 	fmt.Printf("%d valid demos / %d total demos, %d hdf5s\n", validDemos, totalDemos, hdf5Index)
 }
@@ -194,7 +196,7 @@ func clearTmpCSVFolder() {
 	}
 }
 
-func covertCSVToHDF5(dataName string, uploadFlag bool, dataS3FolderKey string, hdf5S3FolderKey string, hdf5Index int,
+func convertCSVToHDF5(dataName string, uploadFlag bool, dataS3FolderKey string, hdf5S3FolderKey string, hdf5Index int,
 	finalWrite bool) {
 	currentPath, err := os.Getwd()
 	if err != nil {

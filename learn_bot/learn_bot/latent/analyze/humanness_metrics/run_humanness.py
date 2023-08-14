@@ -63,7 +63,6 @@ def run_humanness():
           f"learned {rollout_humanness_metrics.distance_to_nearest_enemy.max()}, "
           f"hand-crafted {heuristics_humanness_metrics.distance_to_nearest_enemy.max()}, "
           f"default {default_humanness_metrics.distance_to_nearest_enemy.max()}")
-    exit(0)
 
     set_pd_print_options()
 
