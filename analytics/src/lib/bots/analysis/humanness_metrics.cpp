@@ -230,6 +230,10 @@ namespace csknow::humanness_metrics {
                                 distanceToNearestEnemyWhenFiring.push_back(nearestEnemyDistance);
                             }
 
+                            if (nearestEnemyDistance > 1e7) {
+                                std::cout << "bad nearest enemy distance " << nearestEnemyDistance
+                                    << " game tick number " << ticks.gameTickNumber[tickIndex] << std::endl;
+                            }
                             distanceToNearestEnemy.push_back(nearestEnemyDistance);
                             if (victimsThisTick.count(playerId)) {
                                 if (nearestTeammateDistance != std::numeric_limits<float>::max()) {

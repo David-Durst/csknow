@@ -57,9 +57,9 @@ class HumannessMetrics:
         elif data_option == HumannessDataOptions.ALL_TRAIN:
             hdf5_paths = all_train_humanness_hdf5_data_paths
         elif data_option == HumannessDataOptions.HEURISTIC:
-            hdf5_paths = heuristic_humanness_hdf5_data_path
+            hdf5_paths = [heuristic_humanness_hdf5_data_path]
         else:
-            hdf5_paths = default_humanness_hdf5_data_path
+            hdf5_paths = [default_humanness_hdf5_data_path]
 
         first_file: bool = True
         for hdf5_path in hdf5_paths:

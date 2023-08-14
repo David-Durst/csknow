@@ -43,11 +43,13 @@ def plot_metric(axs, metric_index: int, human_metric: np.ndarray, learned_bot_me
 def plot_sums(axs, metric_index: int, human_metric: np.ndarray, learned_bot_metric: np.ndarray,
               heuristic_bot_metric: np.ndarray, default_bot_metric: np.ndarray, metric_name: str):
     axs[metric_index, 0].set_title(metric_name)
-    bot_value = learned_bot_metric.sum() / len(learned_bot_metric)
+    learned_bot_value = learned_bot_metric.sum() / len(learned_bot_metric)
     human_value = human_metric.sum() / len(human_metric)
+    heuristic_bot_value = heuristic_bot_metric.sum() / len(heuristic_bot_metric)
+    default_bot_value = default_bot_metric.sum() / len(default_bot_metric)
     players = [learned_bot_name + metric_name, human_name + metric_name, heuristic_bot_name + metric_name,
                default_bot_name + metric_name]
-    values = [bot_value, human_value, heuristic_bot_metric, default_bot_metric]
+    values = [learned_bot_value, human_value, heuristic_bot_value, default_bot_value]
     axs[metric_index, 0].bar(players, values)
     axs[metric_index, 0].set_ylim(0., 1.)
 
@@ -57,6 +59,11 @@ def run_humanness():
     rollout_humanness_metrics = HumannessMetrics(HumannessDataOptions.ROLLOUT)
     heuristics_humanness_metrics = HumannessMetrics(HumannessDataOptions.HEURISTIC)
     default_humanness_metrics = HumannessMetrics(HumannessDataOptions.DEFAULT)
+    print(f"max distance to nearest enemy human {all_train_humanness_metrics.distance_to_nearest_enemy.max()}, "
+          f"learned {rollout_humanness_metrics.distance_to_nearest_enemy.max()}, "
+          f"hand-crafted {heuristics_humanness_metrics.distance_to_nearest_enemy.max()}, "
+          f"default {default_humanness_metrics.distance_to_nearest_enemy.max()}")
+    exit(0)
 
     set_pd_print_options()
 
@@ -112,84 +119,122 @@ def run_humanness():
     plot_metric(axs, 7,
                 all_train_humanness_metrics.weapon_only_scaled_speed_when_firing,
                 rollout_humanness_metrics.weapon_only_scaled_speed_when_firing,
+                heuristics_humanness_metrics.weapon_only_scaled_speed_when_firing,
+                default_humanness_metrics.weapon_only_scaled_speed_when_firing,
                 weapon_only_scaled_speed_when_firing_name, pct_bins=True)
     plot_metric(axs, 8,
                 all_train_humanness_metrics.weapon_only_scaled_speed_when_shot,
                 rollout_humanness_metrics.weapon_only_scaled_speed_when_shot,
+                heuristics_humanness_metrics.weapon_only_scaled_speed_when_shot,
+                default_humanness_metrics.weapon_only_scaled_speed_when_shot,
                 weapon_only_scaled_speed_when_shot_name, pct_bins=True)
 
     plot_metric(axs, 9,
                 all_train_humanness_metrics.distance_to_nearest_teammate,
                 rollout_humanness_metrics.distance_to_nearest_teammate,
+                heuristics_humanness_metrics.distance_to_nearest_teammate,
+                default_humanness_metrics.distance_to_nearest_teammate,
                 distance_to_nearest_teammate_name)
     plot_metric(axs, 10,
                 all_train_humanness_metrics.distance_to_nearest_teammate_when_firing,
                 rollout_humanness_metrics.distance_to_nearest_teammate_when_firing,
+                heuristics_humanness_metrics.distance_to_nearest_teammate_when_firing,
+                default_humanness_metrics.distance_to_nearest_teammate_when_firing,
                 distance_to_nearest_teammate_when_firing_name)
     plot_metric(axs, 11,
                 all_train_humanness_metrics.distance_to_nearest_teammate_when_shot,
                 rollout_humanness_metrics.distance_to_nearest_teammate_when_shot,
+                heuristics_humanness_metrics.distance_to_nearest_teammate_when_shot,
+                default_humanness_metrics.distance_to_nearest_teammate_when_shot,
                 distance_to_nearest_teammate_when_shot_name)
 
     plot_metric(axs, 12,
                 all_train_humanness_metrics.distance_to_nearest_enemy,
                 rollout_humanness_metrics.distance_to_nearest_enemy,
+                heuristics_humanness_metrics.distance_to_nearest_enemy,
+                default_humanness_metrics.distance_to_nearest_enemy,
                 distance_to_nearest_enemy_name)
     plot_metric(axs, 13,
                 all_train_humanness_metrics.distance_to_nearest_enemy_when_firing,
                 rollout_humanness_metrics.distance_to_nearest_enemy_when_firing,
+                heuristics_humanness_metrics.distance_to_nearest_enemy_when_firing,
+                default_humanness_metrics.distance_to_nearest_enemy_when_firing,
                 distance_to_nearest_enemy_when_firing_name)
     plot_metric(axs, 14,
                 all_train_humanness_metrics.distance_to_nearest_enemy_when_shot,
                 rollout_humanness_metrics.distance_to_nearest_enemy_when_shot,
+                heuristics_humanness_metrics.distance_to_nearest_enemy_when_shot,
+                default_humanness_metrics.distance_to_nearest_enemy_when_shot,
                 distance_to_nearest_enemy_when_shot_name)
 
     plot_metric(axs, 15,
                 all_train_humanness_metrics.distance_to_attacker_when_shot,
                 rollout_humanness_metrics.distance_to_attacker_when_shot,
+                heuristics_humanness_metrics.distance_to_attacker_when_shot,
+                default_humanness_metrics.distance_to_attacker_when_shot,
                 distance_to_attacker_when_shot_name)
 
     plot_metric(axs, 16,
                 all_train_humanness_metrics.distance_to_cover,
                 rollout_humanness_metrics.distance_to_cover,
+                heuristics_humanness_metrics.distance_to_cover,
+                default_humanness_metrics.distance_to_cover,
                 distance_to_cover_name)
     plot_metric(axs, 17,
                 all_train_humanness_metrics.distance_to_cover_when_enemy_visible_no_fov,
                 rollout_humanness_metrics.distance_to_cover_when_enemy_visible_no_fov,
+                heuristics_humanness_metrics.distance_to_cover_when_enemy_visible_no_fov,
+                default_humanness_metrics.distance_to_cover_when_enemy_visible_no_fov,
                 distance_to_cover_when_enemy_visible_no_fov_name)
     plot_metric(axs, 18,
                 all_train_humanness_metrics.distance_to_cover_when_enemy_visible_fov,
                 rollout_humanness_metrics.distance_to_cover_when_enemy_visible_fov,
+                heuristics_humanness_metrics.distance_to_cover_when_enemy_visible_fov,
+                default_humanness_metrics.distance_to_cover_when_enemy_visible_fov,
                 distance_to_cover_when_enemy_visible_fov_name)
     plot_metric(axs, 19,
                 all_train_humanness_metrics.distance_to_cover_when_firing,
                 rollout_humanness_metrics.distance_to_cover_when_firing,
+                heuristics_humanness_metrics.distance_to_cover_when_firing,
+                default_humanness_metrics.distance_to_cover_when_firing,
                 distance_to_cover_when_firing_name)
     plot_metric(axs, 20,
                 all_train_humanness_metrics.distance_to_cover_when_shot,
                 rollout_humanness_metrics.distance_to_cover_when_shot,
+                heuristics_humanness_metrics.distance_to_cover_when_shot,
+                default_humanness_metrics.distance_to_cover_when_shot,
                 distance_to_cover_when_shot_name)
 
     plot_metric(axs, 21,
                 all_train_humanness_metrics.pct_time_max_speed_ct,
                 rollout_humanness_metrics.pct_time_max_speed_ct,
+                heuristics_humanness_metrics.pct_time_max_speed_ct,
+                default_humanness_metrics.pct_time_max_speed_ct,
                 pct_time_max_speed_ct_name, pct_bins=True)
     plot_metric(axs, 22,
                 all_train_humanness_metrics.pct_time_max_speed_t,
                 rollout_humanness_metrics.pct_time_max_speed_t,
+                heuristics_humanness_metrics.pct_time_max_speed_t,
+                default_humanness_metrics.pct_time_max_speed_t,
                 pct_time_max_speed_t_name, pct_bins=True)
     plot_metric(axs, 23,
                 all_train_humanness_metrics.pct_time_still_ct,
                 rollout_humanness_metrics.pct_time_still_ct,
+                heuristics_humanness_metrics.pct_time_still_ct,
+                default_humanness_metrics.pct_time_still_ct,
                 pct_time_still_ct_name, pct_bins=True)
     plot_metric(axs, 24,
                 all_train_humanness_metrics.pct_time_still_t,
                 rollout_humanness_metrics.pct_time_still_t,
+                heuristics_humanness_metrics.pct_time_still_t,
+                default_humanness_metrics.pct_time_still_t,
                 pct_time_still_t_name, pct_bins=True)
     plot_sums(axs, 25,
-                all_train_humanness_metrics.ct_wins,
-                rollout_humanness_metrics.ct_wins,
-                ct_wins_name)
+              all_train_humanness_metrics.ct_wins,
+              rollout_humanness_metrics.ct_wins,
+              heuristics_humanness_metrics.ct_wins,
+              default_humanness_metrics.ct_wins,
+              ct_wins_name)
 
     os.makedirs(humanness_plots_path, exist_ok=True)
     plt.savefig(humanness_plots_path / 'humanness_metrics.png')
