@@ -38,6 +38,18 @@ pct_time_still_t_name = "pct time still t"
 ct_wins_name = "ct wins"
 ct_wins_title = "Offense Wins"
 
+round_id_per_pat_name = "round id per pat"
+round_id_per_firing_pat_name = "round id per firing pat"
+round_id_per_shot_pat_name = "round id per shot pat"
+round_id_per_nearest_teammate_name = "round id per nearest teammate"
+round_id_per_nearest_teammate_firing_name = "round id per nearest teammate firing"
+round_id_per_nearest_teammate_shot_name = "round id per nearest teammate shot"
+round_id_per_enemy_visible_no_fov_pat_name = "round id per enemy visible no fov pat"
+round_id_per_enemy_visible_fov_pat_name = "round id per enemy visible fov pat"
+round_id_per_firing_to_teammate_seeing_enemy_name = "round id per firing to teammate seeing enemy"
+round_id_per_shot_to_teammate_seeing_enemy_name = "round id per shot to teammate seeing enemy"
+round_id_per_round_name = "round id per round"
+
 rollout_humanness_hdf5_data_path = Path(__file__).parent / '..' / '..' / '..' / '..' / '..' / 'analytics' / 'rollout_outputs' / 'humannessMetrics.hdf5'
 heuristic_humanness_hdf5_data_path = Path(__file__).parent / '..' / '..' / '..' / '..' / '..' / 'analytics' / 'rollout_outputs' / 'humannessMetrics_heuristic.hdf5'
 default_humanness_hdf5_data_path = Path(__file__).parent / '..' / '..' / '..' / '..' / '..' / 'analytics' / 'rollout_outputs' / 'humannessMetrics_default.hdf5'

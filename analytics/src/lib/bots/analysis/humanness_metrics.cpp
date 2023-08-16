@@ -295,11 +295,13 @@ namespace csknow::humanness_metrics {
 
                             if (nearestTeammateDistance != std::numeric_limits<float>::max()) {
                                 distanceToNearestTeammate.push_back(nearestTeammateDistance);
+                                roundIdPerNearestTeammate.push_back(roundIndex);
                             }
                             if (shootersThisTick.count(playerId)) {
                                 // filter out times when no teammate exists
                                 if (nearestTeammateDistance != std::numeric_limits<float>::max()) {
                                     distanceToNearestTeammateWhenFiring.push_back(nearestTeammateDistance);
+                                    roundIdPerNearestTeammateFiring.push_back(roundIndex);
                                 }
                                 distanceToNearestEnemyWhenFiring.push_back(nearestEnemyDistance);
                             }
@@ -312,6 +314,7 @@ namespace csknow::humanness_metrics {
                             if (victimsThisTick.count(playerId)) {
                                 if (nearestTeammateDistance != std::numeric_limits<float>::max()) {
                                     distanceToNearestTeammateWhenShot.push_back(nearestTeammateDistance);
+                                    roundIdPerNearestTeammateShot.push_back(roundIndex);
                                 }
                                 distanceToNearestEnemyWhenShot.push_back(nearestEnemyDistance);
                                 distanceToAttackerWhenShot.push_back(attackerForVictimDistance);
@@ -426,6 +429,9 @@ namespace csknow::humanness_metrics {
         file.createDataSet("/data/round id per pat", roundIdPerPAT, hdf5FlatCreateProps);
         file.createDataSet("/data/round id per firing pat", roundIdPerFiringPAT, hdf5FlatCreateProps);
         file.createDataSet("/data/round id per shot pat", roundIdPerShotPAT, hdf5FlatCreateProps);
+        file.createDataSet("/data/round id per nearest teammate", roundIdPerNearestTeammate, hdf5FlatCreateProps);
+        file.createDataSet("/data/round id per nearest teammate firing", roundIdPerNearestTeammateFiring, hdf5FlatCreateProps);
+        file.createDataSet("/data/round id per nearest teammate shot", roundIdPerNearestTeammateShot, hdf5FlatCreateProps);
         file.createDataSet("/data/round id per enemy visible no fov pat", roundIdPerEnemyVisibleNoFOVPAT,
                            hdf5FlatCreateProps);
         file.createDataSet("/data/round id per enemy visible fov pat", roundIdPerEnemyVisibleFOVPAT,

@@ -49,6 +49,7 @@ namespace csknow::humanness_metrics {
 
         // round ids for filtering to push rounds
         vector<int64_t> roundIdPerPAT, roundIdPerFiringPAT, roundIdPerShotPAT,
+            roundIdPerNearestTeammate, roundIdPerNearestTeammateFiring, roundIdPerNearestTeammateShot,
             roundIdPerEnemyVisibleNoFOVPAT, roundIdPerEnemyVisibleFOVPAT,
             roundIdPerFiringToTeammateSeeingEnemy, roundIdPerShotToTeammateSeeingEnemy;
         vector<int64_t> roundIdPerRound;
