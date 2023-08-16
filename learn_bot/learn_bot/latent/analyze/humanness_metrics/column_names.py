@@ -31,6 +31,9 @@ distance_to_cover_when_enemy_visible_fov_name = "distance to cover when enemy vi
 distance_to_cover_when_firing_name = "distance to cover when firing"
 distance_to_cover_when_shot_name = "distance to cover when shot"
 
+time_from_firing_to_teammate_seeing_enemy_fov_name = "time from firing to teammate seeing enemy fov"
+time_from_shot_to_teammate_seeing_enemy_fov_name = "time from shot to teammate seeing enemy fov"
+
 pct_time_max_speed_ct_name = "pct time max speed ct"
 pct_time_max_speed_t_name = "pct time max speed t"
 pct_time_still_ct_name = "pct time still ct"

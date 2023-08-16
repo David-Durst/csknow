@@ -15,6 +15,18 @@ HDF5SourceOptions = Union[Path, HDF5Wrapper]
 
 train_test_split_folder_path = Path(__file__).parent / 'saved_train_test_splits'
 
+
+def absolute_to_relative_train_test_key(p: Path) -> Path:
+    return Path(p.parent.name) / p.name
+
+
+def make_train_test_splits_relative(train_test_splits: Dict[Path, TrainTestSplit]) -> Dict[Path, TrainTestSplit]:
+    result = {}
+    for k, v in train_test_splits.items():
+        result[absolute_to_relative_train_test_key(k)] = v
+    return result
+
+
 class MultiHDF5Wrapper:
     hdf5_wrappers: List[HDF5Wrapper]
     # subsets of main hdf5_wrappers for train/test splits
@@ -68,7 +80,7 @@ class MultiHDF5Wrapper:
         if self.train_test_split_path is not None and self.train_test_split_path.exists():
             if self.diff_train_test:
                 with open(self.train_test_split_path, "rb") as pickle_file:
-                    self.train_test_splits = pickle.load(pickle_file)
+                    self.train_test_splits = make_train_test_splits_relative(pickle.load(pickle_file))
             else:
                 raise Exception("must have different train and test to repeat")
 
@@ -77,10 +89,11 @@ class MultiHDF5Wrapper:
         for hdf5_wrapper in self.hdf5_wrappers:
             if self.diff_train_test:
                 # if already loaded, use that, otherwise create new ones
-                if hdf5_wrapper.hdf5_path in self.train_test_splits:
+                hdf5_key = absolute_to_relative_train_test_key(hdf5_wrapper.hdf5_path)
+                if hdf5_key in self.train_test_splits:
                     train_test_split = \
                         train_test_split_by_col_ids(hdf5_wrapper.id_df, round_id_column,
-                                                    self.train_test_splits[hdf5_wrapper.hdf5_path].train_group_ids)
+                                                    self.train_test_splits[hdf5_key].train_group_ids)
                 else:
                     train_test_split = train_test_split_by_col(hdf5_wrapper.id_df, round_id_column)
                     new_train_test_split = True
@@ -99,14 +112,15 @@ class MultiHDF5Wrapper:
                 pickle.dump(self.train_test_splits, pickle_file)
 
     def record_train_test_split(self, hdf5_wrapper: HDF5Wrapper, train_test_split: TrainTestSplit):
-        self.train_test_splits[hdf5_wrapper.hdf5_path] = train_test_split
+        hdf5_key = absolute_to_relative_train_test_key(hdf5_wrapper.hdf5_path)
+        self.train_test_splits[hdf5_key] = train_test_split
         train_hdf5_wrapper = hdf5_wrapper.clone()
         train_hdf5_wrapper.limit(train_test_split.train_predicate)
         self.train_hdf5_wrappers.append(train_hdf5_wrapper)
         test_hdf5_wrapper = hdf5_wrapper.clone()
         test_hdf5_wrapper.limit(~train_test_split.train_predicate)
         self.test_hdf5_wrappers.append(test_hdf5_wrapper)
-        self.test_group_ids[hdf5_wrapper.hdf5_path] = get_test_col_ids(test_hdf5_wrapper.id_df, round_id_column)
+        self.test_group_ids[hdf5_key] = get_test_col_ids(test_hdf5_wrapper.id_df, round_id_column)
 
     def create_np_arrays(self, cts: IOColumnTransformers, load_output_data: bool = True):
         for hdf5_wrapper in self.hdf5_wrappers:

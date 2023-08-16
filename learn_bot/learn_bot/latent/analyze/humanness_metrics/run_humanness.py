@@ -54,10 +54,10 @@ def plot_sums(axs, metric_index: int, human_metric: np.ndarray, learned_bot_metr
 
 
 def run_humanness():
-    all_train_humanness_metrics = HumannessMetrics(HumannessDataOptions.ALL_TRAIN)
-    rollout_humanness_metrics = HumannessMetrics(HumannessDataOptions.ROLLOUT)
-    heuristics_humanness_metrics = HumannessMetrics(HumannessDataOptions.HEURISTIC)
-    default_humanness_metrics = HumannessMetrics(HumannessDataOptions.DEFAULT)
+    all_train_humanness_metrics = HumannessMetrics(HumannessDataOptions.ALL_TRAIN, True)
+    rollout_humanness_metrics = HumannessMetrics(HumannessDataOptions.ROLLOUT, False)
+    heuristics_humanness_metrics = HumannessMetrics(HumannessDataOptions.HEURISTIC, False)
+    default_humanness_metrics = HumannessMetrics(HumannessDataOptions.DEFAULT, False)
     print(f"max distance to nearest enemy human {all_train_humanness_metrics.distance_to_nearest_enemy.max()}, "
           f"learned {rollout_humanness_metrics.distance_to_nearest_enemy.max()}, "
           f"hand-crafted {heuristics_humanness_metrics.distance_to_nearest_enemy.max()}, "
