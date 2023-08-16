@@ -135,6 +135,7 @@ namespace csknow::humanness_metrics {
                                 timeFromFiringToTeammateSeeingEnemyFOV.push_back(static_cast<float>(
                                         secondsBetweenTicks(tickRates, startTickIndex, tickIndex)));
                                 firingTeammatesToClear.push_back(firingTeammateId);
+                                roundIdPerFiringToTeammateSeeingEnemy.push_back(roundIndex);
                             }
                         }
                         for (const auto & firingTeammateId : firingTeammatesToClear) {
@@ -148,6 +149,7 @@ namespace csknow::humanness_metrics {
                                 timeFromShotToTeammateSeeingEnemyFOV.push_back(static_cast<float>(
                                         secondsBetweenTicks(tickRates, startTickIndex, tickIndex)));
                                 shotTeammatesToClear.push_back(shotTeammateId);
+                                roundIdPerShotToTeammateSeeingEnemy.push_back(roundIndex);
                             }
                         }
                         for (const auto & shotTeammateId : shotTeammatesToClear) {
@@ -342,6 +344,20 @@ namespace csknow::humanness_metrics {
                             if (victimsThisTick.count(playerId)) {
                                 distanceToCoverWhenShot.push_back(minDistanceToCover);
                             }
+
+                            roundIdPerPAT.push_back(roundIndex);
+                            if (shootersThisTick.count(playerId)) {
+                                roundIdPerFiringPAT.push_back(roundIndex);
+                            }
+                            if (victimsThisTick.count(playerId)) {
+                                roundIdPerShotPAT.push_back(roundIndex);
+                            }
+                            if (playerCanSeeEnemyNoFOV.count(playerId)) {
+                                roundIdPerEnemyVisibleNoFOVPAT.push_back(roundIndex);
+                            }
+                            if (playerCanSeeEnemyFOV.count(playerId)) {
+                                roundIdPerEnemyVisibleFOVPAT.push_back(roundIndex);
+                            }
                         }
                     }
                 }
@@ -354,6 +370,7 @@ namespace csknow::humanness_metrics {
                 pctTimeMaxSpeedT.push_back(static_cast<float>(numMaxSpeedTicksT) / static_cast<float>(numValidTicksT));
                 pctTimeStillT.push_back(static_cast<float>(numStillTicksT) / static_cast<float>(numValidTicksT));
                 ctWins.push_back(ctWon);
+                roundIdPerRound.push_back(roundIndex);
             }
 
             roundsProcessed++;
@@ -405,5 +422,19 @@ namespace csknow::humanness_metrics {
         file.createDataSet("/data/pct time still ct", pctTimeStillCT, hdf5FlatCreateProps);
         file.createDataSet("/data/pct time still t", pctTimeStillT, hdf5FlatCreateProps);
         file.createDataSet("/data/ct wins", ctWins, hdf5FlatCreateProps);
+
+        file.createDataSet("/data/round id per pat", roundIdPerPAT, hdf5FlatCreateProps);
+        file.createDataSet("/data/round id per firing pat", roundIdPerFiringPAT, hdf5FlatCreateProps);
+        file.createDataSet("/data/round id per shot pat", roundIdPerShotPAT, hdf5FlatCreateProps);
+        file.createDataSet("/data/round id per enemy visible no fov pat", roundIdPerEnemyVisibleNoFOVPAT,
+                           hdf5FlatCreateProps);
+        file.createDataSet("/data/round id per enemy visible fov pat", roundIdPerEnemyVisibleFOVPAT,
+                           hdf5FlatCreateProps);
+        file.createDataSet("/data/round id per firing to teammate seeing enemy", roundIdPerFiringToTeammateSeeingEnemy,
+                           hdf5FlatCreateProps);
+        file.createDataSet("/data/round id per shot to teammate seeing enemy", roundIdPerShotToTeammateSeeingEnemy,
+                           hdf5FlatCreateProps);
+        file.createDataSet("/data/round id per round", roundIdPerRound,
+                           hdf5FlatCreateProps);
     }
 }

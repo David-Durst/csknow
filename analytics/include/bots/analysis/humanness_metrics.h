@@ -47,6 +47,13 @@ namespace csknow::humanness_metrics {
         vector<float> pctTimeStillCT, pctTimeStillT;
         vector<bool> ctWins;
 
+        // round ids for filtering to push rounds
+        vector<int64_t> roundIdPerPAT, roundIdPerFiringPAT, roundIdPerShotPAT,
+            roundIdPerEnemyVisibleNoFOVPAT, roundIdPerEnemyVisibleFOVPAT,
+            roundIdPerFiringToTeammateSeeingEnemy, roundIdPerShotToTeammateSeeingEnemy;
+        vector<int64_t> roundIdPerRound;
+
+
         HumannessMetrics(const csknow::feature_store::TeamFeatureStoreResult & teamFeatureStoreResult,
                          const Games & games, const Rounds & rounds, const Players & players, const Ticks & ticks,
                          const PlayerAtTick & playerAtTick, const Hurt & hurt, const WeaponFire & weaponFire,
