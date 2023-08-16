@@ -16,15 +16,27 @@ namespace csknow::humanness_metrics {
     }
 
     HumannessMetrics::HumannessMetrics(const csknow::feature_store::TeamFeatureStoreResult &teamFeatureStoreResult,
-                                       const Games &, const Rounds & rounds, const Players &, const Ticks & ticks,
+                                       const Games & games, const Rounds & rounds, const Players & players, const Ticks & ticks,
                                        const PlayerAtTick & playerAtTick, const Hurt & hurt, const WeaponFire & weaponFire,
                                        const ReachableResult & reachable, const VisPoints & visPoints) {
         std::atomic<int64_t> roundsProcessed = 0;
         for (int64_t roundIndex = 0; roundIndex < rounds.size; roundIndex++) {
+            TickRates tickRates = computeTickRates(games, rounds, roundIndex);
+
             // record round metrics only if round has at least one valid tick
             bool roundHasValidTick = false, ctWon = false;
             size_t numValidTicksCT = 0, numValidTicksT = 0;
             size_t numMaxSpeedTicksCT = 0, numMaxSpeedTicksT = 0, numStillTicksCT = 0, numStillTicksT = 0;
+
+            map<TeamId, map<int64_t, int64_t>> teamToPlayerToLastTimeFiring, teamToPlayerToLastTimeShot;
+            teamToPlayerToLastTimeFiring[ENGINE_TEAM_CT] = {};
+            teamToPlayerToLastTimeShot[ENGINE_TEAM_CT] = {};
+            teamToPlayerToLastTimeFiring[ENGINE_TEAM_T] = {};
+            teamToPlayerToLastTimeShot[ENGINE_TEAM_T] = {};
+
+            // keep player to team across ticks because need it on frame when players die. Dead players aren't
+            // recorded by team feature store. OFC victim on frame when die, and can shoot on frame when dying
+            map<int64_t, TeamId> playerToTeamId;
 
             for (int64_t tickIndex = rounds.ticksPerRound[roundIndex].minId;
                  tickIndex <= rounds.ticksPerRound[roundIndex].maxId; tickIndex++) {
@@ -52,22 +64,26 @@ namespace csknow::humanness_metrics {
                         }
                     }
 
-                    // get positions in area id form and enemy visible
+                    // get positions in area id form, enemy visible, and team
                     map<int64_t, int64_t> playerToAreaIndex;
                     map<int64_t, int64_t> playerToAreaId;
                     set<int64_t> playerCanSeeEnemyNoFOV, playerCanSeeEnemyFOV;
                     for (int i = 0; i < csknow::feature_store::max_enemies; i++) {
                         if (teamFeatureStoreResult.nonDecimatedCTData[i].playerId[tickIndex] != INVALID_ID) {
-                            playerToAreaIndex[teamFeatureStoreResult.nonDecimatedCTData[i].playerId[tickIndex]] =
+                            int64_t playerId = teamFeatureStoreResult.nonDecimatedCTData[i].playerId[tickIndex];
+                            playerToAreaIndex[playerId] =
                                     teamFeatureStoreResult.nonDecimatedCTData[i].areaIndex[tickIndex];
-                            playerToAreaId[teamFeatureStoreResult.nonDecimatedCTData[i].playerId[tickIndex]] =
+                            playerToAreaId[playerId] =
                                     teamFeatureStoreResult.nonDecimatedCTData[i].areaId[tickIndex];
+                            playerToTeamId[playerId] = ENGINE_TEAM_CT;
                         }
                         if (teamFeatureStoreResult.nonDecimatedTData[i].playerId[tickIndex] != INVALID_ID) {
-                            playerToAreaIndex[teamFeatureStoreResult.nonDecimatedTData[i].playerId[tickIndex]] =
+                            int64_t playerId = teamFeatureStoreResult.nonDecimatedTData[i].playerId[tickIndex];
+                            playerToAreaIndex[playerId] =
                                     teamFeatureStoreResult.nonDecimatedTData[i].areaIndex[tickIndex];
-                            playerToAreaId[teamFeatureStoreResult.nonDecimatedTData[i].playerId[tickIndex]] =
+                            playerToAreaId[playerId] =
                                     teamFeatureStoreResult.nonDecimatedTData[i].areaId[tickIndex];
+                            playerToTeamId[playerId] = ENGINE_TEAM_T;
                         }
                         if (teamFeatureStoreResult.nonDecimatedCTData[i].noFOVEnemyVisible[tickIndex]) {
                             playerCanSeeEnemyNoFOV.insert(teamFeatureStoreResult.nonDecimatedCTData[i].playerId[tickIndex]);
@@ -83,7 +99,63 @@ namespace csknow::humanness_metrics {
                         }
                     }
 
-                    // get who's alive and their
+                    // start time events based on firing/shoot -> teammate seeing enemy
+                    for (const auto & shooter : shootersThisTick) {
+                        if (!playerToTeamId.count(shooter)) {
+                            std::cout << "shooter " << players.name[players.idOffset + shooter] << " without team, game tick id " << ticks.gameTickNumber[tickIndex] << std::endl;
+                        }
+                        TeamId teamId = playerToTeamId[shooter];
+                        // don't add if already started event from prior shot that hasn't finished
+                        if (!teamToPlayerToLastTimeFiring[teamId].count(shooter)) {
+                            teamToPlayerToLastTimeFiring[teamId][shooter] = tickIndex;
+                        }
+                    }
+
+                    for (const auto & victim : victimsThisTick) {
+                        if (!playerToTeamId.count(victim)) {
+                            std::cout << "victim " << players.name[players.idOffset + victim] << " without team, game tick id " << ticks.gameTickNumber[tickIndex] << std::endl;
+                        }
+                        TeamId teamId = playerToTeamId[victim];
+                        // don't add if already started event from prior shot that hasn't finished
+                        if (!teamToPlayerToLastTimeShot[teamId].count(victim)) {
+                            teamToPlayerToLastTimeShot[teamId][victim] = tickIndex;
+                        }
+                    }
+
+                    // finish time events based on firing/shoot -> teammate seeing enemy
+                    // finish after start so can handle 0 tick events where fire/shot on same tick
+                    // won't close events where shot but never have teammate see enemey because those are
+                    // just end of round when last players are alive, not baits
+                    for (const auto & playerSeeingEnemy : playerCanSeeEnemyFOV) {
+                        TeamId teamId = playerToTeamId[playerSeeingEnemy];
+                        vector<int64_t> firingTeammatesToClear;
+                        for (const auto & [firingTeammateId, startTickIndex] : teamToPlayerToLastTimeFiring[teamId]) {
+                            // don't count if same person sees and shoots enemy
+                            if (firingTeammateId != playerSeeingEnemy) {
+                                timeFromFiringToTeammateSeeingEnemyFOV.push_back(static_cast<float>(
+                                        secondsBetweenTicks(tickRates, startTickIndex, tickIndex)));
+                                firingTeammatesToClear.push_back(firingTeammateId);
+                            }
+                        }
+                        for (const auto & firingTeammateId : firingTeammatesToClear) {
+                            teamToPlayerToLastTimeFiring[teamId].erase(firingTeammateId);
+                        }
+
+                        vector<int64_t> shotTeammatesToClear;
+                        for (const auto & [shotTeammateId, startTickIndex] : teamToPlayerToLastTimeShot[teamId]) {
+                            // don't count if same person sees and shoots enemy
+                            if (shotTeammateId != playerSeeingEnemy) {
+                                timeFromShotToTeammateSeeingEnemyFOV.push_back(static_cast<float>(
+                                        secondsBetweenTicks(tickRates, startTickIndex, tickIndex)));
+                                shotTeammatesToClear.push_back(shotTeammateId);
+                            }
+                        }
+                        for (const auto & shotTeammateId : shotTeammatesToClear) {
+                            teamToPlayerToLastTimeShot[teamId].erase(shotTeammateId);
+                        }
+                    }
+
+                    // get who's alive and their area ids
                     map<int64_t, int16_t> playerToTeam;
                     map<int64_t, bool> playerToAlive;
                     vector<AreaId> ctAreaIds, tAreaIds;
@@ -107,7 +179,7 @@ namespace csknow::humanness_metrics {
                     coverForT.flip();
                     coverForCT.flip();
 
-                    // record ticks for entire round metrics
+                    // compute metrics that require player at tick data (positions/velocities)
                     for (int64_t patIndex = ticks.patPerTick[tickIndex].minId;
                          patIndex != -1 && patIndex <= ticks.patPerTick[tickIndex].maxId; patIndex++) {
                         if (playerAtTick.isAlive[patIndex]) {
@@ -322,6 +394,11 @@ namespace csknow::humanness_metrics {
         file.createDataSet("/data/distance to cover when enemy visible fov", distanceToCoverWhenEnemyVisibleFOV, hdf5FlatCreateProps);
         file.createDataSet("/data/distance to cover when firing", distanceToCoverWhenFiring, hdf5FlatCreateProps);
         file.createDataSet("/data/distance to cover when shot", distanceToCoverWhenShot, hdf5FlatCreateProps);
+
+        file.createDataSet("/data/time from firing to teammate seeing enemy fov", timeFromFiringToTeammateSeeingEnemyFOV,
+                           hdf5FlatCreateProps);
+        file.createDataSet("/data/time from shot to teammate seeing enemy fov", timeFromShotToTeammateSeeingEnemyFOV,
+                           hdf5FlatCreateProps);
 
         file.createDataSet("/data/pct time max speed ct", pctTimeMaxSpeedCT, hdf5FlatCreateProps);
         file.createDataSet("/data/pct time max speed t", pctTimeMaxSpeedT, hdf5FlatCreateProps);

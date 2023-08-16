@@ -39,6 +39,9 @@ namespace csknow::humanness_metrics {
         vector<float> distanceToCoverWhenFiring;
         vector<float> distanceToCoverWhenShot;
 
+        vector<float> timeFromFiringToTeammateSeeingEnemyFOV;
+        vector<float> timeFromShotToTeammateSeeingEnemyFOV;
+
         // per round metrics
         vector<float> pctTimeMaxSpeedCT, pctTimeMaxSpeedT;
         vector<float> pctTimeStillCT, pctTimeStillT;

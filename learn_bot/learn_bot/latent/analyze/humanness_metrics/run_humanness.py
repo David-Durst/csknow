@@ -47,8 +47,7 @@ def plot_sums(axs, metric_index: int, human_metric: np.ndarray, learned_bot_metr
     human_value = human_metric.sum() / len(human_metric)
     heuristic_bot_value = heuristic_bot_metric.sum() / len(heuristic_bot_metric)
     default_bot_value = default_bot_metric.sum() / len(default_bot_metric)
-    players = [learned_bot_name + metric_name, human_name + metric_name, heuristic_bot_name + metric_name,
-               default_bot_name + metric_name]
+    players = [learned_bot_name, human_name, heuristic_bot_name, default_bot_name]
     values = [learned_bot_value, human_value, heuristic_bot_value, default_bot_value]
     axs[metric_index, 0].bar(players, values)
     axs[metric_index, 0].set_ylim(0., 1.)
@@ -233,7 +232,7 @@ def run_humanness():
               rollout_humanness_metrics.ct_wins,
               heuristics_humanness_metrics.ct_wins,
               default_humanness_metrics.ct_wins,
-              ct_wins_name)
+              ct_wins_title)
 
     os.makedirs(humanness_plots_path, exist_ok=True)
     plt.savefig(humanness_plots_path / 'humanness_metrics.png')

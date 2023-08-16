@@ -36,6 +36,7 @@ pct_time_max_speed_t_name = "pct time max speed t"
 pct_time_still_ct_name = "pct time still ct"
 pct_time_still_t_name = "pct time still t"
 ct_wins_name = "ct wins"
+ct_wins_title = "Offense Wins"
 
 rollout_humanness_hdf5_data_path = Path(__file__).parent / '..' / '..' / '..' / '..' / '..' / 'analytics' / 'rollout_outputs' / 'humannessMetrics.hdf5'
 heuristic_humanness_hdf5_data_path = Path(__file__).parent / '..' / '..' / '..' / '..' / '..' / 'analytics' / 'rollout_outputs' / 'humannessMetrics_heuristic.hdf5'
