@@ -8,7 +8,7 @@ from learn_bot.latent.analyze.process_trajectory_comparison import set_pd_print_
 import matplotlib.pyplot as plt
 
 fig_length = 6
-num_figs = 26
+num_figs = 28
 num_player_types = 4
 learned_bot_name = "Learned Bot "
 human_name = "Human "
@@ -202,32 +202,44 @@ def run_humanness():
                 heuristics_humanness_metrics.distance_to_cover_when_shot,
                 default_humanness_metrics.distance_to_cover_when_shot,
                 distance_to_cover_when_shot_name)
-
     plot_metric(axs, 21,
+                all_train_humanness_metrics.time_from_firing_to_teammate_seeing_enemy_fov,
+                rollout_humanness_metrics.time_from_firing_to_teammate_seeing_enemy_fov,
+                heuristics_humanness_metrics.time_from_firing_to_teammate_seeing_enemy_fov,
+                default_humanness_metrics.time_from_firing_to_teammate_seeing_enemy_fov,
+                time_from_firing_to_teammate_seeing_enemy_fov_name)
+    plot_metric(axs, 22,
+                all_train_humanness_metrics.time_from_shot_to_teammate_seeing_enemy_fov,
+                rollout_humanness_metrics.time_from_shot_to_teammate_seeing_enemy_fov,
+                heuristics_humanness_metrics.time_from_shot_to_teammate_seeing_enemy_fov,
+                default_humanness_metrics.time_from_shot_to_teammate_seeing_enemy_fov,
+                time_from_shot_to_teammate_seeing_enemy_fov_name)
+
+    plot_metric(axs, 23,
                 all_train_humanness_metrics.pct_time_max_speed_ct,
                 rollout_humanness_metrics.pct_time_max_speed_ct,
                 heuristics_humanness_metrics.pct_time_max_speed_ct,
                 default_humanness_metrics.pct_time_max_speed_ct,
                 pct_time_max_speed_ct_name, pct_bins=True)
-    plot_metric(axs, 22,
+    plot_metric(axs, 24,
                 all_train_humanness_metrics.pct_time_max_speed_t,
                 rollout_humanness_metrics.pct_time_max_speed_t,
                 heuristics_humanness_metrics.pct_time_max_speed_t,
                 default_humanness_metrics.pct_time_max_speed_t,
                 pct_time_max_speed_t_name, pct_bins=True)
-    plot_metric(axs, 23,
+    plot_metric(axs, 25,
                 all_train_humanness_metrics.pct_time_still_ct,
                 rollout_humanness_metrics.pct_time_still_ct,
                 heuristics_humanness_metrics.pct_time_still_ct,
                 default_humanness_metrics.pct_time_still_ct,
                 pct_time_still_ct_name, pct_bins=True)
-    plot_metric(axs, 24,
+    plot_metric(axs, 26,
                 all_train_humanness_metrics.pct_time_still_t,
                 rollout_humanness_metrics.pct_time_still_t,
                 heuristics_humanness_metrics.pct_time_still_t,
                 default_humanness_metrics.pct_time_still_t,
                 pct_time_still_t_name, pct_bins=True)
-    plot_sums(axs, 25,
+    plot_sums(axs, 27,
               all_train_humanness_metrics.ct_wins,
               rollout_humanness_metrics.ct_wins,
               heuristics_humanness_metrics.ct_wins,

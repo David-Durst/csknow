@@ -10,9 +10,14 @@ from pathlib import Path
 
 import pandas as pd
 
+from learn_bot.latent.analyze.create_test_plant_states import test_plant_states_file_name, load_data_options
 from learn_bot.latent.analyze.humanness_metrics.column_names import *
+from learn_bot.latent.engagement.column_names import round_id_column
+from learn_bot.latent.place_area.column_names import get_similarity_column
+from learn_bot.latent.place_area.load_data import LoadDataResult
 from learn_bot.latent.train import train_test_split_file_name
 from learn_bot.libs.df_grouping import TrainTestSplit
+from learn_bot.libs.hdf5_to_pd import load_hdf5_to_pd
 from learn_bot.libs.multi_hdf5_wrapper import train_test_split_folder_path, make_train_test_splits_relative, \
     absolute_to_relative_train_test_key
 
@@ -63,8 +68,7 @@ class HumannessMetrics:
     ct_wins: np.ndarray
 
     def __init__(self, data_option: HumannessDataOptions, limit_to_test: bool) -> np.ndarray:
-        with open(train_test_split_folder_path / train_test_split_file_name, "rb") as pickle_file:
-            train_test_splits: Dict[Path, TrainTestSplit] = make_train_test_splits_relative(pickle.load(pickle_file))
+        test_plant_states_df = load_hdf5_to_pd(train_test_split_folder_path / test_plant_states_file_name)
 
         # get data as numpy arrays and column names
         hdf5_paths: List[Path]
@@ -76,6 +80,15 @@ class HumannessMetrics:
             hdf5_paths = [heuristic_humanness_hdf5_data_path]
         else:
             hdf5_paths = [default_humanness_hdf5_data_path]
+
+        hdf5_to_test_round_ids: Dict[Path, List[int]] = {}
+        if limit_to_test:
+            load_data_result = LoadDataResult(load_data_options)
+            for hdf5_wrapper in load_data_result.multi_hdf5_wrapper.hdf5_wrappers:
+                round_df = hdf5_wrapper.id_df.groupby(round_id_column, as_index=False).first()
+                push_round_df = round_df[round_df[get_similarity_column(0)]]
+                hdf5_to_test_round_ids[absolute_to_relative_train_test_key(hdf5_wrapper.hdf5_path)] = \
+                    list(push_round_df[round_id_column])
 
         first_file: bool = True
         for hdf5_path in hdf5_paths:
@@ -92,9 +105,9 @@ class HumannessMetrics:
                 scaled_speed_when_firing = hdf5_data[scaled_speed_when_firing_name][...]
                 scaled_speed_when_shot = hdf5_data[scaled_speed_when_shot_name][...]
 
-                weapon_only_scaled_speed = hdf5_data[scaled_speed_name][...]
-                weapon_only_scaled_speed_when_firing = hdf5_data[scaled_speed_when_firing_name][...]
-                weapon_only_scaled_speed_when_shot = hdf5_data[scaled_speed_when_shot_name][...]
+                weapon_only_scaled_speed = hdf5_data[weapon_only_scaled_speed_name][...]
+                weapon_only_scaled_speed_when_firing = hdf5_data[weapon_only_scaled_speed_when_firing_name][...]
+                weapon_only_scaled_speed_when_shot = hdf5_data[weapon_only_scaled_speed_when_shot_name][...]
 
                 distance_to_nearest_teammate = hdf5_data[distance_to_nearest_teammate_name][...]
                 distance_to_nearest_teammate_when_firing = \
@@ -126,8 +139,6 @@ class HumannessMetrics:
                 pct_time_still_t = hdf5_data[pct_time_still_t_name][...]
                 ct_wins = hdf5_data[ct_wins_name][...]
 
-                pre_round_id_time = time.perf_counter()
-                
                 # round ids for filtering
                 round_id_per_pat = hdf5_data[round_id_per_pat_name][...]
                 round_id_per_firing_pat = hdf5_data[round_id_per_firing_pat_name][...]
@@ -145,25 +156,25 @@ class HumannessMetrics:
 
                 # filter if necessary
                 if limit_to_test:
-                    train_group_ids = train_test_splits[Path(splits_key_path)].train_group_ids
-                    test_round_id_per_pat = np.isin(round_id_per_pat, train_group_ids, invert=True)
-                    test_round_id_per_firing_pat = np.isin(round_id_per_firing_pat, train_group_ids, invert=True)
-                    test_round_id_per_shot_pat = np.isin(round_id_per_shot_pat, train_group_ids, invert=True)
+                    test_round_ids = hdf5_to_test_round_ids[Path(splits_key_path)]
+                    test_round_id_per_pat = np.isin(round_id_per_pat, test_round_ids)
+                    test_round_id_per_firing_pat = np.isin(round_id_per_firing_pat, test_round_ids)
+                    test_round_id_per_shot_pat = np.isin(round_id_per_shot_pat, test_round_ids)
                     test_round_id_per_nearest_teammate = \
-                        np.isin(round_id_per_nearest_teammate, train_group_ids, invert=True)
+                        np.isin(round_id_per_nearest_teammate, test_round_ids)
                     test_round_id_per_nearest_teammate_firing = \
-                        np.isin(round_id_per_nearest_teammate_firing, train_group_ids, invert=True)
+                        np.isin(round_id_per_nearest_teammate_firing, test_round_ids)
                     test_round_id_per_nearest_teammate_shot = \
-                        np.isin(round_id_per_nearest_teammate_shot, train_group_ids, invert=True)
+                        np.isin(round_id_per_nearest_teammate_shot, test_round_ids)
                     test_round_id_per_enemy_visible_no_fov_pat = \
-                        np.isin(round_id_per_enemy_visible_no_fov_pat, train_group_ids, invert=True)
+                        np.isin(round_id_per_enemy_visible_no_fov_pat, test_round_ids)
                     test_round_id_per_enemy_visible_fov_pat = \
-                        np.isin(round_id_per_enemy_visible_fov_pat, train_group_ids, invert=True)
+                        np.isin(round_id_per_enemy_visible_fov_pat, test_round_ids)
                     test_round_id_per_firing_to_teammate_seeing_enemy = \
-                        np.isin(round_id_per_firing_to_teammate_seeing_enemy, train_group_ids, invert=True)
+                        np.isin(round_id_per_firing_to_teammate_seeing_enemy, test_round_ids)
                     test_round_id_per_shot_to_teammate_seeing_enemy = \
-                        np.isin(round_id_per_shot_to_teammate_seeing_enemy, train_group_ids, invert=True)
-                    test_round_id_per_round = np.isin(round_id_per_round, train_group_ids, invert=True)
+                        np.isin(round_id_per_shot_to_teammate_seeing_enemy, test_round_ids)
+                    test_round_id_per_round = np.isin(round_id_per_round, test_round_ids)
 
                     unscaled_speed = unscaled_speed[test_round_id_per_pat]
                     unscaled_speed_when_firing = unscaled_speed_when_firing[test_round_id_per_firing_pat]

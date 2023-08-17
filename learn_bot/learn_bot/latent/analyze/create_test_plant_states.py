@@ -9,6 +9,7 @@ from learn_bot.latent.place_area.column_names import specific_player_place_area_
 from learn_bot.latent.place_area.load_data import LoadDataResult, LoadDataOptions
 from learn_bot.latent.train import train_test_split_file_name
 from learn_bot.libs.hdf5_to_pd import load_hdf5_to_pd
+from learn_bot.libs.multi_hdf5_wrapper import absolute_to_relative_train_test_key
 
 load_data_options = LoadDataOptions(
     use_manual_data=False,
@@ -47,7 +48,8 @@ def create_test_plant_states():
     for hdf5_wrapper in load_data_result.multi_hdf5_wrapper.hdf5_wrappers:
         df = load_hdf5_to_pd(hdf5_wrapper.hdf5_path, cols_to_get=cols_to_gets)
         id_df = hdf5_wrapper.id_df
-        train_test_split = load_data_result.multi_hdf5_wrapper.train_test_splits[hdf5_wrapper.hdf5_path]
+        train_test_split = load_data_result.multi_hdf5_wrapper.train_test_splits[
+            absolute_to_relative_train_test_key(hdf5_wrapper.hdf5_path)]
         df[plant_tick_id_column] = df.groupby(round_id_column)[tick_id_column].transform('min')
         df[get_similarity_column(0)] = id_df[get_similarity_column(0)]
         start_df = df[df[plant_tick_id_column] == df[tick_id_column]]
