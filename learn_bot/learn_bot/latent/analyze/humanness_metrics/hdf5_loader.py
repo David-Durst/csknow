@@ -254,7 +254,7 @@ class HumannessMetrics:
                     self.distance_to_cover_when_shot = distance_to_cover_when_shot
 
                     self.time_from_firing_to_teammate_seeing_enemy_fov = time_from_firing_to_teammate_seeing_enemy_fov
-                    self.time_from_shot_to_teammate_seeing_enemy_fov = time_from_firing_to_teammate_seeing_enemy_fov
+                    self.time_from_shot_to_teammate_seeing_enemy_fov = time_from_shot_to_teammate_seeing_enemy_fov
 
                     self.pct_time_max_speed_ct = pct_time_max_speed_ct
                     self.pct_time_max_speed_t = pct_time_max_speed_t

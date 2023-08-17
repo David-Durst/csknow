@@ -21,6 +21,10 @@ def plot_metric(axs, metric_index: int, human_metric: np.ndarray, learned_bot_me
                 metric_name: str, pct_bins: bool = False):
     max_value = int(ceil(max(human_metric.max(), learned_bot_metric.max(),
                              heuristic_bot_metric.max(), default_bot_metric.max())))
+    #max_value = int(ceil(max(
+    #    np.percentile(human_metric, 0.95), np.percentile(learned_bot_metric, 0.95),
+    #    np.percentile(heuristic_bot_metric, 0.95),
+    #    np.percentile(default_bot_metric, 0.95))))
     axs[metric_index, 0].set_title(learned_bot_name + metric_name)
     axs[metric_index, 1].set_title(human_name + metric_name)
     axs[metric_index, 2].set_title(heuristic_bot_name + metric_name)

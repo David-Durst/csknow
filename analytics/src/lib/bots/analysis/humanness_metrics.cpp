@@ -150,6 +150,22 @@ namespace csknow::humanness_metrics {
                                         secondsBetweenTicks(tickRates, startTickIndex, tickIndex)));
                                 shotTeammatesToClear.push_back(shotTeammateId);
                                 roundIdPerShotToTeammateSeeingEnemy.push_back(roundIndex);
+                                /*
+                                if (timeFromShotToTeammateSeeingEnemyFOV.back() == 0.) {
+                                    std::cout << "victim " << players.name[players.idOffset + shotTeammateId]
+                                        << ", teammate " << players.name[players.idOffset + playerSeeingEnemy]
+                                        << " at same time, game tick id " << ticks.gameTickNumber[tickIndex] << std::endl;
+                                }
+                                 */
+                                /*
+                                if (ticks.gameTickNumber[tickIndex] > 122999 && ticks.gameTickNumber[tickIndex] < 123600) {
+                                    std::cout << "victim " << players.name[players.idOffset + shotTeammateId]
+                                              << ", teammate " << players.name[players.idOffset + playerSeeingEnemy]
+                                              << " time delta " << timeFromShotToTeammateSeeingEnemyFOV.back()
+                                              << " start game tick id " << ticks.gameTickNumber[startTickIndex]
+                                              << " end game tick id " << ticks.gameTickNumber[tickIndex] << std::endl;
+                                }
+                                 */
                             }
                         }
                         for (const auto & shotTeammateId : shotTeammatesToClear) {
