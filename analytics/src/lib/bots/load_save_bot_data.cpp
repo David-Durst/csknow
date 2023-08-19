@@ -639,7 +639,8 @@ void ServerState::saveBotInputs() {
     string tmpInputsFilePath = dataPath + "/" + tmpInputsFileName;
 
     std::stringstream inputsStream;
-    inputsStream << "Player Index,Last Frame,Last Teleport Confirmation Id,Buttons,Input Angle Delta Pct Pitch,Input Angle Delta Pct Yaw,Input Angle Absolute,Force Input\n";
+    inputsStream << "Player Index,Last Frame,Last Teleport Confirmation Id,Buttons,Input Angle Delta Pct Pitch,Input Angle Delta Pct Yaw,Input Angle Absolute,Force Input,"
+                    "Enable Abs Pos,Abs X, Abs Y, Abs Z, Abs Pitch, Abs Yaw\n";
 
     for (int i = 0; i < (int) inputsValid.size(); i++) {
         if (i < (int) clients.size() && inputsValid[i]) {
@@ -662,7 +663,11 @@ void ServerState::saveBotInputs() {
                          << clients[i].inputAngleY << ","
                          << clients[i].inputAngleX << ","
                          << boolToInt(clients[i].inputAngleAbsolute) << ","
-                         << boolToInt(clients[i].forceInput) << "\n";
+                         << boolToInt(clients[i].forceInput) << ","
+                         << boolToInt(clients[i].enableAbsPos) << ","
+                         << clients[i].absPos.toCSV() << ","
+                         << clients[i].absView.y << ","
+                         << clients[i].absView.x << "\n";
         }
     }
 

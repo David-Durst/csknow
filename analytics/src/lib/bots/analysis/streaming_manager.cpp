@@ -191,6 +191,9 @@ void StreamingManager::update(const Games & games, const RoundPlantDefusal & rou
         newClient.intendedToFire = false;
         newClient.inputAngleAbsolute = false;
         newClient.forceInput = false;
+        newClient.enableAbsPos = false;
+        newClient.absPos = {0., 0., 0.};
+        newClient.absView = {0., 0.};
 
         newState.clients.push_back(newClient);
     }

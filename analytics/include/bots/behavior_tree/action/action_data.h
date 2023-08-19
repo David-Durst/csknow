@@ -87,8 +87,14 @@ struct Action {
     float inputAngleX;
     float inputAngleY;
     bool inputAngleAbsolute;
+    // set these here as part of blackboard, so easily changeable in testing infra
+    // unlike client server state which is const in tree node args
     // force human players inputs
     bool forceInput;
+    // absolute position setting
+    bool enableAbsPos;
+    Vec3 absPos;
+    Vec2 absView;
 
     string print() {
         return "buttons: " + std::to_string(buttons) + ", shots in burst: " + std::to_string(shotsInBurst)

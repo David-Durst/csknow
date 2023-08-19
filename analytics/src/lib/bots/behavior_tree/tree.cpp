@@ -176,8 +176,9 @@ void Tree::tick(ServerState & state, const string & mapsPath) {
         featureStoreResult.teamFeatureStoreResult.reinit();
 
         for (auto & client : state.clients) {
-            // disable force for all players, testing infrastructure can set force
+            // disable force and absolute positioning for all players, testing infrastructure can set force
             blackboard->playerToAction[client.csgoId].forceInput = false;
+            blackboard->playerToAction[client.csgoId].enableAbsPos = false;
             if (!client.isAlive || !client.isBot) {
                 continue;
             }
@@ -197,7 +198,8 @@ void Tree::tick(ServerState & state, const string & mapsPath) {
 
             state.setInputs(client.csgoId, clientAction.lastTeleportConfirmationId, clientAction.buttons,
                             clientAction.intendedToFire, clientAction.inputAngleX, clientAction.inputAngleY,
-                            clientAction.inputAngleAbsolute, clientAction.forceInput);
+                            clientAction.inputAngleAbsolute, clientAction.forceInput, clientAction.enableAbsPos,
+                            clientAction.absPos, clientAction.absView);
 
             // log state
             if (localLogFilterNames.empty() || localLogFilterNames.find(state.getClient(treeThinker.csgoId).name) != localLogFilterNames.end()) {
