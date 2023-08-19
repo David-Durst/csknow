@@ -10,6 +10,7 @@ num_engagement_states = 4
 row_id_column = "id"
 game_id_column = "game id"
 round_id_column = "round id"
+round_number_column = "round number"
 tick_id_column = "tick id"
 game_tick_number_column = 'game tick number'
 player_id_column = "player id"

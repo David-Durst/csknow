@@ -69,16 +69,5 @@ def compute_coverage_metrics(loaded_model: LoadedModel):
 
 if __name__ == "__main__":
     load_data_result = LoadDataResult(load_data_options)
-    #if manual_data:
-    #    all_data_df = load_hdf5_to_pd(manual_latent_team_hdf5_data_path, rows_to_get=[i for i in range(20000)])
-    #    #all_data_df = all_data_df[all_data_df['test name'] == b'LearnedGooseToCatScript']
-    #elif rollout_data:
-    #    all_data_df = load_hdf5_to_pd(rollout_latent_team_hdf5_data_path)
-    #else:
-    #    all_data_df = load_hdf5_to_pd(human_latent_team_hdf5_data_path, rows_to_get=[i for i in range(20000)])
-    #all_data_df = all_data_df.copy()
-
-    #load_result = load_model_file_for_rollout(all_data_df, "delta_pos_checkpoint.pt")
-
     loaded_model = load_model_file(load_data_result, use_test_data_only=False)
     compute_coverage_metrics(loaded_model)
