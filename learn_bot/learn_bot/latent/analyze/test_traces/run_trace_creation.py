@@ -65,11 +65,11 @@ def create_traces(loaded_model: LoadedModel):
         assert round_for_trace.start_index_in_hdf5 != -1
 
     combined_df = pd.concat(result_dfs)
+    extra_df = pd.DataFrame.from_records([rft.to_dict() for rft in rounds_for_traces])
 
     trace_path = \
         load_data_result.multi_hdf5_wrapper.train_test_split_path.parent / trace_file_name
-    save_pd_to_hdf5(trace_path, combined_df)
-
+    save_pd_to_hdf5(trace_path, combined_df, extra_df=extra_df)
 
 
 if __name__ == "__main__":

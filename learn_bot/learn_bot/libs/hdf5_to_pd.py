@@ -81,7 +81,7 @@ def load_hdf5_extra_column(hdf5_path: Path, column_name: str) -> np.ndarray:
     return result
 
 
-def save_pd_to_hdf5(hdf5_path: Path, df: pd.DataFrame):
+def save_pd_to_hdf5(hdf5_path: Path, df: pd.DataFrame, extra_df: Optional[pd.DataFrame]):
     hdf5_file = h5py.File(hdf5_path, 'w')
     data_group = hdf5_file.create_group('data')
 
@@ -91,6 +91,15 @@ def save_pd_to_hdf5(hdf5_path: Path, df: pd.DataFrame):
         if col_to_save.dtype == 'O':
             col_to_save = col_to_save.astype('|S')
         data_group.create_dataset(col_name, data=col_to_save)
+
+    if extra_df is not None:
+        extra_group = hdf5_file.create_group('extra')
+        for col_name in extra_df.columns:
+            col_to_save = extra_df.loc[:, col_name]
+            # assume if object that it's a string
+            if col_to_save.dtype == 'O':
+                col_to_save = col_to_save.astype('|S')
+            extra_group.create_dataset(col_name, data=col_to_save)
 
     hdf5_file.close()
 
