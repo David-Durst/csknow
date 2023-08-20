@@ -24,6 +24,7 @@
 #include "bots/testing/scripts/learned/test_learned_teamwork.h"
 #include "bots/analysis/formation_initializer.h"
 #include "bots/testing/scripts/learned/test_learned_all.h"
+#include "bots/testing/scripts/trace/trace_script.h"
 #include <iostream>
 #include <thread>
 #include <chrono>
@@ -42,13 +43,15 @@ int main(int argc, char * argv[]) {
             << "5. path/to/saved/data\n"
             << "6. t for tests, tl for tests with learned, r for rounds, rh for rounds with hueristics, rht for rounds with t hueristics, rhct for rounds with ct heuristics\n"
             << "7. 1 for all csknow bots, ct for ct only csknow bots, t for t only csknow bots, 0 for for no csknow bots\n"
+            << "8. y for traces, n for normal bots"
             << std::endl;
         return 1;
     }
     string mapsPath = argv[1], dataPath = argv[2], logPath = argv[3], modelsDir = argv[4], savedDatasetsDir = argv[5],
-        roundsTestStr = argv[6], botStop = argv[7];
+        roundsTestStr = argv[6], botStop = argv[7], tracesStr = argv[8];
 
     bool runTest = roundsTestStr == "t" || roundsTestStr == "tl";
+    bool runTraces = tracesStr == "y";
     processModelArg(roundsTestStr);
 
     ServerState state;
@@ -62,6 +65,8 @@ int main(int argc, char * argv[]) {
     csknow::plant_states::PlantStatesResult plantStatesResult;
     plantStatesResult.loadFromPython(savedDatasetsDir + "/push_only_test_plant_states.hdf5");
     ScriptsRunner roundScriptsRunner(createRoundScripts(plantStatesResult, true), false);
+    csknow::tests::trace::TracesData traceData(savedDatasetsDir + "/traces.hdf5");
+    ScriptsRunner traceScriptsRunner(csknow::tests::trace::createTracesScripts(traceData, false), false);
 
     ScriptsRunner learnedNavDataGenerator(csknow::tests::learned::createLearnedNavScripts(200, true), false);
     ScriptsRunner learnedHoldDataGenerator(csknow::tests::learned::createLearnedHoldScripts(200, true), false);
@@ -177,6 +182,10 @@ int main(int argc, char * argv[]) {
                     //finishedTests = learnedAllDataGenerator.tick(tree, state);
                     //formationDataGenerator.initialize(tree, state);
                     //finishedTests = formationDataGenerator.tick(tree, state);
+                }
+                else if (runTraces) {
+                    traceScriptsRunner.initialize(tree, state);
+                    finishedTests = roundScriptsRunner.tick(tree, state);
                 }
                 else {
                     roundScriptsRunner.initialize(tree, state);
