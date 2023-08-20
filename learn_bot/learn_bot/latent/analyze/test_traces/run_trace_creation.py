@@ -24,10 +24,10 @@ class RoundForTrace:
 
 
 rounds_for_traces: List[RoundForTrace] = [
-    # _28, 0/52, round id 26 (i think, roughly)
-    RoundForTrace("2354544_135491_vitality-vs-ence-m2-dust2_d20d7c6e-a6e6-11ec-8233-0a58a9feac02.dem", 25),
-    # _31, 1/52, round id 5
-    RoundForTrace("2355669_136889_masonic-vs-young-ninjas-m2-dust2_9364d3e6-bb53-11ec-a7e7-0a58a9feac02.dem", 6)
+    # _28, 0/52, round id 84 (i think, roughly)
+    RoundForTrace("2354548_135549_outsiders-vs-ence-m2-dust2_9c77e360-a7ad-11ec-8656-0a58a9feac02.dem", 20),
+    # _31, 1/52, round id 25
+    RoundForTrace("2355685_136862_1620-kings-vs-dynasty-m2-dust2_1241692a-bb56-11ec-8b31-0a58a9feac02.dem", 0)
 ]
 
 trace_file_name = 'traces.hdf5'
