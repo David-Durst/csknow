@@ -8,7 +8,7 @@ from learn_bot.latent.order.column_names import c4_pos_cols
 from learn_bot.latent.place_area.column_names import specific_player_place_area_columns, get_similarity_column
 from learn_bot.latent.place_area.load_data import LoadDataResult, LoadDataOptions
 from learn_bot.latent.train import train_test_split_file_name
-from learn_bot.libs.hdf5_to_pd import load_hdf5_to_pd
+from learn_bot.libs.hdf5_to_pd import load_hdf5_to_pd, save_pd_to_hdf5
 from learn_bot.libs.multi_hdf5_wrapper import absolute_to_relative_train_test_key
 
 load_data_options = LoadDataOptions(
@@ -76,13 +76,7 @@ def create_test_plant_states():
         test_plant_states_file_name = "push_only_" + test_plant_states_file_name
     test_plant_states_path = \
         load_data_result.multi_hdf5_wrapper.train_test_split_path.parent / test_plant_states_file_name
-    test_plant_states_hdf5_file = h5py.File(test_plant_states_path, 'w')
-    data_group = test_plant_states_hdf5_file.create_group('data')
-
-    for col_name in concat_test_start_df.columns:
-        data_group.create_dataset(col_name, data=concat_test_start_df.loc[:, col_name])
-
-    test_plant_states_hdf5_file.close()
+    save_pd_to_hdf5(test_plant_states_path, concat_test_start_df)
 
 
 if __name__ == "__main__":

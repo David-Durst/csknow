@@ -80,5 +80,17 @@ def load_hdf5_extra_column(hdf5_path: Path, column_name: str) -> np.ndarray:
         result = hdf5_data[column_name][...]
     return result
 
-# make a pandas dataframe look like an HDF5 wrapper
+
+def save_pd_to_hdf5(hdf5_path: Path, df: pd.DataFrame):
+    hdf5_file = h5py.File(hdf5_path, 'w')
+    data_group = hdf5_file.create_group('data')
+
+    for col_name in df.columns:
+        col_to_save = df.loc[:, col_name]
+        # assume if object that it's a string
+        if col_to_save.dtype == 'O':
+            col_to_save = col_to_save.astype('|S')
+        data_group.create_dataset(col_name, data=col_to_save)
+
+    hdf5_file.close()
 
