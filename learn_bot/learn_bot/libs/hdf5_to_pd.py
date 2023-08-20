@@ -89,7 +89,7 @@ def save_pd_to_hdf5(hdf5_path: Path, df: pd.DataFrame, extra_df: Optional[pd.Dat
         col_to_save = df.loc[:, col_name]
         # assume if object that it's a string
         if col_to_save.dtype == 'O':
-            col_to_save = col_to_save.astype('|S')
+            col_to_save = col_to_save.values.astype('S')
         data_group.create_dataset(col_name, data=col_to_save)
 
     if extra_df is not None:
@@ -98,7 +98,7 @@ def save_pd_to_hdf5(hdf5_path: Path, df: pd.DataFrame, extra_df: Optional[pd.Dat
             col_to_save = extra_df.loc[:, col_name]
             # assume if object that it's a string
             if col_to_save.dtype == 'O':
-                col_to_save = col_to_save.astype('|S')
+                col_to_save = col_to_save.values.astype('S')
             extra_group.create_dataset(col_name, data=col_to_save)
 
     hdf5_file.close()
