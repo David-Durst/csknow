@@ -206,6 +206,13 @@ Vec3 max(Vec3 a, Vec3 b) {
 }
 
 static inline __attribute__((always_inline))
+Vec3 avg(Vec3 a, Vec3 b, double aWeight) {
+    Vec3 aWeighted = a * aWeight;
+    Vec3 bWeighted = b * (1. - aWeight);
+    return aWeighted + bWeighted;
+}
+
+static inline __attribute__((always_inline))
 double computeDistance(Vec3 v1, Vec3 v2) {
     double xDistance = v1.x - v2.x;
     double yDistance = v1.y - v2.y;
@@ -351,6 +358,13 @@ Vec2 max(Vec2 a, Vec2 b) {
     result.x = std::max(a.x, b.x);
     result.y = std::max(a.y, b.y);
     return result;
+}
+
+static inline __attribute__((always_inline))
+Vec2 avg(Vec2 a, Vec2 b, double aWeight) {
+    Vec2 aWeighted = a * aWeight;
+    Vec2 bWeighted = b * (1. - aWeight);
+    return aWeighted + bWeighted;
 }
 
 static inline __attribute__((always_inline))

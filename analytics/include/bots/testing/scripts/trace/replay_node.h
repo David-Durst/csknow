@@ -15,6 +15,7 @@ namespace csknow::tests::trace {
         const TracesData & tracesData;
         int64_t roundIndex;
         int64_t tickInRound;
+        int64_t gameTickBetweenLogTicks;
         CSKnowTime roundStartTime;
 
     public:
@@ -26,6 +27,7 @@ namespace csknow::tests::trace {
 
         void restart(const TreeThinker & treeThinker) override {
             tickInRound = 0;
+            gameTickBetweenLogTicks = 0;
             Node::restart(treeThinker);
         }
     };

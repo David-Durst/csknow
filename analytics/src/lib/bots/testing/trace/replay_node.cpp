@@ -43,12 +43,19 @@ namespace csknow::tests::trace {
                                      tracesData.teamFeatureStoreResult.columnTData;
 
                 // if alive in game but not trace, just let bot controller handle it
-                if (columnData[columnIndex].alive[roundIndex]) {
+                // stop 1 tick early as averaging between ticks
+                if (columnData[columnIndex].alive[tickInFeatureStore + 1] &&
+                    tickInRound < tracesData.lengths[roundIndex] - 1) {
                     blackboard.playerToAction[client.csgoId].enableAbsPos = true;
+                    double curTickWeight = 1. -
+                            (static_cast<double>(gameTickBetweenLogTicks) /
+                            static_cast<double>(feature_store::every_nth_row));
                     blackboard.playerToAction[client.csgoId].absPos =
-                            columnData[columnIndex].footPos[tickInFeatureStore];
+                            avg(columnData[columnIndex].footPos[tickInFeatureStore],
+                                columnData[columnIndex].footPos[tickInFeatureStore + 1], curTickWeight);
                     blackboard.playerToAction[client.csgoId].absView =
-                            columnData[columnIndex].viewAngle[tickInFeatureStore];
+                            avg(columnData[columnIndex].viewAngle[tickInFeatureStore],
+                                columnData[columnIndex].viewAngle[tickInFeatureStore + 1], curTickWeight);
                 }
 
             }
@@ -62,7 +69,11 @@ namespace csknow::tests::trace {
             }
         }
 
-        tickInRound++;
+        gameTickBetweenLogTicks++;
+        if (gameTickBetweenLogTicks == feature_store::every_nth_row) {
+            gameTickBetweenLogTicks = 0;
+            tickInRound++;
+        }
         playerNodeState[treeThinker.csgoId] = NodeState::Running;
         return playerNodeState[treeThinker.csgoId];
     }
