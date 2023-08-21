@@ -1149,6 +1149,10 @@ namespace csknow::feature_store {
                     columnData[columnPlayer].priorFootPosValid[priorTick] =
                             file.getDataSet("/data/player history valid " + columnTeam + " " + iStr + " t-" + std::to_string(priorTick + 1)).read<std::vector<bool>>();
                 }
+                columnData[columnPlayer].walking =
+                        file.getDataSet("/data/player walking " + columnTeam + " " + iStr).read<std::vector<bool>>();
+                columnData[columnPlayer].ducking =
+                        file.getDataSet("/data/player ducking " + columnTeam + " " + iStr).read<std::vector<bool>>();
                 columnData[columnPlayer].nearestCrosshairDistanceToEnemy =
                         file.getDataSet("/data/player nearest crosshair distance to enemy " + columnTeam + " " + iStr).read<std::vector<float>>();
                 for (int priorTick = 0; priorTick < num_prior_ticks; priorTick++) {
