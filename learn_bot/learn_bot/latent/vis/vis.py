@@ -70,6 +70,7 @@ def vis(loaded_model: LoadedModel, inference_fn: Callable[[LoadedModel], None]):
         cur_round = rounds[0]
         print(f"num rounds {len(rounds)}")
         round_slider.set(0)
+        round_slider.configure(to=len(rounds) - 1)
         round_slider_changed(0)
 
     def round_slider_changed(cur_round_index):
