@@ -7,7 +7,7 @@ from typing import List, Optional, Union
 
 def load_hdf5_to_pd(hdf5_path: Path, selector_df: Optional[pd.DataFrame] = None, cols_to_get: Optional[List] = None,
                     rows_to_get: Optional[Union[List[int], int]] = None, root_key: str = 'data',
-                    cast_bool_to_int = True):
+                    cast_bool_to_int: bool = True):
     # get data as numpy arrays and column names
     #np_arrs: List[np.ndarray] = []
     #col_names: List[List[str]] = []
