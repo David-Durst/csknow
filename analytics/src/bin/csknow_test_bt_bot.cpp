@@ -185,7 +185,7 @@ int main(int argc, char * argv[]) {
                 }
                 else if (runTraces) {
                     traceScriptsRunner.initialize(tree, state);
-                    finishedTests = roundScriptsRunner.tick(tree, state);
+                    finishedTests = traceScriptsRunner.tick(tree, state);
                 }
                 else {
                     roundScriptsRunner.initialize(tree, state);
