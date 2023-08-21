@@ -28,12 +28,12 @@ namespace csknow::tests::trace {
                 for (size_t columnPlayer = 0; columnPlayer < columnData.size(); columnPlayer++) {
                     if (columnData[columnPlayer].alive[startIndex]) {
                         if (columnData[columnPlayer].ctTeam[startIndex]) {
-                            ctBotIndexToFeatureStoreIndex[startIndex].push_back(numCTBotsNeeded[startIndex]);
-                            numCTBotsNeeded[startIndex]++;
+                            ctBotIndexToFeatureStoreIndex[i].push_back(columnPlayer);
+                            numCTBotsNeeded[i]++;
                         }
                         else {
-                            tBotIndexToFeatureStoreIndex[startIndex].push_back(numTBotsNeeded[startIndex]);
-                            numTBotsNeeded[startIndex]++;
+                            tBotIndexToFeatureStoreIndex[i].push_back(columnPlayer);
+                            numTBotsNeeded[i]++;
                         }
                     }
                 }
