@@ -14,20 +14,19 @@ namespace csknow::tests::trace {
     class ReplayNode : public Node {
         const TracesData & tracesData;
         int64_t roundIndex;
-        int64_t tickInRound;
-        int64_t gameTickBetweenLogTicks;
+        int64_t curRoundTick;
         CSKnowTime roundStartTime;
+        int64_t startFrame;
 
     public:
         ReplayNode(Blackboard & blackboard, const TracesData & tracesData, int64_t roundIndex) :
                 Node(blackboard, "Replay" + tracesData.demoFile[roundIndex]), tracesData(tracesData),
-                roundIndex(roundIndex), tickInRound(0) { };
+                roundIndex(roundIndex), curRoundTick(0) { };
 
         NodeState exec(const ServerState & state, TreeThinker &treeThinker) override;
 
         void restart(const TreeThinker & treeThinker) override {
-            tickInRound = 0;
-            gameTickBetweenLogTicks = 0;
+            curRoundTick = 0;
             Node::restart(treeThinker);
         }
     };

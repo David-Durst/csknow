@@ -67,9 +67,9 @@ namespace csknow::tests::trace {
     vector<Script::Ptr> createTracesScripts(const TracesData & tracesData, bool quitAtEnd) {
         vector<Script::Ptr> result;
 
-        int64_t numRounds = static_cast<int64_t>(tracesData.demoFile.size());
+        int64_t numRounds = 300;/*static_cast<int64_t>(tracesData.demoFile.size());*/
         for (int64_t i = 0; i < numRounds; i++) {
-            result.push_back(make_unique<TraceScript>(tracesData, i, numRounds));
+            result.push_back(make_unique<TraceScript>(tracesData, 0, numRounds));
         }
         if (quitAtEnd) {
             result.push_back(make_unique<QuitScript>());

@@ -7,10 +7,19 @@
 namespace csknow::tests::trace {
     NodeState ReplayNode::exec(const ServerState &state, TreeThinker &treeThinker) {
         int64_t ctBotIndex = 0, tBotIndex = 0;
-        int64_t tickInFeatureStore = tracesData.startIndices[roundIndex] + tickInRound;
-        if (tickInRound == 0) {
+        if (curRoundTick == 0) {
             roundStartTime = state.loadTime;
+            startFrame = static_cast<int64_t>(state.getLastFrame());
         }
+        curRoundTick++;
+        int64_t curFrame = static_cast<int64_t>(state.getLastFrame());
+        if (curFrame < startFrame) {
+            // start frame restarts at 0, so add 1 for that offset and continue
+            curFrame = startFrame + curFrame + 1;
+        }
+        int64_t framesAfterStartFrame = curFrame - startFrame;
+        int64_t tickInFeatureStore = tracesData.startIndices[roundIndex] +
+                (framesAfterStartFrame / feature_store::every_nth_row);
 
         // stop when one team not alive
         bool ctAlive = false, tAlive = false;
@@ -45,17 +54,21 @@ namespace csknow::tests::trace {
                 // if alive in game but not trace, just let bot controller handle it
                 // stop 1 tick early as averaging between ticks
                 if (columnData[columnIndex].alive[tickInFeatureStore + 1] &&
-                    tickInRound < tracesData.lengths[roundIndex] - 1) {
+                    tickInFeatureStore < tracesData.startIndices[roundIndex] + tracesData.lengths[roundIndex] - 1) {
                     blackboard.playerToAction[client.csgoId].enableAbsPos = true;
                     double curTickWeight = 1. -
-                            (static_cast<double>(gameTickBetweenLogTicks) /
-                            static_cast<double>(feature_store::every_nth_row));
+                            (static_cast<double>(framesAfterStartFrame % feature_store::every_nth_row) /
+                             static_cast<double>(feature_store::every_nth_row));
                     blackboard.playerToAction[client.csgoId].absPos =
                             avg(columnData[columnIndex].footPos[tickInFeatureStore],
                                 columnData[columnIndex].footPos[tickInFeatureStore + 1], curTickWeight);
                     blackboard.playerToAction[client.csgoId].absView =
                             avg(columnData[columnIndex].viewAngle[tickInFeatureStore],
                                 columnData[columnIndex].viewAngle[tickInFeatureStore + 1], curTickWeight);
+                    blackboard.playerToAction[client.csgoId]
+                        .setButton(IN_WALK, columnData[columnIndex].walking[tickInFeatureStore]);
+                    blackboard.playerToAction[client.csgoId]
+                        .setButton(IN_DUCK, columnData[columnIndex].ducking[tickInFeatureStore]);
                 }
 
             }
@@ -69,11 +82,6 @@ namespace csknow::tests::trace {
             }
         }
 
-        gameTickBetweenLogTicks++;
-        if (gameTickBetweenLogTicks == feature_store::every_nth_row) {
-            gameTickBetweenLogTicks = 0;
-            tickInRound++;
-        }
         playerNodeState[treeThinker.csgoId] = NodeState::Running;
         return playerNodeState[treeThinker.csgoId];
     }
