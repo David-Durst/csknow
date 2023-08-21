@@ -6,7 +6,8 @@ from typing import List, Optional, Union
 
 
 def load_hdf5_to_pd(hdf5_path: Path, selector_df: Optional[pd.DataFrame] = None, cols_to_get: Optional[List] = None,
-                    rows_to_get: Optional[Union[List[int], int]] = None, root_key: str = 'data'):
+                    rows_to_get: Optional[Union[List[int], int]] = None, root_key: str = 'data',
+                    cast_bool_to_int = True):
     # get data as numpy arrays and column names
     #np_arrs: List[np.ndarray] = []
     #col_names: List[List[str]] = []
@@ -40,9 +41,10 @@ def load_hdf5_to_pd(hdf5_path: Path, selector_df: Optional[pd.DataFrame] = None,
             partial_dfs.append(df_to_append)
 
     result_df = pd.concat(partial_dfs, axis=1)
-    for col in result_df.columns:
-        if str(result_df[col].dtype) == 'bool':
-            result_df[col] = result_df[col].astype('i8')
+    if cast_bool_to_int:
+        for col in result_df.columns:
+            if str(result_df[col].dtype) == 'bool':
+                result_df[col] = result_df[col].astype('i8')
     return result_df
 
 

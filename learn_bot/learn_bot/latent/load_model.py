@@ -49,8 +49,9 @@ class LoadedModel:
         # this will be set later depending on if doing off policy or on policy inference
         self.cur_inference_df = None
 
-    def load_cur_hdf5_as_pd(self, load_cur_dataset=True):
-        self.cur_loaded_df = load_hdf5_to_pd(self.dataset.data_hdf5s[self.cur_hdf5_index].hdf5_path)
+    def load_cur_hdf5_as_pd(self, load_cur_dataset=True, cast_bool_to_int=True):
+        self.cur_loaded_df = load_hdf5_to_pd(self.dataset.data_hdf5s[self.cur_hdf5_index].hdf5_path,
+                                             cast_bool_to_int=cast_bool_to_int)
         # done to apply limit on hdf5 wrapper's id df to actual df
         self.cur_loaded_df = self.cur_loaded_df.iloc[self.dataset.data_hdf5s[self.cur_hdf5_index].id_df['id'], :]
         make_index_column(self.cur_loaded_df)

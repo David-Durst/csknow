@@ -48,7 +48,7 @@ def create_traces(loaded_model: LoadedModel):
                 break
 
         if cur_hdf5_relevant:
-            loaded_model.load_cur_hdf5_as_pd(load_cur_dataset=False)
+            loaded_model.load_cur_hdf5_as_pd(load_cur_dataset=False, cast_bool_to_int=False)
             for round_for_trace in rounds_for_traces:
                 if round_for_trace.demo_file in cur_demo_names:
                     game_id = cur_demo_names.index(round_for_trace.demo_file)
