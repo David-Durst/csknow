@@ -1045,6 +1045,10 @@ namespace csknow::feature_store {
                     file.createDataSet("/data/player history valid " + columnTeam + " " + iStr + " t-" + std::to_string(priorTick+1),
                                        columnData[columnPlayer].priorFootPosValid[priorTick], hdf5FlatCreateProps);
                 }
+                file.createDataSet("/data/player walking " + columnTeam + " " + iStr,
+                                   columnData[columnPlayer].walking, hdf5FlatCreateProps);
+                file.createDataSet("/data/player ducking " + columnTeam + " " + iStr,
+                                   columnData[columnPlayer].ducking, hdf5FlatCreateProps);
                 file.createDataSet("/data/player nearest crosshair distance to enemy " + columnTeam + " " + iStr,
                                    columnData[columnPlayer].nearestCrosshairDistanceToEnemy, hdf5FlatCreateProps);
                 for (int priorTick = 0; priorTick < num_prior_ticks; priorTick++) {
