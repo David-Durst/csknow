@@ -27,6 +27,20 @@ namespace csknow::tests::trace {
                 neededBots.push_back({0, ENGINE_TEAM_T});
             }
         }
+
+        /*
+        // spectate a bot if one team is bots
+        if (oneTeam) {
+            if (tracesData.ctBot[roundIndex]) {
+                for (size_t
+                observeSettings.neededBotIndex = 0;
+
+            }
+            else {
+
+            }
+        }
+         */
     }
 
     void TraceScript::initialize(Tree &tree, ServerState &state) {

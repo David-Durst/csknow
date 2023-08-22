@@ -41,7 +41,7 @@ namespace csknow::tests::trace {
 
         for (size_t i = 0; i < state.clients.size(); i++) {
             const ServerState::Client & client = state.clients[i];
-            
+
             // limit to right team/bot as requested by config
             bool teamForTest = !oneTeam || (client.team == ENGINE_TEAM_CT && tracesData.ctBot[roundIndex]) ||
                                (client.team == ENGINE_TEAM_T && !tracesData.ctBot[roundIndex]);
