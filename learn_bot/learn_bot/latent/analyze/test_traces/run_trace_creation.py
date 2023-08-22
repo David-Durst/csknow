@@ -29,7 +29,6 @@ class RoundForTrace:
 
 rounds_for_traces: List[RoundForTrace] = [
     RoundForTrace("2358189_141815_los-grandes-academy-vs-isurus-m1-dust2_906349fe-2244-11ed-81f8-0a58a9feac02.dem", 6, False, 4),
-    RoundForTrace("2355808_137170_spirit-vs-asg-dust2_38157d06-c265-11ec-b800-0a58a9feac02.dem", 15, False, 2),
     RoundForTrace("2355804_137165_entropiq-vs-endpoint-dust2_e90097d6-c265-11ec-ba43-0a58a9feac02.dem", 2, False, 4),
     RoundForTrace("2355741_137031_vitality-vs-eternal-fire-dust2_e0beba24-c00a-11ec-a32e-0a58a9feac02.dem", 14, False, 3),
     RoundForTrace("2354576_136413_natus-vincere-vs-evil-geniuses-m2-dust2_7e07ebd2-b1e4-11ec-a36e-0a58a9feac02.dem", 23, False, 4),
