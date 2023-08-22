@@ -21,12 +21,12 @@ namespace csknow::tests::trace {
         map<int64_t, int64_t> ctFeatureStoreIndexToBotIndex, tFeatureStoreIndexToBotIndex;
         for (size_t i = 0; i < feature_store::max_enemies; i++) {
             if (tracesData.teamFeatureStoreResult.columnCTData[i].alive[tickInFeatureStore] && numCT < maxCT) {
-                ctFeatureStoreIndexToBotIndex[numCT] = static_cast<int64_t>(i);
+                ctFeatureStoreIndexToBotIndex[static_cast<int64_t>(i)] = static_cast<int64_t>(neededBots.size());
                 numCT++;
                 neededBots.push_back({0, ENGINE_TEAM_CT});
             }
             if (tracesData.teamFeatureStoreResult.columnTData[i].alive[tickInFeatureStore] && numT < maxT) {
-                tFeatureStoreIndexToBotIndex[numT] = static_cast<int64_t>(i);
+                tFeatureStoreIndexToBotIndex[static_cast<int64_t>(i)] = static_cast<int64_t>(neededBots.size());
                 numT++;
                 neededBots.push_back({0, ENGINE_TEAM_T});
             }
@@ -34,22 +34,24 @@ namespace csknow::tests::trace {
 
         // if one team is bots, spectate a bot from that team
         // if one player is a bot, spectate that bot
-        if (oneBot) {
-            if (tracesData.ctBot[roundIndex]) {
-                observeSettings.neededBotIndex =
-                        ctFeatureStoreIndexToBotIndex[tracesData.oneBotFeatureStoreIndex[roundIndex]];
-            }
-            else {
-                observeSettings.neededBotIndex =
-                        tFeatureStoreIndexToBotIndex[tracesData.oneBotFeatureStoreIndex[roundIndex]];
-            }
-        }
         if (oneTeam) {
-            if (tracesData.ctBot[roundIndex]) {
-                observeSettings.neededBotIndex = ctFeatureStoreIndexToBotIndex[0];
+            if (oneBot) {
+                if (tracesData.ctBot[roundIndex]) {
+                    observeSettings.neededBotIndex =
+                            ctFeatureStoreIndexToBotIndex[tracesData.oneBotFeatureStoreIndex[roundIndex]];
+                }
+                else {
+                    observeSettings.neededBotIndex =
+                            tFeatureStoreIndexToBotIndex[tracesData.oneBotFeatureStoreIndex[roundIndex]];
+                }
             }
             else {
-                observeSettings.neededBotIndex = tFeatureStoreIndexToBotIndex[0];
+                if (tracesData.ctBot[roundIndex]) {
+                    observeSettings.neededBotIndex = ctFeatureStoreIndexToBotIndex[0];
+                }
+                else {
+                    observeSettings.neededBotIndex = tFeatureStoreIndexToBotIndex[0];
+                }
             }
         }
     }
@@ -92,10 +94,10 @@ namespace csknow::tests::trace {
     vector<Script::Ptr> createTracesScripts(const TracesData & tracesData, bool quitAtEnd) {
         vector<Script::Ptr> result;
 
-        int64_t numRounds = 300;/*static_cast<int64_t>(tracesData.demoFile.size());*/
+        int64_t numRounds = static_cast<int64_t>(tracesData.demoFile.size());
         for (int64_t i = 0; i < numRounds; i++) {
-            result.push_back(make_unique<TraceScript>(tracesData, 0, numRounds, true, false));
-            result.push_back(make_unique<TraceScript>(tracesData, 0, numRounds, true, true));
+            result.push_back(make_unique<TraceScript>(tracesData, i, numRounds, true, false));
+            result.push_back(make_unique<TraceScript>(tracesData, i, numRounds, true, true));
         }
         if (quitAtEnd) {
             result.push_back(make_unique<QuitScript>());
