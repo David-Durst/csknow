@@ -13,6 +13,7 @@ namespace csknow::tests::trace {
         }
         curRoundTick++;
         int64_t curFrame = static_cast<int64_t>(state.getLastFrame());
+        bool firstFrame = curFrame == startFrame;
         if (curFrame < startFrame) {
             // start frame restarts at 0, so add 1 for that offset and continue
             curFrame = startFrame + curFrame + 1;
@@ -43,16 +44,18 @@ namespace csknow::tests::trace {
             const ServerState::Client & client = state.clients[i];
 
             // limit to right team/bot as requested by config
-            bool teamForTest = !oneTeam || (client.team == ENGINE_TEAM_CT && tracesData.ctBot[roundIndex]) ||
-                               (client.team == ENGINE_TEAM_T && !tracesData.ctBot[roundIndex]);
-            bool botForTest = !oneBot ||
-                    (client.team == ENGINE_TEAM_CT && tracesData.ctBotIndexToFeatureStoreIndex[roundIndex][ctBotIndex]
+            // ignore on first tick so everyone in right place
+            bool botTeamForTest = oneTeam && !firstFrame &&
+                    ((client.team == ENGINE_TEAM_CT && tracesData.ctBot[roundIndex]) ||
+                    (client.team == ENGINE_TEAM_T && !tracesData.ctBot[roundIndex]));
+            bool botPlayerForTest = oneBot && botTeamForTest && !firstFrame &&
+                    ((client.team == ENGINE_TEAM_CT && tracesData.ctBotIndexToFeatureStoreIndex[roundIndex][ctBotIndex]
                         == tracesData.oneBotFeatureStoreIndex[roundIndex]) ||
                     (client.team == ENGINE_TEAM_T && tracesData.tBotIndexToFeatureStoreIndex[roundIndex][tBotIndex]
-                        == tracesData.oneBotFeatureStoreIndex[roundIndex]);
+                        == tracesData.oneBotFeatureStoreIndex[roundIndex]));
 
             // assuming that script already configured players to be alive
-            if (client.isAlive && teamForTest && botForTest) {
+            if (client.isAlive && !botTeamForTest && !botPlayerForTest) {
                 int64_t columnIndex = client.team == ENGINE_TEAM_CT ?
                         tracesData.ctBotIndexToFeatureStoreIndex[roundIndex][ctBotIndex] :
                         tracesData.tBotIndexToFeatureStoreIndex[roundIndex][tBotIndex];
