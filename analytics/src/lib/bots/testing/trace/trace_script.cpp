@@ -83,7 +83,7 @@ namespace csknow::tests::trace {
 
         int64_t numRounds = 300;/*static_cast<int64_t>(tracesData.demoFile.size());*/
         for (int64_t i = 0; i < numRounds; i++) {
-            result.push_back(make_unique<TraceScript>(tracesData, 0, numRounds, true, false));
+            //result.push_back(make_unique<TraceScript>(tracesData, 0, numRounds, true, false));
             result.push_back(make_unique<TraceScript>(tracesData, 0, numRounds, true, true));
         }
         if (quitAtEnd) {

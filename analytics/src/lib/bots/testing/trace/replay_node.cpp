@@ -45,17 +45,18 @@ namespace csknow::tests::trace {
 
             // limit to right team/bot as requested by config
             // ignore on first tick so everyone in right place
-            bool botTeamForTest = oneTeam && !firstFrame &&
+            bool botTeamForTest =
                     ((client.team == ENGINE_TEAM_CT && tracesData.ctBot[roundIndex]) ||
                     (client.team == ENGINE_TEAM_T && !tracesData.ctBot[roundIndex]));
-            bool botPlayerForTest = oneBot && botTeamForTest && !firstFrame &&
-                    ((client.team == ENGINE_TEAM_CT && tracesData.ctBotIndexToFeatureStoreIndex[roundIndex][ctBotIndex]
+            bool botPlayerForTest = !oneBot ||
+                    (client.team == ENGINE_TEAM_CT && tracesData.ctBotIndexToFeatureStoreIndex[roundIndex][ctBotIndex]
                         == tracesData.oneBotFeatureStoreIndex[roundIndex]) ||
                     (client.team == ENGINE_TEAM_T && tracesData.tBotIndexToFeatureStoreIndex[roundIndex][tBotIndex]
-                        == tracesData.oneBotFeatureStoreIndex[roundIndex]));
+                        == tracesData.oneBotFeatureStoreIndex[roundIndex]);
+            bool botForTest = !firstFrame && oneTeam && botTeamForTest && botPlayerForTest;
 
             // assuming that script already configured players to be alive
-            if (client.isAlive && !botTeamForTest && !botPlayerForTest) {
+            if (client.isAlive && !botForTest) {
                 int64_t columnIndex = client.team == ENGINE_TEAM_CT ?
                         tracesData.ctBotIndexToFeatureStoreIndex[roundIndex][ctBotIndex] :
                         tracesData.tBotIndexToFeatureStoreIndex[roundIndex][tBotIndex];
