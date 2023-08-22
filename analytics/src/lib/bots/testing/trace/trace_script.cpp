@@ -19,14 +19,17 @@ namespace csknow::tests::trace {
 
         c4Pos = tracesData.teamFeatureStoreResult.c4Pos[tickInFeatureStore];
         map<int64_t, int64_t> ctFeatureStoreIndexToBotIndex, tFeatureStoreIndexToBotIndex;
+        int64_t anAliveCTFeatureStoreIndex, anAliveTFeatureStoreIndex;
         for (size_t i = 0; i < feature_store::max_enemies; i++) {
             if (tracesData.teamFeatureStoreResult.columnCTData[i].alive[tickInFeatureStore] && numCT < maxCT) {
                 ctFeatureStoreIndexToBotIndex[static_cast<int64_t>(i)] = static_cast<int64_t>(neededBots.size());
+                anAliveCTFeatureStoreIndex = static_cast<int64_t>(i);
                 numCT++;
                 neededBots.push_back({0, ENGINE_TEAM_CT});
             }
             if (tracesData.teamFeatureStoreResult.columnTData[i].alive[tickInFeatureStore] && numT < maxT) {
                 tFeatureStoreIndexToBotIndex[static_cast<int64_t>(i)] = static_cast<int64_t>(neededBots.size());
+                anAliveTFeatureStoreIndex = static_cast<int64_t>(i);
                 numT++;
                 neededBots.push_back({0, ENGINE_TEAM_T});
             }
@@ -47,10 +50,10 @@ namespace csknow::tests::trace {
             }
             else {
                 if (tracesData.ctBot[roundIndex]) {
-                    observeSettings.neededBotIndex = ctFeatureStoreIndexToBotIndex[0];
+                    observeSettings.neededBotIndex = ctFeatureStoreIndexToBotIndex[anAliveCTFeatureStoreIndex];
                 }
                 else {
-                    observeSettings.neededBotIndex = tFeatureStoreIndexToBotIndex[0];
+                    observeSettings.neededBotIndex = tFeatureStoreIndexToBotIndex[anAliveTFeatureStoreIndex];
                 }
             }
         }
@@ -96,8 +99,8 @@ namespace csknow::tests::trace {
 
         int64_t numRounds = static_cast<int64_t>(tracesData.demoFile.size());
         for (int64_t i = 0; i < numRounds; i++) {
-            result.push_back(make_unique<TraceScript>(tracesData, i, numRounds, true, false));
-            result.push_back(make_unique<TraceScript>(tracesData, i, numRounds, true, true));
+            result.push_back(make_unique<TraceScript>(tracesData, 1, numRounds, true, false));
+            //result.push_back(make_unique<TraceScript>(tracesData, 1, numRounds, true, true));
         }
         if (quitAtEnd) {
             result.push_back(make_unique<QuitScript>());
