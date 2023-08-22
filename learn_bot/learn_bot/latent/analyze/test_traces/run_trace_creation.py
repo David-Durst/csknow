@@ -12,7 +12,7 @@ class RoundForTrace:
     demo_file: str
     round_number: int
     ct_bot: bool
-    one_player_team_index: int
+    one_bot_feature_store_index: int
     start_index_in_hdf5: int = -1
     length: int = -1
 
@@ -21,7 +21,7 @@ class RoundForTrace:
             "demo file": self.demo_file,
             "round number": self.round_number,
             "ct bot": self.ct_bot,
-            "one player team index": self.one_player_team_index,
+            "one bot feature store index": self.one_bot_feature_store_index,
             "start index in hdf5": self.start_index_in_hdf5,
             "length": self.length,
         }

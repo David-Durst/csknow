@@ -41,8 +41,18 @@ namespace csknow::tests::trace {
 
         for (size_t i = 0; i < state.clients.size(); i++) {
             const ServerState::Client & client = state.clients[i];
-            // assuming that script already configurated players to be alive
-            if (client.isAlive) {
+            
+            // limit to right team/bot as requested by config
+            bool teamForTest = !oneTeam || (client.team == ENGINE_TEAM_CT && tracesData.ctBot[roundIndex]) ||
+                               (client.team == ENGINE_TEAM_T && !tracesData.ctBot[roundIndex]);
+            bool botForTest = !oneBot ||
+                    (client.team == ENGINE_TEAM_CT && tracesData.ctBotIndexToFeatureStoreIndex[roundIndex][ctBotIndex]
+                        == tracesData.oneBotFeatureStoreIndex[roundIndex]) ||
+                    (client.team == ENGINE_TEAM_T && tracesData.tBotIndexToFeatureStoreIndex[roundIndex][tBotIndex]
+                        == tracesData.oneBotFeatureStoreIndex[roundIndex]);
+
+            // assuming that script already configured players to be alive
+            if (client.isAlive && teamForTest && botForTest) {
                 int64_t columnIndex = client.team == ENGINE_TEAM_CT ?
                         tracesData.ctBotIndexToFeatureStoreIndex[roundIndex][ctBotIndex] :
                         tracesData.tBotIndexToFeatureStoreIndex[roundIndex][tBotIndex];

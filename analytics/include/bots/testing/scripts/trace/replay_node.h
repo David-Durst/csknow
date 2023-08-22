@@ -15,13 +15,16 @@ namespace csknow::tests::trace {
         const TracesData & tracesData;
         int64_t roundIndex;
         int64_t curRoundTick;
+        bool oneTeam;
+        bool oneBot;
         CSKnowTime roundStartTime;
         int64_t startFrame;
 
     public:
-        ReplayNode(Blackboard & blackboard, const TracesData & tracesData, int64_t roundIndex) :
+        ReplayNode(Blackboard & blackboard, const TracesData & tracesData, int64_t roundIndex,
+                   bool oneTeam, bool oneBot) :
                 Node(blackboard, "Replay" + tracesData.demoFile[roundIndex]), tracesData(tracesData),
-                roundIndex(roundIndex), curRoundTick(0) { };
+                roundIndex(roundIndex), curRoundTick(0), oneTeam(oneTeam), oneBot(oneBot) { };
 
         NodeState exec(const ServerState & state, TreeThinker &treeThinker) override;
 

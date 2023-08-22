@@ -14,6 +14,8 @@ namespace csknow::tests::trace {
         csknow::feature_store::TeamFeatureStoreResult teamFeatureStoreResult;
         vector<string> demoFile;
         vector<int64_t> roundNumber;
+        vector<int64_t> ctBot;
+        vector<int64_t> oneBotFeatureStoreIndex;
         vector<int64_t> startIndices;
         vector<int64_t> lengths;
         vector<int64_t> numCTBotsNeeded, numTBotsNeeded;

@@ -7,12 +7,12 @@
 
 namespace csknow::tests::trace {
     TraceScript::TraceScript(const csknow::tests::trace::TracesData &tracesData, int64_t roundIndex,
-                             int64_t numRounds) :
+                             int64_t numRounds, bool oneTeam, bool oneBot) :
                              Script("TraceScript", {}, {ObserveType::FirstPerson, 0}), tracesData(tracesData),
-                             roundIndex(roundIndex), numRounds(numRounds) {
+                             roundIndex(roundIndex), numRounds(numRounds), oneTeam(oneTeam), oneBot(oneBot) {
         int64_t tickInFeatureStore = tracesData.startIndices[roundIndex];
 
-        name += tracesData.demoFile[roundIndex];
+        name += tracesData.demoFile[roundIndex] + "_" + std::to_string(tracesData.roundNumber[roundIndex]);
         int numCT = 0, numT = 0;
         neededBots.clear();
 
@@ -53,7 +53,7 @@ namespace csknow::tests::trace {
 
             Node::Ptr bodyNode = make_unique<ParallelFirstNode>(blackboard, Node::makeList(
                     make_unique<RepeatDecorator>(blackboard, make_unique<RoundStart>(blackboard), true),
-                    make_unique<ReplayNode>(blackboard, tracesData, roundIndex)));
+                    make_unique<ReplayNode>(blackboard, tracesData, roundIndex, oneTeam, oneBot)));
 
             commands = make_unique<SequenceNode>(blackboard, Node::makeList(
                                                          std::move(disableAllBothDuringSetup),
@@ -69,7 +69,8 @@ namespace csknow::tests::trace {
 
         int64_t numRounds = 300;/*static_cast<int64_t>(tracesData.demoFile.size());*/
         for (int64_t i = 0; i < numRounds; i++) {
-            result.push_back(make_unique<TraceScript>(tracesData, 0, numRounds));
+            result.push_back(make_unique<TraceScript>(tracesData, 0, numRounds, true, false));
+            result.push_back(make_unique<TraceScript>(tracesData, 0, numRounds, true, true));
         }
         if (quitAtEnd) {
             result.push_back(make_unique<QuitScript>());

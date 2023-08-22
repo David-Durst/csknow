@@ -14,9 +14,11 @@ namespace csknow::tests::trace {
         const TracesData & tracesData;
         int64_t roundIndex, numRounds;
         Vec3 c4Pos;
+        bool oneTeam;
+        bool oneBot;
 
     public:
-        TraceScript(const TracesData & tracesData, int64_t roundIndex, int64_t numRounds);
+        TraceScript(const TracesData & tracesData, int64_t roundIndex, int64_t numRounds, bool oneBot, bool oneTeam);
 
         void initialize(Tree & tree, ServerState & state) override;
     };

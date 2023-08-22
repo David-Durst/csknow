@@ -11,6 +11,8 @@ namespace csknow::tests::trace {
         HighFive::File file(tracesPathStr, HighFive::File::ReadOnly);
         demoFile = file.getDataSet("/extra/demo file").read<std::vector<string>>();
         roundNumber = file.getDataSet("/extra/round number").read<std::vector<int64_t>>();
+        ctBot = file.getDataSet("/extra/ct bot").read<std::vector<int64_t>>();
+        oneBotFeatureStoreIndex = file.getDataSet("/extra/one bot feature store index").read<std::vector<int64_t>>();
         startIndices = file.getDataSet("/extra/start index in hdf5").read<std::vector<int64_t>>();
         lengths = file.getDataSet("/extra/length").read<std::vector<int64_t>>();
 
