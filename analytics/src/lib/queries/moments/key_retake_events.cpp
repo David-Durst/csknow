@@ -37,6 +37,18 @@ namespace csknow::key_retake_events {
         roundHasCompleteTest.resize(rounds.size, false);
         roundHasFailedTest.resize(rounds.size, false);
         roundBaiters.resize(rounds.size, false);
+
+        perTraceData.demoFile.resize(rounds.size, "INVALID");
+        perTraceData.traceIndex.resize(rounds.size, INVALID_ID);
+        perTraceData.numTraces.resize(rounds.size, INVALID_ID);
+        perTraceData.nonReplayPlayers.resize(rounds.size, {});
+        perTraceData.convertedNonReplayNamesToIndices.resize(rounds.size, false);
+        for (size_t columnPlayer = 0; columnPlayer < max_enemies; columnPlayer++) {
+            perTraceData.ctIsBotPlayer[columnPlayer].resize(rounds.size, false);
+            perTraceData.tIsBotPlayer[columnPlayer].resize(rounds.size, false);
+        }
+        perTraceData.oneNonReplayTeam.resize(rounds.size, false);
+        perTraceData.oneNonReplayBot.resize(rounds.size, false);
 //#pragma omp parallel for
         for (int64_t roundIndex = 0; roundIndex < rounds.size; roundIndex++) {
             bool foundFirstFireInRound = false, foundFirstPlantInRound = false, foundFirstDefusalInRound = false,
@@ -154,6 +166,25 @@ namespace csknow::key_retake_events {
                                 roundBaiters[roundIndex-1] = true;
                             }
                         }
+                    }
+                    else if (sayMessage.find(demo_file_string) != std::string::npos) {
+                        std::vector<std::string> parsedMessage = parseString(sayMessage, ':');
+                        perTraceData.demoFile[roundIndex] = parsedMessage[1];
+                    }
+                    else if (sayMessage.find(trace_counter_string) != std::string::npos) {
+                        std::vector<std::string> parsedMessage = parseString(sayMessage, '_');
+                        perTraceData.traceIndex[roundIndex] = std::stoi(parsedMessage[1]);
+                        perTraceData.numTraces[roundIndex] = std::stoi(parsedMessage[2]);
+                    }
+                    else if (sayMessage.find(non_replay_players_string) != std::string::npos) {
+                        std::vector<std::string> parsedMessage = parseString(sayMessage, '_');
+                        perTraceData.nonReplayPlayers[roundIndex].insert(perTraceData.nonReplayPlayers[roundIndex].end(),
+                                                                         parsedMessage.begin() + 1, parsedMessage.end());
+                    }
+                    else if (sayMessage.find(trace_bot_options_string) != std::string::npos) {
+                        std::vector<std::string> parsedMessage = parseString(sayMessage, '_');
+                        perTraceData.oneNonReplayTeam[roundIndex] = std::stoi(parsedMessage[1]);
+                        perTraceData.oneNonReplayBot[roundIndex] = std::stoi(parsedMessage[2]);
                     }
                 }
                 testStartBeforeOrDuringThisTick[tickIndex] = foundTestStartInRound;

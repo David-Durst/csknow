@@ -19,11 +19,11 @@
 #include <map>
 
 namespace csknow::feature_store {
+    using key_retake_events::max_enemies;
     constexpr double maxWorldDistance = 4000.;
     constexpr int prior_tick_spacing = 64;
     constexpr int num_prior_ticks = 12;
     constexpr int num_future_ticks = 2;
-    constexpr int max_enemies = 5;
 
     enum class DecreaseTimingOption {
         s5,

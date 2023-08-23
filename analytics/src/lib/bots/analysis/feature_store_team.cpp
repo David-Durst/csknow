@@ -835,14 +835,44 @@ namespace csknow::feature_store {
         }
     }
 
+    void TeamFeatureStoreResult::convertTraceNonReplayNamesToIndices(const Players & players, int64_t roundIndex,
+                                                                     int64_t tickIndex) {
+        // don't repeat multiple times per round, and don't do it on rounds without non-replay players
+        if (!perTraceData.convertedNonReplayNamesToIndices[roundIndex] &&
+            !perTraceData.nonReplayPlayers[roundIndex].empty()) {
+            perTraceData.convertedNonReplayNamesToIndices[roundIndex] = true;
+            map<string, int> ctPlayerNameToColumnIndex, tPlayerNameToColumnIndex;
+            for (size_t playerColumn = 0; playerColumn < max_enemies; playerColumn++) {
+                if (columnCTData[playerColumn].playerId[tickIndex] != INVALID_ID) {
+                    string playerName = players.name[players.idOffset + columnCTData[playerColumn].playerId[tickIndex]];
+                    ctPlayerNameToColumnIndex[playerName] = playerColumn;
+                }
+                if (columnTData[playerColumn].playerId[tickIndex] != INVALID_ID) {
+                    string playerName = players.name[players.idOffset + columnTData[playerColumn].playerId[tickIndex]];
+                    tPlayerNameToColumnIndex[playerName] = playerColumn;
+                }
+            }
+
+            for (const auto & nonReplayPlayerName : perTraceData.nonReplayPlayers[roundIndex]) {
+                if (ctPlayerNameToColumnIndex.count(nonReplayPlayerName)) {
+                    perTraceData.ctIsBotPlayer[ctPlayerNameToColumnIndex[nonReplayPlayerName]][roundIndex] = true;
+                }
+                if (tPlayerNameToColumnIndex.count(nonReplayPlayerName)) {
+                    perTraceData.tIsBotPlayer[tPlayerNameToColumnIndex[nonReplayPlayerName]][roundIndex] = true;
+                }
+            }
+        }
+    }
+
     void TeamFeatureStoreResult::computeAcausalLabels(const Games & games, const Rounds & rounds,
                                                       const Ticks & ticks,
-                                                      const Players &,
+                                                      const Players & players,
                                                       const DistanceToPlacesResult &,
                                                       const ReachableResult & reachableResult,
                                                       const nav_mesh::nav_file &,
                                                       const csknow::key_retake_events::KeyRetakeEvents & keyRetakeEvents) {
         demoFile = games.demoFile;
+        perTraceData = keyRetakeEvents.perTraceData;
         std::atomic<int64_t> roundsProcessed = 0;
         /*
         for (size_t i = 0; i < columnTData[4].distributionNearestAOrders15s[0].size(); i++) {
@@ -864,6 +894,8 @@ namespace csknow::feature_store {
                 if (tickIndex == INVALID_ID) {
                     continue;
                 }
+                // need to call once have filtered tick id, will rely on function to early exit from repeat calls
+                convertTraceNonReplayNamesToIndices(players, roundIndex, tickIndex);
                 gameId[tickIndex] = gameIndex;
                 gameTickNumber[tickIndex] = ticks.gameTickNumber[unmodifiedTickIndex];
                 roundNumber[tickIndex] = rounds.roundNumber[roundIndex];
@@ -990,6 +1022,18 @@ namespace csknow::feature_store {
         //hdf5FlatCreateProps.add(HighFive::Chunking(roundId.size()));
 
         file.createDataSet("/extra/demo file", demoFile, hdf5FlatCreateProps);
+        file.createDataSet("/extra/trace demo file", perTraceData.demoFile, hdf5FlatCreateProps);
+        file.createDataSet("/extra/trace index", perTraceData.traceIndex, hdf5FlatCreateProps);
+        file.createDataSet("/extra/num traces", perTraceData.numTraces, hdf5FlatCreateProps);
+        for (size_t columnPlayer = 0; columnPlayer < max_enemies; columnPlayer++) {
+            string columnPlayerStr = std::to_string(columnPlayer);
+            file.createDataSet("/extra/trace is bot player " + ctTeamStr + " " + columnPlayerStr,
+                               perTraceData.ctIsBotPlayer[columnPlayer], hdf5FlatCreateProps);
+            file.createDataSet("/extra/trace is bot player " + tTeamStr + " " + columnPlayerStr,
+                               perTraceData.tIsBotPlayer[columnPlayer], hdf5FlatCreateProps);
+        }
+        file.createDataSet("/extra/trace one non replay team", perTraceData.oneNonReplayTeam, hdf5FlatCreateProps);
+        file.createDataSet("/extra/trace one non replay bot", perTraceData.oneNonReplayBot, hdf5FlatCreateProps);
 
         file.createDataSet("/data/game id", gameId, hdf5FlatCreateProps);
         file.createDataSet("/data/round id", roundId, hdf5FlatCreateProps);
@@ -1101,6 +1145,21 @@ namespace csknow::feature_store {
         fileName = std::filesystem::path(filePath).filename();
 
         demoFile = file.getDataSet("/extra/demo file").read<std::vector<string>>();
+        /*
+         * will load these at a later point if needed
+        perTraceData.demoFile = file.getDataSet("/extra/trace demo file").read<std::vector<string>>();
+        perTraceData.traceIndex = file.getDataSet("/extra/trace index").read<std::vector<int>>();
+        perTraceData.numTraces = file.getDataSet("/extra/num traces").read<std::vector<int>>();
+        for (size_t columnPlayer = 0; columnPlayer < max_enemies; columnPlayer++) {
+            string columnPlayerStr = std::to_string(columnPlayer);
+            perTraceData.ctIsBotPlayer[columnPlayer] =
+                    file.getDataSet("/extra/trace is bot player " + ctTeamStr + " " + columnPlayerStr).read<std::vector<bool>>();
+            perTraceData.tIsBotPlayer[columnPlayer] =
+                    file.getDataSet("/extra/trace is bot player " + tTeamStr + " " + columnPlayerStr).read<std::vector<bool>>();
+        }
+        perTraceData.oneNonReplayTeam = file.getDataSet("/extra/trace one non replay team").read<std::vector<bool>>();
+        perTraceData.oneNonReplayBot = file.getDataSet("/extra/trace one non replay bot").read<std::vector<bool>>();
+         */
 
         gameId = file.getDataSet("/data/game id").read<std::vector<int64_t>>();
         roundId = file.getDataSet("/data/round id").read<std::vector<int64_t>>();

@@ -14,6 +14,21 @@
 #include "load_data.h"
 
 namespace csknow::key_retake_events {
+    constexpr int max_enemies = 5;
+
+    struct PerTraceData {
+        // trace data
+        vector<string> demoFile;
+        vector<int> traceIndex;
+        vector<int> numTraces;
+        // loading names in key retake event, converted to index-based bools in feature store team
+        vector<vector<string>> nonReplayPlayers;
+        vector<bool> convertedNonReplayNamesToIndices;
+        std::array<vector<bool>, max_enemies> ctIsBotPlayer, tIsBotPlayer;
+        vector<bool> oneNonReplayTeam;
+        vector<bool> oneNonReplayBot;
+    };
+
     class KeyRetakeEvents {
     public:
         // per tick data
@@ -47,6 +62,9 @@ namespace csknow::key_retake_events {
         vector<bool> roundHasCompleteTest;
         vector<bool> roundHasFailedTest;
         vector<bool> roundBaiters;
+
+        PerTraceData perTraceData;
+
 
         bool enableNonTestPlantRounds;
 

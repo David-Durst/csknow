@@ -67,8 +67,12 @@ namespace csknow::feature_store {
         vector<int64_t> internalIdToTickId;
         // tracks valid ticks (even if not used for training due to decimation)
         vector<bool> nonDecimatedValidRetakeTicks;
+
         // demo file names are only stored once per demo, not for all ticks, use gameId to lookup into them
         vector<string> demoFile;
+        // trace data only stored once per round
+        key_retake_events::PerTraceData perTraceData;
+
         vector<int64_t> gameId;
         vector<int64_t> roundId;
         vector<int64_t> roundNumber;
@@ -140,6 +144,7 @@ namespace csknow::feature_store {
             return {columnCTData, columnTData};
         }
         vector<string> allColumnDataTeam = {"CT", "T"};
+        string ctTeamStr = allColumnDataTeam[0], tTeamStr = allColumnDataTeam[1];
 
 
         void setOrders(const std::vector<csknow::orders::QueryOrder> & orders);
@@ -184,6 +189,7 @@ namespace csknow::feature_store {
                                           array<ColumnPlayerData,max_enemies> & columnData,
                                           DecreaseTimingOption decreaseTimingOption,
                                           const ReachableResult & reachableResult);
+        void convertTraceNonReplayNamesToIndices(const Players & players, int64_t roundIndex, int64_t tickIndex);
         void computeAcausalLabels(const Games & games, const Rounds & rounds, const Ticks & ticks,
                                   const Players & players, const DistanceToPlacesResult & distanceToPlacesResult,
                                   const ReachableResult & reachableResult,
