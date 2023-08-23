@@ -21,23 +21,8 @@ namespace csknow::tests::trace {
         int64_t tickInFeatureStore = tracesData.startIndices[traceIndex] +
                                      (framesAfterStartFrame / feature_store::every_nth_row);
 
-        // stop when one team not alive
-        bool ctAlive = false, tAlive = false;
-        for (size_t i = 0; i < state.clients.size(); i++) {
-            const ServerState::Client & client = state.clients[i];
-            if (client.isAlive) {
-                if (client.team == ENGINE_TEAM_CT) {
-                    ctAlive = true;
-                }
-                else if (client.team == ENGINE_TEAM_T) {
-                    tAlive = true;
-                }
-            }
-        }
-        if (!ctAlive || !tAlive || state.getSecondsBetweenTimes(roundStartTime, state.loadTime) > max_time_per_replay) {
-            playerNodeState[treeThinker.csgoId] = NodeState::Success;
-            return playerNodeState[treeThinker.csgoId];
-        }
+        // no need for a stopping condition, the script will finish when next round starts
+        // and key_retake_events can connect this round to round finish statement on next round
 
         for (const auto & neededBot : neededBots) {
             const ServerState::Client & client = state.getClient(neededBot.id);

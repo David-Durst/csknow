@@ -133,6 +133,7 @@ namespace csknow::tests::trace {
 
             Node::Ptr bodyNode = make_unique<ParallelFirstNode>(blackboard, Node::makeList(
                     make_unique<RepeatDecorator>(blackboard, make_unique<RoundStart>(blackboard), true),
+                    make_unique<csknow::tests::learned::FailIfTimeoutEndNode>(blackboard, name, roundIndex, numRounds, 60),
                     make_unique<ReplayNode>(blackboard, tracesData, neededBots, traceIndex, oneTeam, oneBot)));
 
             commands = make_unique<SequenceNode>(blackboard, Node::makeList(
