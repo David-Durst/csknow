@@ -357,7 +357,9 @@ struct SpecDynamic : Command {
     }
 };
 
-const string test_ready_string = "test ready", test_finished_string = "test finished", test_failed_string = "test failed";
+const string test_ready_string = "test ready", test_finished_string = "test finished", test_failed_string = "test failed",
+    demo_file_string = "demo file", trace_counter_string = "trace counter", non_replay_players_string = "non replay players",
+    trace_bot_options_string = "trace bot options";
 
 struct SayIf : Command {
     bool condition;

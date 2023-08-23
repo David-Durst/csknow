@@ -15,7 +15,7 @@ namespace csknow::tests::trace {
     class ReplayNode : public Node {
         const TracesData & tracesData;
         vector<NeededBot> neededBots;
-        int64_t roundIndex;
+        int64_t traceIndex;
         int64_t curRoundTick = 0;
         bool oneTeam;
         bool oneBot;
@@ -24,9 +24,9 @@ namespace csknow::tests::trace {
 
     public:
         ReplayNode(Blackboard & blackboard, const TracesData & tracesData, const vector<NeededBot> & neededBots,
-                   int64_t roundIndex, bool oneTeam, bool oneBot) :
-                Node(blackboard, "Replay" + tracesData.demoFile[roundIndex]), tracesData(tracesData),
-                neededBots(neededBots), roundIndex(roundIndex), oneTeam(oneTeam), oneBot(oneBot) { };
+                   int64_t traceIndex, bool oneTeam, bool oneBot) :
+                Node(blackboard, "Replay" + tracesData.demoFile[traceIndex]), tracesData(tracesData),
+                neededBots(neededBots), traceIndex(traceIndex), oneTeam(oneTeam), oneBot(oneBot) { };
 
         NodeState exec(const ServerState & state, TreeThinker &treeThinker) override;
 

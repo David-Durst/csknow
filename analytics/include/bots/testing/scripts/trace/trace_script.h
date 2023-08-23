@@ -14,6 +14,7 @@ namespace csknow::tests::trace {
 
     class TraceScript : public Script {
         const TracesData & tracesData;
+        int64_t traceIndex, numTraces;
         int64_t roundIndex, numRounds;
         Vec3 c4Pos;
         bool oneTeam;
@@ -22,7 +23,8 @@ namespace csknow::tests::trace {
         vector<Vec2> startViewAngle;
 
     public:
-        TraceScript(const TracesData & tracesData, int64_t roundIndex, int64_t numRounds, bool oneBot, bool oneTeam);
+        TraceScript(const TracesData & tracesData, int64_t traceIndex, int64_t numTraces, int64_t roundIndex,
+                    int64_t numRounds, bool oneBot, bool oneTeam);
 
         void computeInitialPositionsViewAngles();
         void initialize(Tree & tree, ServerState & state) override;

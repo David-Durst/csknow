@@ -18,8 +18,8 @@ namespace csknow::tests::trace {
             curFrame = startFrame + curFrame + 1;
         }
         int64_t framesAfterStartFrame = curFrame - startFrame;
-        int64_t tickInFeatureStore = tracesData.startIndices[roundIndex] +
-                (framesAfterStartFrame / feature_store::every_nth_row);
+        int64_t tickInFeatureStore = tracesData.startIndices[traceIndex] +
+                                     (framesAfterStartFrame / feature_store::every_nth_row);
 
         // stop when one team not alive
         bool ctAlive = false, tAlive = false;
@@ -44,20 +44,20 @@ namespace csknow::tests::trace {
 
             // limit to right team/bot as requested by config
             bool botTeamForTest =
-                    ((client.team == ENGINE_TEAM_CT && tracesData.ctBot[roundIndex]) ||
-                    (client.team == ENGINE_TEAM_T && !tracesData.ctBot[roundIndex]));
+                    ((client.team == ENGINE_TEAM_CT && tracesData.ctBot[traceIndex]) ||
+                     (client.team == ENGINE_TEAM_T && !tracesData.ctBot[traceIndex]));
             bool botPlayerForTest = !oneBot ||
-                    (client.team == ENGINE_TEAM_CT && tracesData.ctBotIndexToFeatureStoreIndex[roundIndex][ctBotIndex]
-                        == tracesData.oneBotFeatureStoreIndex[roundIndex]) ||
-                    (client.team == ENGINE_TEAM_T && tracesData.tBotIndexToFeatureStoreIndex[roundIndex][tBotIndex]
-                        == tracesData.oneBotFeatureStoreIndex[roundIndex]);
+                                    (client.team == ENGINE_TEAM_CT && tracesData.ctBotIndexToFeatureStoreIndex[traceIndex][ctBotIndex]
+                        == tracesData.oneBotFeatureStoreIndex[traceIndex]) ||
+                                    (client.team == ENGINE_TEAM_T && tracesData.tBotIndexToFeatureStoreIndex[traceIndex][tBotIndex]
+                        == tracesData.oneBotFeatureStoreIndex[traceIndex]);
             bool botForTest = oneTeam && botTeamForTest && botPlayerForTest;
 
             // assuming that script already configured players to be alive
             if (client.isAlive && !botForTest) {
                 int64_t columnIndex = client.team == ENGINE_TEAM_CT ?
-                        tracesData.ctBotIndexToFeatureStoreIndex[roundIndex][ctBotIndex] :
-                        tracesData.tBotIndexToFeatureStoreIndex[roundIndex][tBotIndex];
+                        tracesData.ctBotIndexToFeatureStoreIndex[traceIndex][ctBotIndex] :
+                        tracesData.tBotIndexToFeatureStoreIndex[traceIndex][tBotIndex];
                 const array<feature_store::TeamFeatureStoreResult::ColumnPlayerData, feature_store::max_enemies> &
                         columnData = client.team == ENGINE_TEAM_CT ?
                                      tracesData.teamFeatureStoreResult.columnCTData :
@@ -66,7 +66,7 @@ namespace csknow::tests::trace {
                 // if alive in game but not trace, just let bot controller handle it
                 // stop 1 tick early as averaging between ticks
                 if (columnData[columnIndex].alive[tickInFeatureStore + 1] &&
-                    tickInFeatureStore < tracesData.startIndices[roundIndex] + tracesData.lengths[roundIndex] - 1) {
+                    tickInFeatureStore < tracesData.startIndices[traceIndex] + tracesData.lengths[traceIndex] - 1) {
                     blackboard.playerToAction[client.csgoId].enableAbsPos = true;
                     double curTickWeight = 1. -
                             (static_cast<double>(framesAfterStartFrame % feature_store::every_nth_row) /

@@ -6,14 +6,13 @@
 #include "bots/testing/scripts/learned/log_nodes.h"
 
 namespace csknow::tests::trace {
-    TraceScript::TraceScript(const csknow::tests::trace::TracesData &tracesData, int64_t roundIndex,
-                             int64_t numRounds, bool oneTeam, bool oneBot) :
+    TraceScript::TraceScript(const csknow::tests::trace::TracesData &tracesData, int64_t traceIndex,
+                             int64_t numTraces, int64_t roundIndex, int64_t numRounds, bool oneTeam, bool oneBot) :
                              Script("TraceScript", {}, {ObserveType::FirstPerson, 0}), tracesData(tracesData),
-                             roundIndex(roundIndex), numRounds(numRounds), oneTeam(oneTeam), oneBot(oneBot) {
-        int64_t tickInFeatureStore = tracesData.startIndices[roundIndex];
+                             traceIndex(traceIndex), numTraces(numTraces), roundIndex(roundIndex), numRounds(numRounds),
+                             oneTeam(oneTeam), oneBot(oneBot) {
+        int64_t tickInFeatureStore = tracesData.startIndices[traceIndex];
 
-        name += tracesData.demoFile[roundIndex] + "_" + std::to_string(tracesData.roundNumber[roundIndex]) +
-                "_" + std::to_string(oneTeam) + "_" + std::to_string(oneBot);
         int numCT = 0, numT = 0;
         neededBots.clear();
 
@@ -39,17 +38,17 @@ namespace csknow::tests::trace {
         // if one player is a bot, spectate that bot
         if (oneTeam) {
             if (oneBot) {
-                if (tracesData.ctBot[roundIndex]) {
+                if (tracesData.ctBot[traceIndex]) {
                     observeSettings.neededBotIndex =
-                            ctFeatureStoreIndexToBotIndex[tracesData.oneBotFeatureStoreIndex[roundIndex]];
+                            ctFeatureStoreIndexToBotIndex[tracesData.oneBotFeatureStoreIndex[traceIndex]];
                 }
                 else {
                     observeSettings.neededBotIndex =
-                            tFeatureStoreIndexToBotIndex[tracesData.oneBotFeatureStoreIndex[roundIndex]];
+                            tFeatureStoreIndexToBotIndex[tracesData.oneBotFeatureStoreIndex[traceIndex]];
                 }
             }
             else {
-                if (tracesData.ctBot[roundIndex]) {
+                if (tracesData.ctBot[traceIndex]) {
                     observeSettings.neededBotIndex = ctFeatureStoreIndexToBotIndex[anAliveCTFeatureStoreIndex];
                 }
                 else {
@@ -61,12 +60,12 @@ namespace csknow::tests::trace {
 
     void TraceScript::computeInitialPositionsViewAngles() {
         // store player initial positions so can teleport before test starts
-        int64_t tickInFeatureStore = tracesData.startIndices[roundIndex];
+        int64_t tickInFeatureStore = tracesData.startIndices[traceIndex];
         int ctBotIndex = 0, tBotIndex = 0;
         for (const auto & neededBot : neededBots) {
             int64_t columnIndex = neededBot.team == ENGINE_TEAM_CT ?
-                                  tracesData.ctBotIndexToFeatureStoreIndex[roundIndex][ctBotIndex] :
-                                  tracesData.tBotIndexToFeatureStoreIndex[roundIndex][tBotIndex];
+                                  tracesData.ctBotIndexToFeatureStoreIndex[traceIndex][ctBotIndex] :
+                                  tracesData.tBotIndexToFeatureStoreIndex[traceIndex][tBotIndex];
             const array<feature_store::TeamFeatureStoreResult::ColumnPlayerData, feature_store::max_enemies> &
                     columnData = neededBot.team == ENGINE_TEAM_CT ?
                                  tracesData.teamFeatureStoreResult.columnCTData :
@@ -92,18 +91,18 @@ namespace csknow::tests::trace {
             Blackboard &blackboard = *tree.blackboard;
             Script::initialize(tree, state);
             vector<CSGOId> neededBotIds = getNeededBotIds();
-            bool lastRound = numRounds == roundIndex + 1;
+            bool lastRound = numTraces == traceIndex + 1;
 
             vector<string> nonReplayNames;
             for (size_t i = 0; i < neededBotIds.size(); i++) {
                 const auto & client = state.getClient(neededBotIds[i]);
                 if (oneTeam) {
-                    if (tracesData.ctBot[roundIndex] && client.team == ENGINE_TEAM_CT) {
+                    if (tracesData.ctBot[traceIndex] && client.team == ENGINE_TEAM_CT) {
                         if (!oneBot || observeSettings.neededBotIndex == static_cast<int64_t>(i)) {
                             nonReplayNames.push_back(client.name);
                         }
                     }
-                    else if (!tracesData.ctBot[roundIndex] && client.team == ENGINE_TEAM_T) {
+                    else if (!tracesData.ctBot[traceIndex] && client.team == ENGINE_TEAM_T) {
                         if (!oneBot || observeSettings.neededBotIndex == static_cast<int64_t>(i)) {
                             nonReplayNames.push_back(client.name);
                         }
@@ -134,12 +133,15 @@ namespace csknow::tests::trace {
 
             Node::Ptr bodyNode = make_unique<ParallelFirstNode>(blackboard, Node::makeList(
                     make_unique<RepeatDecorator>(blackboard, make_unique<RoundStart>(blackboard), true),
-                    make_unique<ReplayNode>(blackboard, tracesData, neededBots, roundIndex, oneTeam, oneBot)));
+                    make_unique<ReplayNode>(blackboard, tracesData, neededBots, traceIndex, oneTeam, oneBot)));
 
             commands = make_unique<SequenceNode>(blackboard, Node::makeList(
                                                          std::move(disableAllBothDuringSetup),
                                                          make_unique<csknow::tests::learned::StartNode>(blackboard, name, roundIndex, numRounds),
-                                                         make_unique<SayCmd>(blackboard, "non_replay_players," + strStream.str()),
+                                                         make_unique<SayCmd>(blackboard, demo_file_string + ":" + tracesData.demoFile[traceIndex]),
+                                                         make_unique<SayCmd>(blackboard, trace_counter_string + "," + std::to_string(traceIndex) + "," + std::to_string(numTraces)),
+                                                         make_unique<SayCmd>(blackboard, non_replay_players_string + "," + strStream.str()),
+                                                         make_unique<SayCmd>(blackboard, trace_bot_options_string + "," + std::to_string(oneTeam) + "," + std::to_string(oneBot)),
                                                          std::move(bodyNode),
                                                          make_unique<csknow::tests::learned::SuccessEndNode>(blackboard, name, roundIndex, numRounds)),
                                                  "RoundSequence");
@@ -149,11 +151,16 @@ namespace csknow::tests::trace {
     vector<Script::Ptr> createTracesScripts(const TracesData & tracesData, bool quitAtEnd) {
         vector<Script::Ptr> result;
 
-        int64_t numRounds = static_cast<int64_t>(tracesData.demoFile.size());
-        for (int64_t i = 0; i < numRounds; i++) {
+        int64_t numTraces = static_cast<int64_t>(tracesData.demoFile.size());
+        // mul by 2 since repeating for
+        int64_t numRounds = numTraces * num_trace_repeats * 2;
+        int64_t roundIndex = 0;
+        for (int64_t i = 0; i < numTraces; i++) {
             for (int j = 0; j < num_trace_repeats; j++) {
-                result.push_back(make_unique<TraceScript>(tracesData, i, numRounds, true, false));
-                result.push_back(make_unique<TraceScript>(tracesData, i, numRounds, true, true));
+                result.push_back(make_unique<TraceScript>(tracesData, i, numTraces, roundIndex, numRounds, true, false));
+                roundIndex++;
+                result.push_back(make_unique<TraceScript>(tracesData, i, numTraces, roundIndex, numRounds, true, true));
+                roundIndex++;
             }
         }
         if (quitAtEnd) {
