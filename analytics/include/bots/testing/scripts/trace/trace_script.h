@@ -10,7 +10,7 @@
 #include "bots/testing/scripts/test_round.h"
 
 namespace csknow::tests::trace {
-    constexpr int num_trace_repeats = 2;
+    constexpr int num_trace_repeats = 10;
 
     class TraceScript : public Script {
         const TracesData & tracesData;
