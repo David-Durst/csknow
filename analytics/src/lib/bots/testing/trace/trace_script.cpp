@@ -59,40 +59,29 @@ namespace csknow::tests::trace {
         }
     }
 
-    void TraceScript::computeInitialPositionsViewAngles(ServerState & state) const {
+    void TraceScript::computeInitialPositionsViewAngles() {
         // store player initial positions so can teleport before test starts
         int64_t tickInFeatureStore = tracesData.startIndices[roundIndex];
-        for (size_t i = 0; i < state.clients.size(); i++) {
-            const ServerState::Client & client = state.clients[i];
-
-            int64_t columnIndex = client.team == ENGINE_TEAM_CT ?
+        int ctBotIndex = 0, tBotIndex = 0;
+        for (const auto & neededBot : neededBots) {
+            int64_t columnIndex = neededBot.team == ENGINE_TEAM_CT ?
                                   tracesData.ctBotIndexToFeatureStoreIndex[roundIndex][ctBotIndex] :
                                   tracesData.tBotIndexToFeatureStoreIndex[roundIndex][tBotIndex];
             const array<feature_store::TeamFeatureStoreResult::ColumnPlayerData, feature_store::max_enemies> &
-                    columnData = client.team == ENGINE_TEAM_CT ?
+                    columnData = neededBot.team == ENGINE_TEAM_CT ?
                                  tracesData.teamFeatureStoreResult.columnCTData :
                                  tracesData.teamFeatureStoreResult.columnTData;
 
             if (columnData[columnIndex].alive[tickInFeatureStore]) {
-
+                startPos.push_back(columnData[columnIndex].footPos[tickInFeatureStore]);
+                startViewAngle.push_back(columnData[columnIndex].viewAngle[tickInFeatureStore]);
             }
-            blackboard.playerToAction[client.csgoId].absPos =
-                    avg(columnData[columnIndex].footPos[tickInFeatureStore],
-                        columnData[columnIndex].footPos[tickInFeatureStore + 1], curTickWeight);
-            blackboard.playerToAction[client.csgoId].absView =
-                    avg(columnData[columnIndex].viewAngle[tickInFeatureStore],
-                        columnData[columnIndex].viewAngle[tickInFeatureStore + 1], curTickWeight);
-            blackboard.playerToAction[client.csgoId]
-                    .setButton(IN_WALK, columnData[columnIndex].walking[tickInFeatureStore]);
-            blackboard.playerToAction[client.csgoId]
-                    .setButton(IN_DUCK, columnData[columnIndex].ducking[tickInFeatureStore]);
-
 
             // track indices even when dead to keep consistent (don't want to teleport to replace a player whne they die)
-            if (client.team == ENGINE_TEAM_CT) {
+            if (neededBot.team == ENGINE_TEAM_CT) {
                 ctBotIndex++;
             }
-            else if (client.team == ENGINE_TEAM_T) {
+            else if (neededBot.team == ENGINE_TEAM_T) {
                 tBotIndex++;
             }
         }
@@ -124,6 +113,7 @@ namespace csknow::tests::trace {
 
             stringstream strStream;
             commaSeparateList(strStream, nonReplayNames);
+            computeInitialPositionsViewAngles();
 
             Node::Ptr setupCommands = make_unique<SequenceNode>(blackboard, Node::makeList(
                     make_unique<InitGameRound>(blackboard, name),
@@ -131,6 +121,7 @@ namespace csknow::tests::trace {
                     make_unique<movement::WaitNode>(blackboard, 0.3),
                     make_unique<SpecDynamic>(blackboard, neededBots, observeSettings),
                     make_unique<SlayAllBut>(blackboard, neededBotIds, state),
+                    make_unique<TeleportMultiple>(blackboard, neededBotIds, startPos, startViewAngle, state),
                     make_unique<SetPos>(blackboard, c4Pos, Vec2({0., 0.})),
                     make_unique<TeleportPlantedC4>(blackboard),
                     make_unique<movement::WaitNode>(blackboard, 0.1),
@@ -143,7 +134,7 @@ namespace csknow::tests::trace {
 
             Node::Ptr bodyNode = make_unique<ParallelFirstNode>(blackboard, Node::makeList(
                     make_unique<RepeatDecorator>(blackboard, make_unique<RoundStart>(blackboard), true),
-                    make_unique<ReplayNode>(blackboard, tracesData, roundIndex, oneTeam, oneBot)));
+                    make_unique<ReplayNode>(blackboard, tracesData, neededBots, roundIndex, oneTeam, oneBot)));
 
             commands = make_unique<SequenceNode>(blackboard, Node::makeList(
                                                          std::move(disableAllBothDuringSetup),

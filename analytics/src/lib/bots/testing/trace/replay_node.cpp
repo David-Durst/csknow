@@ -39,11 +39,10 @@ namespace csknow::tests::trace {
             return playerNodeState[treeThinker.csgoId];
         }
 
-        for (size_t i = 0; i < state.clients.size(); i++) {
-            const ServerState::Client & client = state.clients[i];
+        for (const auto & neededBot : neededBots) {
+            const ServerState::Client & client = state.getClient(neededBot.id);
 
             // limit to right team/bot as requested by config
-            // ignore on first couple ticks so everyone in right place
             bool botTeamForTest =
                     ((client.team == ENGINE_TEAM_CT && tracesData.ctBot[roundIndex]) ||
                     (client.team == ENGINE_TEAM_T && !tracesData.ctBot[roundIndex]));
@@ -52,7 +51,7 @@ namespace csknow::tests::trace {
                         == tracesData.oneBotFeatureStoreIndex[roundIndex]) ||
                     (client.team == ENGINE_TEAM_T && tracesData.tBotIndexToFeatureStoreIndex[roundIndex][tBotIndex]
                         == tracesData.oneBotFeatureStoreIndex[roundIndex]);
-            bool botForTest = (curFrame - startFrame > 0) && oneTeam && botTeamForTest && botPlayerForTest;
+            bool botForTest = oneTeam && botTeamForTest && botPlayerForTest;
 
             // assuming that script already configured players to be alive
             if (client.isAlive && !botForTest) {

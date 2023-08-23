@@ -18,11 +18,13 @@ namespace csknow::tests::trace {
         Vec3 c4Pos;
         bool oneTeam;
         bool oneBot;
+        vector<Vec3> startPos;
+        vector<Vec2> startViewAngle;
 
     public:
         TraceScript(const TracesData & tracesData, int64_t roundIndex, int64_t numRounds, bool oneBot, bool oneTeam);
 
-        void computeInitialPositionsViewAngles(ServerState & state) const;
+        void computeInitialPositionsViewAngles();
         void initialize(Tree & tree, ServerState & state) override;
     };
 
