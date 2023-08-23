@@ -19,7 +19,6 @@ namespace csknow::tests::trace {
         int64_t curRoundTick = 0;
         bool oneTeam;
         bool oneBot;
-        CSKnowTime roundStartTime;
         int64_t startFrame = 0;
 
     public:

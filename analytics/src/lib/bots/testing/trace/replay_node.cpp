@@ -8,7 +8,6 @@ namespace csknow::tests::trace {
     NodeState ReplayNode::exec(const ServerState &state, TreeThinker &treeThinker) {
         int64_t ctBotIndex = 0, tBotIndex = 0;
         if (curRoundTick == 0) {
-            roundStartTime = state.loadTime;
             startFrame = static_cast<int64_t>(state.getLastFrame());
         }
         curRoundTick++;
