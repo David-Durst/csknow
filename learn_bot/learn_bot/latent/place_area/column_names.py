@@ -67,6 +67,8 @@ class PlayerPlaceAreaColumns:
     #prior_area_grid_cell_in_place: list[str]
     distribution_nearest_place: list[str]
     distribution_nearest_grid_area: list[str]
+    # only used for trace analysis
+    trace_is_bot_player: str
 
     def __init__(self, team_str: str, player_index: int):
         self.player_id = player_id_column + " " + player_team_str(team_str, player_index)
@@ -101,6 +103,7 @@ class PlayerPlaceAreaColumns:
         #self.prior_area_grid_cell_in_place = []
         self.distribution_nearest_place = []
         self.distribution_nearest_grid_area = []
+        self.trace_is_bot_player = get_trace_is_bot_player(player_index, team_str)
         self.delta_pos = []
         self.radial_vel = []
         self.future_radial_vel: List[List] = []

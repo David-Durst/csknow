@@ -169,7 +169,8 @@ namespace csknow::key_retake_events {
                     }
                     else if (sayMessage.find(demo_file_string) != std::string::npos) {
                         std::vector<std::string> parsedMessage = parseString(sayMessage, ':');
-                        perTraceData.demoFile[roundIndex] = parsedMessage[1];
+                        // extra offset since message starts with Console:
+                        perTraceData.demoFile[roundIndex] = parsedMessage[2];
                     }
                     else if (sayMessage.find(trace_counter_string) != std::string::npos) {
                         std::vector<std::string> parsedMessage = parseString(sayMessage, '_');

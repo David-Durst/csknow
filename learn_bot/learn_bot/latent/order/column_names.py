@@ -138,6 +138,8 @@ def get_player_prior_area_grid_cell_in_place_columns(player_index: int, area_gri
     return "prior area grid cell in place " + str(area_grid_index) + " " + team_str + " " + str(player_index) \
         + " t-" + str(history_index)
 
+def get_trace_is_bot_player(player_index: int, team_str: str) -> str:
+    return "trace is bot player " + team_str + " " + str(player_index)
 
 T = TypeVar('T')
 
