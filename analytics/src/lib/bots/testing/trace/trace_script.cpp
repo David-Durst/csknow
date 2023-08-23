@@ -65,6 +65,27 @@ namespace csknow::tests::trace {
             Script::initialize(tree, state);
             vector<CSGOId> neededBotIds = getNeededBotIds();
             bool lastRound = numRounds == roundIndex + 1;
+
+            vector<string> nonReplayNames;
+            for (size_t i = 0; i < neededBotIds.size(); i++) {
+                const auto & client = state.getClient(neededBotIds[i]);
+                if (oneTeam) {
+                    if (tracesData.ctBot[roundIndex] && client.team == ENGINE_TEAM_CT) {
+                        if (!oneBot || observeSettings.neededBotIndex == static_cast<int64_t>(i)) {
+                            nonReplayNames.push_back(client.name);
+                        }
+                    }
+                    else if (!tracesData.ctBot[roundIndex] && client.team == ENGINE_TEAM_T) {
+                        if (!oneBot || observeSettings.neededBotIndex == static_cast<int64_t>(i)) {
+                            nonReplayNames.push_back(client.name);
+                        }
+                    }
+                }
+            }
+
+            stringstream strStream;
+            commaSeparateList(strStream, nonReplayNames);
+
             Node::Ptr setupCommands = make_unique<SequenceNode>(blackboard, Node::makeList(
                     make_unique<InitGameRound>(blackboard, name),
                     make_unique<SetMaxRounds>(blackboard, lastRound ? 2 : 20, true),
@@ -88,6 +109,7 @@ namespace csknow::tests::trace {
             commands = make_unique<SequenceNode>(blackboard, Node::makeList(
                                                          std::move(disableAllBothDuringSetup),
                                                          make_unique<csknow::tests::learned::StartNode>(blackboard, name, roundIndex, numRounds),
+                                                         make_unique<SayCmd>(blackboard, "non_replay_players," + strStream.str()),
                                                          std::move(bodyNode),
                                                          make_unique<csknow::tests::learned::SuccessEndNode>(blackboard, name, roundIndex, numRounds)),
                                                  "RoundSequence");
@@ -99,8 +121,10 @@ namespace csknow::tests::trace {
 
         int64_t numRounds = static_cast<int64_t>(tracesData.demoFile.size());
         for (int64_t i = 0; i < numRounds; i++) {
-            result.push_back(make_unique<TraceScript>(tracesData, 1, numRounds, true, false));
-            //result.push_back(make_unique<TraceScript>(tracesData, 1, numRounds, true, true));
+            for (int j = 0; j < num_trace_repeats; j++) {
+                result.push_back(make_unique<TraceScript>(tracesData, i, numRounds, true, false));
+                result.push_back(make_unique<TraceScript>(tracesData, i, numRounds, true, true));
+            }
         }
         if (quitAtEnd) {
             result.push_back(make_unique<QuitScript>());

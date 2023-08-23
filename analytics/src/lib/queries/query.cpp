@@ -25,6 +25,16 @@ void QueryResult::toHDF5(const string &filePath) {
     toHDF5Inner(file);
 }
 
+void commaSeparateList(std::ostream & s, vector<string> list, const string& separator) {
+    if (list.empty()) {
+        return;
+    }
+    s << list[0];
+    for (size_t i = 1; i < list.size(); i++) {
+        s << separator << list[i];
+    }
+}
+
 void saveVec3VectorToHDF5(const std::vector<Vec3> & vectorOfVec3, HighFive::File & file,
                           const string & baseString, const HighFive::DataSetCreateProps & hdf5CreateProps) {
     std::array<std::vector<double>, 3> result;

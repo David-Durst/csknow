@@ -147,16 +147,6 @@ public:
         return result;
     }
 
-    static
-    void commaSeparateList(std::ostream & s, vector<string> list, const string& separator = ",") {
-        if (list.empty()) {
-            return;
-        }
-        s << list[0];
-        for (size_t i = 1; i < list.size(); i++) {
-            s << separator << list[i];
-        }
-    }
 
     // find all rows with foreign key that reference another table
     virtual vector<int64_t> filterByForeignKey(int64_t otherTableIndex) = 0;
@@ -164,6 +154,8 @@ public:
     virtual vector<string> getForeignKeyNames() = 0;
     virtual vector<string> getOtherColumnNames() = 0;
 };
+
+void commaSeparateList(std::ostream & s, vector<string> list, const string& separator = ",");
 
 void saveVec3VectorToHDF5(const std::vector<Vec3> & vectorOfVec3, HighFive::File & file,
                           const string & baseString, const HighFive::DataSetCreateProps & hdf5CreateProps);
@@ -177,6 +169,7 @@ void mergeThreadResults(int numThreads, vector<RangeIndexEntry> &rowIndicesPerRo
                         const vector<vector<int64_t>> & tmpRoundStarts, const vector<vector<int64_t>> & tmpRoundSizes,
                         vector<int64_t> & resultStartTickId, int64_t & resultSize,
                         const std::function<void(int64_t, int64_t)> & appendToResult);
+
 
 /*
 class NoSourceTargetQuery : public QueryResult {
