@@ -22,6 +22,7 @@ namespace csknow::tests::trace {
     public:
         TraceScript(const TracesData & tracesData, int64_t roundIndex, int64_t numRounds, bool oneBot, bool oneTeam);
 
+        void computeInitialPositionsViewAngles(ServerState & state) const;
         void initialize(Tree & tree, ServerState & state) override;
     };
 

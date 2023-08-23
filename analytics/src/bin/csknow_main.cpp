@@ -709,13 +709,13 @@ int main(int argc, char * argv[]) {
                 ss << ",";
                 ss << queryValue.playerLabelIndicesColumn;
                 ss << ",";
-                QueryResult::commaSeparateList(ss, queryValue.playerLabels, ";");
+                commaSeparateList(ss, queryValue.playerLabels, ";");
                 ss << ",";
                 ss << queryValue.perTickPlayerLabels;
                 ss << ",";
                 ss << queryValue.perTickPlayerLabelsQuery;
                 ss << ",";
-                QueryResult::commaSeparateList(ss, queryValue.posLabelsPositions, ";");
+                commaSeparateList(ss, queryValue.posLabelsPositions, ";");
                 ss << ",";
                 ss << queryValue.perTickPosLabels;
                 ss << ",";

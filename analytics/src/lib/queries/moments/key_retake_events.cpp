@@ -120,8 +120,8 @@ namespace csknow::key_retake_events {
                         foundTestStartInRound = true;
                         std::vector<std::string> parsedMessage = parseString(sayMessage, '_');
                         roundTestName[roundIndex] = parsedMessage[1];
-                        roundTestIndex[roundIndex] = std::stoi(parsedMessage[2]);
-                        roundNumTests[roundIndex] = std::stoi(parsedMessage[3]);
+                        roundTestIndex[roundIndex] = std::stoi(parsedMessage[parsedMessage.size() - 2]);
+                        roundNumTests[roundIndex] = std::stoi(parsedMessage[parsedMessage.size() - 1]);
                         roundHasStartTest[roundIndex] = true;
                     }
                     else if (sayMessage.find(test_finished_string) != std::string::npos) {

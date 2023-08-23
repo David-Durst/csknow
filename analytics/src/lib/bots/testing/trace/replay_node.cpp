@@ -13,7 +13,6 @@ namespace csknow::tests::trace {
         }
         curRoundTick++;
         int64_t curFrame = static_cast<int64_t>(state.getLastFrame());
-        bool firstFrame = curFrame == startFrame;
         if (curFrame < startFrame) {
             // start frame restarts at 0, so add 1 for that offset and continue
             curFrame = startFrame + curFrame + 1;
@@ -44,7 +43,7 @@ namespace csknow::tests::trace {
             const ServerState::Client & client = state.clients[i];
 
             // limit to right team/bot as requested by config
-            // ignore on first tick so everyone in right place
+            // ignore on first couple ticks so everyone in right place
             bool botTeamForTest =
                     ((client.team == ENGINE_TEAM_CT && tracesData.ctBot[roundIndex]) ||
                     (client.team == ENGINE_TEAM_T && !tracesData.ctBot[roundIndex]));
@@ -53,7 +52,7 @@ namespace csknow::tests::trace {
                         == tracesData.oneBotFeatureStoreIndex[roundIndex]) ||
                     (client.team == ENGINE_TEAM_T && tracesData.tBotIndexToFeatureStoreIndex[roundIndex][tBotIndex]
                         == tracesData.oneBotFeatureStoreIndex[roundIndex]);
-            bool botForTest = !firstFrame && oneTeam && botTeamForTest && botPlayerForTest;
+            bool botForTest = (curFrame - startFrame > 0) && oneTeam && botTeamForTest && botPlayerForTest;
 
             // assuming that script already configured players to be alive
             if (client.isAlive && !botForTest) {
