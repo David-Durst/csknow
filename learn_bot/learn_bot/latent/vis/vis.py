@@ -21,6 +21,10 @@ def index_cur_hdf5(loaded_model: LoadedModel):
     make_index_column(loaded_model.get_cur_id_df())
 
 
+ct_color = (4, 190, 196)
+t_color = (187, 142, 52)
+
+
 def vis(loaded_model: LoadedModel, inference_fn: Callable[[LoadedModel], None]):
     inference_fn(loaded_model)
     index_cur_hdf5(loaded_model)
@@ -132,8 +136,8 @@ def vis(loaded_model: LoadedModel, inference_fn: Callable[[LoadedModel], None]):
         player_to_color = {}
         if not draw_pred:
             for i in range(max_enemies):
-                player_to_color[i] = (4, 190, 196)
-                player_to_color[i+max_enemies] = (187, 142, 52)
+                player_to_color[i] = ct_color
+                player_to_color[i+max_enemies] = t_color
         players_status = draw_all_players(data_series, pred_series, d2_img_draw, draw_max, players_to_draw,
                                           player_to_color=player_to_color, draw_only_pos=not draw_pred,
                                           radial_vel_time_step=radial_vel_time_step_slider.get())

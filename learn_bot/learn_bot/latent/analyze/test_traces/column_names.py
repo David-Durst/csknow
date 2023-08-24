@@ -13,3 +13,4 @@ for player_columns in specific_player_place_area_columns:
     trace_is_bot_player_names.append(player_columns.trace_is_bot_player)
 
 rollout_aggressive_trace_hdf5_data_path = Path(__file__).parent / '..' / '..' / '..' / '..' / '..' / 'analytics' / 'rollout_outputs' / 'behaviorTreeTeamFeatureStore_8_22_23_aggressive_learned_trace.hdf5'
+trace_plots_path = Path(__file__).parent / 'trace_plots'
