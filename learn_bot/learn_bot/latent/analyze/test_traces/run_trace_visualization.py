@@ -24,7 +24,8 @@ def convert_to_canvas_coordinates(x_coords: pd.Series, y_coords: pd.Series) -> T
     return (x_coords - d2_top_left_x) / minimapScale, (d2_top_left_y - y_coords) / minimapScale
 
 
-def draw_trace_paths(trace_df: pd.DataFrame, trace_extra_df: pd.DataFrame, trace_index: int, one_non_replay_bot: bool):
+def draw_trace_paths(trace_df: pd.DataFrame, trace_extra_df: pd.DataFrame, trace_index: int, one_non_replay_bot: bool,
+                     trace_style_appendix: str):
     cur_trace_extra_df = trace_extra_df[(trace_extra_df[trace_index_name] == trace_index) &
                                         (trace_extra_df[trace_one_non_replay_bot_name] == one_non_replay_bot)]
     cur_trace_round_ids = cur_trace_extra_df.index
@@ -74,24 +75,24 @@ def draw_trace_paths(trace_df: pd.DataFrame, trace_extra_df: pd.DataFrame, trace
             all_player_d2_img_copy.alpha_composite(cur_player_d2_overlay_im)
 
     png_file_name = str(trace_index) + "_" + trace_demo_file + "_" + str(one_non_replay_bot) + ".png"
-    all_player_d2_img_copy.save(trace_plots_path / png_file_name)
+    os.makedirs(trace_plots_path / trace_style_appendix, exist_ok=True)
+    all_player_d2_img_copy.save(trace_plots_path / trace_style_appendix / png_file_name)
     print(f"finished {png_file_name}")
 
 
-def visualize_traces(trace_hdf5_data_path):
+def visualize_traces(trace_hdf5_data_path: Path, trace_style_appendix: str):
     trace_df = load_hdf5_to_pd(trace_hdf5_data_path)
     trace_extra_df = load_hdf5_to_pd(trace_hdf5_data_path, root_key='extra',
                                      cols_to_get=[trace_demo_file_name, trace_index_name, num_traces_name,
                                                   trace_one_non_replay_team_name, trace_one_non_replay_bot_name] + trace_is_bot_player_names)
 
-    os.makedirs(trace_plots_path, exist_ok=True)
-
     for trace_index in range(len(rounds_for_traces)):
-        draw_trace_paths(trace_df, trace_extra_df, trace_index, False)
-        draw_trace_paths(trace_df, trace_extra_df, trace_index, True)
+        draw_trace_paths(trace_df, trace_extra_df, trace_index, False, trace_style_appendix)
+        draw_trace_paths(trace_df, trace_extra_df, trace_index, True, trace_style_appendix)
 
 
 if __name__ == "__main__":
     #set_pd_print_options()
 
-    visualize_traces(rollout_aggressive_trace_hdf5_data_path)
+    visualize_traces(rollout_aggressive_trace_hdf5_data_path, 'aggressive')
+    visualize_traces(rollout_passive_trace_hdf5_data_path, 'passive')
