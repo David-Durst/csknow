@@ -15,9 +15,9 @@ d2_img = Image.open(d2_radar_path)
 d2_img = d2_img.resize((minimapWidth, minimapHeight), Image.Resampling.LANCZOS)
 
 bot_ct_color_list = [4, 190, 196, 0]
-replay_ct_color_list = [4, 125, 125, 0]
+replay_ct_color_list = [18, 237, 147, 0]
 bot_t_color_list = [187, 142, 52, 0]
-replay_t_color_list = [128, 128, 0, 0]
+replay_t_color_list = [237, 18, 108, 0]
 
 
 def convert_to_canvas_coordinates(x_coords: pd.Series, y_coords: pd.Series) -> Tuple[pd.Series, pd.Series]:
@@ -39,18 +39,19 @@ def draw_trace_paths(trace_df: pd.DataFrame, trace_extra_df: pd.DataFrame, trace
 
     all_player_d2_img_copy = d2_img.copy().convert("RGBA")
 
+    trace_demo_file = ""
     for cur_round_id in cur_trace_round_ids:
+        # since this was split with : rather than _, need to remove last _
+        trace_demo_file = cur_trace_extra_df.loc[cur_round_id, trace_demo_file_name].decode('utf-8')[:-1]
         cur_round_trace_df = trace_df[trace_df[round_id_column] == cur_round_id]
         for player_place_area_columns in specific_player_place_area_columns:
-            print(player_place_area_columns.player_id)
-            print('hi')
-            player_x_coords = cur_round_trace_df.loc[:, player_place_area_columns.pos[0]]
-            player_y_coords = cur_round_trace_df.loc[:, player_place_area_columns.pos[1]]
-            player_alive = cur_round_trace_df[cur_round_trace_df[round_id_column] == cur_round_id].loc[:, player_place_area_columns.alive]
-            player_alive_x_coords = player_x_coords[player_alive]
-            player_alive_y_coords = player_y_coords[player_alive]
+            cur_round_player_trace_df = cur_round_trace_df[cur_round_trace_df[player_place_area_columns.alive] == 1]
+            if cur_round_player_trace_df.empty:
+                continue
+            player_x_coords = cur_round_player_trace_df.loc[:, player_place_area_columns.pos[0]]
+            player_y_coords = cur_round_player_trace_df.loc[:, player_place_area_columns.pos[1]]
             player_canvas_x_coords, player_canvas_y_coords = \
-                convert_to_canvas_coordinates(player_alive_x_coords, player_alive_y_coords)
+                convert_to_canvas_coordinates(player_x_coords, player_y_coords)
             player_xy_coords = list(zip(list(player_canvas_x_coords), list(player_canvas_y_coords)))
 
             cur_player_d2_overlay_im = Image.new("RGBA", all_player_d2_img_copy.size, (255, 255, 255, 0))
@@ -69,13 +70,12 @@ def draw_trace_paths(trace_df: pd.DataFrame, trace_extra_df: pd.DataFrame, trace
                     fill_color = bot_t_color
                 else:
                     fill_color = replay_t_color
-            cur_player_d2_drw.line(xy=player_xy_coords, fill=fill_color)
+            cur_player_d2_drw.line(xy=player_xy_coords, fill=fill_color, width=5)
             all_player_d2_img_copy.alpha_composite(cur_player_d2_overlay_im)
 
-    all_player_d2_img_copy.save(
-        trace_plots_path /
-        (cur_trace_extra_df.loc[trace_demo_file_name].iloc[0] + "_" + str(one_non_replay_bot) + ".png")
-    )
+    png_file_name = str(trace_index) + "_" + trace_demo_file + "_" + str(one_non_replay_bot) + ".png"
+    all_player_d2_img_copy.save(trace_plots_path / png_file_name)
+    print(f"finished {png_file_name}")
 
 
 def visualize_traces(trace_hdf5_data_path):

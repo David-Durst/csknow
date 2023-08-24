@@ -894,8 +894,6 @@ namespace csknow::feature_store {
                 if (tickIndex == INVALID_ID) {
                     continue;
                 }
-                // need to call once have filtered tick id, will rely on function to early exit from repeat calls
-                convertTraceNonReplayNamesToIndices(players, roundIndex, tickIndex);
                 gameId[tickIndex] = gameIndex;
                 gameTickNumber[tickIndex] = ticks.gameTickNumber[unmodifiedTickIndex];
                 roundNumber[tickIndex] = rounds.roundNumber[roundIndex];
@@ -1007,6 +1005,10 @@ namespace csknow::feature_store {
                 if (tickIndex == INVALID_ID) {
                     continue;
                 }
+
+                // need to call once have filtered tick id, will rely on function to early exit from repeat calls
+                convertTraceNonReplayNamesToIndices(players, roundIndex, tickIndex);
+
                 removePartialACausalLabels(tickIndex, columnCTData);
                 removePartialACausalLabels(tickIndex, columnTData);
             }
