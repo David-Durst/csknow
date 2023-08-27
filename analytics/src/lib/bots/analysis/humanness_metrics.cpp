@@ -40,7 +40,10 @@ namespace csknow::humanness_metrics {
 
             for (int64_t tickIndex = rounds.ticksPerRound[roundIndex].minId;
                  tickIndex <= rounds.ticksPerRound[roundIndex].maxId; tickIndex++) {
-                if (teamFeatureStoreResult.nonDecimatedValidRetakeTicks[tickIndex]) {
+                // last player hurt event (killing last enemy) happens when player is dead, so not counted as valid
+                // allow first tick after valids to catch this
+                if (teamFeatureStoreResult.nonDecimatedValidRetakeTicks[tickIndex] ||
+                    (tickIndex > 0 && teamFeatureStoreResult.nonDecimatedValidRetakeTicks[tickIndex - 1])) {
                     // on first valid tick, set winner
                     if (!roundHasValidTick) {
                         roundHasValidTick = true;

@@ -135,6 +135,10 @@ namespace csknow::key_retake_events {
                         roundTestIndex[roundIndex] = std::stoi(parsedMessage[2]);
                         roundNumTests[roundIndex] = std::stoi(parsedMessage[3]);
                         roundHasStartTest[roundIndex] = true;
+                        // if round start and last round, then mark has completion as no next round to print completion
+                        if (roundIndex == rounds.size - 1) {
+                            roundHasCompleteTest[roundIndex] = true;
+                        }
                     }
                     else if (sayMessage.find(test_finished_string) != std::string::npos) {
                         foundTestFinishInRound = true;
