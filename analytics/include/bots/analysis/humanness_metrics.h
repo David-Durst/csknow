@@ -39,6 +39,11 @@ namespace csknow::humanness_metrics {
         vector<float> distanceToCoverWhenFiring;
         vector<float> distanceToCoverWhenShot;
 
+        vector<float> distanceToC4;
+        vector<float> distanceToC4WhenEnemyVisibleFOV;
+        vector<float> distanceToC4WhenFiring;
+        vector<float> distanceToC4WhenShot;
+
         vector<float> timeFromFiringToTeammateSeeingEnemyFOV;
         vector<float> timeFromShotToTeammateSeeingEnemyFOV;
 
@@ -52,6 +57,10 @@ namespace csknow::humanness_metrics {
             roundIdPerNearestTeammate, roundIdPerNearestTeammateFiring, roundIdPerNearestTeammateShot,
             roundIdPerEnemyVisibleNoFOVPAT, roundIdPerEnemyVisibleFOVPAT,
             roundIdPerFiringToTeammateSeeingEnemy, roundIdPerShotToTeammateSeeingEnemy;
+        vector<bool> isCTPerPAT, isCTPerFiringPAT, isCTPerShotPAT,
+                isCTPerNearestTeammate, isCTPerNearestTeammateFiring, isCTPerNearestTeammateShot,
+                isCTPerEnemyVisibleNoFOVPAT, isCTPerEnemyVisibleFOVPAT,
+                isCTPerFiringToTeammateSeeingEnemy, isCTPerShotToTeammateSeeingEnemy;
         vector<int64_t> roundIdPerRound;
 
 
