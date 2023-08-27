@@ -142,6 +142,7 @@ namespace csknow::humanness_metrics {
                                 firingTeammatesToClear.push_back(firingTeammateId);
                                 roundIdPerFiringToTeammateSeeingEnemy.push_back(roundIndex);
                                 isCTPerFiringToTeammateSeeingEnemy.push_back(teamId == ENGINE_TEAM_CT);
+                                playerIdPerFiringToTeammateSeeingEnemy.push_back(firingTeammateId);
                             }
                         }
                         for (const auto & firingTeammateId : firingTeammatesToClear) {
@@ -157,6 +158,7 @@ namespace csknow::humanness_metrics {
                                 shotTeammatesToClear.push_back(shotTeammateId);
                                 roundIdPerShotToTeammateSeeingEnemy.push_back(roundIndex);
                                 isCTPerShotToTeammateSeeingEnemy.push_back(teamId == ENGINE_TEAM_CT);
+                                playerIdPerShotToTeammateSeeingEnemy.push_back(shotTeammateId);
                                 /*
                                 if (timeFromShotToTeammateSeeingEnemyFOV.back() == 0.) {
                                     std::cout << "victim " << players.name[players.idOffset + shotTeammateId]
@@ -325,6 +327,7 @@ namespace csknow::humanness_metrics {
                                         nearestTeammateDistance - playerToFirstRoundDistanceToNearestTeammate[playerId]);
                                 roundIdPerNearestTeammate.push_back(roundIndex);
                                 isCTPerNearestTeammate.push_back(teamId == ENGINE_TEAM_CT);
+                                playerIdPerNearestTeammate.push_back(playerId);
                             }
 
                             if (nearestEnemyDistance > 1e7) {
@@ -341,6 +344,7 @@ namespace csknow::humanness_metrics {
                                             nearestTeammateDistance - playerToFirstRoundDistanceToNearestTeammate[playerId]);
                                     roundIdPerNearestTeammateFiring.push_back(roundIndex);
                                     isCTPerNearestTeammateFiring.push_back(teamId == ENGINE_TEAM_CT);
+                                    playerIdPerNearestTeammateFiring.push_back(playerId);
                                 }
                                 distanceToNearestEnemyWhenFiring.push_back(nearestEnemyDistance);
                             }
@@ -352,6 +356,7 @@ namespace csknow::humanness_metrics {
                                             nearestTeammateDistance - playerToFirstRoundDistanceToNearestTeammate[playerId]);
                                     roundIdPerNearestTeammateShot.push_back(roundIndex);
                                     isCTPerNearestTeammateShot.push_back(teamId == ENGINE_TEAM_CT);
+                                    playerIdPerNearestTeammateShot.push_back(playerId);
                                 }
                                 distanceToNearestEnemyWhenShot.push_back(nearestEnemyDistance);
                                 distanceToAttackerWhenShot.push_back(attackerForVictimDistance);
@@ -408,21 +413,26 @@ namespace csknow::humanness_metrics {
 
                             roundIdPerPAT.push_back(roundIndex);
                             isCTPerPAT.push_back(teamId == ENGINE_TEAM_CT);
+                            playerIdPerPAT.push_back(playerId);
                             if (shootersNextTick.count(playerId)) {
                                 roundIdPerFiringPAT.push_back(roundIndex);
                                 isCTPerFiringPAT.push_back(teamId == ENGINE_TEAM_CT);
+                                playerIdPerFiringPAT.push_back(playerId);
                             }
                             if (victimsNextTick.count(playerId)) {
                                 roundIdPerShotPAT.push_back(roundIndex);
                                 isCTPerShotPAT.push_back(teamId == ENGINE_TEAM_CT);
+                                playerIdPerShotPAT.push_back(playerId);
                             }
                             if (playerCanSeeEnemyNoFOV.count(playerId)) {
                                 roundIdPerEnemyVisibleNoFOVPAT.push_back(roundIndex);
                                 isCTPerEnemyVisibleNoFOVPAT.push_back(teamId == ENGINE_TEAM_CT);
+                                playerIdPerEnemyVisibleNoFOVPAT.push_back(playerId);
                             }
                             if (playerCanSeeEnemyFOV.count(playerId)) {
                                 roundIdPerEnemyVisibleFOVPAT.push_back(roundIndex);
                                 isCTPerEnemyVisibleFOVPAT.push_back(teamId == ENGINE_TEAM_CT);
+                                playerIdPerEnemyVisibleFOVPAT.push_back(playerId);
                             }
                         }
                     }
@@ -530,6 +540,20 @@ namespace csknow::humanness_metrics {
         file.createDataSet("/data/is ct per firing to teammate seeing enemy", isCTPerFiringToTeammateSeeingEnemy,
                            hdf5FlatCreateProps);
         file.createDataSet("/data/is ct per shot to teammate seeing enemy", isCTPerShotToTeammateSeeingEnemy,
+                           hdf5FlatCreateProps);
+        file.createDataSet("/data/player id per pat", playerIdPerPAT, hdf5FlatCreateProps);
+        file.createDataSet("/data/player id per firing pat", playerIdPerFiringPAT, hdf5FlatCreateProps);
+        file.createDataSet("/data/player id per shot pat", playerIdPerShotPAT, hdf5FlatCreateProps);
+        file.createDataSet("/data/player id per nearest teammate", playerIdPerNearestTeammate, hdf5FlatCreateProps);
+        file.createDataSet("/data/player id per nearest teammate firing", playerIdPerNearestTeammateFiring, hdf5FlatCreateProps);
+        file.createDataSet("/data/player id per nearest teammate shot", playerIdPerNearestTeammateShot, hdf5FlatCreateProps);
+        file.createDataSet("/data/player id per enemy visible no fov pat", playerIdPerEnemyVisibleNoFOVPAT,
+                           hdf5FlatCreateProps);
+        file.createDataSet("/data/player id per enemy visible fov pat", playerIdPerEnemyVisibleFOVPAT,
+                           hdf5FlatCreateProps);
+        file.createDataSet("/data/player id per firing to teammate seeing enemy", playerIdPerFiringToTeammateSeeingEnemy,
+                           hdf5FlatCreateProps);
+        file.createDataSet("/data/player id per shot to teammate seeing enemy", playerIdPerShotToTeammateSeeingEnemy,
                            hdf5FlatCreateProps);
         file.createDataSet("/data/round id per round", roundIdPerRound,
                            hdf5FlatCreateProps);

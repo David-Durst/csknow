@@ -70,6 +70,10 @@ namespace csknow::humanness_metrics {
                 isCTPerNearestTeammate, isCTPerNearestTeammateFiring, isCTPerNearestTeammateShot,
                 isCTPerEnemyVisibleNoFOVPAT, isCTPerEnemyVisibleFOVPAT,
                 isCTPerFiringToTeammateSeeingEnemy, isCTPerShotToTeammateSeeingEnemy;
+        vector<int64_t> playerIdPerPAT, playerIdPerFiringPAT, playerIdPerShotPAT,
+                playerIdPerNearestTeammate, playerIdPerNearestTeammateFiring, playerIdPerNearestTeammateShot,
+                playerIdPerEnemyVisibleNoFOVPAT, playerIdPerEnemyVisibleFOVPAT,
+                playerIdPerFiringToTeammateSeeingEnemy, playerIdPerShotToTeammateSeeingEnemy;
         vector<int64_t> roundIdPerRound;
 
 
