@@ -326,9 +326,6 @@ namespace csknow::humanness_metrics {
                                 distanceToNearestEnemyWhenFiring.push_back(nearestEnemyDistance);
                             }
 
-                            if (ticks.gameTickNumber[tickIndex] == 117695) {
-                                std::cout << "huh" << std::endl;
-                            }
                             if (nearestEnemyDistance > 1e7) {
                                 std::cout << "bad nearest enemy distance " << nearestEnemyDistance
                                     << " game tick number " << ticks.gameTickNumber[tickIndex] << std::endl;
