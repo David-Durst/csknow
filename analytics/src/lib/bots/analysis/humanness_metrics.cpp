@@ -40,10 +40,7 @@ namespace csknow::humanness_metrics {
 
             for (int64_t tickIndex = rounds.ticksPerRound[roundIndex].minId;
                  tickIndex <= rounds.ticksPerRound[roundIndex].maxId; tickIndex++) {
-                // last player hurt event (killing last enemy) happens when player is dead, so not counted as valid
-                // allow first tick after valids to catch this
-                if (teamFeatureStoreResult.nonDecimatedValidRetakeTicks[tickIndex] ||
-                    (tickIndex > 0 && teamFeatureStoreResult.nonDecimatedValidRetakeTicks[tickIndex - 1])) {
+                if (teamFeatureStoreResult.nonDecimatedValidRetakeTicks[tickIndex]) {
                     // on first valid tick, set winner
                     if (!roundHasValidTick) {
                         roundHasValidTick = true;
@@ -51,19 +48,23 @@ namespace csknow::humanness_metrics {
                     }
 
                     // compute key events
-                    set<int64_t> shootersThisTick;
+                    // last player hurt event (killing last enemy) happens when player is dead, so not counted as valid
+                    // shift shoot/hurt events by one tick so compute everything while victim is alive
+                    // this avoids dealing with positions when player is dead, game inconsistently puts garbage
+                    // in dead positions
+                    set<int64_t> shootersNextTick;
                     for (const auto & [_0, _1, weaponFireIndex] :
-                            ticks.weaponFirePerTick.intervalToEvent.findOverlapping(tickIndex, tickIndex)) {
-                        shootersThisTick.insert(weaponFire.shooter[weaponFireIndex]);
+                            ticks.weaponFirePerTick.intervalToEvent.findOverlapping(tickIndex + 1, tickIndex + 1)) {
+                        shootersNextTick.insert(weaponFire.shooter[weaponFireIndex]);
                     }
 
-                    set<int64_t> victimsThisTick;
-                    map<int64_t, int64_t> attackerForVictimsThisTick;
+                    set<int64_t> victimsNextTick;
+                    map<int64_t, int64_t> attackerForVictimsNextTick;
                     for (const auto & [_0, _1, hurtIndex] :
-                            ticks.hurtPerTick.intervalToEvent.findOverlapping(tickIndex, tickIndex)) {
+                            ticks.hurtPerTick.intervalToEvent.findOverlapping(tickIndex + 1, tickIndex + 1)) {
                         if (isDemoEquipmentAGun(hurt.weapon[hurtIndex])) {
-                            victimsThisTick.insert(hurt.victim[hurtIndex]);
-                            attackerForVictimsThisTick[hurt.victim[hurtIndex]] = hurt.attacker[hurtIndex];
+                            victimsNextTick.insert(hurt.victim[hurtIndex]);
+                            attackerForVictimsNextTick[hurt.victim[hurtIndex]] = hurt.attacker[hurtIndex];
                         }
                     }
 
@@ -103,7 +104,7 @@ namespace csknow::humanness_metrics {
                     }
 
                     // start time events based on firing/shoot -> teammate seeing enemy
-                    for (const auto & shooter : shootersThisTick) {
+                    for (const auto & shooter : shootersNextTick) {
                         if (!playerToTeamId.count(shooter)) {
                             std::cout << "shooter " << players.name[players.idOffset + shooter] << " without team, game tick id " << ticks.gameTickNumber[tickIndex] << std::endl;
                         }
@@ -114,7 +115,7 @@ namespace csknow::humanness_metrics {
                         }
                     }
 
-                    for (const auto & victim : victimsThisTick) {
+                    for (const auto & victim : victimsNextTick) {
                         if (!playerToTeamId.count(victim)) {
                             std::cout << "victim " << players.name[players.idOffset + victim] << " without team, game tick id " << ticks.gameTickNumber[tickIndex] << std::endl;
                         }
@@ -269,12 +270,12 @@ namespace csknow::humanness_metrics {
                             unscaledSpeed.push_back(curUnscaledSpeed);
                             scaledSpeed.push_back(curScaledSpeed);
                             weaponOnlyScaledSpeed.push_back(curWeaponOnlyScaledSpeed);
-                            if (shootersThisTick.count(playerId) > 0) {
+                            if (shootersNextTick.count(playerId) > 0) {
                                 unscaledSpeedWhenFiring.push_back(curUnscaledSpeed);
                                 scaledSpeedWhenFiring.push_back(curScaledSpeed);
                                 weaponOnlyScaledSpeedWhenFiring.push_back(curWeaponOnlyScaledSpeed);
                             }
-                            if (victimsThisTick.count(playerId) > 0) {
+                            if (victimsNextTick.count(playerId) > 0) {
                                 unscaledSpeedWhenShot.push_back(curUnscaledSpeed);
                                 scaledSpeedWhenShot.push_back(curScaledSpeed);
                                 weaponOnlyScaledSpeedWhenShot.push_back(curWeaponOnlyScaledSpeed);
@@ -290,8 +291,8 @@ namespace csknow::humanness_metrics {
                                 if (playerId == otherPlayerId) {
                                     continue;
                                 }
-                                if (!playerToAlive[otherPlayerId] && !victimsThisTick.count(otherPlayerId) &&
-                                    !shootersThisTick.count(otherPlayerId)) {
+                                if (!playerToAlive[otherPlayerId] && !victimsNextTick.count(otherPlayerId) &&
+                                    !shootersNextTick.count(otherPlayerId)) {
                                     continue;
                                 }
 
@@ -299,8 +300,8 @@ namespace csknow::humanness_metrics {
                                         reachable.getDistance(playerToAreaIndex[playerId],
                                                               playerToAreaIndex[otherPlayerId]));
 
-                                if (attackerForVictimsThisTick.count(playerId) > 0 &&
-                                    attackerForVictimsThisTick[playerId] == otherPlayerId) {
+                                if (attackerForVictimsNextTick.count(playerId) > 0 &&
+                                    attackerForVictimsNextTick[playerId] == otherPlayerId) {
                                     attackerForVictimDistance = otherPlayerDistance;
                                 }
 
@@ -316,7 +317,7 @@ namespace csknow::humanness_metrics {
                                 distanceToNearestTeammate.push_back(nearestTeammateDistance);
                                 roundIdPerNearestTeammate.push_back(roundIndex);
                             }
-                            if (shootersThisTick.count(playerId)) {
+                            if (shootersNextTick.count(playerId)) {
                                 // filter out times when no teammate exists
                                 if (nearestTeammateDistance != std::numeric_limits<float>::max()) {
                                     distanceToNearestTeammateWhenFiring.push_back(nearestTeammateDistance);
@@ -325,12 +326,15 @@ namespace csknow::humanness_metrics {
                                 distanceToNearestEnemyWhenFiring.push_back(nearestEnemyDistance);
                             }
 
+                            if (ticks.gameTickNumber[tickIndex] == 117695) {
+                                std::cout << "huh" << std::endl;
+                            }
                             if (nearestEnemyDistance > 1e7) {
                                 std::cout << "bad nearest enemy distance " << nearestEnemyDistance
                                     << " game tick number " << ticks.gameTickNumber[tickIndex] << std::endl;
                             }
                             distanceToNearestEnemy.push_back(nearestEnemyDistance);
-                            if (victimsThisTick.count(playerId)) {
+                            if (victimsNextTick.count(playerId)) {
                                 if (nearestTeammateDistance != std::numeric_limits<float>::max()) {
                                     distanceToNearestTeammateWhenShot.push_back(nearestTeammateDistance);
                                     roundIdPerNearestTeammateShot.push_back(roundIndex);
@@ -360,18 +364,18 @@ namespace csknow::humanness_metrics {
                             if (playerCanSeeEnemyFOV.count(playerId)) {
                                 distanceToCoverWhenEnemyVisibleFOV.push_back(minDistanceToCover);
                             }
-                            if (shootersThisTick.count(playerId)) {
+                            if (shootersNextTick.count(playerId)) {
                                 distanceToCoverWhenFiring.push_back(minDistanceToCover);
                             }
-                            if (victimsThisTick.count(playerId)) {
+                            if (victimsNextTick.count(playerId)) {
                                 distanceToCoverWhenShot.push_back(minDistanceToCover);
                             }
 
                             roundIdPerPAT.push_back(roundIndex);
-                            if (shootersThisTick.count(playerId)) {
+                            if (shootersNextTick.count(playerId)) {
                                 roundIdPerFiringPAT.push_back(roundIndex);
                             }
-                            if (victimsThisTick.count(playerId)) {
+                            if (victimsNextTick.count(playerId)) {
                                 roundIdPerShotPAT.push_back(roundIndex);
                             }
                             if (playerCanSeeEnemyNoFOV.count(playerId)) {
