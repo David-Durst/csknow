@@ -27,6 +27,10 @@ namespace csknow::humanness_metrics {
         vector<float> distanceToNearestTeammateWhenFiring;
         vector<float> distanceToNearestTeammateWhenShot;
 
+        vector<float> deltaDistanceToNearestTeammate;
+        vector<float> deltaDistanceToNearestTeammateWhenFiring;
+        vector<float> deltaDistanceToNearestTeammateWhenShot;
+
         vector<float> distanceToNearestEnemy;
         vector<float> distanceToNearestEnemyWhenFiring;
         vector<float> distanceToNearestEnemyWhenShot;
@@ -43,6 +47,11 @@ namespace csknow::humanness_metrics {
         vector<float> distanceToC4WhenEnemyVisibleFOV;
         vector<float> distanceToC4WhenFiring;
         vector<float> distanceToC4WhenShot;
+
+        vector<float> deltaDistanceToC4;
+        vector<float> deltaDistanceToC4WhenEnemyVisibleFOV;
+        vector<float> deltaDistanceToC4WhenFiring;
+        vector<float> deltaDistanceToC4WhenShot;
 
         vector<float> timeFromFiringToTeammateSeeingEnemyFOV;
         vector<float> timeFromShotToTeammateSeeingEnemyFOV;

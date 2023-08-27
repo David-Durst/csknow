@@ -62,6 +62,7 @@ namespace csknow::feature_store {
             vector<bool> fovEnemyVisible;
         };
         array<NonDecimatedPlayerData, max_enemies> nonDecimatedCTData, nonDecimatedTData;
+        vector<int64_t> nonDecimatedC4AreaIndex;
 
         vector<int64_t> tickIdToInternalId;
         vector<int64_t> internalIdToTickId;

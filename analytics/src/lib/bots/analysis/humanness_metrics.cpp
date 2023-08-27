@@ -37,6 +37,7 @@ namespace csknow::humanness_metrics {
             // keep player to team across ticks because need it on frame when players die. Dead players aren't
             // recorded by team feature store. OFC victim on frame when die, and can shoot on frame when dying
             map<int64_t, TeamId> playerToTeamId;
+            map<int64_t, float> playerToFirstRoundDistanceToNearestTeammate, playerToFirstRoundDistanceToC4;
 
             for (int64_t tickIndex = rounds.ticksPerRound[roundIndex].minId;
                  tickIndex <= rounds.ticksPerRound[roundIndex].maxId; tickIndex++) {
@@ -317,27 +318,38 @@ namespace csknow::humanness_metrics {
 
                             if (nearestTeammateDistance != std::numeric_limits<float>::max()) {
                                 distanceToNearestTeammate.push_back(nearestTeammateDistance);
+                                if (!playerToFirstRoundDistanceToNearestTeammate.count(playerId)) {
+                                    playerToFirstRoundDistanceToNearestTeammate[playerId] = nearestTeammateDistance;
+                                }
+                                deltaDistanceToNearestTeammate.push_back(
+                                        nearestTeammateDistance - playerToFirstRoundDistanceToNearestTeammate[playerId]);
                                 roundIdPerNearestTeammate.push_back(roundIndex);
                                 isCTPerNearestTeammate.push_back(teamId == ENGINE_TEAM_CT);
                             }
+
+                            if (nearestEnemyDistance > 1e7) {
+                                std::cout << "bad nearest enemy distance " << nearestEnemyDistance
+                                          << " game tick number " << ticks.gameTickNumber[tickIndex] << std::endl;
+                            }
+                            distanceToNearestEnemy.push_back(nearestEnemyDistance);
+
                             if (shootersNextTick.count(playerId)) {
                                 // filter out times when no teammate exists
                                 if (nearestTeammateDistance != std::numeric_limits<float>::max()) {
                                     distanceToNearestTeammateWhenFiring.push_back(nearestTeammateDistance);
+                                    deltaDistanceToNearestTeammateWhenFiring.push_back(
+                                            nearestTeammateDistance - playerToFirstRoundDistanceToNearestTeammate[playerId]);
                                     roundIdPerNearestTeammateFiring.push_back(roundIndex);
                                     isCTPerNearestTeammateFiring.push_back(teamId == ENGINE_TEAM_CT);
                                 }
                                 distanceToNearestEnemyWhenFiring.push_back(nearestEnemyDistance);
                             }
 
-                            if (nearestEnemyDistance > 1e7) {
-                                std::cout << "bad nearest enemy distance " << nearestEnemyDistance
-                                    << " game tick number " << ticks.gameTickNumber[tickIndex] << std::endl;
-                            }
-                            distanceToNearestEnemy.push_back(nearestEnemyDistance);
                             if (victimsNextTick.count(playerId)) {
                                 if (nearestTeammateDistance != std::numeric_limits<float>::max()) {
                                     distanceToNearestTeammateWhenShot.push_back(nearestTeammateDistance);
+                                    deltaDistanceToNearestTeammateWhenShot.push_back(
+                                            nearestTeammateDistance - playerToFirstRoundDistanceToNearestTeammate[playerId]);
                                     roundIdPerNearestTeammateShot.push_back(roundIndex);
                                     isCTPerNearestTeammateShot.push_back(teamId == ENGINE_TEAM_CT);
                                 }
@@ -371,6 +383,27 @@ namespace csknow::humanness_metrics {
                             }
                             if (victimsNextTick.count(playerId)) {
                                 distanceToCoverWhenShot.push_back(minDistanceToCover);
+                            }
+
+                            float curDistanceToC4 = static_cast<float>(
+                                    reachable.getDistance(playerToAreaIndex[playerId],
+                                                          teamFeatureStoreResult.nonDecimatedC4AreaIndex[tickIndex]));
+                            distanceToC4.push_back(curDistanceToC4);
+                            if (!playerToFirstRoundDistanceToC4.count(playerId)) {
+                                playerToFirstRoundDistanceToC4[playerId] = curDistanceToC4;
+                            }
+                            deltaDistanceToC4.push_back(curDistanceToC4 - playerToFirstRoundDistanceToC4[playerId]);
+                            if (playerCanSeeEnemyFOV.count(playerId)) {
+                                distanceToC4WhenEnemyVisibleFOV.push_back(curDistanceToC4);
+                                deltaDistanceToC4WhenEnemyVisibleFOV.push_back(curDistanceToC4 - playerToFirstRoundDistanceToC4[playerId]);
+                            }
+                            if (shootersNextTick.count(playerId)) {
+                                distanceToC4WhenFiring.push_back(curDistanceToC4);
+                                deltaDistanceToC4WhenFiring.push_back(curDistanceToC4 - playerToFirstRoundDistanceToC4[playerId]);
+                            }
+                            if (victimsNextTick.count(playerId)) {
+                                distanceToC4WhenShot.push_back(curDistanceToC4);
+                                deltaDistanceToC4WhenShot.push_back(curDistanceToC4 - playerToFirstRoundDistanceToC4[playerId]);
                             }
 
                             roundIdPerPAT.push_back(roundIndex);
@@ -433,6 +466,10 @@ namespace csknow::humanness_metrics {
         file.createDataSet("/data/distance to nearest teammate when firing", distanceToNearestTeammateWhenFiring, hdf5FlatCreateProps);
         file.createDataSet("/data/distance to nearest teammate when shot", distanceToNearestTeammateWhenShot, hdf5FlatCreateProps);
 
+        file.createDataSet("/data/delta distance to nearest teammate", deltaDistanceToNearestTeammate, hdf5FlatCreateProps);
+        file.createDataSet("/data/delta distance to nearest teammate when firing", deltaDistanceToNearestTeammateWhenFiring, hdf5FlatCreateProps);
+        file.createDataSet("/data/delta distance to nearest teammate when shot", deltaDistanceToNearestTeammateWhenShot, hdf5FlatCreateProps);
+
         file.createDataSet("/data/distance to nearest enemy", distanceToNearestEnemy, hdf5FlatCreateProps);
         file.createDataSet("/data/distance to nearest enemy when firing", distanceToNearestEnemyWhenFiring, hdf5FlatCreateProps);
         file.createDataSet("/data/distance to nearest enemy when shot", distanceToNearestEnemyWhenShot, hdf5FlatCreateProps);
@@ -444,6 +481,16 @@ namespace csknow::humanness_metrics {
         file.createDataSet("/data/distance to cover when enemy visible fov", distanceToCoverWhenEnemyVisibleFOV, hdf5FlatCreateProps);
         file.createDataSet("/data/distance to cover when firing", distanceToCoverWhenFiring, hdf5FlatCreateProps);
         file.createDataSet("/data/distance to cover when shot", distanceToCoverWhenShot, hdf5FlatCreateProps);
+
+        file.createDataSet("/data/distance to c4", distanceToC4, hdf5FlatCreateProps);
+        file.createDataSet("/data/distance to c4 when enemy visible fov", distanceToC4WhenEnemyVisibleFOV, hdf5FlatCreateProps);
+        file.createDataSet("/data/distance to c4 when firing", distanceToC4WhenFiring, hdf5FlatCreateProps);
+        file.createDataSet("/data/distance to c4 when shot", distanceToC4WhenShot, hdf5FlatCreateProps);
+
+        file.createDataSet("/data/delta distance to c4", deltaDistanceToC4, hdf5FlatCreateProps);
+        file.createDataSet("/data/delta distance to c4 when enemy visible fov", deltaDistanceToC4WhenEnemyVisibleFOV, hdf5FlatCreateProps);
+        file.createDataSet("/data/delta distance to c4 when firing", deltaDistanceToC4WhenFiring, hdf5FlatCreateProps);
+        file.createDataSet("/data/delta distance to c4 when shot", deltaDistanceToC4WhenShot, hdf5FlatCreateProps);
 
         file.createDataSet("/data/time from firing to teammate seeing enemy fov", timeFromFiringToTeammateSeeingEnemyFOV,
                            hdf5FlatCreateProps);

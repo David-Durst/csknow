@@ -196,6 +196,7 @@ namespace csknow::feature_store {
             nonDecimatedTData[i].noFOVEnemyVisible.resize(size, INVALID_ID);
             nonDecimatedTData[i].fovEnemyVisible.resize(size, INVALID_ID);
         }
+        nonDecimatedC4AreaIndex.resize(size, INVALID_ID);
         size_t internalSize = 0;
         if (keyRetakeEvents && ticks) {
             int64_t nextTickId = 0;
@@ -436,6 +437,7 @@ namespace csknow::feature_store {
             nonDecimatedData[columnIndex].fovEnemyVisible[tickIndex] =
                     buffer.playerTickCounters[btTeamPlayerData.playerId].ticksSinceFOVEnemyVisible == 0;
         }
+        nonDecimatedC4AreaIndex[tickIndex] = buffer.c4MapData.c4AreaIndex;
 
         int64_t internalTickIndex = tickIdToInternalId[tickIndex];
         if (internalTickIndex == INVALID_ID) {
