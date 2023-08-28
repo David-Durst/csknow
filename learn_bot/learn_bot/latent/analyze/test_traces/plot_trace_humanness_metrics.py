@@ -15,7 +15,8 @@ from learn_bot.latent.analyze.humanness_metrics.column_names import distance_to_
     distance_to_c4_name, distance_to_c4_when_firing_name, distance_to_c4_when_shot_name, \
     delta_distance_to_c4_name, delta_distance_to_c4_when_firing_name, delta_distance_to_c4_when_shot_name, \
     distance_to_cover_when_enemy_visible_fov_name, distance_to_cover_when_firing_name, distance_to_cover_when_shot_name, \
-    time_from_firing_to_teammate_seeing_enemy_fov_name, time_from_shot_to_teammate_seeing_enemy_fov_name
+    time_from_firing_to_teammate_seeing_enemy_fov_name, time_from_shot_to_teammate_seeing_enemy_fov_name, \
+    distance_to_c4_when_enemy_visible_fov_name, delta_distance_to_c4_when_enemy_visible_fov_name
 
 from learn_bot.latent.analyze.humanness_metrics.hdf5_loader import HumannessMetrics, HumannessDataOptions
 from learn_bot.latent.analyze.process_trajectory_comparison import plot_hist, generate_bins, set_pd_print_options
@@ -29,44 +30,31 @@ from learn_bot.libs.hdf5_to_pd import load_hdf5_to_pd
 RoundBotPlayerIds = Dict[int, List[int]]
 TraceBotPlayerIds = Dict[int, RoundBotPlayerIds]
 
-metric_cols = ['distance_to_nearest_teammate', 'distance_to_nearest_teammate_when_firing',
-               'distance_to_nearest_teammate_when_shot',
-               'delta_distance_to_nearest_teammate', 'delta_distance_to_nearest_teammate_when_firing',
-               'delta_distance_to_nearest_teammate_when_shot',
-               'distance_to_c4', 'distance_to_c4_when_enemy_visible_fov', 'distance_to_c4_when_firing',
-               'distance_to_c4_when_shot',
-               'delta_distance_to_c4', 'delta_distance_to_c4_when_enemy_visible_fov',
-               'delta_distance_to_c4_when_firing',
-               'delta_distance_to_c4_when_shot',
-               'distance_to_cover_when_enemy_visible_fov', 'distance_to_cover_when_firing',
-               'distance_to_cover_when_shot',
+metric_cols = ['distance_to_nearest_teammate', 'distance_to_nearest_teammate_when_firing', 'distance_to_nearest_teammate_when_shot',
+               'delta_distance_to_nearest_teammate', 'delta_distance_to_nearest_teammate_when_firing', 'delta_distance_to_nearest_teammate_when_shot',
+               'distance_to_c4', 'distance_to_c4_when_enemy_visible_fov', 'distance_to_c4_when_firing', 'distance_to_c4_when_shot',
+               'delta_distance_to_c4', 'delta_distance_to_c4_when_enemy_visible_fov', 'delta_distance_to_c4_when_firing', 'delta_distance_to_c4_when_shot',
+               'distance_to_cover_when_enemy_visible_fov', 'distance_to_cover_when_firing', 'distance_to_cover_when_shot',
                'time_from_firing_to_teammate_seeing_enemy_fov', 'time_from_shot_to_teammate_seeing_enemy_fov']
 
-metric_names = [distance_to_nearest_teammate_name, distance_to_nearest_teammate_when_firing_name,
-                distance_to_nearest_enemy_when_shot_name,
-                delta_distance_to_nearest_teammate_name, delta_distance_to_nearest_teammate_when_firing_name,
-                delta_distance_to_c4_when_shot_name,
-                distance_to_c4_name, distance_to_c4_when_firing_name, distance_to_c4_when_shot_name,
-                delta_distance_to_c4_name, delta_distance_to_c4_when_firing_name, delta_distance_to_c4_when_shot_name,
-                distance_to_cover_when_enemy_visible_fov_name, distance_to_cover_when_firing_name,
-                distance_to_cover_when_shot_name,
+metric_names = [distance_to_nearest_teammate_name, distance_to_nearest_teammate_when_firing_name, distance_to_nearest_enemy_when_shot_name,
+                delta_distance_to_nearest_teammate_name, delta_distance_to_nearest_teammate_when_firing_name, delta_distance_to_c4_when_shot_name,
+                distance_to_c4_name, distance_to_c4_when_enemy_visible_fov_name, distance_to_c4_when_firing_name, distance_to_c4_when_shot_name,
+                delta_distance_to_c4_name, delta_distance_to_c4_when_enemy_visible_fov_name, delta_distance_to_c4_when_firing_name, delta_distance_to_c4_when_shot_name,
+                distance_to_cover_when_enemy_visible_fov_name, distance_to_cover_when_firing_name, distance_to_cover_when_shot_name,
                 time_from_firing_to_teammate_seeing_enemy_fov_name, time_from_shot_to_teammate_seeing_enemy_fov_name]
 
-round_id_cols = ['round_id_per_nearest_teammate_pat', 'round_id_pe_nearest_teammate_firing_pat',
-                 'round_id_per_nearest_teammate_shot_pat',
-                 'round_id_per_nearest_teammate_pat', 'round_id_pe_nearest_teammate_firing_pat',
-                 'round_id_per_nearest_teammate_shot_pat',
-                 'round_id_per_pat', 'round_id_per_enemy_visible_fov_pat', 'round_id_per_firing_pat',
-                 'round_id_per_shot_pat',
+round_id_cols = ['round_id_per_nearest_teammate', 'round_id_per_nearest_teammate_firing', 'round_id_per_nearest_teammate_shot',
+                 'round_id_per_nearest_teammate', 'round_id_per_nearest_teammate_firing', 'round_id_per_nearest_teammate_shot',
+                 'round_id_per_pat', 'round_id_per_enemy_visible_fov_pat', 'round_id_per_firing_pat', 'round_id_per_shot_pat',
+                 'round_id_per_pat', 'round_id_per_enemy_visible_fov_pat', 'round_id_per_firing_pat', 'round_id_per_shot_pat',
                  'round_id_per_enemy_visible_fov_pat', 'round_id_per_firing_pat', 'round_id_per_shot_pat',
                  'round_id_per_firing_to_teammate_seeing_enemy', 'round_id_per_shot_to_teammate_seeing_enemy']
 
-player_id_cols = ['player_id_per_nearest_teammate_pat', 'player_id_pe_nearest_teammate_firing_pat',
-                  'player_id_per_nearest_teammate_shot_pat',
-                  'player_id_per_nearest_teammate_pat', 'player_id_pe_nearest_teammate_firing_pat',
-                  'player_id_per_nearest_teammate_shot_pat',
-                  'player_id_per_pat', 'player_id_per_enemy_visible_fov_pat', 'player_id_per_firing_pat',
-                  'player_id_per_shot_pat',
+player_id_cols = ['player_id_per_nearest_teammate', 'player_id_per_nearest_teammate_firing', 'player_id_per_nearest_teammate_shot',
+                  'player_id_per_nearest_teammate', 'player_id_per_nearest_teammate_firing', 'player_id_per_nearest_teammate_shot',
+                  'player_id_per_pat', 'player_id_per_enemy_visible_fov_pat', 'player_id_per_firing_pat', 'player_id_per_shot_pat',
+                  'player_id_per_pat', 'player_id_per_enemy_visible_fov_pat', 'player_id_per_firing_pat', 'player_id_per_shot_pat',
                   'player_id_per_enemy_visible_fov_pat', 'player_id_per_firing_pat', 'player_id_per_shot_pat',
                   'player_id_per_firing_to_teammate_seeing_enemy', 'player_id_per_shot_to_teammate_seeing_enemy']
 
@@ -111,10 +99,12 @@ def get_metrics(humanness_metrics: HumannessMetrics, round_ids: List[int], bot_p
         metric_col = humanness_metrics.__getattribute__(metric_cols[i])
         round_ids_col = humanness_metrics.__getattribute__(round_id_cols[i])
         player_ids_col = humanness_metrics.__getattribute__(player_id_cols[i])
+        if len(metric_col) != len(round_ids_col) or len(metric_col) != len(player_ids_col):
+            print("bad")
         # start with false, because building up or's
         conditions = round_ids_col == -1
         for round_id in round_ids:
-            conditions = conditions | ((round_ids_col == round_id) & (player_ids_col.isin(bot_player_ids[round_id])))
+            conditions = conditions | ((round_ids_col == round_id) & (np.isin(player_ids_col, bot_player_ids[round_id])))
         result[metric_names[i]] = metric_col[conditions]
     return result
 
@@ -172,7 +162,7 @@ def plot_humanness_metrics(aggressive_trace_bot_player_ids: TraceBotPlayerIds,
             .decode('utf-8')[:-1]
 
         fig = plt.figure(figsize=(fig_length * num_player_types, fig_length * num_figs), constrained_layout=True)
-        fig.suptitle("Bot in ReplayHumannesss Metrics " + trace_index + "_" + trace_demo_file)
+        fig.suptitle("Bot in Replay Humanness Metrics " + str(trace_index) + "_" + trace_demo_file)
         axs = fig.subplots(num_figs, num_player_types, squeeze=False)
 
         for m in range(len(aggressive_one_bot_metrics)):
