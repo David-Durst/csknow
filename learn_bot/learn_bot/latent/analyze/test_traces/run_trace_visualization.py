@@ -2,6 +2,7 @@ import os
 
 import pandas as pd
 
+from learn_bot.latent.analyze.humanness_metrics.hdf5_loader import HumannessMetrics, HumannessDataOptions
 from learn_bot.latent.analyze.process_trajectory_comparison import set_pd_print_options
 from learn_bot.latent.analyze.test_traces.run_trace_creation import *
 from learn_bot.latent.analyze.test_traces.column_names import *
@@ -91,8 +92,18 @@ def visualize_traces(trace_hdf5_data_path: Path, trace_style_appendix: str):
         draw_trace_paths(trace_df, trace_extra_df, trace_index, True, trace_style_appendix)
 
 
+def plot_humanness_summaries():
+    aggressive_humanness_metrics = HumannessMetrics(HumannessDataOptions.CUSTOM, False,
+                                                    rollout_aggressive_humanness_hdf5_data_path)
+    rollout_humanness_metrics = HumannessMetrics(HumannessDataOptions.CUSTOM, False,
+                                                 rollout_passive_humanness_hdf5_data_path)
+    quit(0)
+
+
 if __name__ == "__main__":
     #set_pd_print_options()
+
+    plot_humanness_summaries()
 
     visualize_traces(rollout_aggressive_trace_hdf5_data_path, 'aggressive')
     visualize_traces(rollout_passive_trace_hdf5_data_path, 'passive')

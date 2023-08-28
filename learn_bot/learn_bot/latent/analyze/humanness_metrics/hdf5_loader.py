@@ -119,7 +119,7 @@ class HumannessMetrics:
     player_id_per_round: np.ndarray
 
     def __init__(self, data_option: HumannessDataOptions, limit_to_test: bool,
-                 custom_hdf5_path: Optional[str] = None) -> np.ndarray:
+                 custom_hdf5_path: Optional[Path] = None) -> np.ndarray:
         # get data as numpy arrays and column names
         hdf5_paths: List[Path]
         if data_option == HumannessDataOptions.ROLLOUT:

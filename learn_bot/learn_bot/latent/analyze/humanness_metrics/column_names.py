@@ -35,15 +35,15 @@ distance_to_cover_when_enemy_visible_fov_name = "distance to cover when enemy vi
 distance_to_cover_when_firing_name = "distance to cover when firing"
 distance_to_cover_when_shot_name = "distance to cover when shot"
 
-distance_to_c4_name = "distance to cover"
-distance_to_c4_when_enemy_visible_fov_name = "distance to cover when enemy visible fov"
-distance_to_c4_when_firing_name = "distance to cover when firing"
-distance_to_c4_when_shot_name = "distance to cover when shot"
+distance_to_c4_name = "distance to c4"
+distance_to_c4_when_enemy_visible_fov_name = "distance to c4 when enemy visible fov"
+distance_to_c4_when_firing_name = "distance to c4 when firing"
+distance_to_c4_when_shot_name = "distance to c4 when shot"
 
-delta_distance_to_c4_name = "delta distance to cover"
-delta_distance_to_c4_when_enemy_visible_fov_name = "delta distance to cover when enemy visible fov"
-delta_distance_to_c4_when_firing_name = "delta distance to cover when firing"
-delta_distance_to_c4_when_shot_name = "delta distance to cover when shot"
+delta_distance_to_c4_name = "delta distance to c4"
+delta_distance_to_c4_when_enemy_visible_fov_name = "delta distance to c4 when enemy visible fov"
+delta_distance_to_c4_when_firing_name = "delta distance to c4 when firing"
+delta_distance_to_c4_when_shot_name = "delta distance to c4 when shot"
 
 time_from_firing_to_teammate_seeing_enemy_fov_name = "time from firing to teammate seeing enemy fov"
 time_from_shot_to_teammate_seeing_enemy_fov_name = "time from shot to teammate seeing enemy fov"
