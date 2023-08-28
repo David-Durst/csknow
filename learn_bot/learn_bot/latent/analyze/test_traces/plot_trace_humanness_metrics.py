@@ -66,13 +66,26 @@ one_team_aggressive_learned_bot_name = "One Team Aggressive Learned Bot "
 one_bot_passive_learned_bot_name = "One Bot Passive Learned Bot "
 one_team_passive_learned_bot_name = "One Team Passive Learned Bot "
 
+
 def plot_metric(axs, metric_index: int, one_bot_aggressive_learned_bot_metric: np.ndarray,
                 one_team_aggressive_learned_bot_metric: np.ndarray,
                 one_bot_passive_learned_bot_metric: np.ndarray,
                 one_team_passive_learned_bot_metric: np.ndarray,
                 metric_name: str, pct_bins: bool = False):
-    max_value = int(ceil(max(one_bot_aggressive_learned_bot_metric.max(), one_team_aggressive_learned_bot_metric.max(),
-                             one_bot_passive_learned_bot_metric.max(), one_team_passive_learned_bot_metric.max())))
+    values_for_max = []
+    if len(one_bot_aggressive_learned_bot_metric) > 0:
+        values_for_max.append(one_bot_aggressive_learned_bot_metric.max())
+    if len(one_team_aggressive_learned_bot_metric) > 0:
+        values_for_max.append(one_team_aggressive_learned_bot_metric.max())
+    if len(one_bot_passive_learned_bot_metric) > 0:
+        values_for_max.append(one_bot_passive_learned_bot_metric.max())
+    if len(one_team_passive_learned_bot_metric) > 0:
+        values_for_max.append(one_team_passive_learned_bot_metric.max())
+    if len(values_for_max) == 0:
+        return
+    max_value = int(ceil(max(values_for_max)))
+    if max_value == 0:
+        return
     axs[metric_index, 0].set_title(one_bot_aggressive_learned_bot_name + metric_name)
     axs[metric_index, 1].set_title(one_team_aggressive_learned_bot_name + metric_name)
     axs[metric_index, 2].set_title(one_bot_passive_learned_bot_name + metric_name)
@@ -82,10 +95,14 @@ def plot_metric(axs, metric_index: int, one_bot_aggressive_learned_bot_metric: n
         bins = [i * 0.1 for i in range(11)]
     else:
         bins = generate_bins(0, max_value, max_value // 20)
-    plot_hist(axs[metric_index, 0], pd.Series(one_bot_aggressive_learned_bot_metric), bins)
-    plot_hist(axs[metric_index, 1], pd.Series(one_team_aggressive_learned_bot_metric), bins)
-    plot_hist(axs[metric_index, 2], pd.Series(one_bot_passive_learned_bot_metric), bins)
-    plot_hist(axs[metric_index, 3], pd.Series(one_team_passive_learned_bot_metric), bins)
+    if len(one_bot_aggressive_learned_bot_metric) > 0:
+        plot_hist(axs[metric_index, 0], pd.Series(one_bot_aggressive_learned_bot_metric), bins)
+    if len(one_team_aggressive_learned_bot_metric) > 0:
+        plot_hist(axs[metric_index, 1], pd.Series(one_team_aggressive_learned_bot_metric), bins)
+    if len(one_bot_passive_learned_bot_metric) > 0:
+        plot_hist(axs[metric_index, 2], pd.Series(one_bot_passive_learned_bot_metric), bins)
+    if len(one_team_passive_learned_bot_metric) > 0:
+        plot_hist(axs[metric_index, 3], pd.Series(one_team_passive_learned_bot_metric), bins)
     axs[metric_index, 0].set_ylim(0., 1.)
     axs[metric_index, 1].set_ylim(0., 1.)
     axs[metric_index, 2].set_ylim(0., 1.)
