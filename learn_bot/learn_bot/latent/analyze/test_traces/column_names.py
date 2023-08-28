@@ -17,3 +17,4 @@ rollout_aggressive_humanness_hdf5_data_path = Path(__file__).parent / '..' / '..
 rollout_passive_trace_hdf5_data_path = Path(__file__).parent / '..' / '..' / '..' / '..' / '..' / 'analytics' / 'rollout_outputs' / 'behaviorTreeTeamFeatureStore_8_23_23_passive_learned_trace.hdf5'
 rollout_passive_humanness_hdf5_data_path = Path(__file__).parent / '..' / '..' / '..' / '..' / '..' / 'analytics' / 'rollout_outputs' / 'humannessMetrics_8_23_23_passive_learned_trace.hdf5'
 trace_plots_path = Path(__file__).parent / 'trace_plots'
+trace_humanness_path = trace_plots_path / 'humanness_plots'

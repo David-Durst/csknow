@@ -2,9 +2,8 @@ import os
 
 import pandas as pd
 
-from learn_bot.latent.analyze.humanness_metrics.hdf5_loader import HumannessMetrics, HumannessDataOptions
-from learn_bot.latent.analyze.process_trajectory_comparison import set_pd_print_options
-from learn_bot.latent.analyze.test_traces.plot_trace_humanness_metrics import plot_humanness_metrics, get_trace_png_name
+from learn_bot.latent.analyze.test_traces.plot_trace_humanness_metrics import plot_humanness_metrics, \
+    RoundBotPlayerIds, TraceBotPlayerIds
 from learn_bot.latent.analyze.test_traces.run_trace_creation import *
 from learn_bot.latent.analyze.test_traces.column_names import *
 from PIL import Image, ImageDraw
@@ -27,7 +26,7 @@ def convert_to_canvas_coordinates(x_coords: pd.Series, y_coords: pd.Series) -> T
 
 
 def draw_trace_paths(trace_df: pd.DataFrame, trace_extra_df: pd.DataFrame, trace_index: int, one_non_replay_bot: bool,
-                     trace_style_appendix: str):
+                     trace_style_appendix: str) -> RoundBotPlayerIds:
     cur_trace_extra_df = trace_extra_df[(trace_extra_df[trace_index_name] == trace_index) &
                                         (trace_extra_df[trace_one_non_replay_bot_name] == one_non_replay_bot)]
     cur_trace_round_ids = cur_trace_extra_df.index
@@ -43,10 +42,13 @@ def draw_trace_paths(trace_df: pd.DataFrame, trace_extra_df: pd.DataFrame, trace
     all_player_d2_img_copy = d2_img.copy().convert("RGBA")
 
     trace_demo_file = ""
+    round_bot_player_ids: RoundBotPlayerIds = {}
+
     for cur_round_id in cur_trace_round_ids:
         # since this was split with : rather than _, need to remove last _
         trace_demo_file = cur_trace_extra_df.loc[cur_round_id, trace_demo_file_name].decode('utf-8')[:-1]
         cur_round_trace_df = trace_df[trace_df[round_id_column] == cur_round_id]
+        round_bot_player_ids[cur_round_id] = []
         for player_place_area_columns in specific_player_place_area_columns:
             cur_round_player_trace_df = cur_round_trace_df[cur_round_trace_df[player_place_area_columns.alive] == 1]
             if cur_round_player_trace_df.empty:
@@ -63,6 +65,9 @@ def draw_trace_paths(trace_df: pd.DataFrame, trace_extra_df: pd.DataFrame, trace
             ct_team = team_strs[0] in player_place_area_columns.player_id
 
             is_bot = cur_trace_extra_df.loc[cur_round_id, player_place_area_columns.trace_is_bot_player]
+            if is_bot:
+                round_bot_player_ids[cur_round_id].append(
+                    cur_round_player_trace_df[player_place_area_columns.player_id].iloc[0])
             if ct_team:
                 if is_bot:
                     fill_color = bot_ct_color
@@ -76,28 +81,34 @@ def draw_trace_paths(trace_df: pd.DataFrame, trace_extra_df: pd.DataFrame, trace
             cur_player_d2_drw.line(xy=player_xy_coords, fill=fill_color, width=5)
             all_player_d2_img_copy.alpha_composite(cur_player_d2_overlay_im)
 
-    png_file_name = get_trace_png_name(trace_index, trace_demo_file, one_non_replay_bot)
+    png_file_name = str(trace_index) + "_" + trace_demo_file + "_" + str(one_non_replay_bot) + ".png"
     os.makedirs(trace_plots_path / trace_style_appendix, exist_ok=True)
     all_player_d2_img_copy.save(trace_plots_path / trace_style_appendix / png_file_name)
     print(f"finished {png_file_name}")
 
+    return round_bot_player_ids
 
-def visualize_traces(trace_hdf5_data_path: Path, trace_style_appendix: str):
+
+def visualize_traces(trace_hdf5_data_path: Path, trace_style_appendix: str) -> TraceBotPlayerIds:
     trace_df = load_hdf5_to_pd(trace_hdf5_data_path)
     trace_extra_df = load_hdf5_to_pd(trace_hdf5_data_path, root_key='extra',
                                      cols_to_get=[trace_demo_file_name, trace_index_name, num_traces_name,
                                                   trace_one_non_replay_team_name, trace_one_non_replay_bot_name] + trace_is_bot_player_names)
 
-    for trace_index in range(len(rounds_for_traces)):
-        draw_trace_paths(trace_df, trace_extra_df, trace_index, False, trace_style_appendix)
-        draw_trace_paths(trace_df, trace_extra_df, trace_index, True, trace_style_appendix)
+    trace_bot_player_ids: TraceBotPlayerIds = {}
 
+    for trace_index in range(len(rounds_for_traces)):
+        one_team_player_ids = draw_trace_paths(trace_df, trace_extra_df, trace_index, False, trace_style_appendix)
+        one_bot_player_ids = draw_trace_paths(trace_df, trace_extra_df, trace_index, True, trace_style_appendix)
+        trace_bot_player_ids[trace_index] = {**one_bot_player_ids, **one_team_player_ids}
+
+    return trace_bot_player_ids
 
 
 if __name__ == "__main__":
     #set_pd_print_options()
 
-    plot_humanness_metrics()
+    aggressive_trace_bot_player_ids = visualize_traces(rollout_aggressive_trace_hdf5_data_path, 'aggressive')
+    passive_trace_bot_player_ids = visualize_traces(rollout_passive_trace_hdf5_data_path, 'passive')
 
-    visualize_traces(rollout_aggressive_trace_hdf5_data_path, 'aggressive')
-    visualize_traces(rollout_passive_trace_hdf5_data_path, 'passive')
+    plot_humanness_metrics(aggressive_trace_bot_player_ids, passive_trace_bot_player_ids)
