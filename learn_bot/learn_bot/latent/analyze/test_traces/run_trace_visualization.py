@@ -4,7 +4,7 @@ import pandas as pd
 
 from learn_bot.latent.analyze.humanness_metrics.hdf5_loader import HumannessMetrics, HumannessDataOptions
 from learn_bot.latent.analyze.process_trajectory_comparison import set_pd_print_options
-from learn_bot.latent.analyze.test_traces.plot_trace_humanness_metrics import plot_humanness_metrics
+from learn_bot.latent.analyze.test_traces.plot_trace_humanness_metrics import plot_humanness_metrics, get_trace_png_name
 from learn_bot.latent.analyze.test_traces.run_trace_creation import *
 from learn_bot.latent.analyze.test_traces.column_names import *
 from PIL import Image, ImageDraw
@@ -76,7 +76,7 @@ def draw_trace_paths(trace_df: pd.DataFrame, trace_extra_df: pd.DataFrame, trace
             cur_player_d2_drw.line(xy=player_xy_coords, fill=fill_color, width=5)
             all_player_d2_img_copy.alpha_composite(cur_player_d2_overlay_im)
 
-    png_file_name = str(trace_index) + "_" + trace_demo_file + "_" + str(one_non_replay_bot) + ".png"
+    png_file_name = get_trace_png_name(trace_index, trace_demo_file, one_non_replay_bot)
     os.makedirs(trace_plots_path / trace_style_appendix, exist_ok=True)
     all_player_d2_img_copy.save(trace_plots_path / trace_style_appendix / png_file_name)
     print(f"finished {png_file_name}")
