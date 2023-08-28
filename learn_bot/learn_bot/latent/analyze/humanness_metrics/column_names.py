@@ -19,6 +19,10 @@ distance_to_nearest_teammate_name = "distance to nearest teammate"
 distance_to_nearest_teammate_when_firing_name = "distance to nearest teammate when firing"
 distance_to_nearest_teammate_when_shot_name = "distance to nearest teammate when shot"
 
+delta_distance_to_nearest_teammate_name = "delta distance to nearest teammate"
+delta_distance_to_nearest_teammate_when_firing_name = "delta distance to nearest teammate when firing"
+delta_distance_to_nearest_teammate_when_shot_name = "delta distance to nearest teammate when shot"
+
 distance_to_nearest_enemy_name = "distance to nearest enemy"
 distance_to_nearest_enemy_when_firing_name = "distance to nearest enemy when firing"
 distance_to_nearest_enemy_when_shot_name = "distance to nearest enemy when shot"
@@ -30,6 +34,16 @@ distance_to_cover_when_enemy_visible_no_fov_name = "distance to cover when enemy
 distance_to_cover_when_enemy_visible_fov_name = "distance to cover when enemy visible fov"
 distance_to_cover_when_firing_name = "distance to cover when firing"
 distance_to_cover_when_shot_name = "distance to cover when shot"
+
+distance_to_c4_name = "distance to cover"
+distance_to_c4_when_enemy_visible_fov_name = "distance to cover when enemy visible fov"
+distance_to_c4_when_firing_name = "distance to cover when firing"
+distance_to_c4_when_shot_name = "distance to cover when shot"
+
+delta_distance_to_c4_name = "delta distance to cover"
+delta_distance_to_c4_when_enemy_visible_fov_name = "delta distance to cover when enemy visible fov"
+delta_distance_to_c4_when_firing_name = "delta distance to cover when firing"
+delta_distance_to_c4_when_shot_name = "delta distance to cover when shot"
 
 time_from_firing_to_teammate_seeing_enemy_fov_name = "time from firing to teammate seeing enemy fov"
 time_from_shot_to_teammate_seeing_enemy_fov_name = "time from shot to teammate seeing enemy fov"
@@ -51,6 +65,29 @@ round_id_per_enemy_visible_no_fov_pat_name = "round id per enemy visible no fov 
 round_id_per_enemy_visible_fov_pat_name = "round id per enemy visible fov pat"
 round_id_per_firing_to_teammate_seeing_enemy_name = "round id per firing to teammate seeing enemy"
 round_id_per_shot_to_teammate_seeing_enemy_name = "round id per shot to teammate seeing enemy"
+
+is_ct_per_pat_name = "is ct per pat"
+is_ct_per_firing_pat_name = "is ct per firing pat"
+is_ct_per_shot_pat_name = "is ct per shot pat"
+is_ct_per_nearest_teammate_name = "is ct per nearest teammate"
+is_ct_per_nearest_teammate_firing_name = "is ct per nearest teammate firing"
+is_ct_per_nearest_teammate_shot_name = "is ct per nearest teammate shot"
+is_ct_per_enemy_visible_no_fov_pat_name = "is ct per enemy visible no fov pat"
+is_ct_per_enemy_visible_fov_pat_name = "is ct per enemy visible fov pat"
+is_ct_per_firing_to_teammate_seeing_enemy_name = "is ct per firing to teammate seeing enemy"
+is_ct_per_shot_to_teammate_seeing_enemy_name = "is ct per shot to teammate seeing enemy"
+
+player_id_per_pat_name = "player id per pat"
+player_id_per_firing_pat_name = "player id per firing pat"
+player_id_per_shot_pat_name = "player id per shot pat"
+player_id_per_nearest_teammate_name = "player id per nearest teammate"
+player_id_per_nearest_teammate_firing_name = "player id per nearest teammate firing"
+player_id_per_nearest_teammate_shot_name = "player id per nearest teammate shot"
+player_id_per_enemy_visible_no_fov_pat_name = "player id per enemy visible no fov pat"
+player_id_per_enemy_visible_fov_pat_name = "player id per enemy visible fov pat"
+player_id_per_firing_to_teammate_seeing_enemy_name = "player id per firing to teammate seeing enemy"
+player_id_per_shot_to_teammate_seeing_enemy_name = "player id per shot to teammate seeing enemy"
+
 round_id_per_round_name = "round id per round"
 
 rollout_humanness_hdf5_data_path = Path(__file__).parent / '..' / '..' / '..' / '..' / '..' / 'analytics' / 'rollout_outputs' / 'humannessMetrics.hdf5'

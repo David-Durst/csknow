@@ -2,7 +2,7 @@ import pickle
 from dataclasses import dataclass
 import time
 from enum import Enum
-from typing import Dict
+from typing import Dict, Optional
 
 import h5py
 import numpy as np
@@ -27,6 +27,7 @@ class HumannessDataOptions(Enum):
     ALL_TRAIN = 2
     HEURISTIC = 3
     DEFAULT = 4
+    CUSTOM = 5
 
 
 class HumannessMetrics:
@@ -46,6 +47,10 @@ class HumannessMetrics:
     distance_to_nearest_teammate_when_firing: np.ndarray
     distance_to_nearest_teammate_when_shot: np.ndarray
 
+    delta_distance_to_nearest_teammate: np.ndarray
+    delta_distance_to_nearest_teammate_when_firing: np.ndarray
+    delta_distance_to_nearest_teammate_when_shot: np.ndarray
+
     distance_to_nearest_enemy: np.ndarray
     distance_to_nearest_enemy_when_firing: np.ndarray
     distance_to_nearest_enemy_when_shot: np.ndarray
@@ -58,6 +63,16 @@ class HumannessMetrics:
     distance_to_cover_when_firing: np.ndarray
     distance_to_cover_when_shot: np.ndarray
 
+    distance_to_c4: np.ndarray
+    distance_to_c4_when_enemy_visible_fov: np.ndarray
+    distance_to_c4_when_firing: np.ndarray
+    distance_to_c4_when_shot: np.ndarray
+
+    delta_distance_to_c4: np.ndarray
+    delta_distance_to_c4_when_enemy_visible_fov: np.ndarray
+    delta_distance_to_c4_when_firing: np.ndarray
+    delta_distance_to_c4_when_shot: np.ndarray
+
     time_from_firing_to_teammate_seeing_enemy_fov: np.ndarray
     time_from_shot_to_teammate_seeing_enemy_fov: np.ndarray
 
@@ -67,9 +82,44 @@ class HumannessMetrics:
     pct_time_still_t: np.ndarray
     ct_wins: np.ndarray
 
-    def __init__(self, data_option: HumannessDataOptions, limit_to_test: bool) -> np.ndarray:
-        test_plant_states_df = load_hdf5_to_pd(train_test_split_folder_path / test_plant_states_file_name)
+    round_id_per_pat: np.ndarray
+    round_id_per_firing_pat: np.ndarray
+    round_id_per_shot_pat: np.ndarray
+    round_id_per_nearest_teammate: np.ndarray
+    round_id_per_nearest_teammate_firing: np.ndarray
+    round_id_per_nearest_teammate_shot: np.ndarray
+    round_id_per_enemy_visible_no_fov_pat: np.ndarray
+    round_id_per_enemy_visible_fov_pat: np.ndarray
+    round_id_per_firing_to_teammate_seeing_enemy: np.ndarray
+    round_id_per_shot_to_teammate_seeing_enemy: np.ndarray
+    round_id_per_round: np.ndarray
 
+    is_ct_per_pat: np.ndarray
+    is_ct_per_firing_pat: np.ndarray
+    is_ct_per_shot_pat: np.ndarray
+    is_ct_per_nearest_teammate: np.ndarray
+    is_ct_per_nearest_teammate_firing: np.ndarray
+    is_ct_per_nearest_teammate_shot: np.ndarray
+    is_ct_per_enemy_visible_no_fov_pat: np.ndarray
+    is_ct_per_enemy_visible_fov_pat: np.ndarray
+    is_ct_per_firing_to_teammate_seeing_enemy: np.ndarray
+    is_ct_per_shot_to_teammate_seeing_enemy: np.ndarray
+    is_ct_per_round: np.ndarray
+
+    player_id_per_pat: np.ndarray
+    player_id_per_firing_pat: np.ndarray
+    player_id_per_shot_pat: np.ndarray
+    player_id_per_nearest_teammate: np.ndarray
+    player_id_per_nearest_teammate_firing: np.ndarray
+    player_id_per_nearest_teammate_shot: np.ndarray
+    player_id_per_enemy_visible_no_fov_pat: np.ndarray
+    player_id_per_enemy_visible_fov_pat: np.ndarray
+    player_id_per_firing_to_teammate_seeing_enemy: np.ndarray
+    player_id_per_shot_to_teammate_seeing_enemy: np.ndarray
+    player_id_per_round: np.ndarray
+
+    def __init__(self, data_option: HumannessDataOptions, limit_to_test: bool,
+                 custom_hdf5_path: Optional[str] = None) -> np.ndarray:
         # get data as numpy arrays and column names
         hdf5_paths: List[Path]
         if data_option == HumannessDataOptions.ROLLOUT:
@@ -78,8 +128,11 @@ class HumannessMetrics:
             hdf5_paths = all_train_humanness_hdf5_data_paths
         elif data_option == HumannessDataOptions.HEURISTIC:
             hdf5_paths = [heuristic_humanness_hdf5_data_path]
-        else:
+        elif data_option == HumannessDataOptions.DEFAULT:
             hdf5_paths = [default_humanness_hdf5_data_path]
+        else:
+            assert custom_hdf5_path is not None
+            hdf5_paths = [custom_hdf5_path]
 
         hdf5_to_test_round_ids: Dict[Path, List[int]] = {}
         if limit_to_test:
@@ -114,6 +167,12 @@ class HumannessMetrics:
                     hdf5_data[distance_to_nearest_teammate_when_firing_name][...]
                 distance_to_nearest_teammate_when_shot = hdf5_data[distance_to_nearest_teammate_when_shot_name][...]
 
+                delta_distance_to_nearest_teammate = hdf5_data[delta_distance_to_nearest_teammate_name][...]
+                delta_distance_to_nearest_teammate_when_firing = \
+                    hdf5_data[delta_distance_to_nearest_teammate_when_firing_name][...]
+                delta_distance_to_nearest_teammate_when_shot = \
+                    hdf5_data[delta_distance_to_nearest_teammate_when_shot_name][...]
+
                 distance_to_nearest_enemy = hdf5_data[distance_to_nearest_enemy_name][...]
                 distance_to_nearest_enemy_when_firing = hdf5_data[distance_to_nearest_enemy_when_firing_name][...]
                 distance_to_nearest_enemy_when_shot = hdf5_data[distance_to_nearest_enemy_when_shot_name][...]
@@ -127,6 +186,18 @@ class HumannessMetrics:
                     hdf5_data[distance_to_cover_when_enemy_visible_fov_name][...]
                 distance_to_cover_when_firing = hdf5_data[distance_to_cover_when_firing_name][...]
                 distance_to_cover_when_shot = hdf5_data[distance_to_cover_when_shot_name][...]
+
+                distance_to_c4 = hdf5_data[distance_to_c4_name][...]
+                distance_to_c4_when_enemy_visible_fov = \
+                    hdf5_data[distance_to_c4_when_enemy_visible_fov_name][...]
+                distance_to_c4_when_firing = hdf5_data[distance_to_c4_when_firing_name][...]
+                distance_to_c4_when_shot = hdf5_data[distance_to_c4_when_shot_name][...]
+
+                delta_distance_to_c4 = hdf5_data[delta_distance_to_c4_name][...]
+                delta_distance_to_c4_when_enemy_visible_fov = \
+                    hdf5_data[delta_distance_to_c4_when_enemy_visible_fov_name][...]
+                delta_distance_to_c4_when_firing = hdf5_data[delta_distance_to_c4_when_firing_name][...]
+                delta_distance_to_c4_when_shot = hdf5_data[delta_distance_to_c4_when_shot_name][...]
 
                 time_from_firing_to_teammate_seeing_enemy_fov = \
                     hdf5_data[time_from_firing_to_teammate_seeing_enemy_fov_name][...]
@@ -152,6 +223,33 @@ class HumannessMetrics:
                     hdf5_data[round_id_per_firing_to_teammate_seeing_enemy_name][...]
                 round_id_per_shot_to_teammate_seeing_enemy = \
                     hdf5_data[round_id_per_shot_to_teammate_seeing_enemy_name][...]
+
+                is_ct_per_pat = hdf5_data[is_ct_per_pat_name][...]
+                is_ct_per_firing_pat = hdf5_data[is_ct_per_firing_pat_name][...]
+                is_ct_per_shot_pat = hdf5_data[is_ct_per_shot_pat_name][...]
+                is_ct_per_nearest_teammate = hdf5_data[is_ct_per_nearest_teammate_name][...]
+                is_ct_per_nearest_teammate_firing = hdf5_data[is_ct_per_nearest_teammate_firing_name][...]
+                is_ct_per_nearest_teammate_shot = hdf5_data[is_ct_per_nearest_teammate_shot_name][...]
+                is_ct_per_enemy_visible_no_fov_pat = hdf5_data[is_ct_per_enemy_visible_no_fov_pat_name][...]
+                is_ct_per_enemy_visible_fov_pat = hdf5_data[is_ct_per_enemy_visible_fov_pat_name][...]
+                is_ct_per_firing_to_teammate_seeing_enemy = \
+                    hdf5_data[is_ct_per_firing_to_teammate_seeing_enemy_name][...]
+                is_ct_per_shot_to_teammate_seeing_enemy = \
+                    hdf5_data[is_ct_per_shot_to_teammate_seeing_enemy_name][...]
+
+                player_id_per_pat = hdf5_data[player_id_per_pat_name][...]
+                player_id_per_firing_pat = hdf5_data[player_id_per_firing_pat_name][...]
+                player_id_per_shot_pat = hdf5_data[player_id_per_shot_pat_name][...]
+                player_id_per_nearest_teammate = hdf5_data[player_id_per_nearest_teammate_name][...]
+                player_id_per_nearest_teammate_firing = hdf5_data[player_id_per_nearest_teammate_firing_name][...]
+                player_id_per_nearest_teammate_shot = hdf5_data[player_id_per_nearest_teammate_shot_name][...]
+                player_id_per_enemy_visible_no_fov_pat = hdf5_data[player_id_per_enemy_visible_no_fov_pat_name][...]
+                player_id_per_enemy_visible_fov_pat = hdf5_data[player_id_per_enemy_visible_fov_pat_name][...]
+                player_id_per_firing_to_teammate_seeing_enemy = \
+                    hdf5_data[player_id_per_firing_to_teammate_seeing_enemy_name][...]
+                player_id_per_shot_to_teammate_seeing_enemy = \
+                    hdf5_data[player_id_per_shot_to_teammate_seeing_enemy_name][...]
+
                 round_id_per_round = hdf5_data[round_id_per_round_name][...]
 
                 # filter if necessary
@@ -196,6 +294,13 @@ class HumannessMetrics:
                     distance_to_nearest_teammate_when_shot = \
                         distance_to_nearest_teammate_when_shot[test_round_id_per_nearest_teammate_shot]
 
+                    delta_distance_to_nearest_teammate = \
+                        delta_distance_to_nearest_teammate[test_round_id_per_nearest_teammate]
+                    delta_distance_to_nearest_teammate_when_firing = \
+                        delta_distance_to_nearest_teammate_when_firing[test_round_id_per_nearest_teammate_firing]
+                    delta_distance_to_nearest_teammate_when_shot = \
+                        delta_distance_to_nearest_teammate_when_shot[test_round_id_per_nearest_teammate_shot]
+
                     distance_to_nearest_enemy = distance_to_nearest_enemy[test_round_id_per_pat]
                     distance_to_nearest_enemy_when_firing = \
                         distance_to_nearest_enemy_when_firing[test_round_id_per_firing_pat]
@@ -213,6 +318,18 @@ class HumannessMetrics:
                     distance_to_cover_when_firing = distance_to_cover_when_firing[test_round_id_per_firing_pat]
                     distance_to_cover_when_shot = distance_to_cover_when_shot[test_round_id_per_shot_pat]
 
+                    distance_to_c4 = distance_to_c4[test_round_id_per_pat]
+                    distance_to_c4_when_enemy_visible_fov = \
+                        distance_to_c4_when_enemy_visible_fov[test_round_id_per_enemy_visible_fov_pat]
+                    distance_to_c4_when_firing = distance_to_c4_when_firing[test_round_id_per_firing_pat]
+                    distance_to_c4_when_shot = distance_to_c4_when_shot[test_round_id_per_shot_pat]
+
+                    delta_distance_to_c4 = delta_distance_to_c4[test_round_id_per_pat]
+                    delta_distance_to_c4_when_enemy_visible_fov = \
+                        delta_distance_to_c4_when_enemy_visible_fov[test_round_id_per_enemy_visible_fov_pat]
+                    delta_distance_to_c4_when_firing = delta_distance_to_c4_when_firing[test_round_id_per_firing_pat]
+                    delta_distance_to_c4_when_shot = delta_distance_to_c4_when_shot[test_round_id_per_shot_pat]
+
                     time_from_firing_to_teammate_seeing_enemy_fov = \
                         time_from_firing_to_teammate_seeing_enemy_fov[test_round_id_per_firing_to_teammate_seeing_enemy]
                     time_from_shot_to_teammate_seeing_enemy_fov = \
@@ -223,6 +340,59 @@ class HumannessMetrics:
                     pct_time_still_ct = pct_time_still_ct[test_round_id_per_round]
                     pct_time_still_t = pct_time_still_t[test_round_id_per_round]
                     ct_wins = ct_wins[test_round_id_per_round]
+                    
+                    round_id_per_pat = round_id_per_pat[test_round_id_per_pat]
+                    round_id_per_firing_pat = round_id_per_firing_pat[test_round_id_per_firing_pat]
+                    round_id_per_shot_pat = round_id_per_shot_pat[test_round_id_per_shot_pat]
+                    round_id_per_nearest_teammate = round_id_per_nearest_teammate[test_round_id_per_nearest_teammate]
+                    round_id_per_nearest_teammate_firing = \
+                        round_id_per_nearest_teammate_firing[test_round_id_per_nearest_teammate_firing]
+                    round_id_per_nearest_teammate_shot = \
+                        round_id_per_nearest_teammate_shot[test_round_id_per_nearest_teammate_firing]
+                    round_id_per_enemy_visible_no_fov_pat = \
+                        round_id_per_enemy_visible_no_fov_pat[test_round_id_per_enemy_visible_no_fov_pat]
+                    round_id_per_enemy_visible_fov_pat = \
+                        round_id_per_enemy_visible_fov_pat[test_round_id_per_enemy_visible_fov_pat]
+                    round_id_per_firing_to_teammate_seeing_enemy = \
+                        round_id_per_firing_to_teammate_seeing_enemy[test_round_id_per_firing_to_teammate_seeing_enemy]
+                    round_id_per_shot_to_teammate_seeing_enemy = \
+                        round_id_per_shot_to_teammate_seeing_enemy[test_round_id_per_shot_to_teammate_seeing_enemy]
+                    
+                    is_ct_per_pat = is_ct_per_pat[test_round_id_per_pat]
+                    is_ct_per_firing_pat = is_ct_per_firing_pat[test_round_id_per_firing_pat]
+                    is_ct_per_shot_pat = is_ct_per_shot_pat[test_round_id_per_shot_pat]
+                    is_ct_per_nearest_teammate = is_ct_per_nearest_teammate[test_round_id_per_nearest_teammate]
+                    is_ct_per_nearest_teammate_firing = \
+                        is_ct_per_nearest_teammate_firing[test_round_id_per_nearest_teammate_firing]
+                    is_ct_per_nearest_teammate_shot = \
+                        is_ct_per_nearest_teammate_shot[test_round_id_per_nearest_teammate_firing]
+                    is_ct_per_enemy_visible_no_fov_pat = \
+                        is_ct_per_enemy_visible_no_fov_pat[test_round_id_per_enemy_visible_no_fov_pat]
+                    is_ct_per_enemy_visible_fov_pat = \
+                        is_ct_per_enemy_visible_fov_pat[test_round_id_per_enemy_visible_fov_pat]
+                    is_ct_per_firing_to_teammate_seeing_enemy = \
+                        is_ct_per_firing_to_teammate_seeing_enemy[test_round_id_per_firing_to_teammate_seeing_enemy]
+                    is_ct_per_shot_to_teammate_seeing_enemy = \
+                        is_ct_per_shot_to_teammate_seeing_enemy[test_round_id_per_shot_to_teammate_seeing_enemy]
+
+                    player_id_per_pat = player_id_per_pat[test_round_id_per_pat]
+                    player_id_per_firing_pat = player_id_per_firing_pat[test_round_id_per_firing_pat]
+                    player_id_per_shot_pat = player_id_per_shot_pat[test_round_id_per_shot_pat]
+                    player_id_per_nearest_teammate = player_id_per_nearest_teammate[test_round_id_per_nearest_teammate]
+                    player_id_per_nearest_teammate_firing = \
+                        player_id_per_nearest_teammate_firing[test_round_id_per_nearest_teammate_firing]
+                    player_id_per_nearest_teammate_shot = \
+                        player_id_per_nearest_teammate_shot[test_round_id_per_nearest_teammate_firing]
+                    player_id_per_enemy_visible_no_fov_pat = \
+                        player_id_per_enemy_visible_no_fov_pat[test_round_id_per_enemy_visible_no_fov_pat]
+                    player_id_per_enemy_visible_fov_pat = \
+                        player_id_per_enemy_visible_fov_pat[test_round_id_per_enemy_visible_fov_pat]
+                    player_id_per_firing_to_teammate_seeing_enemy = \
+                        player_id_per_firing_to_teammate_seeing_enemy[test_round_id_per_firing_to_teammate_seeing_enemy]
+                    player_id_per_shot_to_teammate_seeing_enemy = \
+                        player_id_per_shot_to_teammate_seeing_enemy[test_round_id_per_shot_to_teammate_seeing_enemy]
+
+                    round_id_per_round = round_id_per_round[test_round_id_per_round]
 
                 if first_file:
                     self.unscaled_speed = unscaled_speed
@@ -241,6 +411,10 @@ class HumannessMetrics:
                     self.distance_to_nearest_teammate_when_firing = distance_to_nearest_teammate_when_firing
                     self.distance_to_nearest_teammate_when_shot = distance_to_nearest_teammate_when_shot
 
+                    self.delta_distance_to_nearest_teammate = delta_distance_to_nearest_teammate
+                    self.delta_distance_to_nearest_teammate_when_firing = delta_distance_to_nearest_teammate_when_firing
+                    self.delta_distance_to_nearest_teammate_when_shot = delta_distance_to_nearest_teammate_when_shot
+
                     self.distance_to_nearest_enemy = distance_to_nearest_enemy
                     self.distance_to_nearest_enemy_when_firing = distance_to_nearest_enemy_when_firing
                     self.distance_to_nearest_enemy_when_shot = distance_to_nearest_enemy_when_shot
@@ -253,6 +427,16 @@ class HumannessMetrics:
                     self.distance_to_cover_when_firing = distance_to_cover_when_firing
                     self.distance_to_cover_when_shot = distance_to_cover_when_shot
 
+                    self.distance_to_c4 = distance_to_c4
+                    self.distance_to_c4_when_enemy_visible_fov = distance_to_c4_when_enemy_visible_fov
+                    self.distance_to_c4_when_firing = distance_to_c4_when_firing
+                    self.distance_to_c4_when_shot = distance_to_c4_when_shot
+
+                    self.delta_distance_to_c4 = delta_distance_to_c4
+                    self.delta_distance_to_c4_when_enemy_visible_fov = delta_distance_to_c4_when_enemy_visible_fov
+                    self.delta_distance_to_c4_when_firing = delta_distance_to_c4_when_firing
+                    self.delta_distance_to_c4_when_shot = delta_distance_to_c4_when_shot
+
                     self.time_from_firing_to_teammate_seeing_enemy_fov = time_from_firing_to_teammate_seeing_enemy_fov
                     self.time_from_shot_to_teammate_seeing_enemy_fov = time_from_shot_to_teammate_seeing_enemy_fov
 
@@ -261,6 +445,41 @@ class HumannessMetrics:
                     self.pct_time_still_ct = pct_time_still_ct
                     self.pct_time_still_t = pct_time_still_t
                     self.ct_wins = ct_wins
+
+                    self.round_id_per_pat = round_id_per_pat
+                    self.round_id_per_firing_pat = round_id_per_firing_pat
+                    self.round_id_per_shot_pat = round_id_per_shot_pat
+                    self.round_id_per_nearest_teammate = round_id_per_nearest_teammate
+                    self.round_id_per_nearest_teammate_firing = round_id_per_nearest_teammate_firing
+                    self.round_id_per_nearest_teammate_shot = round_id_per_nearest_teammate_shot
+                    self.round_id_per_enemy_visible_no_fov_pat = round_id_per_enemy_visible_no_fov_pat
+                    self.round_id_per_enemy_visible_fov_pat = round_id_per_enemy_visible_fov_pat
+                    self.round_id_per_firing_to_teammate_seeing_enemy = round_id_per_firing_to_teammate_seeing_enemy
+                    self.round_id_per_shot_to_teammate_seeing_enemy = round_id_per_shot_to_teammate_seeing_enemy
+
+                    self.is_ct_per_pat = is_ct_per_pat
+                    self.is_ct_per_firing_pat = is_ct_per_firing_pat
+                    self.is_ct_per_shot_pat = is_ct_per_shot_pat
+                    self.is_ct_per_nearest_teammate = is_ct_per_nearest_teammate
+                    self.is_ct_per_nearest_teammate_firing = is_ct_per_nearest_teammate_firing
+                    self.is_ct_per_nearest_teammate_shot = is_ct_per_nearest_teammate_shot
+                    self.is_ct_per_enemy_visible_no_fov_pat = is_ct_per_enemy_visible_no_fov_pat
+                    self.is_ct_per_enemy_visible_fov_pat = is_ct_per_enemy_visible_fov_pat
+                    self.is_ct_per_firing_to_teammate_seeing_enemy = is_ct_per_firing_to_teammate_seeing_enemy
+                    self.is_ct_per_shot_to_teammate_seeing_enemy = is_ct_per_shot_to_teammate_seeing_enemy
+                    
+                    self.player_id_per_pat = player_id_per_pat
+                    self.player_id_per_firing_pat = player_id_per_firing_pat
+                    self.player_id_per_shot_pat = player_id_per_shot_pat
+                    self.player_id_per_nearest_teammate = player_id_per_nearest_teammate
+                    self.player_id_per_nearest_teammate_firing = player_id_per_nearest_teammate_firing
+                    self.player_id_per_nearest_teammate_shot = player_id_per_nearest_teammate_shot
+                    self.player_id_per_enemy_visible_no_fov_pat = player_id_per_enemy_visible_no_fov_pat
+                    self.player_id_per_enemy_visible_fov_pat = player_id_per_enemy_visible_fov_pat
+                    self.player_id_per_firing_to_teammate_seeing_enemy = player_id_per_firing_to_teammate_seeing_enemy
+                    self.player_id_per_shot_to_teammate_seeing_enemy = player_id_per_shot_to_teammate_seeing_enemy
+
+                    self.round_id_per_round = round_id_per_round
                 else:
                     self.unscaled_speed = np.append(self.unscaled_speed, unscaled_speed)
                     self.unscaled_speed_when_firing = \
@@ -324,6 +543,62 @@ class HumannessMetrics:
                     self.pct_time_still_ct = np.append(self.pct_time_still_ct, pct_time_still_ct)
                     self.pct_time_still_t = np.append(self.pct_time_still_t, pct_time_still_t)
                     self.ct_wins = np.append(self.ct_wins, ct_wins)
+
+                    self.round_id_per_pat = np.append(self.round_id_per_pat, round_id_per_pat)
+                    self.round_id_per_firing_pat = np.append(self.round_id_per_firing_pat, round_id_per_firing_pat)
+                    self.round_id_per_shot_pat = np.append(self.round_id_per_shot_pat, round_id_per_shot_pat)
+                    self.round_id_per_nearest_teammate = \
+                        np.append(self.round_id_per_nearest_teammate, round_id_per_nearest_teammate)
+                    self.round_id_per_nearest_teammate_firing = \
+                        np.append(self.round_id_per_nearest_teammate_firing, round_id_per_nearest_teammate_firing)
+                    self.round_id_per_nearest_teammate_shot = \
+                        np.append(self.round_id_per_nearest_teammate_shot, round_id_per_nearest_teammate_shot)
+                    self.round_id_per_enemy_visible_no_fov_pat = \
+                        np.append(self.round_id_per_enemy_visible_no_fov_pat, round_id_per_enemy_visible_no_fov_pat)
+                    self.round_id_per_enemy_visible_fov_pat = \
+                        np.append(self.round_id_per_enemy_visible_fov_pat, round_id_per_enemy_visible_fov_pat)
+                    self.round_id_per_firing_to_teammate_seeing_enemy = \
+                        np.append(self.round_id_per_firing_to_teammate_seeing_enemy, round_id_per_firing_to_teammate_seeing_enemy)
+                    self.round_id_per_shot_to_teammate_seeing_enemy = \
+                        np.append(self.round_id_per_shot_to_teammate_seeing_enemy, round_id_per_shot_to_teammate_seeing_enemy)
+
+                    self.is_ct_per_pat = np.append(self.is_ct_per_pat, is_ct_per_pat)
+                    self.is_ct_per_firing_pat = np.append(self.is_ct_per_firing_pat, is_ct_per_firing_pat)
+                    self.is_ct_per_shot_pat = np.append(self.is_ct_per_shot_pat, is_ct_per_shot_pat)
+                    self.is_ct_per_nearest_teammate = \
+                        np.append(self.is_ct_per_nearest_teammate, is_ct_per_nearest_teammate)
+                    self.is_ct_per_nearest_teammate_firing = \
+                        np.append(self.is_ct_per_nearest_teammate_firing, is_ct_per_nearest_teammate_firing)
+                    self.is_ct_per_nearest_teammate_shot = \
+                        np.append(self.is_ct_per_nearest_teammate_shot, is_ct_per_nearest_teammate_shot)
+                    self.is_ct_per_enemy_visible_no_fov_pat = \
+                        np.append(self.is_ct_per_enemy_visible_no_fov_pat, is_ct_per_enemy_visible_no_fov_pat)
+                    self.is_ct_per_enemy_visible_fov_pat = \
+                        np.append(self.is_ct_per_enemy_visible_fov_pat, is_ct_per_enemy_visible_fov_pat)
+                    self.is_ct_per_firing_to_teammate_seeing_enemy = \
+                        np.append(self.is_ct_per_firing_to_teammate_seeing_enemy, is_ct_per_firing_to_teammate_seeing_enemy)
+                    self.is_ct_per_shot_to_teammate_seeing_enemy = \
+                        np.append(self.is_ct_per_shot_to_teammate_seeing_enemy, is_ct_per_shot_to_teammate_seeing_enemy)
+
+                    self.player_id_per_pat = np.append(self.player_id_per_pat, player_id_per_pat)
+                    self.player_id_per_firing_pat = np.append(self.player_id_per_firing_pat, player_id_per_firing_pat)
+                    self.player_id_per_shot_pat = np.append(self.player_id_per_shot_pat, player_id_per_shot_pat)
+                    self.player_id_per_nearest_teammate = \
+                        np.append(self.player_id_per_nearest_teammate, player_id_per_nearest_teammate)
+                    self.player_id_per_nearest_teammate_firing = \
+                        np.append(self.player_id_per_nearest_teammate_firing, player_id_per_nearest_teammate_firing)
+                    self.player_id_per_nearest_teammate_shot = \
+                        np.append(self.player_id_per_nearest_teammate_shot, player_id_per_nearest_teammate_shot)
+                    self.player_id_per_enemy_visible_no_fov_pat = \
+                        np.append(self.player_id_per_enemy_visible_no_fov_pat, player_id_per_enemy_visible_no_fov_pat)
+                    self.player_id_per_enemy_visible_fov_pat = \
+                        np.append(self.player_id_per_enemy_visible_fov_pat, player_id_per_enemy_visible_fov_pat)
+                    self.player_id_per_firing_to_teammate_seeing_enemy = \
+                        np.append(self.player_id_per_firing_to_teammate_seeing_enemy, player_id_per_firing_to_teammate_seeing_enemy)
+                    self.player_id_per_shot_to_teammate_seeing_enemy = \
+                        np.append(self.player_id_per_shot_to_teammate_seeing_enemy, player_id_per_shot_to_teammate_seeing_enemy)
+
+                    self.round_id_per_round = np.append(self.round_id_per_round, round_id_per_round)
 
                 first_file = False
 
