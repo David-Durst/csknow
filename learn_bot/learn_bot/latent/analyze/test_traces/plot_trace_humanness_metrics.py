@@ -102,7 +102,10 @@ def plot_metric(axs, metric_index: int, one_bot_aggressive_learned_bot_metric: n
         min_value = int(floor(min(values_for_min)))
         if min_value > 0:
             min_value = 0
-        bins = generate_bins(min_value, max_value, max(max_value // 20, 1))
+        bin_width = (max_value - min_value) // 20
+        if bin_width == 0:
+            bin_width = 1
+        bins = generate_bins(min_value, max_value, bin_width)
     if len(one_bot_aggressive_learned_bot_metric) > 0:
         metric_series = pd.Series(one_bot_aggressive_learned_bot_metric)
         plot_hist(axs[metric_index, 0], metric_series, bins)
