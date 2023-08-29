@@ -27,6 +27,7 @@ class RoundForTrace:
     start_index_in_hdf5: int = -1
     length: int = -1
     hdf5_key: str = ""
+    round_id: int = -1
 
     def to_dict(self):
         return {
@@ -36,7 +37,8 @@ class RoundForTrace:
             rft_one_bot_feature_store_index_name: self.one_bot_feature_store_index,
             rft_start_index_in_hdf5_name: self.start_index_in_hdf5,
             rft_length_name: self.length,
-            rft_hdf5_key: self.hdf5_key
+            rft_hdf5_key: self.hdf5_key,
+            round_id_column: self.round_id
         }
 
 
@@ -82,6 +84,7 @@ def create_traces(loaded_model: LoadedModel):
                     round_for_trace.start_index_in_hdf5 = cur_start_index
                     round_for_trace.length = len(round_ticks_df)
                     round_for_trace.hdf5_key = str(absolute_to_relative_train_test_key(hdf5_wrapper.hdf5_path))
+                    round_for_trace.round_id = round_ticks_df[round_id_column].iloc[0]
                     cur_start_index += len(round_ticks_df)
 
     # make sure all rounds for traces have been found

@@ -2,7 +2,7 @@ import os
 from dataclasses import dataclass, field
 from math import ceil, floor
 from pathlib import Path
-from typing import List, Dict
+from typing import List, Dict, Tuple, Optional
 
 import numpy as np
 import pandas as pd
@@ -16,7 +16,7 @@ from learn_bot.latent.analyze.humanness_metrics.column_names import distance_to_
     distance_to_cover_when_enemy_visible_fov_name, distance_to_cover_when_firing_name, distance_to_cover_when_shot_name, \
     time_from_firing_to_teammate_seeing_enemy_fov_name, time_from_shot_to_teammate_seeing_enemy_fov_name, \
     distance_to_c4_when_enemy_visible_fov_name, delta_distance_to_c4_when_enemy_visible_fov_name, \
-    delta_distance_to_nearest_teammate_when_shot_name
+    delta_distance_to_nearest_teammate_when_shot_name, rollout_humanness_hdf5_data_path, all_train_humanness_folder_path
 
 from learn_bot.latent.analyze.humanness_metrics.hdf5_loader import HumannessMetrics, HumannessDataOptions
 from learn_bot.latent.analyze.process_trajectory_comparison import plot_hist, generate_bins, set_pd_print_options
@@ -24,7 +24,11 @@ from learn_bot.latent.analyze.test_traces.column_names import rollout_aggressive
     rollout_passive_humanness_hdf5_data_path, trace_index_name, trace_one_non_replay_team_name, \
     trace_one_non_replay_bot_name, rollout_aggressive_trace_hdf5_data_path, rollout_passive_trace_hdf5_data_path, \
     trace_demo_file_name, num_traces_name, trace_is_bot_player_names, trace_humanness_path
+from learn_bot.latent.analyze.test_traces.run_trace_creation import trace_file_name, rft_demo_file_name, rft_hdf5_key, \
+    rft_ct_bot_name
+from learn_bot.latent.engagement.column_names import round_id_column
 from learn_bot.libs.hdf5_to_pd import load_hdf5_to_pd
+from learn_bot.libs.multi_hdf5_wrapper import train_test_split_folder_path
 
 RoundBotPlayerIds = Dict[int, List[int]]
 TraceBotPlayerIds = Dict[int, RoundBotPlayerIds]
@@ -50,6 +54,13 @@ round_id_cols = ['round_id_per_nearest_teammate', 'round_id_per_nearest_teammate
                  'round_id_per_enemy_visible_fov_pat', 'round_id_per_firing_pat', 'round_id_per_shot_pat',
                  'round_id_per_firing_to_teammate_seeing_enemy', 'round_id_per_shot_to_teammate_seeing_enemy']
 
+is_ct_cols = ['is_ct_per_nearest_teammate', 'is_ct_per_nearest_teammate_firing', 'is_ct_per_nearest_teammate_shot',
+              'is_ct_per_nearest_teammate', 'is_ct_per_nearest_teammate_firing', 'is_ct_per_nearest_teammate_shot',
+              'is_ct_per_pat', 'is_ct_per_enemy_visible_fov_pat', 'is_ct_per_firing_pat', 'is_ct_per_shot_pat',
+              'is_ct_per_pat', 'is_ct_per_enemy_visible_fov_pat', 'is_ct_per_firing_pat', 'is_ct_per_shot_pat',
+              'is_ct_per_enemy_visible_fov_pat', 'is_ct_per_firing_pat', 'is_ct_per_shot_pat',
+              'is_ct_per_firing_to_teammate_seeing_enemy', 'is_ct_per_shot_to_teammate_seeing_enemy']
+
 player_id_cols = ['player_id_per_nearest_teammate', 'player_id_per_nearest_teammate_firing', 'player_id_per_nearest_teammate_shot',
                   'player_id_per_nearest_teammate', 'player_id_per_nearest_teammate_firing', 'player_id_per_nearest_teammate_shot',
                   'player_id_per_pat', 'player_id_per_enemy_visible_fov_pat', 'player_id_per_firing_pat', 'player_id_per_shot_pat',
@@ -59,17 +70,19 @@ player_id_cols = ['player_id_per_nearest_teammate', 'player_id_per_nearest_teamm
 
 fig_length = 8
 num_figs = len(metric_cols)
-num_player_types = 4
+num_player_types = 5
 one_bot_aggressive_learned_bot_name = "One Bot Aggressive "
 one_team_aggressive_learned_bot_name = "One Team Aggressive "
 one_bot_passive_learned_bot_name = "One Bot Passive "
 one_team_passive_learned_bot_name = "One Team Passive "
+human_name = "Human "
 
 
 def plot_metric(axs, metric_index: int, one_bot_aggressive_learned_bot_metric: np.ndarray,
                 one_team_aggressive_learned_bot_metric: np.ndarray,
                 one_bot_passive_learned_bot_metric: np.ndarray,
                 one_team_passive_learned_bot_metric: np.ndarray,
+                human_metric: np.ndarray,
                 metric_name: str, pct_bins: bool = False):
     values_for_max = []
     values_for_min = []
@@ -85,6 +98,9 @@ def plot_metric(axs, metric_index: int, one_bot_aggressive_learned_bot_metric: n
     if len(one_team_passive_learned_bot_metric) > 0:
         values_for_max.append(one_team_passive_learned_bot_metric.max())
         values_for_min.append(one_team_passive_learned_bot_metric.min())
+    if len(human_metric) > 0:
+        values_for_max.append(human_metric.max())
+        values_for_min.append(human_metric.min())
     if len(values_for_max) == 0:
         return
     max_value = int(ceil(max(values_for_max)))
@@ -94,6 +110,7 @@ def plot_metric(axs, metric_index: int, one_bot_aggressive_learned_bot_metric: n
     axs[metric_index, 1].set_title(one_team_aggressive_learned_bot_name + metric_name)
     axs[metric_index, 2].set_title(one_bot_passive_learned_bot_name + metric_name)
     axs[metric_index, 3].set_title(one_team_passive_learned_bot_name + metric_name)
+    axs[metric_index, 4].set_title(human_name + metric_name)
     bins: List
     if pct_bins:
         min_value = 0
@@ -126,29 +143,61 @@ def plot_metric(axs, metric_index: int, one_bot_aggressive_learned_bot_metric: n
         plot_hist(axs[metric_index, 3], metric_series, bins)
         axs[metric_index, 3].text((min_value + max_value) / 2., 0.4, metric_series.describe().to_string(),
                               family='monospace')
+    if len(human_metric) > 0:
+        metric_series = pd.Series(human_metric)
+        plot_hist(axs[metric_index, 4], metric_series, bins)
+        axs[metric_index, 4].text((min_value + max_value) / 2., 0.4, metric_series.describe().to_string(),
+                                  family='monospace')
     axs[metric_index, 0].set_ylim(0., 1.)
     axs[metric_index, 1].set_ylim(0., 1.)
     axs[metric_index, 2].set_ylim(0., 1.)
     axs[metric_index, 3].set_ylim(0., 1.)
+    axs[metric_index, 4].set_ylim(0., 1.)
     axs[metric_index, 0].set_xlim(min_value, max_value)
     axs[metric_index, 1].set_xlim(min_value, max_value)
     axs[metric_index, 2].set_xlim(min_value, max_value)
     axs[metric_index, 3].set_xlim(min_value, max_value)
+    axs[metric_index, 4].set_xlim(min_value, max_value)
 
 
-def get_metrics(humanness_metrics: HumannessMetrics, round_ids: List[int], bot_player_ids: RoundBotPlayerIds) \
+@dataclass
+class HumannessDataForHumanRound:
+    humanness_metrics: HumannessMetrics
+    round_id: int
+    ct_bot: bool
+
+
+def get_metrics(humanness_metrics: HumannessMetrics, round_ids: List[int], bot_player_ids: RoundBotPlayerIds,
+                ct_bot: Optional[bool] = None) \
         -> Dict[str, np.ndarray]:
     result: Dict[str, np.ndarray] = {}
     for i in range(len(metric_cols)):
         metric_col = humanness_metrics.__getattribute__(metric_cols[i])
         round_ids_col = humanness_metrics.__getattribute__(round_id_cols[i])
         player_ids_col = humanness_metrics.__getattribute__(player_id_cols[i])
+        is_ct_col = humanness_metrics.__getattribute__(is_ct_cols[i])
         # start with false, because building up or's
         conditions = round_ids_col == -1
         for round_id in round_ids:
-            conditions = conditions | ((round_ids_col == round_id) & (np.isin(player_ids_col, bot_player_ids[round_id])))
+            if ct_bot is None:
+                conditions = conditions | \
+                             ((round_ids_col == round_id) & (np.isin(player_ids_col, bot_player_ids[round_id])))
+            else:
+                conditions = conditions | ((round_ids_col == round_id) & (is_ct_col == ct_bot))
         result[metric_names[i]] = metric_col[conditions]
     return result
+
+
+def get_humanness_data_for_human_round(trace_extra_df: pd.DataFrame, trace_index: int) -> HumannessDataForHumanRound:
+    trace_extra_row = trace_extra_df.iloc[trace_index]
+    round_id = trace_extra_row[round_id_column]
+    trace_hdf5_key = trace_extra_row[rft_hdf5_key].decode('utf-8')
+    humanness_hdf5_key = trace_hdf5_key.replace('behaviorTreeTeamFeatureStore', 'humannessMetrics')
+    ct_bot = trace_extra_row[rft_ct_bot_name]
+
+    human_humanness_metrics = HumannessMetrics(HumannessDataOptions.CUSTOM, False,
+                                               all_train_humanness_folder_path.parent / humanness_hdf5_key)
+    return HumannessDataForHumanRound(human_humanness_metrics, round_id, ct_bot)
 
 
 def plot_humanness_metrics(aggressive_trace_bot_player_ids: TraceBotPlayerIds,
@@ -167,6 +216,10 @@ def plot_humanness_metrics(aggressive_trace_bot_player_ids: TraceBotPlayerIds,
                                              cols_to_get=[trace_demo_file_name, trace_index_name, num_traces_name,
                                                           trace_one_non_replay_team_name,
                                                           trace_one_non_replay_bot_name] + trace_is_bot_player_names)
+
+    trace_path = train_test_split_folder_path / trace_file_name
+    trace_extra_df = load_hdf5_to_pd(trace_path, root_key='extra', cols_to_get=[rft_demo_file_name, round_id_column,
+                                                                                rft_hdf5_key, rft_ct_bot_name])
 
     os.makedirs(trace_humanness_path, exist_ok=True)
 
@@ -199,6 +252,12 @@ def plot_humanness_metrics(aggressive_trace_bot_player_ids: TraceBotPlayerIds,
         passive_one_team_metrics = get_metrics(passive_humanness_metrics, passive_one_team_trace_round_ids,
                                                passive_trace_bot_player_ids[trace_index])
 
+        humanness_data_for_human_round = get_humanness_data_for_human_round(trace_extra_df, trace_index)
+        human_metrics = get_metrics(humanness_data_for_human_round.humanness_metrics,
+                                    [humanness_data_for_human_round.round_id],
+                                    {}, humanness_data_for_human_round.ct_bot)
+
+
         trace_demo_file = \
             aggressive_trace_extra_df.loc[aggressive_one_bot_trace_round_ids[0], trace_demo_file_name] \
             .decode('utf-8')[:-1]
@@ -212,7 +271,7 @@ def plot_humanness_metrics(aggressive_trace_bot_player_ids: TraceBotPlayerIds,
             plot_metric(axs, m,
                         aggressive_one_bot_metrics[metric_name], aggressive_one_team_metrics[metric_name],
                         passive_one_bot_metrics[metric_name], passive_one_team_metrics[metric_name],
-                        metric_name)
+                        human_metrics[metric_name], metric_name)
 
         png_file_name = str(trace_index) + "_" + trace_demo_file + ".png"
         plt.savefig(trace_humanness_path / png_file_name)
