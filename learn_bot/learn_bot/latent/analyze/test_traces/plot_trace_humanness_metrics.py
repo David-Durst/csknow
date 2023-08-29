@@ -1,6 +1,6 @@
 import os
 from dataclasses import dataclass, field
-from math import ceil
+from math import ceil, floor
 from pathlib import Path
 from typing import List, Dict
 
@@ -11,12 +11,12 @@ from matplotlib import pyplot as plt
 from learn_bot.latent.analyze.humanness_metrics.column_names import distance_to_nearest_teammate_name, \
     distance_to_nearest_teammate_when_firing_name, distance_to_nearest_enemy_when_shot_name, \
     delta_distance_to_nearest_teammate_name, delta_distance_to_nearest_teammate_when_firing_name, \
-    delta_distance_to_c4_when_shot_name, \
     distance_to_c4_name, distance_to_c4_when_firing_name, distance_to_c4_when_shot_name, \
     delta_distance_to_c4_name, delta_distance_to_c4_when_firing_name, delta_distance_to_c4_when_shot_name, \
     distance_to_cover_when_enemy_visible_fov_name, distance_to_cover_when_firing_name, distance_to_cover_when_shot_name, \
     time_from_firing_to_teammate_seeing_enemy_fov_name, time_from_shot_to_teammate_seeing_enemy_fov_name, \
-    distance_to_c4_when_enemy_visible_fov_name, delta_distance_to_c4_when_enemy_visible_fov_name
+    distance_to_c4_when_enemy_visible_fov_name, delta_distance_to_c4_when_enemy_visible_fov_name, \
+    delta_distance_to_nearest_teammate_when_shot_name
 
 from learn_bot.latent.analyze.humanness_metrics.hdf5_loader import HumannessMetrics, HumannessDataOptions
 from learn_bot.latent.analyze.process_trajectory_comparison import plot_hist, generate_bins, set_pd_print_options
@@ -37,7 +37,7 @@ metric_cols = ['distance_to_nearest_teammate', 'distance_to_nearest_teammate_whe
                'time_from_firing_to_teammate_seeing_enemy_fov', 'time_from_shot_to_teammate_seeing_enemy_fov']
 
 metric_names = [distance_to_nearest_teammate_name, distance_to_nearest_teammate_when_firing_name, distance_to_nearest_enemy_when_shot_name,
-                delta_distance_to_nearest_teammate_name, delta_distance_to_nearest_teammate_when_firing_name, delta_distance_to_c4_when_shot_name,
+                delta_distance_to_nearest_teammate_name, delta_distance_to_nearest_teammate_when_firing_name, delta_distance_to_nearest_teammate_when_shot_name,
                 distance_to_c4_name, distance_to_c4_when_enemy_visible_fov_name, distance_to_c4_when_firing_name, distance_to_c4_when_shot_name,
                 delta_distance_to_c4_name, delta_distance_to_c4_when_enemy_visible_fov_name, delta_distance_to_c4_when_firing_name, delta_distance_to_c4_when_shot_name,
                 distance_to_cover_when_enemy_visible_fov_name, distance_to_cover_when_firing_name, distance_to_cover_when_shot_name,
@@ -72,14 +72,19 @@ def plot_metric(axs, metric_index: int, one_bot_aggressive_learned_bot_metric: n
                 one_team_passive_learned_bot_metric: np.ndarray,
                 metric_name: str, pct_bins: bool = False):
     values_for_max = []
+    values_for_min = []
     if len(one_bot_aggressive_learned_bot_metric) > 0:
         values_for_max.append(one_bot_aggressive_learned_bot_metric.max())
+        values_for_min.append(one_bot_aggressive_learned_bot_metric.min())
     if len(one_team_aggressive_learned_bot_metric) > 0:
         values_for_max.append(one_team_aggressive_learned_bot_metric.max())
+        values_for_min.append(one_team_aggressive_learned_bot_metric.min())
     if len(one_bot_passive_learned_bot_metric) > 0:
         values_for_max.append(one_bot_passive_learned_bot_metric.max())
+        values_for_min.append(one_bot_passive_learned_bot_metric.min())
     if len(one_team_passive_learned_bot_metric) > 0:
         values_for_max.append(one_team_passive_learned_bot_metric.max())
+        values_for_min.append(one_team_passive_learned_bot_metric.min())
     if len(values_for_max) == 0:
         return
     max_value = int(ceil(max(values_for_max)))
@@ -91,21 +96,41 @@ def plot_metric(axs, metric_index: int, one_bot_aggressive_learned_bot_metric: n
     axs[metric_index, 3].set_title(one_team_passive_learned_bot_name + metric_name)
     bins: List
     if pct_bins:
+        min_value = 0
         bins = [i * 0.1 for i in range(11)]
     else:
-        bins = generate_bins(0, max_value, max(max_value // 20, 1))
+        min_value = int(floor(min(values_for_min)))
+        if min_value > 0:
+            min_value = 0
+        bins = generate_bins(min_value, max_value, max(max_value // 20, 1))
     if len(one_bot_aggressive_learned_bot_metric) > 0:
-        plot_hist(axs[metric_index, 0], pd.Series(one_bot_aggressive_learned_bot_metric), bins)
+        metric_series = pd.Series(one_bot_aggressive_learned_bot_metric)
+        plot_hist(axs[metric_index, 0], metric_series, bins)
+        axs[metric_index, 0].text((min_value + max_value) / 2., 0.4, metric_series.describe().to_string(),
+                                  family='monospace')
     if len(one_team_aggressive_learned_bot_metric) > 0:
-        plot_hist(axs[metric_index, 1], pd.Series(one_team_aggressive_learned_bot_metric), bins)
+        metric_series = pd.Series(one_team_aggressive_learned_bot_metric)
+        plot_hist(axs[metric_index, 1], metric_series, bins)
+        axs[metric_index, 1].text((min_value + max_value) / 2., 0.4, metric_series.describe().to_string(),
+                              family='monospace')
     if len(one_bot_passive_learned_bot_metric) > 0:
-        plot_hist(axs[metric_index, 2], pd.Series(one_bot_passive_learned_bot_metric), bins)
+        metric_series = pd.Series(one_bot_passive_learned_bot_metric)
+        plot_hist(axs[metric_index, 2], metric_series, bins)
+        axs[metric_index, 2].text((min_value + max_value) / 2., 0.4, metric_series.describe().to_string(),
+                              family='monospace')
     if len(one_team_passive_learned_bot_metric) > 0:
-        plot_hist(axs[metric_index, 3], pd.Series(one_team_passive_learned_bot_metric), bins)
+        metric_series = pd.Series(one_team_passive_learned_bot_metric)
+        plot_hist(axs[metric_index, 3], metric_series, bins)
+        axs[metric_index, 3].text((min_value + max_value) / 2., 0.4, metric_series.describe().to_string(),
+                              family='monospace')
     axs[metric_index, 0].set_ylim(0., 1.)
     axs[metric_index, 1].set_ylim(0., 1.)
     axs[metric_index, 2].set_ylim(0., 1.)
     axs[metric_index, 3].set_ylim(0., 1.)
+    axs[metric_index, 0].set_xlim(min_value, max_value)
+    axs[metric_index, 1].set_xlim(min_value, max_value)
+    axs[metric_index, 2].set_xlim(min_value, max_value)
+    axs[metric_index, 3].set_xlim(min_value, max_value)
 
 
 def get_metrics(humanness_metrics: HumannessMetrics, round_ids: List[int], bot_player_ids: RoundBotPlayerIds) \
