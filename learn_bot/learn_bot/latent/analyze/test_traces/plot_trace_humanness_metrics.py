@@ -23,8 +23,7 @@ from learn_bot.latent.analyze.process_trajectory_comparison import plot_hist, ge
 from learn_bot.latent.analyze.test_traces.column_names import rollout_aggressive_humanness_hdf5_data_path, \
     rollout_passive_humanness_hdf5_data_path, trace_index_name, trace_one_non_replay_team_name, \
     trace_one_non_replay_bot_name, rollout_aggressive_trace_hdf5_data_path, rollout_passive_trace_hdf5_data_path, \
-    trace_demo_file_name, num_traces_name, trace_is_bot_player_names, trace_plots_path, trace_humanness_path
-from learn_bot.latent.engagement.column_names import round_id_column
+    trace_demo_file_name, num_traces_name, trace_is_bot_player_names, trace_humanness_path
 from learn_bot.libs.hdf5_to_pd import load_hdf5_to_pd
 
 RoundBotPlayerIds = Dict[int, List[int]]
@@ -58,13 +57,13 @@ player_id_cols = ['player_id_per_nearest_teammate', 'player_id_per_nearest_teamm
                   'player_id_per_enemy_visible_fov_pat', 'player_id_per_firing_pat', 'player_id_per_shot_pat',
                   'player_id_per_firing_to_teammate_seeing_enemy', 'player_id_per_shot_to_teammate_seeing_enemy']
 
-fig_length = 6
+fig_length = 8
 num_figs = len(metric_cols)
 num_player_types = 4
-one_bot_aggressive_learned_bot_name = "One Bot Aggressive Learned Bot "
-one_team_aggressive_learned_bot_name = "One Team Aggressive Learned Bot "
-one_bot_passive_learned_bot_name = "One Bot Passive Learned Bot "
-one_team_passive_learned_bot_name = "One Team Passive Learned Bot "
+one_bot_aggressive_learned_bot_name = "One Bot Aggressive "
+one_team_aggressive_learned_bot_name = "One Team Aggressive "
+one_bot_passive_learned_bot_name = "One Bot Passive "
+one_team_passive_learned_bot_name = "One Team Passive "
 
 
 def plot_metric(axs, metric_index: int, one_bot_aggressive_learned_bot_metric: np.ndarray,
@@ -94,7 +93,7 @@ def plot_metric(axs, metric_index: int, one_bot_aggressive_learned_bot_metric: n
     if pct_bins:
         bins = [i * 0.1 for i in range(11)]
     else:
-        bins = generate_bins(0, max_value, max_value // 20)
+        bins = generate_bins(0, max_value, max(max_value // 20, 1))
     if len(one_bot_aggressive_learned_bot_metric) > 0:
         plot_hist(axs[metric_index, 0], pd.Series(one_bot_aggressive_learned_bot_metric), bins)
     if len(one_team_aggressive_learned_bot_metric) > 0:
@@ -116,8 +115,6 @@ def get_metrics(humanness_metrics: HumannessMetrics, round_ids: List[int], bot_p
         metric_col = humanness_metrics.__getattribute__(metric_cols[i])
         round_ids_col = humanness_metrics.__getattribute__(round_id_cols[i])
         player_ids_col = humanness_metrics.__getattribute__(player_id_cols[i])
-        if len(metric_col) != len(round_ids_col) or len(metric_col) != len(player_ids_col):
-            print("bad")
         # start with false, because building up or's
         conditions = round_ids_col == -1
         for round_id in round_ids:
