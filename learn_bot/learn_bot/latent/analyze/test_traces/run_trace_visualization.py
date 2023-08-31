@@ -136,10 +136,15 @@ if __name__ == "__main__":
     #set_pd_print_options()
 
     visualize_human_traces()
+    print("aggressive traces")
     aggressive_trace_bot_player_ids = visualize_bot_traces(rollout_aggressive_trace_hdf5_data_path, 'aggressive')
+    print("passive traces")
     passive_trace_bot_player_ids = visualize_bot_traces(rollout_passive_trace_hdf5_data_path, 'passive')
+    print("heuristic traces")
     heuristic_trace_bot_player_ids = visualize_bot_traces(rollout_heuristic_trace_hdf5_data_path, 'heuristic')
+    print("default traces")
     default_trace_bot_player_ids = visualize_bot_traces(rollout_default_trace_hdf5_data_path, 'default')
 
+    print("trace metrics")
     plot_humanness_metrics(aggressive_trace_bot_player_ids, passive_trace_bot_player_ids,
                            heuristic_trace_bot_player_ids, default_trace_bot_player_ids)
