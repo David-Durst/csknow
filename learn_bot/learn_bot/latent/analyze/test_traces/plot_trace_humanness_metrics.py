@@ -2,7 +2,7 @@ import os
 from dataclasses import dataclass, field
 from math import ceil, floor
 from pathlib import Path
-from typing import List, Dict, Tuple, Optional
+from typing import List, Dict, Tuple, Optional, Set
 
 import numpy as np
 import pandas as pd
@@ -93,9 +93,18 @@ player_type_names = [
     one_team_default_learned_bot_name,
     human_name]
 
+trace_metrics: Set[Tuple[int, str]] = {(0, delta_distance_to_nearest_teammate_name), (0, delta_distance_to_c4_name),
+                                       (1, delta_distance_to_nearest_teammate_name), (1, delta_distance_to_c4_name),
+                                       (2, delta_distance_to_nearest_teammate_name), (2, delta_distance_to_c4_name),
+                                       (3, delta_distance_to_nearest_teammate_name), (3, delta_distance_to_c4_name),
+                                       (4, distance_to_cover_when_firing_name), (5, distance_to_cover_when_firing_name),
+                                       (6, time_from_firing_to_teammate_seeing_enemy_fov_name), (7, time_from_firing_to_teammate_seeing_enemy_fov_name),
+                                       (8, time_from_firing_to_teammate_seeing_enemy_fov_name), (9, time_from_firing_to_teammate_seeing_enemy_fov_name),
+                                       }
+
 def plot_metric(axs, metric_index: int, 
                 metric_player_types: List[np.ndarray],
-                metric_name: str, pct_bins: bool = False):
+                metric_name: str, trace_index: int):
     values_for_max = []
     values_for_min = []
     for metric_player_type in metric_player_types:
@@ -109,24 +118,32 @@ def plot_metric(axs, metric_index: int,
         return
     for i, player_type_name in enumerate(player_type_names):
         axs[metric_index, i].set_title(player_type_name + metric_name)
-    bins: List
-    if pct_bins:
+
+    min_value = int(floor(min(values_for_min)))
+    if min_value > 0:
         min_value = 0
-        bins = [i * 0.1 for i in range(11)]
-    else:
-        min_value = int(floor(min(values_for_min)))
-        if min_value > 0:
-            min_value = 0
-        bin_width = (max_value - min_value) // 20
-        if bin_width == 0:
-            bin_width = 1
-        bins = generate_bins(min_value, max_value, bin_width)
+    bin_width = (max_value - min_value) // 20
+    if bin_width == 0:
+        bin_width = 1
+    bins = generate_bins(min_value, max_value, bin_width)
+
+    player_type_names_to_print = []
+    avgs = []
     for i, metric_player_type in enumerate(metric_player_types):
         if len(metric_player_type) > 0:
             metric_series = pd.Series(metric_player_type)
             plot_hist(axs[metric_index, i], metric_series, bins)
             axs[metric_index, i].text((min_value + max_value) / 2., 0.4, metric_series.describe().to_string(),
                                       family='monospace')
+            if 'Bot' not in player_type_names[i]:
+                player_type_names_to_print.append(player_type_names[i])
+                avgs.append(f"{metric_series.mean():.1f}")
+
+    if (trace_index, metric_name) in trace_metrics:
+        print(f"{trace_index}, {metric_name}")
+        print(player_type_names_to_print)
+        print(" & ".join(avgs))
+
     for i in range(num_player_types):
         axs[metric_index, i].set_ylim(0., 1.)
         axs[metric_index, i].set_xlim(min_value, max_value)
@@ -290,7 +307,7 @@ def plot_humanness_metrics(aggressive_trace_bot_player_ids: TraceBotPlayerIds,
                             default_one_bot_metrics[metric_name],
                             default_one_team_metrics[metric_name],
                             human_metrics[metric_name]
-                        ], metric_name)
+                        ], metric_name, trace_index)
 
         png_file_name = str(trace_index) + "_" + trace_demo_file + ".png"
         plt.savefig(trace_humanness_path / png_file_name)
