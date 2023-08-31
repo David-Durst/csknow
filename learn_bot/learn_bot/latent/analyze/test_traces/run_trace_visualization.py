@@ -34,6 +34,8 @@ def draw_trace_paths(trace_df: pd.DataFrame, trace_extra_df: pd.DataFrame, trace
                                             (trace_extra_df[trace_one_non_replay_bot_name] == one_non_replay_bot)]
         cur_trace_round_ids = cur_trace_extra_df.index
         trace_demo_file = cur_trace_extra_df.loc[cur_trace_round_ids[0], trace_demo_file_name].decode('utf-8')[:-1]
+        if len(cur_trace_round_ids) != 10:
+            print('too few round ids')
     num_trace_repeats = len(cur_trace_round_ids)
     # set alpha so blend to 255 if fully overlap
     bot_ct_color = (bot_ct_color_list[0], bot_ct_color_list[1], bot_ct_color_list[2], 255 // num_trace_repeats)
@@ -133,8 +135,10 @@ def visualize_human_traces():
 if __name__ == "__main__":
     #set_pd_print_options()
 
-    visualize_human_traces()
+    #visualize_human_traces()
     aggressive_trace_bot_player_ids = visualize_bot_traces(rollout_aggressive_trace_hdf5_data_path, 'aggressive')
     passive_trace_bot_player_ids = visualize_bot_traces(rollout_passive_trace_hdf5_data_path, 'passive')
+    heuristic_trace_bot_player_ids = visualize_bot_traces(rollout_heuristic_trace_hdf5_data_path, 'heuristic')
+    default_trace_bot_player_ids = visualize_bot_traces(rollout_default_trace_hdf5_data_path, 'default')
 
     plot_humanness_metrics(aggressive_trace_bot_player_ids, passive_trace_bot_player_ids)

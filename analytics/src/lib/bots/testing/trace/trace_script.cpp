@@ -140,9 +140,13 @@ namespace csknow::tests::trace {
                                                          std::move(disableAllBothDuringSetup),
                                                          make_unique<csknow::tests::learned::StartNode>(blackboard, name, roundIndex, numRounds),
                                                          make_unique<SayCmd>(blackboard, demo_file_string + ":" + tracesData.demoFile[traceIndex]),
+                                                         make_unique<movement::WaitNode>(blackboard, 0.1),
                                                          make_unique<SayCmd>(blackboard, trace_counter_string + "," + std::to_string(traceIndex) + "," + std::to_string(numTraces)),
+                                                         make_unique<movement::WaitNode>(blackboard, 0.1),
                                                          make_unique<SayCmd>(blackboard, non_replay_players_string + "," + strStream.str()),
+                                                         make_unique<movement::WaitNode>(blackboard, 0.1),
                                                          make_unique<SayCmd>(blackboard, trace_bot_options_string + "," + std::to_string(oneTeam) + "," + std::to_string(oneBot)),
+                                                         make_unique<movement::WaitNode>(blackboard, 0.1),
                                                          std::move(bodyNode),
                                                          make_unique<csknow::tests::learned::SuccessEndNode>(blackboard, name, roundIndex, numRounds)),
                                                  "RoundSequence");
