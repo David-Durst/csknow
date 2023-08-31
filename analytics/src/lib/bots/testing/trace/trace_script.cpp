@@ -7,10 +7,11 @@
 
 namespace csknow::tests::trace {
     TraceScript::TraceScript(const csknow::tests::trace::TracesData &tracesData, int64_t traceIndex,
-                             int64_t numTraces, int64_t roundIndex, int64_t numRounds, bool oneTeam, bool oneBot) :
+                             int64_t numTraces, int64_t roundIndex, int64_t numRounds, bool oneTeam, bool oneBot,
+                             const string & botStop) :
                              Script("TraceScript", {}, {ObserveType::FirstPerson, 0}), tracesData(tracesData),
                              traceIndex(traceIndex), numTraces(numTraces), roundIndex(roundIndex), numRounds(numRounds),
-                             oneTeam(oneTeam), oneBot(oneBot) {
+                             oneTeam(oneTeam), oneBot(oneBot), botStop(botStop) {
         int64_t tickInFeatureStore = tracesData.startIndices[traceIndex];
 
         int numCT = 0, numT = 0;
@@ -114,9 +115,22 @@ namespace csknow::tests::trace {
             commaSeparateList(strStream, nonReplayNames);
             computeInitialPositionsViewAngles();
 
+            // set bot stop only for team that isn't replay. Replay must be csknow controlled
+            string actualBotStop = "1";
+            if (botStop != "1") {
+                if (tracesData.ctBot[traceIndex]) {
+                    // want ct do be csgo bots, so t controlled by csgo in replay
+                    actualBotStop = "t";
+                }
+                else {
+                    actualBotStop = "ct";
+                }
+            }
+
             Node::Ptr setupCommands = make_unique<SequenceNode>(blackboard, Node::makeList(
                     make_unique<InitGameRound>(blackboard, name),
                     make_unique<SetMaxRounds>(blackboard, lastRound ? 2 : 20, true),
+                    make_unique<SetBotStop>(blackboard, actualBotStop),
                     make_unique<movement::WaitNode>(blackboard, 0.3),
                     make_unique<SpecDynamic>(blackboard, neededBots, observeSettings),
                     make_unique<SlayAllBut>(blackboard, neededBotIds, state),
@@ -153,7 +167,7 @@ namespace csknow::tests::trace {
         }
     }
 
-    vector<Script::Ptr> createTracesScripts(const TracesData & tracesData, bool quitAtEnd) {
+    vector<Script::Ptr> createTracesScripts(const TracesData & tracesData, const string & botStop, bool quitAtEnd) {
         vector<Script::Ptr> result;
 
         int64_t numTraces = static_cast<int64_t>(tracesData.demoFile.size());
@@ -162,9 +176,11 @@ namespace csknow::tests::trace {
         int64_t roundIndex = 0;
         for (int64_t i = 0; i < numTraces; i++) {
             for (int j = 0; j < num_trace_repeats; j++) {
-                result.push_back(make_unique<TraceScript>(tracesData, i, numTraces, roundIndex, numRounds, true, false));
+                result.push_back(make_unique<TraceScript>(tracesData, i, numTraces, roundIndex, numRounds, true, false,
+                                                          botStop));
                 roundIndex++;
-                result.push_back(make_unique<TraceScript>(tracesData, i, numTraces, roundIndex, numRounds, true, true));
+                result.push_back(make_unique<TraceScript>(tracesData, i, numTraces, roundIndex, numRounds, true, true,
+                                                          botStop));
                 roundIndex++;
             }
         }

@@ -135,7 +135,7 @@ def visualize_human_traces():
 if __name__ == "__main__":
     #set_pd_print_options()
 
-    #visualize_human_traces()
+    visualize_human_traces()
     aggressive_trace_bot_player_ids = visualize_bot_traces(rollout_aggressive_trace_hdf5_data_path, 'aggressive')
     passive_trace_bot_player_ids = visualize_bot_traces(rollout_passive_trace_hdf5_data_path, 'passive')
     heuristic_trace_bot_player_ids = visualize_bot_traces(rollout_heuristic_trace_hdf5_data_path, 'heuristic')
