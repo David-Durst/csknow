@@ -141,4 +141,5 @@ if __name__ == "__main__":
     heuristic_trace_bot_player_ids = visualize_bot_traces(rollout_heuristic_trace_hdf5_data_path, 'heuristic')
     default_trace_bot_player_ids = visualize_bot_traces(rollout_default_trace_hdf5_data_path, 'default')
 
-    plot_humanness_metrics(aggressive_trace_bot_player_ids, passive_trace_bot_player_ids)
+    plot_humanness_metrics(aggressive_trace_bot_player_ids, passive_trace_bot_player_ids,
+                           heuristic_trace_bot_player_ids, default_trace_bot_player_ids)

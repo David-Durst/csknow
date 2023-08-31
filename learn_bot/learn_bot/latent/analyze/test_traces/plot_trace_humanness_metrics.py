@@ -23,7 +23,9 @@ from learn_bot.latent.analyze.process_trajectory_comparison import plot_hist, ge
 from learn_bot.latent.analyze.test_traces.column_names import rollout_aggressive_humanness_hdf5_data_path, \
     rollout_passive_humanness_hdf5_data_path, trace_index_name, trace_one_non_replay_team_name, \
     trace_one_non_replay_bot_name, rollout_aggressive_trace_hdf5_data_path, rollout_passive_trace_hdf5_data_path, \
-    trace_demo_file_name, num_traces_name, trace_is_bot_player_names, trace_humanness_path
+    trace_demo_file_name, num_traces_name, trace_is_bot_player_names, trace_humanness_path, \
+    rollout_heuristic_humanness_hdf5_data_path, rollout_heuristic_trace_hdf5_data_path, \
+    rollout_default_humanness_hdf5_data_path, rollout_default_trace_hdf5_data_path
 from learn_bot.latent.analyze.test_traces.run_trace_creation import trace_file_name, rft_demo_file_name, rft_hdf5_key, \
     rft_ct_bot_name
 from learn_bot.latent.engagement.column_names import round_id_column
@@ -70,47 +72,43 @@ player_id_cols = ['player_id_per_nearest_teammate', 'player_id_per_nearest_teamm
 
 fig_length = 8
 num_figs = len(metric_cols)
-num_player_types = 5
+num_player_types = 9
 one_bot_aggressive_learned_bot_name = "One Bot Aggressive "
 one_team_aggressive_learned_bot_name = "One Team Aggressive "
 one_bot_passive_learned_bot_name = "One Bot Passive "
 one_team_passive_learned_bot_name = "One Team Passive "
+one_bot_heuristic_learned_bot_name = "One Bot Heuristic "
+one_team_heuristic_learned_bot_name = "One Team Heuristic "
+one_bot_default_learned_bot_name = "One Bot Default "
+one_team_default_learned_bot_name = "One Team Default "
 human_name = "Human "
+player_type_names = [
+    one_bot_aggressive_learned_bot_name,
+    one_team_aggressive_learned_bot_name,
+    one_bot_passive_learned_bot_name,
+    one_team_passive_learned_bot_name,
+    one_bot_heuristic_learned_bot_name,
+    one_team_heuristic_learned_bot_name,
+    one_bot_default_learned_bot_name,
+    one_team_default_learned_bot_name,
+    human_name]
 
-
-def plot_metric(axs, metric_index: int, one_bot_aggressive_learned_bot_metric: np.ndarray,
-                one_team_aggressive_learned_bot_metric: np.ndarray,
-                one_bot_passive_learned_bot_metric: np.ndarray,
-                one_team_passive_learned_bot_metric: np.ndarray,
-                human_metric: np.ndarray,
+def plot_metric(axs, metric_index: int, 
+                metric_player_types: List[np.ndarray],
                 metric_name: str, pct_bins: bool = False):
     values_for_max = []
     values_for_min = []
-    if len(one_bot_aggressive_learned_bot_metric) > 0:
-        values_for_max.append(one_bot_aggressive_learned_bot_metric.max())
-        values_for_min.append(one_bot_aggressive_learned_bot_metric.min())
-    if len(one_team_aggressive_learned_bot_metric) > 0:
-        values_for_max.append(one_team_aggressive_learned_bot_metric.max())
-        values_for_min.append(one_team_aggressive_learned_bot_metric.min())
-    if len(one_bot_passive_learned_bot_metric) > 0:
-        values_for_max.append(one_bot_passive_learned_bot_metric.max())
-        values_for_min.append(one_bot_passive_learned_bot_metric.min())
-    if len(one_team_passive_learned_bot_metric) > 0:
-        values_for_max.append(one_team_passive_learned_bot_metric.max())
-        values_for_min.append(one_team_passive_learned_bot_metric.min())
-    if len(human_metric) > 0:
-        values_for_max.append(human_metric.max())
-        values_for_min.append(human_metric.min())
+    for metric_player_type in metric_player_types:
+        if len(metric_player_type) > 0:
+            values_for_max.append(metric_player_type.max())
+            values_for_min.append(metric_player_type.min())
     if len(values_for_max) == 0:
         return
     max_value = int(ceil(max(values_for_max)))
     if max_value == 0:
         return
-    axs[metric_index, 0].set_title(one_bot_aggressive_learned_bot_name + metric_name)
-    axs[metric_index, 1].set_title(one_team_aggressive_learned_bot_name + metric_name)
-    axs[metric_index, 2].set_title(one_bot_passive_learned_bot_name + metric_name)
-    axs[metric_index, 3].set_title(one_team_passive_learned_bot_name + metric_name)
-    axs[metric_index, 4].set_title(human_name + metric_name)
+    for i, player_type_name in enumerate(player_type_names):
+        axs[metric_index, i].set_title(player_type_name + metric_name)
     bins: List
     if pct_bins:
         min_value = 0
@@ -123,41 +121,15 @@ def plot_metric(axs, metric_index: int, one_bot_aggressive_learned_bot_metric: n
         if bin_width == 0:
             bin_width = 1
         bins = generate_bins(min_value, max_value, bin_width)
-    if len(one_bot_aggressive_learned_bot_metric) > 0:
-        metric_series = pd.Series(one_bot_aggressive_learned_bot_metric)
-        plot_hist(axs[metric_index, 0], metric_series, bins)
-        axs[metric_index, 0].text((min_value + max_value) / 2., 0.4, metric_series.describe().to_string(),
-                                  family='monospace')
-    if len(one_team_aggressive_learned_bot_metric) > 0:
-        metric_series = pd.Series(one_team_aggressive_learned_bot_metric)
-        plot_hist(axs[metric_index, 1], metric_series, bins)
-        axs[metric_index, 1].text((min_value + max_value) / 2., 0.4, metric_series.describe().to_string(),
-                              family='monospace')
-    if len(one_bot_passive_learned_bot_metric) > 0:
-        metric_series = pd.Series(one_bot_passive_learned_bot_metric)
-        plot_hist(axs[metric_index, 2], metric_series, bins)
-        axs[metric_index, 2].text((min_value + max_value) / 2., 0.4, metric_series.describe().to_string(),
-                              family='monospace')
-    if len(one_team_passive_learned_bot_metric) > 0:
-        metric_series = pd.Series(one_team_passive_learned_bot_metric)
-        plot_hist(axs[metric_index, 3], metric_series, bins)
-        axs[metric_index, 3].text((min_value + max_value) / 2., 0.4, metric_series.describe().to_string(),
-                              family='monospace')
-    if len(human_metric) > 0:
-        metric_series = pd.Series(human_metric)
-        plot_hist(axs[metric_index, 4], metric_series, bins)
-        axs[metric_index, 4].text((min_value + max_value) / 2., 0.4, metric_series.describe().to_string(),
-                                  family='monospace')
-    axs[metric_index, 0].set_ylim(0., 1.)
-    axs[metric_index, 1].set_ylim(0., 1.)
-    axs[metric_index, 2].set_ylim(0., 1.)
-    axs[metric_index, 3].set_ylim(0., 1.)
-    axs[metric_index, 4].set_ylim(0., 1.)
-    axs[metric_index, 0].set_xlim(min_value, max_value)
-    axs[metric_index, 1].set_xlim(min_value, max_value)
-    axs[metric_index, 2].set_xlim(min_value, max_value)
-    axs[metric_index, 3].set_xlim(min_value, max_value)
-    axs[metric_index, 4].set_xlim(min_value, max_value)
+    for i, metric_player_type in enumerate(metric_player_types):
+        if len(metric_player_type) > 0:
+            metric_series = pd.Series(metric_player_type)
+            plot_hist(axs[metric_index, i], metric_series, bins)
+            axs[metric_index, i].text((min_value + max_value) / 2., 0.4, metric_series.describe().to_string(),
+                                      family='monospace')
+    for i in range(num_player_types):
+        axs[metric_index, i].set_ylim(0., 1.)
+        axs[metric_index, i].set_xlim(min_value, max_value)
 
 
 @dataclass
@@ -201,7 +173,9 @@ def get_humanness_data_for_human_round(trace_extra_df: pd.DataFrame, trace_index
 
 
 def plot_humanness_metrics(aggressive_trace_bot_player_ids: TraceBotPlayerIds,
-                           passive_trace_bot_player_ids: TraceBotPlayerIds):
+                           passive_trace_bot_player_ids: TraceBotPlayerIds,
+                           heuristic_trace_bot_player_ids: TraceBotPlayerIds,
+                           default_trace_bot_player_ids: TraceBotPlayerIds):
     set_pd_print_options()
 
     aggressive_humanness_metrics = HumannessMetrics(HumannessDataOptions.CUSTOM, False,
@@ -213,6 +187,18 @@ def plot_humanness_metrics(aggressive_trace_bot_player_ids: TraceBotPlayerIds,
     passive_humanness_metrics = HumannessMetrics(HumannessDataOptions.CUSTOM, False,
                                                  rollout_passive_humanness_hdf5_data_path)
     passive_trace_extra_df = load_hdf5_to_pd(rollout_passive_trace_hdf5_data_path, root_key='extra',
+                                             cols_to_get=[trace_demo_file_name, trace_index_name, num_traces_name,
+                                                          trace_one_non_replay_team_name,
+                                                          trace_one_non_replay_bot_name] + trace_is_bot_player_names)
+    heuristic_humanness_metrics = HumannessMetrics(HumannessDataOptions.CUSTOM, False,
+                                                   rollout_heuristic_humanness_hdf5_data_path)
+    heuristic_trace_extra_df = load_hdf5_to_pd(rollout_heuristic_trace_hdf5_data_path, root_key='extra',
+                                               cols_to_get=[trace_demo_file_name, trace_index_name, num_traces_name,
+                                                            trace_one_non_replay_team_name,
+                                                            trace_one_non_replay_bot_name] + trace_is_bot_player_names)
+    default_humanness_metrics = HumannessMetrics(HumannessDataOptions.CUSTOM, False,
+                                                 rollout_default_humanness_hdf5_data_path)
+    default_trace_extra_df = load_hdf5_to_pd(rollout_default_trace_hdf5_data_path, root_key='extra',
                                              cols_to_get=[trace_demo_file_name, trace_index_name, num_traces_name,
                                                           trace_one_non_replay_team_name,
                                                           trace_one_non_replay_bot_name] + trace_is_bot_player_names)
@@ -244,13 +230,38 @@ def plot_humanness_metrics(aggressive_trace_bot_player_ids: TraceBotPlayerIds,
         )
         passive_one_bot_metrics = get_metrics(passive_humanness_metrics, passive_one_bot_trace_round_ids,
                                               passive_trace_bot_player_ids[trace_index])
-
         passive_one_team_trace_round_ids = list(
             passive_trace_extra_df[(passive_trace_extra_df[trace_index_name] == trace_index) &
                                    (passive_trace_extra_df[trace_one_non_replay_bot_name] == 0)].index
         )
         passive_one_team_metrics = get_metrics(passive_humanness_metrics, passive_one_team_trace_round_ids,
                                                passive_trace_bot_player_ids[trace_index])
+
+        heuristic_one_bot_trace_round_ids = list(
+            heuristic_trace_extra_df[(heuristic_trace_extra_df[trace_index_name] == trace_index) &
+                                     (heuristic_trace_extra_df[trace_one_non_replay_bot_name] == 1)].index
+        )
+        heuristic_one_bot_metrics = get_metrics(heuristic_humanness_metrics, heuristic_one_bot_trace_round_ids,
+                                                 heuristic_trace_bot_player_ids[trace_index])
+        heuristic_one_team_trace_round_ids = list(
+            heuristic_trace_extra_df[(heuristic_trace_extra_df[trace_index_name] == trace_index) &
+                                     (heuristic_trace_extra_df[trace_one_non_replay_bot_name] == 0)].index
+        )
+        heuristic_one_team_metrics = get_metrics(heuristic_humanness_metrics, heuristic_one_team_trace_round_ids,
+                                                 heuristic_trace_bot_player_ids[trace_index])
+
+        default_one_bot_trace_round_ids = list(
+            default_trace_extra_df[(default_trace_extra_df[trace_index_name] == trace_index) &
+                                   (default_trace_extra_df[trace_one_non_replay_bot_name] == 1)].index
+        )
+        default_one_bot_metrics = get_metrics(default_humanness_metrics, default_one_bot_trace_round_ids,
+                                               default_trace_bot_player_ids[trace_index])
+        default_one_team_trace_round_ids = list(
+            default_trace_extra_df[(default_trace_extra_df[trace_index_name] == trace_index) &
+                                   (default_trace_extra_df[trace_one_non_replay_bot_name] == 0)].index
+        )
+        default_one_team_metrics = get_metrics(default_humanness_metrics, default_one_team_trace_round_ids,
+                                               default_trace_bot_player_ids[trace_index])
 
         humanness_data_for_human_round = get_humanness_data_for_human_round(trace_extra_df, trace_index)
         human_metrics = get_metrics(humanness_data_for_human_round.humanness_metrics,
@@ -269,9 +280,17 @@ def plot_humanness_metrics(aggressive_trace_bot_player_ids: TraceBotPlayerIds,
         for m in range(len(aggressive_one_bot_metrics)):
             metric_name = metric_names[m]
             plot_metric(axs, m,
-                        aggressive_one_bot_metrics[metric_name], aggressive_one_team_metrics[metric_name],
-                        passive_one_bot_metrics[metric_name], passive_one_team_metrics[metric_name],
-                        human_metrics[metric_name], metric_name)
+                        [
+                            aggressive_one_bot_metrics[metric_name],
+                            aggressive_one_team_metrics[metric_name],
+                            passive_one_bot_metrics[metric_name],
+                            passive_one_team_metrics[metric_name],
+                            heuristic_one_bot_metrics[metric_name],
+                            heuristic_one_team_metrics[metric_name],
+                            default_one_bot_metrics[metric_name],
+                            default_one_team_metrics[metric_name],
+                            human_metrics[metric_name]
+                        ], metric_name)
 
         png_file_name = str(trace_index) + "_" + trace_demo_file + ".png"
         plt.savefig(trace_humanness_path / png_file_name)
