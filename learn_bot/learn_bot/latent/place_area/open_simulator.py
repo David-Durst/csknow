@@ -1,3 +1,4 @@
+from dataclasses import field
 from enum import Enum
 
 import numpy as np
@@ -18,8 +19,11 @@ class PlayerMaskConfig(Enum):
     LAST_ALIVE = 3
 
 
+def compute_mask_elements_per_player(loaded_model: LoadedModel) -> int:
+    return loaded_model.model.num_input_time_steps * loaded_model.model.num_dim
+
 def build_player_mask(loaded_model: LoadedModel, config: PlayerMaskConfig,
-                      round_lengths: RoundLengths) -> Optional[torch.Tensor]:
+                      round_lengths: RoundLengths) -> PlayerEnableMask:
     if config != PlayerMaskConfig.ALL:
         enabled_player_columns: List[List[bool]] = []
         if config == PlayerMaskConfig.CT:
@@ -40,20 +44,18 @@ def build_player_mask(loaded_model: LoadedModel, config: PlayerMaskConfig,
             for _, last_alive in round_lengths.round_to_last_alive_index.items():
                 enabled_player_columns.append([i == last_alive for i in range(0, 2 * max_enemies)])
         player_enable_mask = torch.tensor(enabled_player_columns)
-        elements_per_player = loaded_model.model.num_input_time_steps * loaded_model.model.num_dim
         repeated_player_enable_mask = rearrange(repeat(
-            rearrange(player_enable_mask, 'b p -> b p 1'), 'b p 1 -> b p r', r=elements_per_player), 'b p r -> b (p r)')
+            rearrange(player_enable_mask, 'b p -> b p 1'), 'b p 1 -> b p r', r=compute_mask_elements_per_player(loaded_model)), 'b p r -> b (p r)')
         return repeated_player_enable_mask
     else:
         return None
 
 
-def delta_pos_open_rollout(loaded_model: LoadedModel, player_mask_config: PlayerMaskConfig) -> Optional[torch.Tensor]:
-    round_lengths = get_round_lengths(loaded_model.cur_loaded_df)
+def delta_pos_open_rollout(loaded_model: LoadedModel, round_lengths: RoundLengths,
+                           player_enable_mask: PlayerEnableMask) -> PlayerEnableMask:
     rollout_tensor, similarity_tensor = \
         build_rollout_and_similarity_tensors(round_lengths, loaded_model.cur_dataset)
     pred_tensor = torch.zeros(rollout_tensor.shape[0], loaded_model.cur_dataset.Y.shape[1])
-    player_enable_mask: Optional[torch.Tensor] = build_player_mask(loaded_model, player_mask_config, round_lengths)
     loaded_model.model.eval()
     with torch.no_grad():
         num_steps = round_lengths.max_length_per_round - 1
@@ -76,17 +78,18 @@ index_in_trajectory_if_alive_column = 'index in trajectory if alive'
 is_ground_truth_column = 'is ground truth'
 last_pred_column = 'last pred'
 is_last_pred_column = 'is last pred'
+pred_vs_orig_total_delta_column = 'pred vs orig total delta'
 
 
 @dataclass
 class DisplacementErrors:
-    ade: float
-    fde: float
-    num_elements_in_sum: int
+    player_round_ades: List[float] = field(default_factory=list)
+    player_round_fdes: List[float] = field(default_factory=list)
 
 
 # compute indices in open rollout that are actually predicted
-def compare_predicted_rollout_indices(orig_df: pd.DataFrame, pred_df: pd.DataFrame) -> DisplacementErrors:
+def compare_predicted_rollout_indices(orig_df: pd.DataFrame, pred_df: pd.DataFrame, round_lengths: RoundLengths,
+                                      player_enable_mask: PlayerEnableMask, loaded_model: LoadedModel) -> DisplacementErrors:
     round_lengths = get_round_lengths(loaded_model.cur_loaded_df)
 
     # get a counter for the ground truth group for each trajectory
@@ -109,11 +112,12 @@ def compare_predicted_rollout_indices(orig_df: pd.DataFrame, pred_df: pd.DataFra
     # first if counter in trajectory is 0
     orig_df[is_ground_truth_column] = orig_df[index_in_trajectory_column] == 0
 
-    result = DisplacementErrors(0., 0., 0)
+    result = DisplacementErrors()
+
+    round_and_delta_df = pred_df.loc[:, [round_id_column]]
 
     # compute deltas
-    for player_columns in specific_player_place_area_columns:
-        # orig_df[player_columns.pos[1]] - orig_df_grouped[player_columns.pos[1]].transform('first')
+    for column_index, player_columns in enumerate(specific_player_place_area_columns):
         pred_vs_orig_delta_x = \
             pred_df[player_columns.pos[0]] - orig_df[player_columns.pos[0]]
         pred_vs_orig_delta_y = \
@@ -121,8 +125,8 @@ def compare_predicted_rollout_indices(orig_df: pd.DataFrame, pred_df: pd.DataFra
         pred_vs_orig_delta_z = \
             pred_df[player_columns.pos[2]] - orig_df[player_columns.pos[2]]
 
-        pred_vs_orig_total_delta = (pred_vs_orig_delta_x ** 2. + pred_vs_orig_delta_y ** 2. +
-                                    pred_vs_orig_delta_z ** 2.).pow(0.5)
+        round_and_delta_df[pred_vs_orig_total_delta_column] = \
+            (pred_vs_orig_delta_x ** 2. + pred_vs_orig_delta_y ** 2. + pred_vs_orig_delta_z ** 2.).pow(0.5)
 
         # last if counter in trajectory equals max index - need to recompute this for every player
         # as last will be different if die in middle of trajectory
@@ -132,17 +136,20 @@ def compare_predicted_rollout_indices(orig_df: pd.DataFrame, pred_df: pd.DataFra
             orig_df.groupby(ground_truth_counter_column)[index_in_trajectory_if_alive_column].transform('max')
         orig_df[is_last_pred_column] = orig_df[last_pred_column] == orig_df[index_in_trajectory_if_alive_column]
 
-        result.ade += pred_vs_orig_total_delta[~orig_df[is_ground_truth_column] & orig_df[player_columns.alive]].mean()
-        result.fde += pred_vs_orig_total_delta[orig_df[is_last_pred_column] & orig_df[player_columns.alive]].mean()
-        # doing averaging for variable length sequences here (different number of ticks where each player column alive)
-        # do fixed length averaging across players in one place at end
-        result.num_elements_in_sum += 1
+        all_pred_steps_df = round_and_delta_df[~orig_df[is_ground_truth_column] & orig_df[player_columns.alive]]
+        final_pred_step_df = round_and_delta_df[orig_df[is_last_pred_column] & orig_df[player_columns.alive]]
+
+        for round_index, round_id in enumerate(round_lengths.round_ids):
+            if not player_enable_mask[round_index, column_index * compute_mask_elements_per_player(loaded_model)]:
+                continue
+            result.player_round_ades.append(all_pred_steps_df[all_pred_steps_df[round_id_column] == round_id].mean())
+            result.player_round_fdes.append(final_pred_step_df[final_pred_step_df[round_id_column] == round_id].mean())
 
     return result
 
 
 def run_analysis(loaded_model: LoadedModel):
-    displacement_errors = DisplacementErrors(0., 0., 0)
+    displacement_errors = DisplacementErrors()
     for i, hdf5_wrapper in enumerate(loaded_model.dataset.data_hdf5s):
         print(f"Processing hdf5 {i + 1} / {len(loaded_model.dataset.data_hdf5s)}: {hdf5_wrapper.hdf5_path}")
         loaded_model.cur_hdf5_index = i
@@ -150,17 +157,19 @@ def run_analysis(loaded_model: LoadedModel):
 
         # running rollout updates df, so keep original copy for analysis
         orig_loaded_df = loaded_model.cur_loaded_df.copy()
-        delta_pos_open_rollout(loaded_model, PlayerMaskConfig.CT)
+        round_lengths = get_round_lengths(loaded_model.cur_loaded_df)
+        player_enable_mask = build_player_mask(loaded_model, PlayerMaskConfig.CT, round_lengths)
+        delta_pos_open_rollout(loaded_model, round_lengths, player_enable_mask)
 
-        hdf5_displacement_errors = compare_predicted_rollout_indices(orig_loaded_df, loaded_model.cur_loaded_df)
-        displacement_errors.ade += hdf5_displacement_errors.ade
-        displacement_errors.fde += hdf5_displacement_errors.fde
-        displacement_errors.num_elements_in_sum += hdf5_displacement_errors.num_elements_in_sum
+        hdf5_displacement_errors = compare_predicted_rollout_indices(orig_loaded_df, loaded_model.cur_loaded_df,
+                                                                     round_lengths, player_enable_mask, loaded_model)
+        displacement_errors.player_round_ades += hdf5_displacement_errors.player_round_ades
+        displacement_errors.player_round_fdes += hdf5_displacement_errors.player_round_fdes
 
-    displacement_errors.ade /= displacement_errors.num_elements_in_sum
-    displacement_errors.fde /= displacement_errors.num_elements_in_sum
+    ades = np.array(displacement_errors.player_round_ades)
+    fdes = np.array(displacement_errors.player_round_fdes)
 
-    print(f"ADE: {displacement_errors.ade}, FDE: {displacement_errors.fde}")
+    print(f"ADE Mean: {ades.mean()}, ADE Std Dev: {ades.std()}, FDE Mean: {fdes.mean()}, FDE Std Dev: {fdes.std()}")
 
 
 nav_data = None

@@ -82,9 +82,12 @@ def build_rollout_and_similarity_tensors(round_lengths: RoundLengths, dataset: L
     return rollout_tensor, similarity_tensor
 
 
+PlayerEnableMask = Optional[torch.Tensor]
+
+
 def step(rollout_tensor: torch.Tensor, all_similarity_tensor: torch.Tensor, pred_tensor: torch.Tensor,
          model: TransformerNestedHiddenLatentModel, round_lengths: RoundLengths, step_index: int, nav_data: NavData,
-         player_enable_mask: Optional[torch.Tensor] = None):
+         player_enable_mask: PlayerEnableMask = None):
     # skip rounds that are over, I know we have space, but wasteful as just going to filter out extra rows later
     # and cause problems as don't have non-computed input features (like visibility) at those time steps
     # and will crash open loop as everyone is 0
@@ -109,7 +112,8 @@ def step(rollout_tensor: torch.Tensor, all_similarity_tensor: torch.Tensor, pred
     new_player_pos = rearrange(compute_new_pos(input_pos_tensor, pred_labels, nav_data, False,
                                                model.stature_to_speed_gpu).to(CPU_DEVICE_STR), "b p t d -> b (p t d)")
     if player_enable_mask is not None:
-        tmp_rollout[:, model.players_pos_columns] = torch.where(player_enable_mask, new_player_pos,
+        tmp_rollout[:, model.players_pos_columns] = torch.where(player_enable_mask[rounds_containing_step_index],
+                                                                new_player_pos,
                                                                 tmp_rollout[:, model.players_pos_columns])
     else:
         tmp_rollout[:, model.players_pos_columns] = new_player_pos
