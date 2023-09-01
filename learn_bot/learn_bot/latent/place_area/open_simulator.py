@@ -1,26 +1,55 @@
-from dataclasses import field
-from enum import Enum
+import os
+from dataclasses import field, dataclass
+from enum import IntEnum
+from math import floor, ceil
+from pathlib import Path
+from typing import List
 
-import numpy as np
 import pandas as pd
 import torch
+from einops import rearrange, repeat
+from matplotlib import pyplot as plt
+from tqdm import tqdm
 
-from learn_bot.latent.place_area.column_names import PlayerPlaceAreaColumns
-from learn_bot.latent.place_area.simulator import *
+from learn_bot.engagement_aim.column_names import tick_id_column
+from learn_bot.latent.analyze.process_trajectory_comparison import plot_hist, generate_bins
+from learn_bot.latent.engagement.column_names import round_id_column
+from learn_bot.latent.load_model import load_model_file
+from learn_bot.latent.order.column_names import flatten_list
+from learn_bot.latent.place_area.column_names import specific_player_place_area_columns
+from learn_bot.latent.place_area.load_data import LoadDataResult
+from learn_bot.latent.place_area.pos_abs_from_delta_grid_or_radial import NavData
+from learn_bot.latent.place_area.simulator import LoadedModel, RoundLengths, PlayerEnableMask, max_enemies, \
+    build_rollout_and_similarity_tensors, match_round_lengths, step, get_round_lengths, load_data_options
+from learn_bot.latent.vis.vis import vis
+from learn_bot.libs.io_transforms import CUDA_DEVICE_STR
+
 # this is a open loop version of the simulator for computing metrics based on short time horizons
 
 num_time_steps = 10
 
 
-class PlayerMaskConfig(Enum):
+class PlayerMaskConfig(IntEnum):
     ALL = 0
     CT = 1
     T = 2
     LAST_ALIVE = 3
+    NUM_MASK_CONFIGS = 4
+
+    def __str__(self) -> str:
+        if self == PlayerMaskConfig.ALL:
+            return "all"
+        if self == PlayerMaskConfig.CT:
+            return "ct only"
+        if self == PlayerMaskConfig.T:
+            return "t only"
+        if self == PlayerMaskConfig.LAST_ALIVE:
+            return "last alive"
 
 
 def compute_mask_elements_per_player(loaded_model: LoadedModel) -> int:
     return loaded_model.model.num_input_time_steps * loaded_model.model.num_dim
+
 
 def build_player_mask(loaded_model: LoadedModel, config: PlayerMaskConfig,
                       round_lengths: RoundLengths) -> PlayerEnableMask:
@@ -29,30 +58,31 @@ def build_player_mask(loaded_model: LoadedModel, config: PlayerMaskConfig,
         if config == PlayerMaskConfig.CT:
             for _ in range(round_lengths.num_rounds):
                 if round_lengths.ct_first:
-                    enabled_player_columns.append([i in range(0, max_enemies) for i in range(0, 2*max_enemies)])
+                    enabled_player_columns.append([i in range(0, max_enemies) for i in range(0, 2 * max_enemies)])
                 else:
-                    enabled_player_columns.append([i in range(max_enemies, 2*max_enemies)
-                                                   for i in range(0, 2*max_enemies)])
+                    enabled_player_columns.append([i in range(max_enemies, 2 * max_enemies)
+                                                   for i in range(0, 2 * max_enemies)])
         elif config == PlayerMaskConfig.T:
             for _ in range(round_lengths.num_rounds):
                 if round_lengths.ct_first:
-                    enabled_player_columns.append([i in range(max_enemies, 2*max_enemies)
-                                                   for i in range(0, 2*max_enemies)])
+                    enabled_player_columns.append([i in range(max_enemies, 2 * max_enemies)
+                                                   for i in range(0, 2 * max_enemies)])
                 else:
-                    enabled_player_columns.append([i in range(0, max_enemies) for i in range(0, 2*max_enemies)])
+                    enabled_player_columns.append([i in range(0, max_enemies) for i in range(0, 2 * max_enemies)])
         elif config == PlayerMaskConfig.LAST_ALIVE:
             for _, last_alive in round_lengths.round_to_last_alive_index.items():
                 enabled_player_columns.append([i == last_alive for i in range(0, 2 * max_enemies)])
         player_enable_mask = torch.tensor(enabled_player_columns)
         repeated_player_enable_mask = rearrange(repeat(
-            rearrange(player_enable_mask, 'b p -> b p 1'), 'b p 1 -> b p r', r=compute_mask_elements_per_player(loaded_model)), 'b p r -> b (p r)')
+            rearrange(player_enable_mask, 'b p -> b p 1'), 'b p 1 -> b p r',
+            r=compute_mask_elements_per_player(loaded_model)), 'b p r -> b (p r)')
         return repeated_player_enable_mask
     else:
         return None
 
 
 def delta_pos_open_rollout(loaded_model: LoadedModel, round_lengths: RoundLengths,
-                           player_enable_mask: PlayerEnableMask) -> PlayerEnableMask:
+                           player_enable_mask: PlayerEnableMask = None) -> PlayerEnableMask:
     rollout_tensor, similarity_tensor = \
         build_rollout_and_similarity_tensors(round_lengths, loaded_model.cur_dataset)
     pred_tensor = torch.zeros(rollout_tensor.shape[0], loaded_model.cur_dataset.Y.shape[1])
@@ -72,7 +102,7 @@ def delta_pos_open_rollout(loaded_model: LoadedModel, round_lengths: RoundLength
     return player_enable_mask
 
 
-ground_truth_counter_column = 'ground truth counter'
+trajectory_counter_column = 'trajectory counter'
 index_in_trajectory_column = 'index in trajectory'
 index_in_trajectory_if_alive_column = 'index in trajectory if alive'
 is_ground_truth_column = 'is ground truth'
@@ -89,13 +119,14 @@ class DisplacementErrors:
 
 # compute indices in open rollout that are actually predicted
 def compare_predicted_rollout_indices(orig_df: pd.DataFrame, pred_df: pd.DataFrame, round_lengths: RoundLengths,
-                                      player_enable_mask: PlayerEnableMask, loaded_model: LoadedModel) -> DisplacementErrors:
+                                      player_enable_mask: PlayerEnableMask,
+                                      loaded_model: LoadedModel) -> DisplacementErrors:
     round_lengths = get_round_lengths(loaded_model.cur_loaded_df)
 
     # get a counter for the ground truth group for each trajectory
     # first row will be ground truth, and rest will be relative to it
     # don't need this when comparing pred/orig since subtracting from each other will implicitly remove ground truth:
-    # (pred delta + ground truth) - (orig delta + ground truth) = pred delta - orig delta
+    # pred pos - orig pos = (pred delta + ground truth) - (orig delta + ground truth) = pred delta - orig delta
     # but need to determine which ground turth rows to filter out for ADE and what are last rows for FDE
     ground_truth_tick_indices = flatten_list([
         [idx for idx in round_subset_tick_indices if (idx - round_subset_tick_indices.start) % num_time_steps == 0]
@@ -103,18 +134,19 @@ def compare_predicted_rollout_indices(orig_df: pd.DataFrame, pred_df: pd.DataFra
     ])
     ground_truth_tick_indicators = orig_df[tick_id_column] * 0
     ground_truth_tick_indicators.iloc[ground_truth_tick_indices] = 1
-    ground_truth_counter = ground_truth_tick_indicators.cumsum()
+    # new trajectory for each ground truth starting point
+    trajectory_counter = ground_truth_tick_indicators.cumsum()
 
     # use counter to compute first/last in each trajectory
-    orig_df[ground_truth_counter_column] = ground_truth_counter
+    orig_df[trajectory_counter_column] = trajectory_counter
     orig_df[index_in_trajectory_column] = \
-        orig_df.groupby(ground_truth_counter_column)[ground_truth_counter_column].transform('cumcount')
+        orig_df.groupby(trajectory_counter_column)[trajectory_counter_column].transform('cumcount')
     # first if counter in trajectory is 0
     orig_df[is_ground_truth_column] = orig_df[index_in_trajectory_column] == 0
 
     result = DisplacementErrors()
 
-    round_and_delta_df = pred_df.loc[:, [round_id_column]]
+    round_and_delta_df = orig_df.loc[:, [round_id_column, index_in_trajectory_column, trajectory_counter_column]]
 
     # compute deltas
     for column_index, player_columns in enumerate(specific_player_place_area_columns):
@@ -133,22 +165,33 @@ def compare_predicted_rollout_indices(orig_df: pd.DataFrame, pred_df: pd.DataFra
         orig_df[index_in_trajectory_if_alive_column] = orig_df[index_in_trajectory_column]
         orig_df[index_in_trajectory_if_alive_column].where(orig_df[player_columns.alive].astype('bool'), -1)
         orig_df[last_pred_column] = \
-            orig_df.groupby(ground_truth_counter_column)[index_in_trajectory_if_alive_column].transform('max')
+            orig_df.groupby(trajectory_counter_column)[index_in_trajectory_if_alive_column].transform('max')
         orig_df[is_last_pred_column] = orig_df[last_pred_column] == orig_df[index_in_trajectory_if_alive_column]
 
         all_pred_steps_df = round_and_delta_df[~orig_df[is_ground_truth_column] & orig_df[player_columns.alive]]
         final_pred_step_df = round_and_delta_df[orig_df[is_last_pred_column] & orig_df[player_columns.alive]]
 
+        # get ade by averaging within trajectories only. This will enable looking at per-trajectory ADE distribution.
+        # Aggregating across trajectories prevent that type of distributional analysis.
+        # Same round_id across all ticks in a trajectory, so just take first
+        player_round_ades = all_pred_steps_df.groupby(trajectory_counter_column).agg(
+            {round_id_column: 'first', pred_vs_orig_total_delta_column: 'mean'})
+        player_round_fdes = final_pred_step_df.groupby(trajectory_counter_column).agg(
+            {round_id_column: 'first', pred_vs_orig_total_delta_column: 'mean'})
+        player_valid_round_ids = []
         for round_index, round_id in enumerate(round_lengths.round_ids):
-            if not player_enable_mask[round_index, column_index * compute_mask_elements_per_player(loaded_model)]:
-                continue
-            result.player_round_ades.append(all_pred_steps_df[all_pred_steps_df[round_id_column] == round_id].mean())
-            result.player_round_fdes.append(final_pred_step_df[final_pred_step_df[round_id_column] == round_id].mean())
+            if player_enable_mask is None or \
+                    player_enable_mask[round_index, column_index * compute_mask_elements_per_player(loaded_model)]:
+                player_valid_round_ids.append(round_id)
+        result.player_round_ades += list(player_round_ades[player_round_ades[round_id_column]
+                                         .isin(player_valid_round_ids)][pred_vs_orig_total_delta_column])
+        result.player_round_fdes += list(player_round_fdes[player_round_fdes[round_id_column]
+                                         .isin(player_valid_round_ids)][pred_vs_orig_total_delta_column])
 
     return result
 
 
-def run_analysis(loaded_model: LoadedModel):
+def run_analysis_per_mask(loaded_model: LoadedModel, player_mask_config: PlayerMaskConfig, ade_ax, fde_ax) -> str:
     displacement_errors = DisplacementErrors()
     for i, hdf5_wrapper in enumerate(loaded_model.dataset.data_hdf5s):
         print(f"Processing hdf5 {i + 1} / {len(loaded_model.dataset.data_hdf5s)}: {hdf5_wrapper.hdf5_path}")
@@ -158,7 +201,7 @@ def run_analysis(loaded_model: LoadedModel):
         # running rollout updates df, so keep original copy for analysis
         orig_loaded_df = loaded_model.cur_loaded_df.copy()
         round_lengths = get_round_lengths(loaded_model.cur_loaded_df)
-        player_enable_mask = build_player_mask(loaded_model, PlayerMaskConfig.CT, round_lengths)
+        player_enable_mask = build_player_mask(loaded_model, player_mask_config, round_lengths)
         delta_pos_open_rollout(loaded_model, round_lengths, player_enable_mask)
 
         hdf5_displacement_errors = compare_predicted_rollout_indices(orig_loaded_df, loaded_model.cur_loaded_df,
@@ -166,10 +209,49 @@ def run_analysis(loaded_model: LoadedModel):
         displacement_errors.player_round_ades += hdf5_displacement_errors.player_round_ades
         displacement_errors.player_round_fdes += hdf5_displacement_errors.player_round_fdes
 
-    ades = np.array(displacement_errors.player_round_ades)
-    fdes = np.array(displacement_errors.player_round_fdes)
+    ades = pd.Series(displacement_errors.player_round_ades)
+    fdes = pd.Series(displacement_errors.player_round_fdes)
 
-    print(f"ADE Mean: {ades.mean()}, ADE Std Dev: {ades.std()}, FDE Mean: {fdes.mean()}, FDE Std Dev: {fdes.std()}")
+    min_value = int(floor(min(ades.min(), fdes.min())))
+    max_value = int(ceil(max(ades.max(), fdes.max())))
+    bin_width = (max_value - min_value) // 20
+    bins = generate_bins(min_value, max_value, bin_width)
+    plot_hist(ade_ax, pd.Series(ades), bins)
+    plot_hist(fde_ax, pd.Series(fdes), bins)
+    ade_ax.text((min_value + max_value) / 2., 0.4, ades.describe().to_string(), family='monospace')
+    fde_ax.text((min_value + max_value) / 2., 0.4, fdes.describe().to_string(), family='monospace')
+    ade_ax.set_ylim(0., 1.)
+    fde_ax.set_xlim(min_value, max_value)
+    ade_ax.set_title(str(player_mask_config) + " ADE")
+    fde_ax.set_title(str(player_mask_config) + " FDE")
+
+    return f"{str(player_mask_config)} ADE Mean: {ades.mean()}, ADE Std Dev: {ades.std()}, " \
+           f"FDE Mean: {fdes.mean()}, FDE Std Dev: {fdes.std()}"
+
+
+simulation_plots_path = Path(__file__).parent / 'simulation_plots'
+fig_length = 8
+num_metrics = 2
+
+
+def run_analysis(loaded_model: LoadedModel):
+    os.makedirs(simulation_plots_path, exist_ok=True)
+
+    fig = plt.figure(figsize=(fig_length * PlayerMaskConfig.NUM_MASK_CONFIGS, fig_length * num_metrics),
+                     constrained_layout=True)
+    fig.suptitle("Model-Level Metrics")
+    axs = fig.subplots(num_metrics, PlayerMaskConfig.NUM_MASK_CONFIGS, squeeze=False)
+
+    mask_result_strs = []
+    for i, player_mask_config in enumerate([PlayerMaskConfig.ALL, PlayerMaskConfig.CT, PlayerMaskConfig.T,
+                                            PlayerMaskConfig.LAST_ALIVE]):
+        print(f"Config {player_mask_config}")
+        mask_result_strs.append(run_analysis_per_mask(loaded_model, player_mask_config, axs[0, i], axs[1, i]))
+        print(mask_result_strs[-1])
+
+    print('\n'.join(mask_result_strs))
+
+    plt.savefig(simulation_plots_path / 'ade_fde_by_mask.png')
 
 
 nav_data = None
@@ -180,16 +262,16 @@ if __name__ == "__main__":
     nav_data = NavData(CUDA_DEVICE_STR)
 
     load_data_result = LoadDataResult(load_data_options)
-    #if manual_data:
+    # if manual_data:
     #    all_data_df = load_hdf5_to_pd(manual_latent_team_hdf5_data_path, rows_to_get=[i for i in range(20000)])
     #    #all_data_df = all_data_df[all_data_df['test name'] == b'LearnedGooseToCatScript']
-    #elif rollout_data:
+    # elif rollout_data:
     #    all_data_df = load_hdf5_to_pd(rollout_latent_team_hdf5_data_path)
-    #else:
+    # else:
     #    all_data_df = load_hdf5_to_pd(human_latent_team_hdf5_data_path, rows_to_get=[i for i in range(20000)])
-    #all_data_df = all_data_df.copy()
+    # all_data_df = all_data_df.copy()
 
-    #load_result = load_model_file_for_rollout(all_data_df, "delta_pos_checkpoint.pt")
+    # load_result = load_model_file_for_rollout(all_data_df, "delta_pos_checkpoint.pt")
 
     loaded_model = load_model_file(load_data_result, use_test_data_only=True)
 
