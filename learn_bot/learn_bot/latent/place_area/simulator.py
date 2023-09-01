@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pandas as pd
 from dataclasses import dataclass
-from typing import Dict, Tuple
+from typing import Dict, Tuple, Optional
 
 import torch
 from tqdm import tqdm
@@ -35,19 +35,30 @@ class RoundLengths:
     round_to_subset_tick_indices: Dict[int, range]
     round_to_length: Dict[int, int]
     round_id_to_list_id: Dict[int, int]
+    ct_first: bool
+    round_to_last_alive_index: Dict[int, int]
 
 
 def get_round_lengths(df: pd.DataFrame) -> RoundLengths:
     grouped_df = df.groupby([round_id_column]).agg({tick_id_column: ['count', 'min', 'max'],
                                                     'index': ['count', 'min', 'max']})
-    result = RoundLengths(len(grouped_df), max(grouped_df[tick_id_column]['count']), [], {}, {}, {}, {})
+    result = RoundLengths(len(grouped_df), max(grouped_df[tick_id_column]['count']), [], {}, {}, {}, {}, False, {})
     list_id = 0
     for round_id, round_row in grouped_df[tick_id_column].iterrows():
         result.round_ids.append(round_id)
         result.round_to_tick_ids[round_id] = range(round_row['min'], round_row['max']+1)
         result.round_to_length[round_id] = len(result.round_to_tick_ids[round_id])
         result.round_id_to_list_id[round_id] = list_id
+
+        last_row = df.loc[grouped_df['index'].loc[round_id, 'max']]
+        for column_index, player_place_area_columns in enumerate(specific_player_place_area_columns):
+            if last_row[player_place_area_columns.alive]:
+                result.round_to_last_alive_index[round_id] = column_index
+        if round_id not in result.round_to_last_alive_index:
+            print(f'no one alive at end of {round_id}')
+
         list_id += 1
+    result.ct_first = team_strs[0] in specific_player_place_area_columns[0].player_id
 
     for round_id, round_row in grouped_df['index'].iterrows():
         result.round_to_subset_tick_indices[round_id] = range(round_row['min'], round_row['max']+1)
@@ -72,7 +83,8 @@ def build_rollout_and_similarity_tensors(round_lengths: RoundLengths, dataset: L
 
 
 def step(rollout_tensor: torch.Tensor, all_similarity_tensor: torch.Tensor, pred_tensor: torch.Tensor,
-         model: TransformerNestedHiddenLatentModel, round_lengths: RoundLengths, step_index: int, nav_data: NavData):
+         model: TransformerNestedHiddenLatentModel, round_lengths: RoundLengths, step_index: int, nav_data: NavData,
+         player_enable_mask: Optional[torch.Tensor] = None):
     # skip rounds that are over, I know we have space, but wasteful as just going to filter out extra rows later
     # and cause problems as don't have non-computed input features (like visibility) at those time steps
     # and will crash open loop as everyone is 0
@@ -94,9 +106,13 @@ def step(rollout_tensor: torch.Tensor, all_similarity_tensor: torch.Tensor, pred
     pred_labels = rearrange(get_label_outputs(pred), 'b p t d -> b (p t d)')
 
     tmp_rollout = rollout_tensor[rollout_tensor_output_indices]
-    tmp_rollout[:, model.players_pos_columns] = \
-        rearrange(compute_new_pos(input_pos_tensor, pred_labels, nav_data, False,
-                                  model.stature_to_speed_gpu).to(CPU_DEVICE_STR), "b p t d -> b (p t d)")
+    new_player_pos = rearrange(compute_new_pos(input_pos_tensor, pred_labels, nav_data, False,
+                                               model.stature_to_speed_gpu).to(CPU_DEVICE_STR), "b p t d -> b (p t d)")
+    if player_enable_mask is not None:
+        tmp_rollout[:, model.players_pos_columns] = torch.where(player_enable_mask, new_player_pos,
+                                                                tmp_rollout[:, model.players_pos_columns])
+    else:
+        tmp_rollout[:, model.players_pos_columns] = new_player_pos
     rollout_tensor[rollout_tensor_output_indices] = tmp_rollout
 
 

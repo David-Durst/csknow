@@ -1,3 +1,5 @@
+from enum import Enum
+
 import numpy as np
 import pandas as pd
 import torch
@@ -9,23 +11,63 @@ from learn_bot.latent.place_area.simulator import *
 num_time_steps = 10
 
 
-def delta_pos_open_rollout(loaded_model: LoadedModel):
+class PlayerMaskConfig(Enum):
+    ALL = 0
+    CT = 1
+    T = 2
+    LAST_ALIVE = 3
+
+
+def build_player_mask(loaded_model: LoadedModel, config: PlayerMaskConfig,
+                      round_lengths: RoundLengths) -> Optional[torch.Tensor]:
+    if config != PlayerMaskConfig.ALL:
+        enabled_player_columns: List[List[bool]] = []
+        if config == PlayerMaskConfig.CT:
+            for _ in range(round_lengths.num_rounds):
+                if round_lengths.ct_first:
+                    enabled_player_columns.append([i in range(0, max_enemies) for i in range(0, 2*max_enemies)])
+                else:
+                    enabled_player_columns.append([i in range(max_enemies, 2*max_enemies)
+                                                   for i in range(0, 2*max_enemies)])
+        elif config == PlayerMaskConfig.T:
+            for _ in range(round_lengths.num_rounds):
+                if round_lengths.ct_first:
+                    enabled_player_columns.append([i in range(max_enemies, 2*max_enemies)
+                                                   for i in range(0, 2*max_enemies)])
+                else:
+                    enabled_player_columns.append([i in range(0, max_enemies) for i in range(0, 2*max_enemies)])
+        elif config == PlayerMaskConfig.LAST_ALIVE:
+            for _, last_alive in round_lengths.round_to_last_alive_index.items():
+                enabled_player_columns.append([i == last_alive for i in range(0, 2 * max_enemies)])
+        player_enable_mask = torch.tensor(enabled_player_columns)
+        elements_per_player = loaded_model.model.num_input_time_steps * loaded_model.model.num_dim
+        repeated_player_enable_mask = rearrange(repeat(
+            rearrange(player_enable_mask, 'b p -> b p 1'), 'b p 1 -> b p r', r=elements_per_player), 'b p r -> b (p r)')
+        return repeated_player_enable_mask
+    else:
+        return None
+
+
+def delta_pos_open_rollout(loaded_model: LoadedModel, player_mask_config: PlayerMaskConfig) -> Optional[torch.Tensor]:
     round_lengths = get_round_lengths(loaded_model.cur_loaded_df)
     rollout_tensor, similarity_tensor = \
         build_rollout_and_similarity_tensors(round_lengths, loaded_model.cur_dataset)
     pred_tensor = torch.zeros(rollout_tensor.shape[0], loaded_model.cur_dataset.Y.shape[1])
+    player_enable_mask: Optional[torch.Tensor] = build_player_mask(loaded_model, player_mask_config, round_lengths)
     loaded_model.model.eval()
     with torch.no_grad():
         num_steps = round_lengths.max_length_per_round - 1
         with tqdm(total=num_steps, disable=False) as pbar:
             for step_index in range(num_steps):
                 if (step_index + 1) % num_time_steps != 0:
-                    step(rollout_tensor, similarity_tensor, pred_tensor, loaded_model.model, round_lengths, step_index, nav_data)
+                    step(rollout_tensor, similarity_tensor, pred_tensor, loaded_model.model, round_lengths, step_index,
+                         nav_data, player_enable_mask)
                 pbar.update(1)
     # need to modify cur_loaded_df as rollout_df has constant length of all rounds for sim efficiency
     loaded_model.cur_loaded_df, loaded_model.cur_inference_df = \
         match_round_lengths(loaded_model.cur_loaded_df, rollout_tensor, pred_tensor, round_lengths,
                             loaded_model.column_transformers)
+    return player_enable_mask
 
 
 ground_truth_counter_column = 'ground truth counter'
@@ -108,7 +150,7 @@ def run_analysis(loaded_model: LoadedModel):
 
         # running rollout updates df, so keep original copy for analysis
         orig_loaded_df = loaded_model.cur_loaded_df.copy()
-        delta_pos_open_rollout(loaded_model)
+        delta_pos_open_rollout(loaded_model, PlayerMaskConfig.CT)
 
         hdf5_displacement_errors = compare_predicted_rollout_indices(orig_loaded_df, loaded_model.cur_loaded_df)
         displacement_errors.ade += hdf5_displacement_errors.ade
