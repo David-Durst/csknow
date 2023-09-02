@@ -161,7 +161,7 @@ def compute_new_pos(input_pos_tensor: torch.Tensor, pred_labels: torch.Tensor, n
 
 
 def one_hot_max_to_index(pred: torch.Tensor) -> torch.Tensor:
-    return torch.argmax(pred, 3)
+    return torch.argmax(pred, 3, keepdim=True)
 
 
 def one_hot_prob_to_index(pred: torch.Tensor) -> torch.Tensor:

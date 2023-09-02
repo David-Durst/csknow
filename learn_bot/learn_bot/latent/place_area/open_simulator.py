@@ -99,8 +99,6 @@ def build_constant_velocity_pred_tensor(loaded_model: LoadedModel, round_lengths
 # round_lengths only accepts none so it can be called from vis, which handles many different sim functions
 def delta_pos_open_rollout(loaded_model: LoadedModel, round_lengths: Optional[RoundLengths] = None,
                            player_enable_mask: PlayerEnableMask = None, constant_velocity: bool = False):
-    if constant_velocity:
-        print("constant velocity open rollout")
     rollout_tensor, similarity_tensor = \
         build_rollout_and_similarity_tensors(round_lengths, loaded_model.cur_dataset)
     if constant_velocity:

@@ -110,9 +110,9 @@ def step(rollout_tensor: torch.Tensor, all_similarity_tensor: torch.Tensor, pred
         pred_tensor[rollout_tensor_input_indices] = rearrange(pred_prob, 'b p t d -> b (p t d)').to(CPU_DEVICE_STR)
         nested_pred_labels = get_label_outputs(pred)
     else:
-        nested_pred_labels = one_hot_prob_to_index(
+        nested_pred_labels = one_hot_max_to_index(
             rearrange(pred_tensor[rollout_tensor_input_indices], 'b (p t d) -> b p t d',
-                      p=model.num_players, t=num_radial_ticks))
+                      p=model.num_players, t=num_radial_ticks)).to(CUDA_DEVICE_STR)
     pred_labels = rearrange(nested_pred_labels, 'b p t d -> b (p t d)')
 
     tmp_rollout = rollout_tensor[rollout_tensor_output_indices]
