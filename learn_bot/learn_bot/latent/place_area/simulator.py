@@ -13,6 +13,7 @@ from learn_bot.latent.analyze.comparison_column_names import small_human_good_ro
 from learn_bot.latent.dataset import LatentDataset
 from learn_bot.latent.engagement.column_names import round_id_column, tick_id_column
 from learn_bot.latent.load_model import load_model_file, LoadedModel
+from learn_bot.latent.order.column_names import num_radial_ticks
 from learn_bot.latent.place_area.pos_abs_from_delta_grid_or_radial import delta_pos_grid_num_cells_per_xy_dim, \
     delta_pos_grid_cell_dim, \
     delta_pos_grid_num_xy_cells_per_z_change, compute_new_pos, NavData
@@ -107,7 +108,12 @@ def step(rollout_tensor: torch.Tensor, all_similarity_tensor: torch.Tensor, pred
         pred = model(input_tensor, similarity_tensor, temperature)
         pred_prob = get_untransformed_outputs(pred)
         pred_tensor[rollout_tensor_input_indices] = rearrange(pred_prob, 'b p t d -> b (p t d)').to(CPU_DEVICE_STR)
-    pred_labels = rearrange(get_label_outputs(pred), 'b p t d -> b (p t d)')
+        nested_pred_labels = get_label_outputs(pred)
+    else:
+        nested_pred_labels = one_hot_prob_to_index(
+            rearrange(pred_tensor[rollout_tensor_input_indices], 'b (p t d) -> b p t d',
+                      p=model.num_players, t=num_radial_ticks))
+    pred_labels = rearrange(nested_pred_labels, 'b p t d -> b (p t d)')
 
     tmp_rollout = rollout_tensor[rollout_tensor_output_indices]
     new_player_pos = rearrange(compute_new_pos(input_pos_tensor, pred_labels, nav_data, False,

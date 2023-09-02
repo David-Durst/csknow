@@ -229,6 +229,8 @@ def run_analysis_per_mask(loaded_model: LoadedModel, player_mask_config: PlayerM
                           filtered_ade_ax, filtered_fde_ax) -> str:
     displacement_errors = DisplacementErrors()
     for i, hdf5_wrapper in enumerate(loaded_model.dataset.data_hdf5s):
+        if i > 3:
+            break
         print(f"Processing hdf5 {i + 1} / {len(loaded_model.dataset.data_hdf5s)}: {hdf5_wrapper.hdf5_path}")
         loaded_model.cur_hdf5_index = i
         loaded_model.load_cur_hdf5_as_pd()
@@ -278,6 +280,7 @@ def run_analysis(loaded_model: LoadedModel):
         mask_result_strs.append(run_analysis_per_mask(loaded_model, player_mask_config, axs[0, i], axs[1, i],
                                                       axs[2, i], axs[3, i]))
         print(mask_result_strs[-1])
+        exit(0)
 
     print('\n'.join(mask_result_strs))
 
