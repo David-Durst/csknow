@@ -87,7 +87,7 @@ PlayerEnableMask = Optional[torch.Tensor]
 
 def step(rollout_tensor: torch.Tensor, all_similarity_tensor: torch.Tensor, pred_tensor: torch.Tensor,
          model: TransformerNestedHiddenLatentModel, round_lengths: RoundLengths, step_index: int, nav_data: NavData,
-         player_enable_mask: PlayerEnableMask = None):
+         player_enable_mask: PlayerEnableMask = None, fixed_pred: bool = False):
     # skip rounds that are over, I know we have space, but wasteful as just going to filter out extra rows later
     # and cause problems as don't have non-computed input features (like visibility) at those time steps
     # and will crash open loop as everyone is 0
@@ -102,10 +102,11 @@ def step(rollout_tensor: torch.Tensor, all_similarity_tensor: torch.Tensor, pred
     input_tensor = rollout_tensor[rollout_tensor_input_indices].to(CUDA_DEVICE_STR)
     input_pos_tensor = rearrange(input_tensor[:, model.players_pos_columns], 'b (p t d) -> b p t d',
                                  p=model.num_players, t=model.num_input_time_steps, d=model.num_dim)
-    temperature = torch.Tensor([1.]).to(CUDA_DEVICE_STR)
-    pred = model(input_tensor, similarity_tensor, temperature)
-    pred_prob = get_untransformed_outputs(pred)
-    pred_tensor[rollout_tensor_input_indices] = rearrange(pred_prob, 'b p t d -> b (p t d)').to(CPU_DEVICE_STR)
+    if not fixed_pred:
+        temperature = torch.Tensor([1.]).to(CUDA_DEVICE_STR)
+        pred = model(input_tensor, similarity_tensor, temperature)
+        pred_prob = get_untransformed_outputs(pred)
+        pred_tensor[rollout_tensor_input_indices] = rearrange(pred_prob, 'b p t d -> b (p t d)').to(CPU_DEVICE_STR)
     pred_labels = rearrange(get_label_outputs(pred), 'b p t d -> b (p t d)')
 
     tmp_rollout = rollout_tensor[rollout_tensor_output_indices]

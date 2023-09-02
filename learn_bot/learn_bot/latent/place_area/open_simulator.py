@@ -12,7 +12,7 @@ from matplotlib import pyplot as plt
 from tqdm import tqdm
 
 from learn_bot.engagement_aim.column_names import tick_id_column
-from learn_bot.latent.analyze.process_trajectory_comparison import plot_hist, generate_bins
+from learn_bot.latent.analyze.process_trajectory_comparison import plot_hist, generate_bins, percentile_filter_series
 from learn_bot.latent.engagement.column_names import round_id_column
 from learn_bot.latent.load_model import load_model_file
 from learn_bot.latent.order.column_names import flatten_list
@@ -34,7 +34,8 @@ class PlayerMaskConfig(IntEnum):
     CT = 1
     T = 2
     LAST_ALIVE = 3
-    NUM_MASK_CONFIGS = 4
+    CONSTANT_VELOCITY = 4
+    NUM_MASK_CONFIGS = 5
 
     def __str__(self) -> str:
         if self == PlayerMaskConfig.ALL:
@@ -45,6 +46,8 @@ class PlayerMaskConfig(IntEnum):
             return "t only"
         if self == PlayerMaskConfig.LAST_ALIVE:
             return "last alive"
+        if self == PlayerMaskConfig.CONSTANT_VELOCITY:
+            return "constant velocity"
 
 
 def compute_mask_elements_per_player(loaded_model: LoadedModel) -> int:
@@ -53,7 +56,7 @@ def compute_mask_elements_per_player(loaded_model: LoadedModel) -> int:
 
 def build_player_mask(loaded_model: LoadedModel, config: PlayerMaskConfig,
                       round_lengths: RoundLengths) -> PlayerEnableMask:
-    if config != PlayerMaskConfig.ALL:
+    if config != PlayerMaskConfig.ALL and config != PlayerMaskConfig.CONSTANT_VELOCITY:
         enabled_player_columns: List[List[bool]] = []
         if config == PlayerMaskConfig.CT:
             for _ in range(round_lengths.num_rounds):
@@ -81,11 +84,27 @@ def build_player_mask(loaded_model: LoadedModel, config: PlayerMaskConfig,
         return None
 
 
+def build_constant_velocity_pred_tensor(loaded_model: LoadedModel, round_lengths: RoundLengths) -> torch.Tensor:
+    pred_tensor_indices = []
+    # for every tick in fixed length pred_tensor (sized to max length per round), get the index to read from actual Y
+    for _, round_subset_tick_indices in round_lengths.round_to_subset_tick_indices.items():
+        # if overrun end of round, just take last tick
+        pred_tensor_indices += [min(round_subset_tick_indices[-1],
+                                    # get first pred in num_time_steps trajectory
+                                    round_subset_tick_indices[0] + step_index // num_time_steps * num_time_steps)
+                                for step_index in range(round_lengths.max_length_per_round)]
+    return loaded_model.cur_dataset.Y[pred_tensor_indices]
+
+
 def delta_pos_open_rollout(loaded_model: LoadedModel, round_lengths: RoundLengths,
-                           player_enable_mask: PlayerEnableMask = None) -> PlayerEnableMask:
+                           player_enable_mask: PlayerEnableMask = None,
+                           constant_velocity: bool = False) -> PlayerEnableMask:
     rollout_tensor, similarity_tensor = \
         build_rollout_and_similarity_tensors(round_lengths, loaded_model.cur_dataset)
-    pred_tensor = torch.zeros(rollout_tensor.shape[0], loaded_model.cur_dataset.Y.shape[1])
+    if constant_velocity:
+        pred_tensor = build_constant_velocity_pred_tensor(loaded_model, round_lengths)
+    else:
+        pred_tensor = torch.zeros(rollout_tensor.shape[0], loaded_model.cur_dataset.Y.shape[1])
     loaded_model.model.eval()
     with torch.no_grad():
         num_steps = round_lengths.max_length_per_round - 1
@@ -93,7 +112,7 @@ def delta_pos_open_rollout(loaded_model: LoadedModel, round_lengths: RoundLength
             for step_index in range(num_steps):
                 if (step_index + 1) % num_time_steps != 0:
                     step(rollout_tensor, similarity_tensor, pred_tensor, loaded_model.model, round_lengths, step_index,
-                         nav_data, player_enable_mask)
+                         nav_data, player_enable_mask, constant_velocity)
                 pbar.update(1)
     # need to modify cur_loaded_df as rollout_df has constant length of all rounds for sim efficiency
     loaded_model.cur_loaded_df, loaded_model.cur_inference_df = \
@@ -191,7 +210,23 @@ def compare_predicted_rollout_indices(orig_df: pd.DataFrame, pred_df: pd.DataFra
     return result
 
 
-def run_analysis_per_mask(loaded_model: LoadedModel, player_mask_config: PlayerMaskConfig, ade_ax, fde_ax) -> str:
+def plot_ade_fde(player_mask_config: PlayerMaskConfig, ades: pd.Series, fdes: pd.Series, ade_ax, fde_ax, title_appendix):
+    min_value = int(floor(min(ades.min(), fdes.min())))
+    max_value = int(ceil(max(ades.max(), fdes.max())))
+    bin_width = (max_value - min_value) // 20
+    bins = generate_bins(min_value, max_value, bin_width)
+    plot_hist(ade_ax, pd.Series(ades), bins)
+    plot_hist(fde_ax, pd.Series(fdes), bins)
+    ade_ax.text((min_value + max_value) / 2., 0.4, ades.describe().to_string(), family='monospace')
+    fde_ax.text((min_value + max_value) / 2., 0.4, fdes.describe().to_string(), family='monospace')
+    ade_ax.set_ylim(0., 1.)
+    fde_ax.set_xlim(min(0., min_value), max_value)
+    ade_ax.set_title(str(player_mask_config) + " ADE" + title_appendix)
+    fde_ax.set_title(str(player_mask_config) + " FDE" + title_appendix)
+
+
+def run_analysis_per_mask(loaded_model: LoadedModel, player_mask_config: PlayerMaskConfig, ade_ax, fde_ax,
+                          filtered_ade_ax, filtered_fde_ax) -> str:
     displacement_errors = DisplacementErrors()
     for i, hdf5_wrapper in enumerate(loaded_model.dataset.data_hdf5s):
         print(f"Processing hdf5 {i + 1} / {len(loaded_model.dataset.data_hdf5s)}: {hdf5_wrapper.hdf5_path}")
@@ -212,18 +247,11 @@ def run_analysis_per_mask(loaded_model: LoadedModel, player_mask_config: PlayerM
     ades = pd.Series(displacement_errors.player_round_ades)
     fdes = pd.Series(displacement_errors.player_round_fdes)
 
-    min_value = int(floor(min(ades.min(), fdes.min())))
-    max_value = int(ceil(max(ades.max(), fdes.max())))
-    bin_width = (max_value - min_value) // 20
-    bins = generate_bins(min_value, max_value, bin_width)
-    plot_hist(ade_ax, pd.Series(ades), bins)
-    plot_hist(fde_ax, pd.Series(fdes), bins)
-    ade_ax.text((min_value + max_value) / 2., 0.4, ades.describe().to_string(), family='monospace')
-    fde_ax.text((min_value + max_value) / 2., 0.4, fdes.describe().to_string(), family='monospace')
-    ade_ax.set_ylim(0., 1.)
-    fde_ax.set_xlim(min_value, max_value)
-    ade_ax.set_title(str(player_mask_config) + " ADE")
-    fde_ax.set_title(str(player_mask_config) + " FDE")
+    plot_ade_fde(player_mask_config, ades, fdes, ade_ax, fde_ax, "")
+
+    filtered_ades = percentile_filter_series(ades)
+    filtered_fdes = percentile_filter_series(fdes)
+    plot_ade_fde(player_mask_config, filtered_ades, filtered_fdes, filtered_ade_ax, filtered_fde_ax, " Filtered")
 
     return f"{str(player_mask_config)} ADE Mean: {ades.mean()}, ADE Std Dev: {ades.std()}, " \
            f"FDE Mean: {fdes.mean()}, FDE Std Dev: {fdes.std()}"
@@ -231,7 +259,7 @@ def run_analysis_per_mask(loaded_model: LoadedModel, player_mask_config: PlayerM
 
 simulation_plots_path = Path(__file__).parent / 'simulation_plots'
 fig_length = 8
-num_metrics = 2
+num_metrics = 4
 
 
 def run_analysis(loaded_model: LoadedModel):
@@ -243,10 +271,12 @@ def run_analysis(loaded_model: LoadedModel):
     axs = fig.subplots(num_metrics, PlayerMaskConfig.NUM_MASK_CONFIGS, squeeze=False)
 
     mask_result_strs = []
-    for i, player_mask_config in enumerate([PlayerMaskConfig.ALL, PlayerMaskConfig.CT, PlayerMaskConfig.T,
-                                            PlayerMaskConfig.LAST_ALIVE]):
+    for i, player_mask_config in enumerate([#PlayerMaskConfig.ALL, PlayerMaskConfig.CT, PlayerMaskConfig.T,
+                                            #PlayerMaskConfig.LAST_ALIVE
+                                            PlayerMaskConfig.CONSTANT_VELOCITY]):
         print(f"Config {player_mask_config}")
-        mask_result_strs.append(run_analysis_per_mask(loaded_model, player_mask_config, axs[0, i], axs[1, i]))
+        mask_result_strs.append(run_analysis_per_mask(loaded_model, player_mask_config, axs[0, i], axs[1, i],
+                                                      axs[2, i], axs[3, i]))
         print(mask_result_strs[-1])
 
     print('\n'.join(mask_result_strs))
