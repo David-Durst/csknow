@@ -195,4 +195,4 @@ if __name__ == "__main__":
     #load_result = load_model_file_for_rollout(all_data_df, "delta_pos_checkpoint.pt")
 
     loaded_model = load_model_file(load_data_result, use_test_data_only=True)
-    vis(loaded_model, delta_pos_rollout)
+    vis(loaded_model, delta_pos_rollout, " Simulator")

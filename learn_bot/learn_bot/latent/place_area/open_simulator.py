@@ -3,7 +3,7 @@ from dataclasses import field, dataclass
 from enum import IntEnum
 from math import floor, ceil
 from pathlib import Path
-from typing import List
+from typing import List, Optional
 
 import pandas as pd
 import torch
@@ -26,7 +26,7 @@ from learn_bot.libs.io_transforms import CUDA_DEVICE_STR
 
 # this is a open loop version of the simulator for computing metrics based on short time horizons
 
-num_time_steps = 10
+num_time_steps = 64
 
 
 class PlayerMaskConfig(IntEnum):
@@ -96,9 +96,12 @@ def build_constant_velocity_pred_tensor(loaded_model: LoadedModel, round_lengths
     return loaded_model.cur_dataset.Y[pred_tensor_indices]
 
 
-def delta_pos_open_rollout(loaded_model: LoadedModel, round_lengths: RoundLengths,
+# round_lengths only accepts none so it can be called from vis, which handles many different sim functions
+def delta_pos_open_rollout(loaded_model: LoadedModel, round_lengths: Optional[RoundLengths] = None,
                            player_enable_mask: PlayerEnableMask = None,
                            constant_velocity: bool = False) -> PlayerEnableMask:
+    if round_lengths is None:
+        round_lengths = get_round_lengths(loaded_model.cur_loaded_df)
     rollout_tensor, similarity_tensor = \
         build_rollout_and_similarity_tensors(round_lengths, loaded_model.cur_dataset)
     if constant_velocity:
@@ -289,7 +292,7 @@ def run_analysis(loaded_model: LoadedModel):
 
 nav_data = None
 
-perform_analysis = True
+perform_analysis = False
 
 if __name__ == "__main__":
     nav_data = NavData(CUDA_DEVICE_STR)
@@ -311,4 +314,4 @@ if __name__ == "__main__":
     if perform_analysis:
         run_analysis(loaded_model)
     else:
-        vis(loaded_model, delta_pos_open_rollout)
+        vis(loaded_model, delta_pos_open_rollout, " Open Loop Simulator")

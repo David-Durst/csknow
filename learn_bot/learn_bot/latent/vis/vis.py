@@ -25,13 +25,13 @@ ct_color = (4, 190, 196)
 t_color = (187, 142, 52)
 
 
-def vis(loaded_model: LoadedModel, inference_fn: Callable[[LoadedModel], None]):
+def vis(loaded_model: LoadedModel, inference_fn: Callable[[LoadedModel], None], window_title_appendix: str = ""):
     inference_fn(loaded_model)
     index_cur_hdf5(loaded_model)
 
     #This creates the main window of an application
     window = tk.Tk()
-    window.title("Delta Position Model")
+    window.title("Delta Position Model " + window_title_appendix)
     window.resizable(width=True, height=True)
     window.configure(background='grey')
 

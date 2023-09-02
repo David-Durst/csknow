@@ -57,4 +57,4 @@ if __name__ == "__main__":
     #data_series = load_data_result.multi_hdf5_wrapper.hdf5_wrappers[0].sample_df.iloc[0].loc[non_delta_pos_cols]
     #print(data_series)
     loaded_model = load_model_file(load_data_result, use_test_data_only=True)
-    vis(loaded_model, off_policy_inference)
+    vis(loaded_model, off_policy_inference, " Off Policy")
