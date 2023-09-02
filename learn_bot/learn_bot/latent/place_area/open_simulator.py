@@ -3,7 +3,7 @@ from dataclasses import field, dataclass
 from enum import IntEnum
 from math import floor, ceil
 from pathlib import Path
-from typing import List, Optional
+from typing import List, Optional, Callable
 
 import pandas as pd
 import torch
@@ -98,10 +98,9 @@ def build_constant_velocity_pred_tensor(loaded_model: LoadedModel, round_lengths
 
 # round_lengths only accepts none so it can be called from vis, which handles many different sim functions
 def delta_pos_open_rollout(loaded_model: LoadedModel, round_lengths: Optional[RoundLengths] = None,
-                           player_enable_mask: PlayerEnableMask = None,
-                           constant_velocity: bool = False) -> PlayerEnableMask:
-    if round_lengths is None:
-        round_lengths = get_round_lengths(loaded_model.cur_loaded_df)
+                           player_enable_mask: PlayerEnableMask = None, constant_velocity: bool = False):
+    if constant_velocity:
+        print("constant velocity open rollout")
     rollout_tensor, similarity_tensor = \
         build_rollout_and_similarity_tensors(round_lengths, loaded_model.cur_dataset)
     if constant_velocity:
@@ -121,7 +120,15 @@ def delta_pos_open_rollout(loaded_model: LoadedModel, round_lengths: Optional[Ro
     loaded_model.cur_loaded_df, loaded_model.cur_inference_df = \
         match_round_lengths(loaded_model.cur_loaded_df, rollout_tensor, pred_tensor, round_lengths,
                             loaded_model.column_transformers)
-    return player_enable_mask
+
+
+def gen_vis_wrapper_delta_pos_open_rollout(player_mask_config: PlayerMaskConfig) -> Callable[[LoadedModel], None]:
+    def result_func(loaded_model: loaded_model):
+        round_lengths = get_round_lengths(loaded_model.cur_loaded_df)
+        player_enable_mask = build_player_mask(loaded_model, player_mask_config, round_lengths)
+        delta_pos_open_rollout(loaded_model, round_lengths, player_enable_mask,
+                               constant_velocity=player_mask_config == PlayerMaskConfig.CONSTANT_VELOCITY)
+    return result_func
 
 
 trajectory_counter_column = 'trajectory counter'
@@ -242,7 +249,8 @@ def run_analysis_per_mask(loaded_model: LoadedModel, player_mask_config: PlayerM
         orig_loaded_df = loaded_model.cur_loaded_df.copy()
         round_lengths = get_round_lengths(loaded_model.cur_loaded_df)
         player_enable_mask = build_player_mask(loaded_model, player_mask_config, round_lengths)
-        delta_pos_open_rollout(loaded_model, round_lengths, player_enable_mask)
+        delta_pos_open_rollout(loaded_model, round_lengths, player_enable_mask,
+                               constant_velocity=player_mask_config == PlayerMaskConfig.CONSTANT_VELOCITY)
 
         hdf5_displacement_errors = compare_predicted_rollout_indices(orig_loaded_df, loaded_model.cur_loaded_df,
                                                                      round_lengths, player_enable_mask, loaded_model)
@@ -276,14 +284,13 @@ def run_analysis(loaded_model: LoadedModel):
     axs = fig.subplots(num_metrics, PlayerMaskConfig.NUM_MASK_CONFIGS, squeeze=False)
 
     mask_result_strs = []
-    for i, player_mask_config in enumerate([#PlayerMaskConfig.ALL, PlayerMaskConfig.CT, PlayerMaskConfig.T,
+    for i, player_mask_config in enumerate([#PlayerMaskConfig.ALL, #PlayerMaskConfig.CT, PlayerMaskConfig.T,
                                             #PlayerMaskConfig.LAST_ALIVE
                                             PlayerMaskConfig.CONSTANT_VELOCITY]):
         print(f"Config {player_mask_config}")
         mask_result_strs.append(run_analysis_per_mask(loaded_model, player_mask_config, axs[0, i], axs[1, i],
                                                       axs[2, i], axs[3, i]))
         print(mask_result_strs[-1])
-        exit(0)
 
     print('\n'.join(mask_result_strs))
 
@@ -291,8 +298,8 @@ def run_analysis(loaded_model: LoadedModel):
 
 
 nav_data = None
-
-perform_analysis = False
+perform_analysis = True
+vis_player_mask_config = PlayerMaskConfig.CONSTANT_VELOCITY
 
 if __name__ == "__main__":
     nav_data = NavData(CUDA_DEVICE_STR)
@@ -314,4 +321,4 @@ if __name__ == "__main__":
     if perform_analysis:
         run_analysis(loaded_model)
     else:
-        vis(loaded_model, delta_pos_open_rollout, " Open Loop Simulator")
+        vis(loaded_model, gen_vis_wrapper_delta_pos_open_rollout(vis_player_mask_config), " Open Loop Simulator")
