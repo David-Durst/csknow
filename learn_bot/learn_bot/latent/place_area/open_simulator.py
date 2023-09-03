@@ -196,7 +196,15 @@ def compare_predicted_rollout_indices(orig_df: pd.DataFrame, pred_df: pd.DataFra
         orig_df[is_last_pred_column] = orig_df[last_pred_column] == orig_df[index_in_trajectory_if_alive_column]
 
         all_pred_steps_df = round_and_delta_df[~orig_df[is_ground_truth_column] & orig_df[player_columns.alive]]
-        final_pred_step_df = round_and_delta_df[orig_df[is_last_pred_column] & orig_df[player_columns.alive]]
+        # need to remove ground truth, otherwise include FDE for 1 tick trajecotries where first tick is ground truth
+        # and die before can make any predictions (no nothing worth evaluating, just get incorrect 0 FDE)
+        final_pred_step_df = round_and_delta_df[orig_df[is_last_pred_column] & ~orig_df[is_ground_truth_column] &
+                                                orig_df[player_columns.alive]]
+
+        ade_traj_ids = all_pred_steps_df[trajectory_counter_column].unique()
+        fde_traj_ids = final_pred_step_df[trajectory_counter_column].unique()
+        if len(ade_traj_ids) != len(fde_traj_ids):
+            print('missing traj')
 
         # get ade by averaging within trajectories only. This will enable looking at per-trajectory ADE distribution.
         # Aggregating across trajectories prevent that type of distributional analysis.
