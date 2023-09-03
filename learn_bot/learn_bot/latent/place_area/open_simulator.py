@@ -228,6 +228,8 @@ def plot_ade_fde(player_mask_config: PlayerMaskConfig, ades: pd.Series, fdes: pd
     ade_ax.text((min_value + max_value) / 2., 0.4, ades.describe().to_string(), family='monospace')
     fde_ax.text((min_value + max_value) / 2., 0.4, fdes.describe().to_string(), family='monospace')
     ade_ax.set_ylim(0., 1.)
+    fde_ax.set_ylim(0., 1.)
+    ade_ax.set_xlim(min(0., min_value), max_value)
     fde_ax.set_xlim(min(0., min_value), max_value)
     ade_ax.set_title(str(player_mask_config) + " ADE" + title_appendix)
     fde_ax.set_title(str(player_mask_config) + " FDE" + title_appendix)
@@ -237,6 +239,8 @@ def run_analysis_per_mask(loaded_model: LoadedModel, player_mask_config: PlayerM
                           filtered_ade_ax, filtered_fde_ax) -> str:
     displacement_errors = DisplacementErrors()
     for i, hdf5_wrapper in enumerate(loaded_model.dataset.data_hdf5s):
+        if i > 0:
+            break
         print(f"Processing hdf5 {i + 1} / {len(loaded_model.dataset.data_hdf5s)}: {hdf5_wrapper.hdf5_path}")
         loaded_model.cur_hdf5_index = i
         loaded_model.load_cur_hdf5_as_pd()
