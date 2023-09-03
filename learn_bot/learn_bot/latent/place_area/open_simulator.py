@@ -190,7 +190,7 @@ def compare_predicted_rollout_indices(orig_df: pd.DataFrame, pred_df: pd.DataFra
         # last if counter in trajectory equals max index - need to recompute this for every player
         # as last will be different if die in middle of trajectory
         orig_df[index_in_trajectory_if_alive_column] = orig_df[index_in_trajectory_column]
-        orig_df[index_in_trajectory_if_alive_column].where(orig_df[player_columns.alive].astype('bool'), -1)
+        orig_df[index_in_trajectory_if_alive_column].where(orig_df[player_columns.alive] == 1, -1, inplace=True)
         orig_df[last_pred_column] = \
             orig_df.groupby(trajectory_counter_column)[index_in_trajectory_if_alive_column].transform('max')
         orig_df[is_last_pred_column] = orig_df[last_pred_column] == orig_df[index_in_trajectory_if_alive_column]
@@ -214,6 +214,12 @@ def compare_predicted_rollout_indices(orig_df: pd.DataFrame, pred_df: pd.DataFra
                                          .isin(player_valid_round_ids)][pred_vs_orig_total_delta_column])
         result.player_round_fdes += list(player_round_fdes[player_round_fdes[round_id_column]
                                          .isin(player_valid_round_ids)][pred_vs_orig_total_delta_column])
+        tmp_ades = list(player_round_ades[player_round_ades[round_id_column]
+                                         .isin(player_valid_round_ids)][pred_vs_orig_total_delta_column])
+        tmp_fdes = list(player_round_fdes[player_round_fdes[round_id_column]
+                                         .isin(player_valid_round_ids)][pred_vs_orig_total_delta_column])
+        if len(tmp_ades) != len(tmp_fdes):
+            print('length mismatch')
 
     return result
 
