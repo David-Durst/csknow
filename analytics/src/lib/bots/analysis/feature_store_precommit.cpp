@@ -4,17 +4,66 @@
 #include "bots/analysis/feature_store_precommit.h"
 
 namespace csknow::feature_store {
-    void FeatureStorePreCommitBuffer::updateFeatureStoreBufferPlayers(const ServerState &state) {
-        tPlayerIdToIndex.clear();
-        ctPlayerIdToIndex.clear();
-        int tIndex = 0, ctIndex = 0;
+    void FeatureStorePreCommitBuffer::updateFeatureStoreBufferPlayers(const ServerState &state, bool newRound) {
+        // keep ids constant as much as possible inside rounds as players may join and leave, don't want to shuffle
+        // as alive players will never leave and rejoin alive, will rejoin dead and come back next round
+        // when continuity irrelevant
+        set<int> usedTIndices, usedCTIndices;
+        if (newRound) {
+            tPlayerIdToIndex.clear();
+            ctPlayerIdToIndex.clear();
+        }
+        else {
+            // remove players who left server in last frame
+            vector<int64_t> tPlayerIdsToRemove;
+            for (const auto & [csgoId, tIndex] : tPlayerIdToIndex) {
+                if (state.csgoIds.count(csgoId)) {
+                    usedTIndices.insert(tIndex);
+                }
+                else {
+                    tPlayerIdsToRemove.push_back(csgoId);
+                }
+            }
+            for (const auto & tPlayerId : tPlayerIdsToRemove) {
+                tPlayerIdToIndex.erase(tPlayerId);
+            }
+
+            vector<int64_t> ctPlayerIdsToRemove;
+            for (const auto & [csgoId, ctIndex] : ctPlayerIdToIndex) {
+                if (state.csgoIds.count(csgoId)) {
+                    usedTIndices.insert(ctIndex);
+                }
+                else {
+                    ctPlayerIdsToRemove.push_back(csgoId);
+                }
+            }
+            for (const auto & ctPlayerId : ctPlayerIdsToRemove) {
+                ctPlayerIdToIndex.erase(ctPlayerId);
+            }
+        }
+
         for (const auto &client: state.clients) {
             if (client.team == ENGINE_TEAM_T) {
-                tPlayerIdToIndex[client.csgoId] = tIndex;
-                tIndex++;
-            } else if (client.team == ENGINE_TEAM_CT) {
-                ctPlayerIdToIndex[client.csgoId] = ctIndex;
-                ctIndex++;
+                if (!tPlayerIdToIndex.count(client.csgoId)) {
+                    for (int tIndex = 0; tIndex < max_enemies; tIndex++) {
+                        if (!usedTIndices.count(tIndex)) {
+                            tPlayerIdToIndex[client.csgoId] = tIndex;
+                            usedTIndices.insert(tIndex);
+                            break;
+                        }
+                    }
+                }
+            }
+            else if (client.team == ENGINE_TEAM_CT) {
+                if (!ctPlayerIdToIndex.count(client.csgoId)) {
+                    for (int ctIndex = 0; ctIndex < max_enemies; ctIndex++) {
+                        if (!usedCTIndices.count(ctIndex)) {
+                            ctPlayerIdToIndex[client.csgoId] = ctIndex;
+                            usedCTIndices.insert(ctIndex);
+                            break;
+                        }
+                    }
+                }
             }
         }
     }

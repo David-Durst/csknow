@@ -100,7 +100,7 @@ namespace csknow::feature_store {
         std::map<int64_t, int> tPlayerIdToIndex, ctPlayerIdToIndex;
         C4MapData c4MapData;
 
-        void updateFeatureStoreBufferPlayers(const ServerState &state);
+        void updateFeatureStoreBufferPlayers(const ServerState &state, bool newRound);
 
         vector<EngagementPossibleEnemy> engagementPossibleEnemyBuffer;
         vector<TargetPossibleEnemyLabel> targetPossibleEnemyLabelBuffer;

@@ -132,7 +132,7 @@ namespace csknow::behavior_tree_latent_states {
                 const ServerState & curState = blackboard->streamingManager.db.batchData.fromNewest();
 
                 addTreeThinkersToBlackboard(curState, blackboard.get());
-                tmpPreCommitBuffer[threadNum].updateFeatureStoreBufferPlayers(curState);
+                tmpPreCommitBuffer[threadNum].updateFeatureStoreBufferPlayers(curState, tickIndex == rounds.ticksPerRound[roundIndex].minId);
                 globalQueryNode->exec(curState, defaultThinker);
 
                 bool newCommitValidRowInRound =

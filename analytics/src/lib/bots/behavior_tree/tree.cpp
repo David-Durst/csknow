@@ -125,9 +125,11 @@ void Tree::tick(ServerState & state, const string & mapsPath) {
     }
 
     // clear history state on round number
+    bool newRound = false;
     if (state.roundNumber != curRoundNumber) {
-       curRoundNumber = state.roundNumber;
-       featureStoreResult.defaultBuffer.clearHistory();
+        newRound = true;
+        curRoundNumber = state.roundNumber;
+        featureStoreResult.defaultBuffer.clearHistory();
     }
 
     // also clear history on teleports (aka teleport confirmation id doesn't equal telport id)
@@ -156,7 +158,7 @@ void Tree::tick(ServerState & state, const string & mapsPath) {
         // update streaming analytics database used in tree
         // blackboard->streamingManager.update(state);
 
-        blackboard->featureStorePreCommitBuffer.updateFeatureStoreBufferPlayers(state);
+        blackboard->featureStorePreCommitBuffer.updateFeatureStoreBufferPlayers(state, newRound);
         //updateStateVisibility(state, *blackboard);
 
         // update cur clients before global node so have playerToInferenceData ready

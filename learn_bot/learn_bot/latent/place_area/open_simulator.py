@@ -26,7 +26,7 @@ from learn_bot.libs.io_transforms import CUDA_DEVICE_STR
 
 # this is a open loop version of the simulator for computing metrics based on short time horizons
 
-num_time_steps = 64
+num_time_steps = 10#64
 
 
 class PlayerMaskConfig(IntEnum):
@@ -228,6 +228,8 @@ def compare_predicted_rollout_indices(orig_df: pd.DataFrame, pred_df: pd.DataFra
                                          .isin(player_valid_round_ids)][pred_vs_orig_total_delta_column])
         if len(tmp_ades) != len(tmp_fdes):
             print('length mismatch')
+        if max(tmp_ades) > 2500.:
+            print('invalid max')
 
     return result
 
@@ -253,8 +255,8 @@ def run_analysis_per_mask(loaded_model: LoadedModel, player_mask_config: PlayerM
                           filtered_ade_ax, filtered_fde_ax) -> str:
     displacement_errors = DisplacementErrors()
     for i, hdf5_wrapper in enumerate(loaded_model.dataset.data_hdf5s):
-        if i > 0:
-            break
+        #if i != 23:
+        #    continue
         print(f"Processing hdf5 {i + 1} / {len(loaded_model.dataset.data_hdf5s)}: {hdf5_wrapper.hdf5_path}")
         loaded_model.cur_hdf5_index = i
         loaded_model.load_cur_hdf5_as_pd()
@@ -298,10 +300,10 @@ def run_analysis(loaded_model: LoadedModel):
     axs = fig.subplots(num_metrics, PlayerMaskConfig.NUM_MASK_CONFIGS, squeeze=False)
 
     mask_result_strs = []
-    for i, player_mask_config in enumerate([PlayerMaskConfig.ALL,
-                                            PlayerMaskConfig.CT, PlayerMaskConfig.T,
-                                            PlayerMaskConfig.LAST_ALIVE,
-                                            PlayerMaskConfig.CONSTANT_VELOCITY]):
+    for i, player_mask_config in enumerate([PlayerMaskConfig.ALL,]):
+                                            #PlayerMaskConfig.CT, PlayerMaskConfig.T,
+                                            #PlayerMaskConfig.LAST_ALIVE,
+                                            #PlayerMaskConfig.CONSTANT_VELOCITY]):
         print(f"Config {player_mask_config}")
         mask_result_strs.append(run_analysis_per_mask(loaded_model, player_mask_config, axs[0, i], axs[1, i],
                                                       axs[2, i], axs[3, i]))

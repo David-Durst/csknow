@@ -51,7 +51,7 @@ namespace csknow::feature_store {
                                         playerAtTick, tickIndex, nearestNavCell, visPoints, tickRates, true);
                 const ServerState & curState = streamingManager.db.batchData.fromNewest();
 
-                tmpPreCommitBuffer[threadNum].updateFeatureStoreBufferPlayers(curState);
+                tmpPreCommitBuffer[threadNum].updateFeatureStoreBufferPlayers(curState, tickIndex == rounds.ticksPerRound[roundIndex].minId);
                 tmpPreCommitBuffer[threadNum].updateCurTeamData(curState, navFile);
 
                 /*
