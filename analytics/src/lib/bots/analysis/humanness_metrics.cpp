@@ -18,7 +18,10 @@ namespace csknow::humanness_metrics {
     HumannessMetrics::HumannessMetrics(const csknow::feature_store::TeamFeatureStoreResult &teamFeatureStoreResult,
                                        const Games & games, const Rounds & rounds, const Players & players, const Ticks & ticks,
                                        const PlayerAtTick & playerAtTick, const Hurt & hurt, const WeaponFire & weaponFire,
-                                       const ReachableResult & reachable, const VisPoints & visPoints) {
+                                       const ReachableResult & reachable, const VisPoints & visPoints, bool enable) {
+        if (!enable) {
+            return;
+        }
         std::atomic<int64_t> roundsProcessed = 0;
         for (int64_t roundIndex = 0; roundIndex < rounds.size; roundIndex++) {
             TickRates tickRates = computeTickRates(games, rounds, roundIndex);

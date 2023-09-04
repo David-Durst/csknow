@@ -209,7 +209,7 @@ namespace csknow::feature_store {
                 }
                 bool testAliveCondition = requireBothTeamsAlive ? (refKeyRetakeEvents.tAlive[i] && refKeyRetakeEvents.ctAlive[i]) : (refKeyRetakeEvents.tAlive[i] || refKeyRetakeEvents.ctAlive[i]);
                 bool testCondition = (refKeyRetakeEvents.roundHasCompleteTest[roundIndex] || refKeyRetakeEvents.roundHasFailedTest[roundIndex]) &&
-                        // turn into an || for base navigation
+                        // turn into an || for base navigation - already done, see above line
                         testAliveCondition &&
                         refKeyRetakeEvents.testStartBeforeOrDuringThisTick[i] && !refKeyRetakeEvents.testEndBeforeOrDuringThisTick[i];
                 bool nonTestCondition = refKeyRetakeEvents.enableNonTestPlantRounds && refKeyRetakeEvents.roundHasPlant[roundIndex] &&

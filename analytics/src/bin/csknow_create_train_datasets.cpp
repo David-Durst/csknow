@@ -64,6 +64,7 @@ int main(int argc, char * argv[]) {
         enableNonTestPlantRounds = argv[4][0] == 'y';
         requireBothTeamsAlive = argv[4][0] == 'b';
     }
+    bool haveCombatForHumanness = enableNonTestPlantRounds || requireBothTeamsAlive;
     string outputNameAppendix = "";
     if (argc == 6) {
         outputNameAppendix = argv[5];
@@ -309,7 +310,7 @@ int main(int argc, char * argv[]) {
     string humannessMetricsName = "humannessMetrics";
     csknow::humanness_metrics::HumannessMetrics humannessMetrics(teamFeatureStoreResult, games, filteredRounds, players, ticks,
                                                                  playerAtTick, hurt, weaponFire, d2ReachableResult,
-                                                                 map_visPoints.at("de_dust2"));
+                                                                 map_visPoints.at("de_dust2"), haveCombatForHumanness);
 
     /*
     std::cout << "processing behavior tree window feature store" << std::endl;
@@ -373,9 +374,11 @@ int main(int argc, char * argv[]) {
             //{behaviorTreeFeatureStoreName, behaviorTreeLatentEvents.featureStoreResult},
             //{behaviorTreeTeamFeatureStoreName + outputNameAppendix, behaviorTreeLatentEvents.featureStoreResult.teamFeatureStoreResult}
             {behaviorTreeTeamFeatureStoreName + outputNameAppendix, teamFeatureStoreResult},
-            {humannessMetricsName + outputNameAppendix, humannessMetrics}
             //{trainingNavigationName, trainingNavigationResult},
     };
+    if (haveCombatForHumanness) {
+        analyses.insert({humannessMetricsName + outputNameAppendix, humannessMetrics});
+    }
 
     auto writeStart = std::chrono::system_clock::now();
     // create the output files and the metadata describing files

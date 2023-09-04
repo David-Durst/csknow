@@ -80,7 +80,7 @@ namespace csknow::humanness_metrics {
         HumannessMetrics(const csknow::feature_store::TeamFeatureStoreResult & teamFeatureStoreResult,
                          const Games & games, const Rounds & rounds, const Players & players, const Ticks & ticks,
                          const PlayerAtTick & playerAtTick, const Hurt & hurt, const WeaponFire & weaponFire,
-                         const ReachableResult & reachable, const VisPoints & visPoints);
+                         const ReachableResult & reachable, const VisPoints & visPoints, bool enable);
 
         void toHDF5Inner(HighFive::File & file) override;
 
