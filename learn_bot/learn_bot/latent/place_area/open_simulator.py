@@ -3,7 +3,7 @@ from dataclasses import field, dataclass
 from enum import IntEnum
 from math import floor, ceil
 from pathlib import Path
-from typing import List, Optional, Callable
+from typing import List, Optional, Callable, Tuple
 
 import pandas as pd
 import torch
@@ -39,15 +39,15 @@ class PlayerMaskConfig(IntEnum):
 
     def __str__(self) -> str:
         if self == PlayerMaskConfig.ALL:
-            return "all"
+            return "All"
         if self == PlayerMaskConfig.CT:
-            return "ct only"
+            return "Offense Only"
         if self == PlayerMaskConfig.T:
-            return "t only"
+            return "Defense Only"
         if self == PlayerMaskConfig.LAST_ALIVE:
-            return "last alive"
+            return "Last Alive"
         if self == PlayerMaskConfig.CONSTANT_VELOCITY:
-            return "constant velocity"
+            return "Constant Velocity"
 
 
 def compute_mask_elements_per_player(loaded_model: LoadedModel) -> int:
@@ -245,29 +245,26 @@ def compare_predicted_rollout_indices(orig_df: pd.DataFrame, pred_df: pd.DataFra
     return result
 
 
-def plot_ade_fde(player_mask_config: PlayerMaskConfig, ades: pd.Series, fdes: pd.Series, ade_ax, fde_ax, title_appendix):
-    min_value = int(floor(min(ades.min(), fdes.min())))
-    max_value = int(ceil(max(ades.max(), fdes.max())))
-    bin_width = (max_value - min_value) // 20
+num_bins = 40
+
+
+def plot_ade_fde(player_mask_configs: List[PlayerMaskConfig], displacement_errors: list[pd.Series], axs, is_ade: bool):
+    min_value = int(floor(min([de.min() for de in displacement_errors])))
+    max_value = int(floor(max([de.max() for de in displacement_errors])))
+    bin_width = (max_value - min_value) // num_bins
     bins = generate_bins(min_value, max_value, bin_width)
-    plot_hist(ade_ax, pd.Series(ades), bins)
-    plot_hist(fde_ax, pd.Series(fdes), bins)
-    ade_ax.text((min_value + max_value) / 2., 0.4, ades.describe().to_string(), family='monospace')
-    fde_ax.text((min_value + max_value) / 2., 0.4, fdes.describe().to_string(), family='monospace')
-    ade_ax.set_ylim(0., 1.)
-    fde_ax.set_ylim(0., 1.)
-    ade_ax.set_xlim(min(0., min_value), max_value)
-    fde_ax.set_xlim(min(0., min_value), max_value)
-    ade_ax.set_title(str(player_mask_config) + " ADE" + title_appendix)
-    fde_ax.set_title(str(player_mask_config) + " FDE" + title_appendix)
+    for player_mask_config, de, ax in zip(player_mask_configs, displacement_errors, axs):
+        plot_hist(ax, de, bins)
+        ax.text((min_value + max_value) / 2., 0.4, de.describe().to_string(), family='monospace')
+        ax.set_ylim(0., 1.)
+        ax.set_xlim(min(0., min_value), max_value)
+        ax.set_title(str(player_mask_config) + (" ADE" if is_ade else " FDE"))
 
 
-def run_analysis_per_mask(loaded_model: LoadedModel, player_mask_config: PlayerMaskConfig, ade_ax, fde_ax,
-                          filtered_ade_ax, filtered_fde_ax) -> str:
+def run_analysis_per_mask(loaded_model: LoadedModel, player_mask_config: PlayerMaskConfig) -> \
+        Tuple[pd.Series, pd.Series]:
     displacement_errors = DisplacementErrors()
     for i, hdf5_wrapper in enumerate(loaded_model.dataset.data_hdf5s):
-        if i != 37:
-            continue
         print(f"Processing hdf5 {i + 1} / {len(loaded_model.dataset.data_hdf5s)}: {hdf5_wrapper.hdf5_path}")
         loaded_model.cur_hdf5_index = i
         loaded_model.load_cur_hdf5_as_pd()
@@ -287,19 +284,12 @@ def run_analysis_per_mask(loaded_model: LoadedModel, player_mask_config: PlayerM
     ades = pd.Series(displacement_errors.player_round_ades)
     fdes = pd.Series(displacement_errors.player_round_fdes)
 
-    plot_ade_fde(player_mask_config, ades, fdes, ade_ax, fde_ax, "")
-
-    filtered_ades = percentile_filter_series(ades)
-    filtered_fdes = percentile_filter_series(fdes)
-    plot_ade_fde(player_mask_config, filtered_ades, filtered_fdes, filtered_ade_ax, filtered_fde_ax, " Filtered")
-
-    return f"{str(player_mask_config)} ADE Mean: {ades.mean()}, ADE Std Dev: {ades.std()}, " \
-           f"FDE Mean: {fdes.mean()}, FDE Std Dev: {fdes.std()}"
+    return ades, fdes
 
 
 simulation_plots_path = Path(__file__).parent / 'simulation_plots'
 fig_length = 8
-num_metrics = 4
+num_metrics = 2
 
 
 def run_analysis(loaded_model: LoadedModel):
@@ -311,15 +301,24 @@ def run_analysis(loaded_model: LoadedModel):
     axs = fig.subplots(num_metrics, PlayerMaskConfig.NUM_MASK_CONFIGS, squeeze=False)
 
     mask_result_strs = []
-    for i, player_mask_config in enumerate([PlayerMaskConfig.ALL,]):
-                                            #PlayerMaskConfig.CT, PlayerMaskConfig.T,
-                                            #PlayerMaskConfig.LAST_ALIVE,
-                                            #PlayerMaskConfig.CONSTANT_VELOCITY]):
+    player_mask_configs = [PlayerMaskConfig.ALL,
+                           PlayerMaskConfig.CT, PlayerMaskConfig.T,
+                           PlayerMaskConfig.LAST_ALIVE,
+                           PlayerMaskConfig.CONSTANT_VELOCITY]
+    ades_per_mask_config: List[pd.Series] = []
+    fdes_per_mask_config: List[pd.Series] = []
+    for i, player_mask_config in enumerate(player_mask_configs):
         print(f"Config {player_mask_config}")
-        mask_result_strs.append(run_analysis_per_mask(loaded_model, player_mask_config, axs[0, i], axs[1, i],
-                                                      axs[2, i], axs[3, i]))
-        print(mask_result_strs[-1])
+        ades, fdes = run_analysis_per_mask(loaded_model, player_mask_config)
+        ades_per_mask_config.append(ades)
+        fdes_per_mask_config.append(fdes)
+        mask_result_str = f"{str(player_mask_config)} ADE Mean: {ades.mean()}, ADE Std Dev: {ades.std()}, " \
+                          f"FDE Mean: {fdes.mean()}, FDE Std Dev: {fdes.std()}"
+        mask_result_strs.append(mask_result_str)
+        print(mask_result_str)
 
+    plot_ade_fde(player_mask_configs, ades_per_mask_config, axs[0], True)
+    plot_ade_fde(player_mask_configs, fdes_per_mask_config, axs[1], False)
     print('\n'.join(mask_result_strs))
 
     plt.savefig(simulation_plots_path / 'ade_fde_by_mask.png')
