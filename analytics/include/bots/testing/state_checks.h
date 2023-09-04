@@ -393,4 +393,25 @@ struct WaitUntilScoreLessThan : Node {
         return playerNodeState[treeThinker.csgoId];
     }
 };
+
+class SayOccurred : public Node {
+    string sayPhrase;
+
+public:
+    SayOccurred(Blackboard & blackboard, const string& sayPhrase) :
+            Node(blackboard, "SayOccured_" + sayPhrase), sayPhrase(sayPhrase) { };
+
+    NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
+        const nav_mesh::nav_area & srcArea =
+                blackboard.navFile.get_nearest_area_by_position(vec3Conv(sourceClient.getFootPosForPlayer()));
+
+        if (state. == blackboard.navFile.get_place(srcArea.m_place)) {
+            playerNodeState[treeThinker.csgoId] = NodeState::Success;
+        }
+        else {
+            playerNodeState[treeThinker.csgoId] = NodeState::Failure;
+        }
+        return playerNodeState[treeThinker.csgoId];
+    }
+};
 #endif //CSKNOW_STATE_CHECKS_H

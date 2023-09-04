@@ -25,6 +25,7 @@
 #include "bots/analysis/formation_initializer.h"
 #include "bots/testing/scripts/learned/test_learned_all.h"
 #include "bots/testing/scripts/trace/trace_script.h"
+#include "bots/testing/scripts/test_say.h"
 #include <iostream>
 #include <thread>
 #include <chrono>
@@ -88,11 +89,9 @@ int main(int argc, char * argv[]) {
             make_unique<CTPushBDoorsScript>(state),
             //make_unique<CTPushBHoleScript>(state),
             make_unique<CTPushMidToBHoleScript>(state),
-             */
             make_unique<DefuseScript>(state),
             make_unique<InterruptedDefuseScript>(state),
             make_unique<SwapOrderDefuseScript>(state)
-                    /*
             make_unique<NavInsideNodeScript>(state)
             make_unique<HoldLongScript>(state),
             make_unique<HoldASitePushScript>(state),
@@ -119,7 +118,8 @@ int main(int argc, char * argv[]) {
             make_unique<DangerOnePlayerCheck>(state),
             make_unique<DangerTwoPlayerCheck>(state)
               */
-    ), true);
+            make_unique<SayScript>(state)
+    ), false);
     ScriptsRunner scenarioRunner(variable_aim_test::makeBotTests(), false, 0);
     ScriptsRunner humanScenarioRunner(variable_aim_test::makeHumanTests(), false, 1);
      /*
