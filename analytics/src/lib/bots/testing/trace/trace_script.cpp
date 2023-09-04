@@ -112,7 +112,7 @@ namespace csknow::tests::trace {
             }
 
             stringstream strStream;
-            commaSeparateList(strStream, nonReplayNames);
+            commaSeparateList(strStream, nonReplayNames, ";");
             computeInitialPositionsViewAngles();
 
             // set bot stop only for team that isn't replay. Replay must be csknow controlled
@@ -152,15 +152,10 @@ namespace csknow::tests::trace {
 
             commands = make_unique<SequenceNode>(blackboard, Node::makeList(
                                                          std::move(disableAllBothDuringSetup),
-                                                         make_unique<csknow::tests::learned::StartNode>(blackboard, name, roundIndex, numRounds),
-                                                         make_unique<SayCmd>(blackboard, demo_file_string + ":" + tracesData.demoFile[traceIndex]),
-                                                         make_unique<movement::WaitNode>(blackboard, 0.1),
-                                                         make_unique<SayCmd>(blackboard, trace_counter_string + "," + std::to_string(traceIndex) + "," + std::to_string(numTraces)),
-                                                         make_unique<movement::WaitNode>(blackboard, 0.1),
-                                                         make_unique<SayCmd>(blackboard, non_replay_players_string + "," + strStream.str()),
-                                                         make_unique<movement::WaitNode>(blackboard, 0.1),
-                                                         make_unique<SayCmd>(blackboard, trace_bot_options_string + "," + std::to_string(oneTeam) + "," + std::to_string(oneBot)),
-                                                         make_unique<movement::WaitNode>(blackboard, 0.1),
+                                                         make_unique<csknow::tests::learned::TraceStartNode>(blackboard, name, roundIndex, numRounds,
+                                                                                                             tracesData.demoFile[traceIndex],
+                                                                                                             traceIndex, numTraces,
+                                                                                                             strStream.str(), oneTeam, oneBot),
                                                          std::move(bodyNode),
                                                          make_unique<csknow::tests::learned::SuccessEndNode>(blackboard, name, roundIndex, numRounds)),
                                                  "RoundSequence");

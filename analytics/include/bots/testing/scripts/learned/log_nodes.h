@@ -17,6 +17,17 @@ namespace csknow::tests::learned {
                     "," + std::to_string(numTests), "StartNode") { }
     };
 
+    class TraceStartNode : public SayCmd {
+    public:
+        TraceStartNode(Blackboard & blackboard, const string & scriptName, size_t roundIndex, size_t numRounds,
+                       const string & demoFile, const size_t traceIndex, const size_t numTraces,
+                       const string & nonReplayPlayers, bool oneTeam, bool oneBot) :
+                SayCmd(blackboard, trace_ready_string + ":" + scriptName + ":" + std::to_string(roundIndex) +
+                                   ":" + std::to_string(numRounds) + ":" + demoFile + ":" + std::to_string(traceIndex) +
+                                   ":" + std::to_string(numTraces) + ":" + nonReplayPlayers + ":" +
+                                   std::to_string(oneTeam) + ":" + std::to_string(oneBot), "StartNode") { }
+    };
+
     class SuccessEndNode : public SayCmd {
     public:
         SuccessEndNode(Blackboard &blackboard, const string &scriptName, size_t testIndex, size_t numTests) :

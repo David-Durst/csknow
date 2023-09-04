@@ -140,6 +140,27 @@ namespace csknow::key_retake_events {
                             roundHasCompleteTest[roundIndex] = true;
                         }
                     }
+                    if (sayMessage.find(trace_ready_string) != std::string::npos) {
+                        foundTestStartInRound = true;
+                        std::vector<std::string> parsedMessage = parseString(sayMessage, ':');
+                        // extra offset since message starts with Console:
+                        roundTestName[roundIndex] = parsedMessage[2];
+                        roundTestIndex[roundIndex] = std::stoi(parsedMessage[3]);
+                        roundNumTests[roundIndex] = std::stoi(parsedMessage[4]);
+                        perTraceData.demoFile[roundIndex] = parsedMessage[5];
+                        perTraceData.traceIndex[roundIndex] = std::stoi(parsedMessage[6]);
+                        perTraceData.numTraces[roundIndex] = std::stoi(parsedMessage[7]);
+                        std::vector<std::string> parsedNonReplayPlayers = parseString(parsedMessage[8], ';');
+                        perTraceData.nonReplayPlayers[roundIndex].insert(perTraceData.nonReplayPlayers[roundIndex].end(),
+                                                                         parsedNonReplayPlayers.begin(), parsedNonReplayPlayers.end());
+                        perTraceData.oneNonReplayTeam[roundIndex] = std::stoi(parsedMessage[9]);
+                        perTraceData.oneNonReplayBot[roundIndex] = std::stoi(parsedMessage[10]);
+                        roundHasStartTest[roundIndex] = true;
+                        // if round start and last round, then mark has completion as no next round to print completion
+                        if (roundIndex == rounds.size - 1) {
+                            roundHasCompleteTest[roundIndex] = true;
+                        }
+                    }
                     else if (sayMessage.find(test_finished_string) != std::string::npos) {
                         foundTestFinishInRound = true;
                         // for tests that require round finishing, check prior round
@@ -170,26 +191,6 @@ namespace csknow::key_retake_events {
                                 roundBaiters[roundIndex-1] = true;
                             }
                         }
-                    }
-                    else if (sayMessage.find(demo_file_string) != std::string::npos) {
-                        std::vector<std::string> parsedMessage = parseString(sayMessage, ':');
-                        // extra offset since message starts with Console:
-                        perTraceData.demoFile[roundIndex] = parsedMessage[2];
-                    }
-                    else if (sayMessage.find(trace_counter_string) != std::string::npos) {
-                        std::vector<std::string> parsedMessage = parseString(sayMessage, '_');
-                        perTraceData.traceIndex[roundIndex] = std::stoi(parsedMessage[1]);
-                        perTraceData.numTraces[roundIndex] = std::stoi(parsedMessage[2]);
-                    }
-                    else if (sayMessage.find(non_replay_players_string) != std::string::npos) {
-                        std::vector<std::string> parsedMessage = parseString(sayMessage, '_');
-                        perTraceData.nonReplayPlayers[roundIndex].insert(perTraceData.nonReplayPlayers[roundIndex].end(),
-                                                                         parsedMessage.begin() + 1, parsedMessage.end());
-                    }
-                    else if (sayMessage.find(trace_bot_options_string) != std::string::npos) {
-                        std::vector<std::string> parsedMessage = parseString(sayMessage, '_');
-                        perTraceData.oneNonReplayTeam[roundIndex] = std::stoi(parsedMessage[1]);
-                        perTraceData.oneNonReplayBot[roundIndex] = std::stoi(parsedMessage[2]);
                     }
                 }
                 testStartBeforeOrDuringThisTick[tickIndex] = foundTestStartInRound;
