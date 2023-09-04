@@ -7,6 +7,8 @@
 
 #include "bots/testing/script.h"
 
+constexpr size_t num_say_tests = 1000;
+
 class SayScript : public Script {
 public:
     explicit SayScript(const ServerState &) :
@@ -18,9 +20,18 @@ public:
             Blackboard & blackboard = *tree.blackboard;
             Script::initialize(tree, state);
             vector<Node::Ptr> sayCmds;
-            for (size_t i = 0; i < 100; i++) {
+            for (size_t i = 0; i < num_say_tests; i++) {
                 sayCmds.emplace_back(make_unique<SayCmd>(blackboard, std::to_string(i)));
             }
+            sayCmds.push_back(make_unique<movement::WaitNode>(blackboard, 20, false));
+            vector<Node::Ptr> checkSayCmds;
+            for (size_t i = 0; i < num_say_tests; i++) {
+                checkSayCmds.emplace_back(make_unique<CheckSay>(blackboard, std::to_string(i)));
+            }
+            Node::Ptr sayAndCheck = make_unique<ParallelFirstNode>(blackboard, Node::makeList(
+                    make_unique<SequenceNode>(blackboard, std::move(sayCmds)),
+                    make_unique<SequenceNode>(blackboard, std::move(checkSayCmds))
+            ));
             commands = make_unique<SequenceNode>(blackboard, Node::makeList(
                                                          make_unique<InitTestingRound>(blackboard, name),
                                                          make_unique<SpecDynamic>(blackboard, neededBots, observeSettings),
@@ -30,8 +41,7 @@ public:
                                                          make_unique<SetPos>(blackboard, Vec3({824.582764, 2612.630127, 95.957748}), Vec2({-1.760050, -105.049713})),
                                                          make_unique<Teleport>(blackboard, neededBots[1].id, state),
                                                          make_unique<movement::WaitNode>(blackboard, 0.1),
-                                                         make_unique<SequenceNode>(blackboard, std::move(sayCmds)),
-                                                         make_unique<movement::WaitNode>(blackboard, 20, false)),
+                                                         std::move(sayAndCheck)),
                                                  "SayScript");
         }
     }

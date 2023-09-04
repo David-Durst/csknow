@@ -44,6 +44,7 @@ private:
     void loadHurtEvents(const string& hurtFilePath);
     void loadWeaponFireEvents(const string& weaponFireFilePath);
     void loadRoundStartEvents(const string& roundStartFilePath);
+    void loadSayEvents(const string& roundStartFilePath);
 
 public:
     string mapName;
@@ -319,6 +320,7 @@ public:
     vector<WeaponFire> weaponFireEvents;
     int64_t lastRoundStartFrame = -1;
     bool newRoundStart = false;
+    vector<string> sayEvents;
 
     // state for caller to debug
     bool loadedSuccessfully;

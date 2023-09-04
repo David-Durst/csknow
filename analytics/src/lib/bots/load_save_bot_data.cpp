@@ -464,6 +464,24 @@ void ServerState::loadRoundStartEvents(const string &roundStartFilePath) {
     }
 }
 
+void ServerState::loadSayEvents(const string &sayFilePath) {
+    // mmap the file
+    auto [fd, stats, file] = openMMapFile(sayFilePath);
+
+    // skip the header
+    size_t firstRow = getNewline(file, 0, stats.st_size);
+
+    // track location for error logging
+
+    for (size_t curStart = firstRow + 1, curDelimiter = getNextDelimiter(file, curStart, stats.st_size);
+         curDelimiter < static_cast<size_t>(stats.st_size);
+         curStart = curDelimiter + 1, curDelimiter = getNextDelimiter(file, curStart, stats.st_size)) {
+        sayEvents.push_back("");
+        readCol(file, curStart, curDelimiter, sayEvents.back());
+    }
+    closeMMapFile({fd, stats, file});
+}
+
 void ServerState::sleepUntilServerStateExists(CSGOFileTime lastFileTime) {
     // check the last file written
     string hurtFileName = "hurt.csv";
@@ -531,6 +549,11 @@ CSGOFileTime ServerState::loadServerState() {
     string tmpRoundStartFileName = "roundStart.csv.tmp.read";
     string tmpRoundStartFilePath = dataPath + "/" + tmpRoundStartFileName;
 
+    string sayFileName = "say.csv";
+    string sayFilePath = dataPath + "/" + sayFileName;
+    string tmpSayFileName = "say.csv.tmp.read";
+    string tmpSayFilePath = dataPath + "/" + tmpSayFileName;
+
     loadTime = std::chrono::system_clock::now();
     CSGOFileTime fileTime;
 
@@ -541,8 +564,9 @@ CSGOFileTime ServerState::loadServerState() {
     bool weaponFireFileExists = std::filesystem::exists(weaponFireFilePath);
     bool hurtFileExists = std::filesystem::exists(hurtFilePath);
     bool roundStartFileExists = std::filesystem::exists(roundStartFilePath);
+    bool sayFileExists = std::filesystem::exists(sayFilePath);
     if (generalExists && clientStatesExists && visibilityExists && c4FileExists &&
-        weaponFireFileExists && hurtFileExists && roundStartFileExists) {
+        weaponFireFileExists && hurtFileExists && roundStartFileExists && sayFileExists) {
         try {
             fileTime = std::filesystem::last_write_time(generalFilePath);
             std::filesystem::rename(generalFilePath, tmpGeneralFilePath);
@@ -552,6 +576,7 @@ CSGOFileTime ServerState::loadServerState() {
             std::filesystem::rename(weaponFireFilePath, tmpWeaponFireFilePath);
             std::filesystem::rename(hurtFilePath, tmpHurtFilePath);
             std::filesystem::rename(roundStartFilePath, tmpRoundStartFilePath);
+            std::filesystem::rename(sayFilePath, tmpSayFilePath);
             loadedSuccessfully = true;
         }
         catch(std::filesystem::filesystem_error const& ex) {
@@ -580,8 +605,14 @@ CSGOFileTime ServerState::loadServerState() {
         else if (!weaponFireFileExists) {
             badPath = weaponFireFilePath;
         }
-        else {
+        else if (!hurtFileExists) {
             badPath = hurtFilePath;
+        }
+        else if (!roundStartFileExists) {
+            badPath = roundStartFilePath;
+        }
+        else {
+            badPath = sayFilePath;
         }
         loadedSuccessfully = false;
         return fileTime;
@@ -606,6 +637,7 @@ CSGOFileTime ServerState::loadServerState() {
     loadWeaponFireEvents(tmpWeaponFireFilePath);
     loadHurtEvents(tmpHurtFilePath);
     loadRoundStartEvents(tmpRoundStartFilePath);
+    loadSayEvents(tmpSayFilePath);
 
     setClientIdTrackers();
     return fileTime;
