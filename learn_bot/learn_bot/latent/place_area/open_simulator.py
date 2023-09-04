@@ -26,7 +26,7 @@ from learn_bot.libs.io_transforms import CUDA_DEVICE_STR
 
 # this is a open loop version of the simulator for computing metrics based on short time horizons
 
-num_time_steps = 10#64
+num_time_steps = 64
 
 
 class PlayerMaskConfig(IntEnum):
@@ -228,8 +228,19 @@ def compare_predicted_rollout_indices(orig_df: pd.DataFrame, pred_df: pd.DataFra
                                          .isin(player_valid_round_ids)][pred_vs_orig_total_delta_column])
         if len(tmp_ades) != len(tmp_fdes):
             print('length mismatch')
-        if max(tmp_ades) > 2500.:
-            print('invalid max')
+        # 2500 possible (not bug) - can go 250 per second for 5 seconds is 1250, mul by 2 because pred and orig can go
+        # in opposite directions
+        # 200+ more is possible if fall off ledge, but haven't seen that on going in opposite direction
+        #if max(tmp_fdes) > 2500.:
+        #    bad_round_and_trajectory = player_round_fdes[player_round_fdes[pred_vs_orig_total_delta_column] > 2000]
+        #    bad_trajectory_id = bad_round_and_trajectory.index[0]
+        #    bad_orig_positions = orig_df[orig_df[trajectory_counter_column] == bad_trajectory_id] \
+        #                             .loc[:, [tick_id_column, player_columns.alive, player_columns.pos[0], player_columns.pos[1], player_columns.pos[2]]]
+        #    bad_pred_positions = pred_df[orig_df[trajectory_counter_column] == bad_trajectory_id] \
+        #                             .loc[:, [tick_id_column, player_columns.alive, player_columns.pos[0], player_columns.pos[1], player_columns.pos[2]]]
+        #    bad_delta = round_and_delta_df[orig_df[trajectory_counter_column] == bad_trajectory_id] \
+        #                    .loc[:, [pred_vs_orig_total_delta_column]]
+        #    print('invalid max')
 
     return result
 
@@ -255,8 +266,8 @@ def run_analysis_per_mask(loaded_model: LoadedModel, player_mask_config: PlayerM
                           filtered_ade_ax, filtered_fde_ax) -> str:
     displacement_errors = DisplacementErrors()
     for i, hdf5_wrapper in enumerate(loaded_model.dataset.data_hdf5s):
-        #if i != 23:
-        #    continue
+        if i != 37:
+            continue
         print(f"Processing hdf5 {i + 1} / {len(loaded_model.dataset.data_hdf5s)}: {hdf5_wrapper.hdf5_path}")
         loaded_model.cur_hdf5_index = i
         loaded_model.load_cur_hdf5_as_pd()
