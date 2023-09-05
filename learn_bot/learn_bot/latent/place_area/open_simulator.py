@@ -13,7 +13,8 @@ from matplotlib import pyplot as plt
 from tqdm import tqdm
 
 from learn_bot.engagement_aim.column_names import tick_id_column
-from learn_bot.latent.analyze.process_trajectory_comparison import plot_hist, generate_bins, percentile_filter_series
+from learn_bot.latent.analyze.process_trajectory_comparison import plot_hist, generate_bins, percentile_filter_series, \
+    set_pd_print_options
 from learn_bot.latent.engagement.column_names import round_id_column
 from learn_bot.latent.load_model import load_model_file
 from learn_bot.latent.order.column_names import flatten_list
@@ -311,6 +312,8 @@ def run_analysis(loaded_model: LoadedModel):
     axs = fig.subplots(num_metrics, PlayerMaskConfig.NUM_MASK_CONFIGS, squeeze=False)
 
     mask_result_strs = []
+    mask_result_latex_strs = ["Simulation Type & minADE Mean & minADE Std Dev & minFDE Mean & minFDE Std Dev \\\\",
+                              "\\hline"]
     player_mask_configs = [PlayerMaskConfig.ALL,
                            PlayerMaskConfig.CT, PlayerMaskConfig.T,
                            PlayerMaskConfig.LAST_ALIVE,
@@ -322,14 +325,19 @@ def run_analysis(loaded_model: LoadedModel):
         ades, fdes = run_analysis_per_mask(loaded_model, player_mask_config)
         ades_per_mask_config.append(ades)
         fdes_per_mask_config.append(fdes)
-        mask_result_str = f"{str(player_mask_config)} ADE Mean: {ades.mean()}, ADE Std Dev: {ades.std()}, " \
-                          f"FDE Mean: {fdes.mean()}, FDE Std Dev: {fdes.std()}"
+        mask_result_str = f"{str(player_mask_config)} minADE Mean: {ades.mean():.2f}, " \
+                          f"minADE Std Dev: {ades.std():2.f}, " \
+                          f"minFDE Mean: {fdes.mean():2.f}, minFDE Std Dev: {fdes.std():.2f}"
         mask_result_strs.append(mask_result_str)
+        mask_result_latex_str = f"{str(player_mask_config)} & {ades.mean():.2f} & {ades.std():.2f} & " \
+                                f"{fdes.mean():.2f} & {fdes.std():.2f} \\\\"
+        mask_result_latex_strs.append(mask_result_latex_str)
         print(mask_result_str)
 
     plot_ade_fde(player_mask_configs, ades_per_mask_config, axs[0], True)
     plot_ade_fde(player_mask_configs, fdes_per_mask_config, axs[1], False)
     print('\n'.join(mask_result_strs))
+    print('\n'.join(mask_result_latex_strs))
 
     plt.savefig(simulation_plots_path / 'ade_fde_by_mask.png')
 
@@ -354,6 +362,8 @@ if __name__ == "__main__":
     # load_result = load_model_file_for_rollout(all_data_df, "delta_pos_checkpoint.pt")
 
     loaded_model = load_model_file(load_data_result, use_test_data_only=True)
+
+    set_pd_print_options()
 
     if perform_analysis:
         run_analysis(loaded_model)
