@@ -47,11 +47,9 @@ rounds_for_traces: List[RoundForTrace] = [
     RoundForTrace("2354429_133822_nexus-vs-ktrl-m1-dust2_7c7c8440-8dc1-11ec-872e-0a58a9feac02.dem", 30, False, 4),
     RoundForTrace("2349618_122963_100pg-vs-spirit-m3-dust2_92202a56-da9b-11eb-a928-0a58a9feac02.dem", 19, False, 2),
     RoundForTrace("2354576_136413_natus-vincere-vs-evil-geniuses-m2-dust2_7e07ebd2-b1e4-11ec-a36e-0a58a9feac02.dem", 23, False, 3),
-    RoundForTrace("2352441_129083_ence-vs-funplus-phoenix-m2-dust2_beff9bc6-31ce-11ec-9ddb-0a58a9feac02.dem", 6, False, 1),
-    RoundForTrace("2355685_136862_1620-kings-vs-dynasty-m2-dust2_1241692a-bb56-11ec-8b31-0a58a9feac02.dem", 16, False, 0),
-    RoundForTrace("2355808_137170_spirit-vs-asg-dust2_38157d06-c265-11ec-b800-0a58a9feac02.dem", 15, True, 2),
-    RoundForTrace("2355669_136889_masonic-vs-young-ninjas-m2-dust2_9364d3e6-bb53-11ec-a7e7-0a58a9feac02.dem", 2, True, 4),
-    RoundForTrace("2354561_135904_liquid-vs-godsent-m2-dust2_3f92bd4e-ac64-11ec-9e6c-0a58a9feac02.dem", 10, True, 0),
+    RoundForTrace("2358772_143226_ungentium-vs-anonymo-m2-dust2_57761380-3390-11ed-8f4d-0a58a9feac02.dem", 5, True, 3),
+    RoundForTrace("2349702_123308_faze-vs-complexity-m1-dust2_64730b48-df4e-11eb-8b4e-0a58a9feac02.d", 28, True, 1),
+    RoundForTrace("2355240_135682_ihc-vs-the-shine-dust2_88e35aa0-aa0a-11ec-9c61-0a58a9feac02.dem", 9, True, 4),
     RoundForTrace("2348918_120880_1win-vs-izako-boars-m1-dust2_8b824c6c-be4c-11eb-86da-0a58a9feac02.dem", 9, True, 0),
 ]
 
