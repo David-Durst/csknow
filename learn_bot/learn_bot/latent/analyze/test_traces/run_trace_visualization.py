@@ -69,7 +69,6 @@ def draw_trace_paths(trace_df: pd.DataFrame, trace_extra_df: pd.DataFrame, trace
             cur_player_d2_drw = ImageDraw.Draw(cur_player_d2_overlay_im)
 
             ct_team = team_strs[0] in player_place_area_columns.player_id
-
             is_bot = False if all_human else cur_trace_extra_df.loc[cur_round_id, player_place_area_columns.trace_is_bot_player]
             if is_bot:
                 round_bot_player_ids[cur_round_id].append(
@@ -85,10 +84,15 @@ def draw_trace_paths(trace_df: pd.DataFrame, trace_extra_df: pd.DataFrame, trace
                 else:
                     fill_color = replay_t_color
             cur_player_d2_drw.line(xy=player_xy_coords, fill=fill_color, width=5)
+
             if first_round_in_trace:
                 start_xy = player_xy_coords[0]
-                cur_player_d2_drw.rectangle((start_xy[0] - 5, start_xy[1] - 5, start_xy[0] + 5, start_xy[1] + 5),
+                cur_player_start_d2_overlay_im = Image.new("RGBA", all_player_d2_img_copy.size, (255, 255, 255, 0))
+                cur_player_start_d2_drw = ImageDraw.Draw(cur_player_start_d2_overlay_im)
+                cur_player_start_d2_drw.rectangle((start_xy[0] - 5, start_xy[1] - 5, start_xy[0] + 5, start_xy[1] + 5),
                                             fill=start_color)
+                all_player_d2_img_copy.alpha_composite(cur_player_start_d2_overlay_im)
+                
             all_player_d2_img_copy.alpha_composite(cur_player_d2_overlay_im)
         first_round_in_trace = False
 
