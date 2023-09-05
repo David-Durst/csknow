@@ -43,11 +43,11 @@ class RoundForTrace:
 
 
 rounds_for_traces: List[RoundForTrace] = [
-    RoundForTrace("2358189_141815_los-grandes-academy-vs-isurus-m1-dust2_906349fe-2244-11ed-81f8-0a58a9feac02.dem", 6, False, 4),
+    RoundForTrace("2351922_128038_bravos-vs-sharks-m2-dust2_12399afe-2607-11ec-84dc-0a58a9feac02.dem", 5, False, 1),
     RoundForTrace("2354429_133822_nexus-vs-ktrl-m1-dust2_7c7c8440-8dc1-11ec-872e-0a58a9feac02.dem", 30, False, 4),
-    RoundForTrace("2355741_137031_vitality-vs-eternal-fire-dust2_e0beba24-c00a-11ec-a32e-0a58a9feac02.dem", 14, False, 3),
+    RoundForTrace("2349618_122963_100pg-vs-spirit-m3-dust2_92202a56-da9b-11eb-a928-0a58a9feac02.dem", 19, False, 2),
     RoundForTrace("2354576_136413_natus-vincere-vs-evil-geniuses-m2-dust2_7e07ebd2-b1e4-11ec-a36e-0a58a9feac02.dem", 23, False, 3),
-    RoundForTrace("2354551_135613_outsiders-vs-sprout-m3-dust2_960c03dc-a878-11ec-84df-0a58a9feac02.dem", 19, False, 4),
+    RoundForTrace("2352441_129083_ence-vs-funplus-phoenix-m2-dust2_beff9bc6-31ce-11ec-9ddb-0a58a9feac02.dem", 6, False, 1),
     RoundForTrace("2355685_136862_1620-kings-vs-dynasty-m2-dust2_1241692a-bb56-11ec-8b31-0a58a9feac02.dem", 16, False, 0),
     RoundForTrace("2355808_137170_spirit-vs-asg-dust2_38157d06-c265-11ec-b800-0a58a9feac02.dem", 15, True, 2),
     RoundForTrace("2355669_136889_masonic-vs-young-ninjas-m2-dust2_9364d3e6-bb53-11ec-a7e7-0a58a9feac02.dem", 2, True, 4),
