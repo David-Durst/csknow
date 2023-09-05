@@ -5,6 +5,7 @@ from math import floor, ceil
 from pathlib import Path
 from typing import List, Optional, Callable, Tuple
 
+import numpy as np
 import pandas as pd
 import torch
 from einops import rearrange, repeat
@@ -246,6 +247,7 @@ def compare_predicted_rollout_indices(orig_df: pd.DataFrame, pred_df: pd.DataFra
 
 
 num_bins = 40
+num_iterations = 6
 
 
 def plot_ade_fde(player_mask_configs: List[PlayerMaskConfig], displacement_errors: list[pd.Series], axs, is_ade: bool):
@@ -258,28 +260,36 @@ def plot_ade_fde(player_mask_configs: List[PlayerMaskConfig], displacement_error
         ax.text((min_value + max_value) / 2., 0.4, de.describe().to_string(), family='monospace')
         ax.set_ylim(0., 1.)
         ax.set_xlim(min(0., min_value), max_value)
-        ax.set_title(str(player_mask_config) + (" ADE" if is_ade else " FDE"))
+        ax.set_title(str(player_mask_config) + (" minADE" if is_ade else " minFDE"))
 
 
 def run_analysis_per_mask(loaded_model: LoadedModel, player_mask_config: PlayerMaskConfig) -> \
         Tuple[pd.Series, pd.Series]:
     displacement_errors = DisplacementErrors()
     for i, hdf5_wrapper in enumerate(loaded_model.dataset.data_hdf5s):
-        print(f"Processing hdf5 {i + 1} / {len(loaded_model.dataset.data_hdf5s)}: {hdf5_wrapper.hdf5_path}")
-        loaded_model.cur_hdf5_index = i
-        loaded_model.load_cur_hdf5_as_pd()
+        print(f"Processing hdf5 {i} / {len(loaded_model.dataset.data_hdf5s)}: {hdf5_wrapper.hdf5_path}")
+        per_iteration_displacement_errors: List[DisplacementErrors] = []
+        for iteration in range(num_iterations):
+            print(f"iteration {iteration} / {num_iterations}")
+            loaded_model.cur_hdf5_index = i
+            loaded_model.load_cur_hdf5_as_pd()
 
-        # running rollout updates df, so keep original copy for analysis
-        orig_loaded_df = loaded_model.cur_loaded_df.copy()
-        round_lengths = get_round_lengths(loaded_model.cur_loaded_df)
-        player_enable_mask = build_player_mask(loaded_model, player_mask_config, round_lengths)
-        delta_pos_open_rollout(loaded_model, round_lengths, player_enable_mask,
-                               constant_velocity=player_mask_config == PlayerMaskConfig.CONSTANT_VELOCITY)
+            # running rollout updates df, so keep original copy for analysis
+            orig_loaded_df = loaded_model.cur_loaded_df.copy()
+            round_lengths = get_round_lengths(loaded_model.cur_loaded_df)
+            player_enable_mask = build_player_mask(loaded_model, player_mask_config, round_lengths)
+            delta_pos_open_rollout(loaded_model, round_lengths, player_enable_mask,
+                                   constant_velocity=player_mask_config == PlayerMaskConfig.CONSTANT_VELOCITY)
 
-        hdf5_displacement_errors = compare_predicted_rollout_indices(orig_loaded_df, loaded_model.cur_loaded_df,
-                                                                     round_lengths, player_enable_mask, loaded_model)
-        displacement_errors.player_round_ades += hdf5_displacement_errors.player_round_ades
-        displacement_errors.player_round_fdes += hdf5_displacement_errors.player_round_fdes
+            hdf5_displacement_errors = compare_predicted_rollout_indices(orig_loaded_df, loaded_model.cur_loaded_df,
+                                                                         round_lengths, player_enable_mask, loaded_model)
+            per_iteration_displacement_errors.append(hdf5_displacement_errors)
+
+        per_iteration_ade: List[List[float]] = [de.player_round_ades for de in per_iteration_displacement_errors]
+        displacement_errors.player_round_ades += list(np.min(np.array(per_iteration_ade), axis=0))
+
+        per_iteration_fde: List[List[float]] = [de.player_round_fdes for de in per_iteration_displacement_errors]
+        displacement_errors.player_round_fdes += list(np.min(np.array(per_iteration_fde), axis=0))
 
     ades = pd.Series(displacement_errors.player_round_ades)
     fdes = pd.Series(displacement_errors.player_round_fdes)
