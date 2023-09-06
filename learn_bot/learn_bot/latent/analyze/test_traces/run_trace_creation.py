@@ -48,7 +48,7 @@ rounds_for_traces: List[RoundForTrace] = [
     RoundForTrace("2349618_122963_100pg-vs-spirit-m3-dust2_92202a56-da9b-11eb-a928-0a58a9feac02.dem", 19, False, 2),
     RoundForTrace("2354576_136413_natus-vincere-vs-evil-geniuses-m2-dust2_7e07ebd2-b1e4-11ec-a36e-0a58a9feac02.dem", 23, False, 3),
     RoundForTrace("2358772_143226_ungentium-vs-anonymo-m2-dust2_57761380-3390-11ed-8f4d-0a58a9feac02.dem", 5, True, 3),
-    RoundForTrace("2349702_123308_faze-vs-complexity-m1-dust2_64730b48-df4e-11eb-8b4e-0a58a9feac02.d", 28, True, 1),
+    RoundForTrace("2349702_123308_faze-vs-complexity-m1-dust2_64730b48-df4e-11eb-8b4e-0a58a9feac02.dem", 28, True, 1),
     RoundForTrace("2355240_135682_ihc-vs-the-shine-dust2_88e35aa0-aa0a-11ec-9c61-0a58a9feac02.dem", 9, True, 4),
     RoundForTrace("2348918_120880_1win-vs-izako-boars-m1-dust2_8b824c6c-be4c-11eb-86da-0a58a9feac02.dem", 9, True, 0),
 ]
@@ -86,6 +86,9 @@ def create_traces(loaded_model: LoadedModel):
                     cur_start_index += len(round_ticks_df)
 
     # make sure all rounds for traces have been found
+    for i, round_for_trace in enumerate(rounds_for_traces):
+        if round_for_trace.start_index_in_hdf5 == -1:
+            print(f"invalid round_for_trace {i}")
     for round_for_trace in rounds_for_traces:
         assert round_for_trace.start_index_in_hdf5 != -1
 
