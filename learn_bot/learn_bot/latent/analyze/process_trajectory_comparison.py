@@ -58,14 +58,15 @@ def plot_trajectory_comparison_histograms(similarity_df: pd.DataFrame, config: C
     # plot cost, distance, and time by metric type
     metric_types = similarity_df[metric_type_col].unique().tolist()
     metric_types_similarity_df = similarity_df.loc[:,
-                                 [metric_type_col, dtw_cost_col, delta_distance_col, delta_time_col]]
+                                 [metric_type_col, dtw_cost_col, delta_distance_col, delta_time_col, best_match_id_col]]
 
     fig = plt.figure(figsize=(15, 15), constrained_layout=True)
     fig.suptitle(config.metric_cost_title)
     axs = fig.subplots(len(metric_types), 3, squeeze=False)
     for i, metric_type in enumerate(metric_types):
         metric_type_str = metric_type.decode('utf-8')
-        metric_type_similarity_df = metric_types_similarity_df[(similarity_df[metric_type_col] == metric_type)]
+        metric_type_similarity_df = metric_types_similarity_df[(metric_types_similarity_df[metric_type_col] == metric_type)]# &
+                                                               #(metric_types_similarity_df[best_match_id_col] < 2)]
         plot_hist(axs[i, 0], metric_type_similarity_df[dtw_cost_col], dtw_cost_bins)
         axs[i, 0].set_title(metric_type_str + " DTW Cost")
         axs[i, 0].set_ylim(0., 0.6)

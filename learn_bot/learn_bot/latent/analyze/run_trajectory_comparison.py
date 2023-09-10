@@ -1,3 +1,4 @@
+import dataclasses
 import gc
 import os
 import sys
@@ -159,8 +160,43 @@ rollout_vs_all_human_config = ComparisonConfig(
     "Rollout vs All Human Distribution"
 )
 
+rollout_learned_load_data_option = dataclasses.replace(rollout_load_data_option,
+                                                       custom_rollout_extension= "_9_10_23_durst_learned")
+rollout_learned_vs_all_human_config = ComparisonConfig(
+    rollout_learned_vs_all_human_similarity_hdf5_data_path,
+    rollout_learned_load_data_option,
+    all_human_load_data_option,
+    False,
+    False,
+    "rollout_learned_vs_all_human_distribution",
+    "Rollout Learned vs All Human Distribution"
+)
 
-just_plot_summaries = False
+rollout_handcrafted_load_data_option = dataclasses.replace(rollout_load_data_option,
+                                                       custom_rollout_extension= "_9_10_23_durst_handcrafted")
+rollout_handcrafted_vs_all_human_config = ComparisonConfig(
+    rollout_handcrafted_vs_all_human_similarity_hdf5_data_path,
+    rollout_handcrafted_load_data_option,
+    all_human_load_data_option,
+    False,
+    False,
+    "rollout_handcrafted_vs_all_human_distribution",
+    "Rollout Hand-Crafted vs All Human Distribution"
+)
+
+rollout_default_load_data_option = dataclasses.replace(rollout_load_data_option,
+                                                           custom_rollout_extension= "_9_10_23_default")
+rollout_default_vs_all_human_config = ComparisonConfig(
+    rollout_default_vs_all_human_similarity_hdf5_data_path,
+    rollout_default_load_data_option,
+    all_human_load_data_option,
+    False,
+    False,
+    "rollout_default_vs_all_human_distribution",
+    "Rollout Default vs All Human Distribution"
+)
+
+just_plot_summaries = True
 
 def compare_trajectories():
     config_case = int(sys.argv[2])
@@ -178,6 +214,12 @@ def compare_trajectories():
         config = all_human_vs_small_human_config
     elif config_case == 6:
         config = rollout_vs_all_human_config
+    elif config_case == 7:
+        config = rollout_learned_vs_all_human_config
+    elif config_case == 8:
+        config = rollout_handcrafted_vs_all_human_config
+    elif config_case == 9:
+        config = rollout_default_vs_all_human_config
 
     os.makedirs(similarity_plots_path, exist_ok=True)
     similarity_df = load_hdf5_to_pd(config.similarity_data_path)

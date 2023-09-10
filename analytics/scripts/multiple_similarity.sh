@@ -21,7 +21,7 @@ cd ${script_dir}/../build
 cmake .. -DCMAKE_BUILD_TYPE=Release
 if make -j; then
     chmod a+x csknow_compare_train_datasets
-    csknow_compare_train_datasets ${script_dir}/../rollout_outputs/behaviorTreeTeamFeatureStore_9_10_23_durst_learned.hdf5 ${script_dir}/../all_train_outputs durst_learnedHumanTrajectorySimilarity.hdf5 0 0
-    csknow_compare_train_datasets ${script_dir}/../rollout_outputs/behaviorTreeTeamFeatureStore_9_10_23_durst_handcrafted.hdf5 ${script_dir}/../all_train_outputs durst_handcraftedHumanTrajectorySimilarity.hdf5 0 0
-    csknow_compare_train_datasets ${script_dir}/../rollout_outputs/behaviorTreeTeamFeatureStore_9_10_23_default.hdf5 ${script_dir}/../all_train_outputs defaultHumanTrajectorySimilarity.hdf5 0 0
+    ./csknow_compare_train_datasets ${script_dir}/../rollout_outputs/behaviorTreeTeamFeatureStore_9_10_23_durst_learned.hdf5 ${script_dir}/../all_train_outputs durst_learnedHumanTrajectorySimilarity.hdf5 0 0
+    ./csknow_compare_train_datasets ${script_dir}/../rollout_outputs/behaviorTreeTeamFeatureStore_9_10_23_durst_handcrafted.hdf5 ${script_dir}/../all_train_outputs durst_handcraftedHumanTrajectorySimilarity.hdf5 0 0
+    ./csknow_compare_train_datasets ${script_dir}/../rollout_outputs/behaviorTreeTeamFeatureStore_9_10_23_default.hdf5 ${script_dir}/../all_train_outputs defaultHumanTrajectorySimilarity.hdf5 0 0
 fi

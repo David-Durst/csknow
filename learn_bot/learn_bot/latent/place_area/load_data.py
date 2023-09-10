@@ -50,6 +50,8 @@ class LoadDataOptions:
     limit_manual_data_to_only_enemies_no_nav: bool = False
     # train test split file name
     train_test_split_file_name: Optional[str] = None
+    # custom rollout data
+    custom_rollout_extension: Optional[str] = None
 
 
 
@@ -76,7 +78,11 @@ class LoadDataResult:
             hdf5_sources.append(manual_data)
         elif load_data_options.use_rollout_data:
             self.dataset_comment = "rollout"
-            rollout_data = HDF5Wrapper(rollout_latent_team_hdf5_data_path, hdf5_id_columns)
+            hdf5_path = rollout_latent_team_hdf5_data_path
+            if load_data_options.custom_rollout_extension is not None:
+                hdf5_path = hdf5_path.parent / (hdf5_path.stem + load_data_options.custom_rollout_extension +
+                                                hdf5_path.suffix)
+            rollout_data = HDF5Wrapper(hdf5_path, hdf5_id_columns)
             self.diff_train_test = False
             hdf5_sources.append(rollout_data)
         elif load_data_options.use_synthetic_data:
