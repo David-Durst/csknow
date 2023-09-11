@@ -4,6 +4,8 @@ import sys
 
 import time
 
+from learn_bot.latent.analyze.compare_trajectories.plot_trajectories_from_comparison import \
+    plot_trajectory_comparison_heatmaps
 from learn_bot.latent.analyze.compare_trajectories.process_trajectory_comparison import ComparisonConfig, \
     plot_trajectory_comparison_histograms, build_predicted_to_ground_truth_dict
 from learn_bot.latent.engagement.column_names import round_id_column
@@ -177,6 +179,7 @@ rollout_default_vs_all_human_config = ComparisonConfig(
 )
 
 just_plot_summaries = True
+plot_trajectories = True
 
 def compare_trajectories():
     config_case = int(sys.argv[2])
@@ -215,7 +218,7 @@ def compare_trajectories():
     end_similarity_plot_time = time.perf_counter()
     print(f"similarity plot time {end_similarity_plot_time - start_similarity_plot_time: 0.4f}")
 
-    if just_plot_summaries:
+    if just_plot_summaries and not plot_trajectories:
         exit(0)
 
     # computing mapping between predict and ground truth
@@ -252,6 +255,16 @@ def compare_trajectories():
     ground_truth_model = load_model_file(ground_truth_data)
     end_ground_truth_load_time = time.perf_counter()
     print(f"ground truth load time {end_ground_truth_load_time - start_ground_truth_load_time: 0.4f}")
+
+    if plot_trajectories:
+        start_heatmaps_plot_time = time.perf_counter()
+        plot_trajectory_comparison_heatmaps(similarity_df, predicted_model, ground_truth_model,
+                                            config, similarity_plots_path)
+        end_heatmaps_plot_time = time.perf_counter()
+        print(f"heatmaps plot time {end_heatmaps_plot_time - start_heatmaps_plot_time: 0.4f}")
+
+    if just_plot_summaries:
+        exit(0)
 
     vis_two(predicted_model, ground_truth_model, predicted_to_ground_truth_dict, similarity_match_index_df)
 
