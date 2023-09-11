@@ -1,17 +1,12 @@
 from learn_bot.latent.analyze.comparison_column_names import small_human_good_rounds, \
     all_human_vs_small_human_similarity_hdf5_data_path, all_human_28_second_filter_good_rounds, \
     all_human_vs_human_28_similarity_hdf5_data_path
-from learn_bot.latent.analyze.process_trajectory_comparison import set_pd_print_options
 from learn_bot.latent.load_model import load_model_file
-from learn_bot.latent.place_area.load_data import human_latent_team_hdf5_data_path, manual_latent_team_hdf5_data_path, \
-    rollout_latent_team_hdf5_data_path, LoadDataResult, LoadDataOptions
+from learn_bot.latent.place_area.load_data import LoadDataResult, LoadDataOptions
 from learn_bot.latent.train import train_test_split_file_name
-from learn_bot.libs.df_grouping import make_index_column, train_test_split_by_col_ids
 from learn_bot.latent.vis.off_policy_inference import off_policy_inference
 from learn_bot.latent.vis.vis import vis
 from learn_bot.libs.hdf5_to_pd import load_hdf5_to_pd
-from learn_bot.libs.vec import Vec3
-
 
 load_data_options = LoadDataOptions(
     use_manual_data=False,

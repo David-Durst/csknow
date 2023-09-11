@@ -1,6 +1,6 @@
 from typing import Set, Callable
 
-from learn_bot.latent.analyze.process_trajectory_comparison import set_pd_print_options
+from learn_bot.latent.analyze.compare_trajectories.process_trajectory_comparison import set_pd_print_options
 from learn_bot.latent.load_model import LoadedModel
 from learn_bot.latent.train import default_selected_retake_rounds_path
 from learn_bot.libs.df_grouping import make_index_column

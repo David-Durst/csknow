@@ -1,7 +1,6 @@
 import os
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from math import ceil, floor
-from pathlib import Path
 from typing import List, Dict, Tuple, Optional, Set
 
 import numpy as np
@@ -16,10 +15,10 @@ from learn_bot.latent.analyze.humanness_metrics.column_names import distance_to_
     distance_to_cover_when_enemy_visible_fov_name, distance_to_cover_when_firing_name, distance_to_cover_when_shot_name, \
     time_from_firing_to_teammate_seeing_enemy_fov_name, time_from_shot_to_teammate_seeing_enemy_fov_name, \
     distance_to_c4_when_enemy_visible_fov_name, delta_distance_to_c4_when_enemy_visible_fov_name, \
-    delta_distance_to_nearest_teammate_when_shot_name, rollout_humanness_hdf5_data_path, all_train_humanness_folder_path
+    delta_distance_to_nearest_teammate_when_shot_name, all_train_humanness_folder_path
 
 from learn_bot.latent.analyze.humanness_metrics.hdf5_loader import HumannessMetrics, HumannessDataOptions
-from learn_bot.latent.analyze.process_trajectory_comparison import plot_hist, generate_bins, set_pd_print_options
+from learn_bot.latent.analyze.compare_trajectories.process_trajectory_comparison import plot_hist, generate_bins, set_pd_print_options
 from learn_bot.latent.analyze.test_traces.column_names import rollout_aggressive_humanness_hdf5_data_path, \
     rollout_passive_humanness_hdf5_data_path, trace_index_name, trace_one_non_replay_team_name, \
     trace_one_non_replay_bot_name, rollout_aggressive_trace_hdf5_data_path, rollout_passive_trace_hdf5_data_path, \

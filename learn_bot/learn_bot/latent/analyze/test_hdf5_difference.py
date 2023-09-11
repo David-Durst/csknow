@@ -1,4 +1,4 @@
-from learn_bot.latent.analyze.process_trajectory_comparison import set_pd_print_options
+from learn_bot.latent.analyze.compare_trajectories.process_trajectory_comparison import set_pd_print_options
 from learn_bot.libs.hdf5_to_pd import load_hdf5_to_pd
 
 set_pd_print_options()

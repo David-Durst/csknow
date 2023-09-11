@@ -1,7 +1,7 @@
 import os
 from dataclasses import field, dataclass
 from enum import IntEnum
-from math import floor, ceil
+from math import floor
 from pathlib import Path
 from typing import List, Optional, Callable, Tuple
 
@@ -13,7 +13,7 @@ from matplotlib import pyplot as plt
 from tqdm import tqdm
 
 from learn_bot.engagement_aim.column_names import tick_id_column
-from learn_bot.latent.analyze.process_trajectory_comparison import plot_hist, generate_bins, percentile_filter_series, \
+from learn_bot.latent.analyze.compare_trajectories.process_trajectory_comparison import plot_hist, generate_bins, \
     set_pd_print_options
 from learn_bot.latent.engagement.column_names import round_id_column
 from learn_bot.latent.load_model import load_model_file

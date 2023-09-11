@@ -1,36 +1,16 @@
 import dataclasses
-import gc
 import os
 import sys
-from pathlib import Path
-from typing import List
 
-from dataclasses import dataclass
-import matplotlib.pyplot as plt
-import pandas as pd
-import numpy as np
-import torch
 import time
 
-from matplotlib.ticker import PercentFormatter
-
-from learn_bot.latent.analyze.process_trajectory_comparison import ComparisonConfig, \
+from learn_bot.latent.analyze.compare_trajectories.process_trajectory_comparison import ComparisonConfig, \
     plot_trajectory_comparison_histograms, build_predicted_to_ground_truth_dict
-from learn_bot.latent.dataset import LatentDataset
-from learn_bot.latent.engagement.column_names import max_enemies, round_id_column
+from learn_bot.latent.engagement.column_names import round_id_column
 from learn_bot.latent.load_model import load_model_file
-from learn_bot.latent.place_area.column_names import place_area_input_column_types, \
-    delta_pos_grid_num_cells
-from learn_bot.latent.transformer_nested_hidden_latent_model import TransformerNestedHiddenLatentModel
-from learn_bot.latent.vis.off_policy_inference import off_policy_inference
-from learn_bot.latent.vis.vis_two import vis_two, PredictedToGroundTruthDict, PredictedToGroundTruthRoundData
-from learn_bot.libs.df_grouping import make_index_column
-from learn_bot.latent.train import checkpoints_path, TrainResult, latent_id_cols
-from learn_bot.latent.place_area.load_data import human_latent_team_hdf5_data_path, manual_latent_team_hdf5_data_path, \
-    rollout_latent_team_hdf5_data_path, all_train_latent_team_hdf5_dir_path, LoadDataOptions, LoadDataResult
+from learn_bot.latent.vis.vis_two import vis_two
+from learn_bot.latent.place_area.load_data import LoadDataOptions, LoadDataResult
 from learn_bot.libs.hdf5_to_pd import load_hdf5_to_pd
-from learn_bot.libs.hdf5_wrapper import HDF5Wrapper
-from learn_bot.libs.io_transforms import IOColumnTransformers, CUDA_DEVICE_STR
 from learn_bot.latent.analyze.comparison_column_names import *
 
 #predicted_data_path = rollout_latent_team_hdf5_data_path
