@@ -18,24 +18,24 @@ get_script_dir
 mkdir -p ${script_dir}/../build
 cd ${script_dir}/../build
 cmake .. -DCMAKE_BUILD_TYPE=Release
-if make -j; then
+if make -j 18; then
     date
     echo 'most recent demo file before test run'
     ls -tp /home/steam/csgo-ds/csgo/*.dem | grep -v /$ | head -1
     /home/steam/csgo-ds/csgo/addons/sourcemod/scripting/bot-link/end_game.sh
-    sleep 20
+    sleep 40
     date
     # learned
     echo 'most recent demo file before learned run'
     ls -tp /home/steam/csgo-ds/csgo/*.dem | grep -v /$ | head -1
     ./csknow_test_bt_bot ${script_dir}/../nav /home/steam/csgo-ds/csgo/addons/sourcemod/bot-link-data ${script_dir}/../ ${script_dir}/../../learn_bot/models ${script_dir}/../../learn_bot/learn_bot/libs/saved_train_test_splits r 1 n
-    sleep 20
+    sleep 40
     date
     # hand crafted
     echo 'most recent demo file before hand-crafted run'
     ls -tp /home/steam/csgo-ds/csgo/*.dem | grep -v /$ | head -1
     ./csknow_test_bt_bot ${script_dir}/../nav /home/steam/csgo-ds/csgo/addons/sourcemod/bot-link-data ${script_dir}/../ ${script_dir}/../../learn_bot/models ${script_dir}/../../learn_bot/learn_bot/libs/saved_train_test_splits rh 1 n
-    sleep 20
+    sleep 40
     date
     # default
     echo 'most recent demo file before default run'
