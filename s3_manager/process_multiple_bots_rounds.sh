@@ -1,0 +1,3 @@
+./process_rollout_specific.sh auto0-20230912-093218-1626767916-de_dust2-international_house_of_short_people.dem 9_12_23_learned_300_rounds
+./process_rollout_specific.sh auto0-20230912-115339-1347303744-de_dust2-international_house_of_short_people.dem 9_12_23_handcrafted_300_rounds
+./process_rollout_specific.sh auto0-20230912-134518-1164087217-de_dust2-international_house_of_short_people.dem 9_12_23_default_300_rounds
