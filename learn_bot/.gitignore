@@ -2,6 +2,7 @@ data/
 models/
 plots/
 similarity_plots/
+simulation_plots/
 humanness_plots/
 saved_models/
 trace_plots/
