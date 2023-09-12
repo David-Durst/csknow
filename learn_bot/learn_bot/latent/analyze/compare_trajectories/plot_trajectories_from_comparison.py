@@ -126,12 +126,12 @@ def plot_trajectory_comparison_heatmaps(similarity_df: pd.DataFrame, predicted_l
     print('loading predicted df')
     predicted_trajectory_dfs = select_trajectories_into_dfs(predicted_loaded_model,
                                                             list(predicted_rounds_for_comparison_heatmap))
-    predicted_image = plot_trajectory_dfs(predicted_trajectory_dfs, True)
+    predicted_image = plot_trajectory_dfs(predicted_trajectory_dfs, config, True)
     print('loading best fit ground truth df')
     best_fit_ground_truth_trajectory_dfs = \
         select_trajectories_into_dfs(ground_truth_loaded_model,
                                      list(best_fit_ground_truth_rounds_for_comparison_heatmap))
-    ground_truth_image = plot_trajectory_dfs(best_fit_ground_truth_trajectory_dfs, False)
+    ground_truth_image = plot_trajectory_dfs(best_fit_ground_truth_trajectory_dfs, config, False)
 
     combined_image = Image.new('RGB', (predicted_image.width + ground_truth_image.width, predicted_image.height))
     combined_image.paste(predicted_image, (0, 0))
