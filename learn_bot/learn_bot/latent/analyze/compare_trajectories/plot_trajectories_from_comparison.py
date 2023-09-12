@@ -54,7 +54,7 @@ def select_trajectories_into_dfs(loaded_model: LoadedModel,
 title_font = ImageFont.truetype("arial.ttf", 25)
 
 
-def plot_trajectory_dfs(trajectory_dfs: List[pd.DataFrame], predicted: bool) -> Image:
+def plot_trajectory_dfs(trajectory_dfs: List[pd.DataFrame], config: ComparisonConfig, predicted: bool) -> Image:
 
     all_player_d2_img_copy = d2_img.copy().convert("RGBA")
     # ground truth has many copies, scale it's color down so brightness comparable
@@ -77,7 +77,7 @@ def plot_trajectory_dfs(trajectory_dfs: List[pd.DataFrame], predicted: bool) -> 
             cur_player_d2_overlay_im = Image.new("RGBA", all_player_d2_img_copy.size, (255, 255, 255, 0))
             cur_player_d2_drw = ImageDraw.Draw(cur_player_d2_overlay_im)
             # drawing same text over and over again, so no big deal
-            title_text = "Predicted" if predicted else "Ground Truth"
+            title_text = config.metric_cost_title + " " + ("Predicted" if predicted else "Ground Truth")
             _, _, w, h = cur_player_d2_drw.textbbox((0, 0), title_text, font=title_font)
             cur_player_d2_drw.text(((all_player_d2_img_copy.width - w) / 2,
                                     (all_player_d2_img_copy.height * 0.1 - h) / 2),

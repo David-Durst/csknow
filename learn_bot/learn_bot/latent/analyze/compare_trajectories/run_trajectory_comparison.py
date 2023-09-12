@@ -219,7 +219,7 @@ def compare_trajectories(config_case: int):
     print(f"similarity plot time {end_similarity_plot_time - start_similarity_plot_time: 0.4f}")
 
     if just_plot_summaries and not plot_trajectories:
-        exit(0)
+        return
 
     # computing mapping between predict and ground truth
     # multiple predicted rounds may match to same ground truth round, don't save them multiple times
@@ -264,7 +264,7 @@ def compare_trajectories(config_case: int):
         print(f"heatmaps plot time {end_heatmaps_plot_time - start_heatmaps_plot_time: 0.4f}")
 
     if just_plot_summaries:
-        exit(0)
+        return
 
     vis_two(predicted_model, ground_truth_model, predicted_to_ground_truth_dict, similarity_match_index_df)
 
