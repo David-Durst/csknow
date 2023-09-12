@@ -3,7 +3,7 @@ from pathlib import Path
 from typing import List, Set
 
 import pandas as pd
-from PIL import Image, ImageDraw
+from PIL import Image, ImageDraw, ImageFont
 from matplotlib import pyplot as plt
 
 from learn_bot.latent.analyze.compare_trajectories.process_trajectory_comparison import set_pd_print_options, \
@@ -51,14 +51,16 @@ def select_trajectories_into_dfs(loaded_model: LoadedModel,
     return selected_dfs
 
 
-def plot_trajectory_dfs(trajectory_dfs: List[pd.DataFrame], config: ComparisonConfig, similarity_plots_path: Path):
+title_font = ImageFont.truetype("arial.ttf", 25)
 
-    fig = plt.figure(figsize=(15, 15), constrained_layout=True)
-    fig.suptitle(config.metric_cost_title)
+
+def plot_trajectory_dfs(trajectory_dfs: List[pd.DataFrame], predicted: bool) -> Image:
 
     all_player_d2_img_copy = d2_img.copy().convert("RGBA")
-    ct_color = (bot_ct_color_list[0], bot_ct_color_list[1], bot_ct_color_list[2], 255 // len(trajectory_dfs))
-    t_color = (bot_t_color_list[0], bot_t_color_list[1], bot_t_color_list[2], 255 // len(trajectory_dfs))
+    # ground truth has many copies, scale it's color down so brightness comparable
+    color_alpha = 20 * plot_n_most_similar if predicted else 20
+    ct_color = (bot_ct_color_list[0], bot_ct_color_list[1], bot_ct_color_list[2], color_alpha)
+    t_color = (bot_t_color_list[0], bot_t_color_list[1], bot_t_color_list[2], color_alpha)
 
     for trajectory_df in trajectory_dfs:
         # since this was split with : rather than _, need to remove last _
@@ -74,6 +76,12 @@ def plot_trajectory_dfs(trajectory_dfs: List[pd.DataFrame], config: ComparisonCo
 
             cur_player_d2_overlay_im = Image.new("RGBA", all_player_d2_img_copy.size, (255, 255, 255, 0))
             cur_player_d2_drw = ImageDraw.Draw(cur_player_d2_overlay_im)
+            # drawing same text over and over again, so no big deal
+            title_text = "Predicted" if predicted else "Ground Truth"
+            _, _, w, h = cur_player_d2_drw.textbbox((0, 0), title_text, font=title_font)
+            cur_player_d2_drw.text(((all_player_d2_img_copy.width - w) / 2,
+                                    (all_player_d2_img_copy.height * 0.1 - h) / 2),
+                                   title_text, fill=(255, 255, 255, 255), font=title_font)
 
             ct_team = team_strs[0] in player_place_area_columns.player_id
             if ct_team:
@@ -83,9 +91,7 @@ def plot_trajectory_dfs(trajectory_dfs: List[pd.DataFrame], config: ComparisonCo
             cur_player_d2_drw.line(xy=player_xy_coords, fill=fill_color, width=5)
             all_player_d2_img_copy.alpha_composite(cur_player_d2_overlay_im)
 
-    png_file_name = config.metric_cost_file_name + '_trajectories' + '.png'
-    all_player_d2_img_copy.save(similarity_plots_path / png_file_name)
-    print(f"finished {png_file_name}")
+    return all_player_d2_img_copy
 
 
 def plot_trajectory_comparison_heatmaps(similarity_df: pd.DataFrame, predicted_loaded_model: LoadedModel,
@@ -100,7 +106,7 @@ def plot_trajectory_comparison_heatmaps(similarity_df: pd.DataFrame, predicted_l
     metric_types = [m.decode('utf-8') for m in metric_types]
     slope_metric_type = [m for m in metric_types if 'Slope' in m][0]
     relevant_similarity_df = similarity_df[(similarity_df[metric_type_col].str.decode('utf-8') == slope_metric_type) &
-                                           (similarity_df[best_match_id_col] < 2)]
+                                           (similarity_df[best_match_id_col] < plot_n_most_similar)]
 
     # same predicted will have multiple matches, start with set and convert to list
     predicted_rounds_for_comparison_heatmap: Set[RoundForComparisonHeatmap] = set()
@@ -120,9 +126,14 @@ def plot_trajectory_comparison_heatmaps(similarity_df: pd.DataFrame, predicted_l
     print('loading predicted df')
     predicted_trajectory_dfs = select_trajectories_into_dfs(predicted_loaded_model,
                                                             list(predicted_rounds_for_comparison_heatmap))
-    plot_trajectory_dfs(predicted_trajectory_dfs, config, similarity_plots_path)
+    predicted_image = plot_trajectory_dfs(predicted_trajectory_dfs, True)
     print('loading best fit ground truth df')
     best_fit_ground_truth_trajectory_dfs = \
         select_trajectories_into_dfs(ground_truth_loaded_model,
                                      list(best_fit_ground_truth_rounds_for_comparison_heatmap))
-    plot_trajectory_dfs(best_fit_ground_truth_trajectory_dfs, config, similarity_plots_path)
+    ground_truth_image = plot_trajectory_dfs(best_fit_ground_truth_trajectory_dfs, False)
+
+    combined_image = Image.new('RGB', (predicted_image.width + ground_truth_image.width, predicted_image.height))
+    combined_image.paste(predicted_image, (0, 0))
+    combined_image.paste(ground_truth_image, (predicted_image.width, 0))
+    combined_image.save(similarity_plots_path / (config.metric_cost_file_name + '_trajectories' + '.png'))

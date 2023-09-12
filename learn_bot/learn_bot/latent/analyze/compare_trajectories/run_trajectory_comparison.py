@@ -181,8 +181,8 @@ rollout_default_vs_all_human_config = ComparisonConfig(
 just_plot_summaries = True
 plot_trajectories = True
 
-def compare_trajectories():
-    config_case = int(sys.argv[2])
+
+def compare_trajectories(config_case: int):
     if config_case == 0:
         config = hand_crafted_bot_vs_hand_crafted_bot_config
     elif config_case == 1:
@@ -270,4 +270,6 @@ def compare_trajectories():
 
 
 if __name__ == "__main__":
-    compare_trajectories()
+    config_cases_str = sys.argv[2]
+    for config_case_str in config_cases_str.split(','):
+        compare_trajectories(int(config_case_str))
