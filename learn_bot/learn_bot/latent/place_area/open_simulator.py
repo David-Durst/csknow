@@ -327,8 +327,8 @@ def run_analysis(loaded_model: LoadedModel):
         ades_per_mask_config.append(ades)
         fdes_per_mask_config.append(fdes)
         mask_result_str = f"{str(player_mask_config)} minADE Mean: {ades.mean():.2f}, " \
-                          f"minADE Std Dev: {ades.std():2.f}, " \
-                          f"minFDE Mean: {fdes.mean():2.f}, minFDE Std Dev: {fdes.std():.2f}"
+                          f"minADE Std Dev: {ades.std():.2f}, " \
+                          f"minFDE Mean: {fdes.mean():.2f}, minFDE Std Dev: {fdes.std():.2f}"
         mask_result_strs.append(mask_result_str)
         mask_result_latex_str = f"{str(player_mask_config)} & {ades.mean():.2f} & {ades.std():.2f} & " \
                                 f"{fdes.mean():.2f} & {fdes.std():.2f} \\\\"
