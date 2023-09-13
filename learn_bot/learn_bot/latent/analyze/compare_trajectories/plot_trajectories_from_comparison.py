@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from math import ceil
 from pathlib import Path
 from typing import List, Set
 
@@ -54,11 +55,11 @@ def select_trajectories_into_dfs(loaded_model: LoadedModel,
 title_font = ImageFont.truetype("arial.ttf", 25)
 
 
-def plot_trajectory_dfs(trajectory_dfs: List[pd.DataFrame], config: ComparisonConfig, predicted: bool) -> Image:
-
+def plot_trajectory_dfs(trajectory_dfs: List[pd.DataFrame], config: ComparisonConfig, predicted: bool,
+                        max_trajectories: int) -> Image:
     all_player_d2_img_copy = d2_img.copy().convert("RGBA")
     # ground truth has many copies, scale it's color down so brightness comparable
-    color_alpha = 20 #* plot_n_most_similar if predicted else 20
+    color_alpha = 20 * int(ceil(float(max_trajectories) / float(len(trajectory_dfs))))
     ct_color = (bot_ct_color_list[0], bot_ct_color_list[1], bot_ct_color_list[2], color_alpha)
     t_color = (bot_t_color_list[0], bot_t_color_list[1], bot_t_color_list[2], color_alpha)
 
@@ -126,12 +127,13 @@ def plot_trajectory_comparison_heatmaps(similarity_df: pd.DataFrame, predicted_l
     print('loading predicted df')
     predicted_trajectory_dfs = select_trajectories_into_dfs(predicted_loaded_model,
                                                             list(predicted_rounds_for_comparison_heatmap))
-    predicted_image = plot_trajectory_dfs(predicted_trajectory_dfs, config, True)
     print('loading best fit ground truth df')
     best_fit_ground_truth_trajectory_dfs = \
         select_trajectories_into_dfs(ground_truth_loaded_model,
                                      list(best_fit_ground_truth_rounds_for_comparison_heatmap))
-    ground_truth_image = plot_trajectory_dfs(best_fit_ground_truth_trajectory_dfs, config, False)
+    max_trajectories = max(len(predicted_trajectory_dfs), len(best_fit_ground_truth_trajectory_dfs))
+    predicted_image = plot_trajectory_dfs(predicted_trajectory_dfs, config, True, max_trajectories)
+    ground_truth_image = plot_trajectory_dfs(best_fit_ground_truth_trajectory_dfs, config, False, max_trajectories)
 
     combined_image = Image.new('RGB', (predicted_image.width + ground_truth_image.width, predicted_image.height))
     combined_image.paste(predicted_image, (0, 0))
