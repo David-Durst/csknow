@@ -48,7 +48,10 @@ class NavData:
 # 130 units per half second (rounded up), 12.8 ticks per second
 max_speed_per_half_second = 130.
 max_speed_per_second = 250.
-max_run_speed_per_tick = 130. / (12.8 / 2)
+# 130 is rounded up speed for half second, mul by 2 to sacle to full second, divide by 12.8 as 12.8 ticks per second
+# (128 tick server, decimated to 1/10th rate in data set) and jumping by 6 ticks at a time to approximate half second of movement
+sim_tick_frequency = 6
+max_run_speed_per_sim_tick = 130. * 2. / 12.8 * sim_tick_frequency
 max_jump_height = 65.
 nav_step_size = 10.
 
@@ -117,18 +120,18 @@ def compute_new_pos(input_pos_tensor: torch.Tensor, pred_labels: torch.Tensor, n
         # scaling is for simulator, not model
         unscaled_pos_change = (pos_index * delta_pos_grid_cell_dim)
         pos_change_norm = torch.linalg.vector_norm(unscaled_pos_change, dim=-1, keepdim=True)
-        all_scaled_pos_change = (max_run_speed_per_tick / pos_change_norm) * unscaled_pos_change
+        all_scaled_pos_change = (max_run_speed_per_sim_tick / pos_change_norm) * unscaled_pos_change
         # if norm less than max run speed, don't scale
-        scaled_pos_change = torch.where(pos_change_norm > max_run_speed_per_tick, all_scaled_pos_change,
+        scaled_pos_change = torch.where(pos_change_norm > max_run_speed_per_sim_tick, all_scaled_pos_change,
                                         unscaled_pos_change)
     else:
         delta_pos_with_z = get_delta_pos_from_radial(pred_labels, stature_to_speed)
         # since this is for sim, and simulator steps one tick at a time (rather than 500ms like prediction), rescale it
         unscaled_pos_change = delta_pos_with_z.delta_pos
         pos_change_norm = torch.linalg.vector_norm(unscaled_pos_change, dim=-1, keepdim=True)
-        all_scaled_pos_change = (max_run_speed_per_tick / pos_change_norm) * unscaled_pos_change
+        all_scaled_pos_change = (max_run_speed_per_sim_tick / pos_change_norm) * unscaled_pos_change
         # if norm less than max run speed, don't scale
-        scaled_pos_change = torch.where(pos_change_norm > max_run_speed_per_tick, all_scaled_pos_change,
+        scaled_pos_change = torch.where(pos_change_norm > max_run_speed_per_sim_tick, all_scaled_pos_change,
                                         unscaled_pos_change)
         # z is treated differently as need to look at navmesh
         z_jump_index = delta_pos_with_z.z_jump_index

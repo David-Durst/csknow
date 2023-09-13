@@ -22,13 +22,14 @@ from learn_bot.latent.place_area.column_names import specific_player_place_area_
 from learn_bot.latent.place_area.load_data import LoadDataResult
 from learn_bot.latent.place_area.pos_abs_from_delta_grid_or_radial import NavData
 from learn_bot.latent.place_area.simulator import LoadedModel, RoundLengths, PlayerEnableMask, max_enemies, \
-    build_rollout_and_similarity_tensors, match_round_lengths, step, get_round_lengths, load_data_options
+    build_rollout_and_similarity_tensors, match_round_lengths, step, get_round_lengths, load_data_options, \
+    limit_to_every_nth_row
 from learn_bot.latent.vis.vis import vis
 from learn_bot.libs.io_transforms import CUDA_DEVICE_STR
 
 # this is a open loop version of the simulator for computing metrics based on short time horizons
 
-num_time_steps = 64
+num_time_steps = 11
 
 
 class PlayerMaskConfig(IntEnum):
@@ -349,6 +350,7 @@ vis_player_mask_config = PlayerMaskConfig.CONSTANT_VELOCITY
 if __name__ == "__main__":
     nav_data = NavData(CUDA_DEVICE_STR)
 
+    load_data_options.custom_limit_fn = limit_to_every_nth_row
     load_data_result = LoadDataResult(load_data_options)
     # if manual_data:
     #    all_data_df = load_hdf5_to_pd(manual_latent_team_hdf5_data_path, rows_to_get=[i for i in range(20000)])

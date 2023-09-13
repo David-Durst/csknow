@@ -38,7 +38,7 @@ float_c4_cols = c4_time_left_percent #c4_ticks_since_plant #[c4_distance_to_a_si
 
 test_success_col = 'test success'
 
-hdf5_id_columns = ['id', round_id_column, game_id_column, test_success_col]
+hdf5_id_columns = ['id', tick_id_column, round_id_column, game_id_column, test_success_col]
 
 def get_player_distribution_nearest_place(player_index: int, place_index: int, team_str: str) -> str:
     return "distribution nearest place " + str(place_index) + " " + team_str + " " + str(player_index)

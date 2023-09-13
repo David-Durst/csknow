@@ -16,9 +16,9 @@ from learn_bot.latent.load_model import load_model_file, LoadedModel
 from learn_bot.latent.order.column_names import num_radial_ticks
 from learn_bot.latent.place_area.pos_abs_from_delta_grid_or_radial import delta_pos_grid_num_cells_per_xy_dim, \
     delta_pos_grid_cell_dim, \
-    delta_pos_grid_num_xy_cells_per_z_change, compute_new_pos, NavData
+    delta_pos_grid_num_xy_cells_per_z_change, compute_new_pos, NavData, sim_tick_frequency
 from learn_bot.latent.place_area.load_data import human_latent_team_hdf5_data_path, manual_latent_team_hdf5_data_path, \
-    rollout_latent_team_hdf5_data_path, LoadDataResult, LoadDataOptions
+    rollout_latent_team_hdf5_data_path, LoadDataResult, LoadDataOptions, SimilarityFn
 from learn_bot.latent.train import train_test_split_file_name
 from learn_bot.latent.transformer_nested_hidden_latent_model import *
 from learn_bot.latent.vis.vis import vis
@@ -40,6 +40,15 @@ class RoundLengths:
     round_to_last_alive_index: Dict[int, int]
 
 
+def limit_to_every_nth_row(df: pd.DataFrame):
+    grouped_df = df.groupby([round_id_column]).agg({tick_id_column: 'min'})
+    condition = df[tick_id_column] != df[tick_id_column]
+    for round_id, round_row in grouped_df.iterrows():
+        condition = condition | ((df[round_id_column] == round_id) &
+                                 ((df[tick_id_column] - round_row[tick_id_column]) % sim_tick_frequency == 0))
+    return condition
+
+
 def get_round_lengths(df: pd.DataFrame) -> RoundLengths:
     grouped_df = df.groupby([round_id_column]).agg({tick_id_column: ['count', 'min', 'max'],
                                                     'index': ['count', 'min', 'max']})
@@ -47,7 +56,7 @@ def get_round_lengths(df: pd.DataFrame) -> RoundLengths:
     list_id = 0
     for round_id, round_row in grouped_df[tick_id_column].iterrows():
         result.round_ids.append(round_id)
-        result.round_to_tick_ids[round_id] = range(round_row['min'], round_row['max']+1)
+        result.round_to_tick_ids[round_id] = range(round_row['min'], round_row['max']+1, sim_tick_frequency)
         result.round_to_length[round_id] = len(result.round_to_tick_ids[round_id])
         result.round_id_to_list_id[round_id] = list_id
 
@@ -72,6 +81,7 @@ def get_round_lengths(df: pd.DataFrame) -> RoundLengths:
 def build_rollout_and_similarity_tensors(round_lengths: RoundLengths, dataset: LatentDataset) -> \
         Tuple[torch.Tensor,torch.Tensor]:
     rollout_tensor = torch.zeros([round_lengths.num_rounds * round_lengths.max_length_per_round, dataset.X.shape[1]])
+    print(dataset.X.shape)
 
     rollout_ticks_in_round = flatten_list(
         [[round_index * round_lengths.max_length_per_round + i for i in range(round_lengths.round_to_length[round_id])]
@@ -182,7 +192,9 @@ nav_data = None
 if __name__ == "__main__":
     nav_data = NavData(CUDA_DEVICE_STR)
 
+    load_data_options.custom_limit_fn = limit_to_every_nth_row
     load_data_result = LoadDataResult(load_data_options)
+
     #if manual_data:
     #    all_data_df = load_hdf5_to_pd(manual_latent_team_hdf5_data_path, rows_to_get=[i for i in range(20000)])
     #    #all_data_df = all_data_df[all_data_df['test name'] == b'LearnedGooseToCatScript']

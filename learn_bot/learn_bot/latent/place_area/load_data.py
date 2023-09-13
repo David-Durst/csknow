@@ -52,6 +52,8 @@ class LoadDataOptions:
     train_test_split_file_name: Optional[str] = None
     # custom rollout data
     custom_rollout_extension: Optional[str] = None
+    # custom limit fn to be used for all human data
+    custom_limit_fn: Optional[SimilarityFn] = None
 
 
 
@@ -65,6 +67,7 @@ class LoadDataResult:
         self.diff_train_test = True
         force_test_data = None
         hdf5_sources: List[HDF5SourceOptions] = []
+        custom_limit_fns = []
         duplicate_last_hdf5_equal_to_rest = False
         if load_data_options.use_manual_data:
             self.dataset_comment = just_bot_comment
@@ -134,6 +137,10 @@ class LoadDataResult:
                 self.limit_big_good_rounds_from_small_good_rounds(load_data_options.similarity_dfs[i],
                                                                   load_data_options.small_good_rounds[i],
                                                                   load_data_options.limit_by_similarity, i)
+        if load_data_options.use_all_human_data and load_data_options.custom_limit_fn is not None:
+            for _ in self.multi_hdf5_wrapper.hdf5_wrappers:
+                custom_limit_fns.append(load_data_options.custom_limit_fn)
+            self.limit(custom_limit_fns)
         self.multi_hdf5_wrapper.train_test_split_by_col(force_test_data)
 
     def limit(self, limit_fns: List[Optional[SimilarityFn]]):
