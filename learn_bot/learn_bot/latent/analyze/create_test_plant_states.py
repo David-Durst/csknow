@@ -4,7 +4,7 @@ import pandas as pd
 from learn_bot.latent.analyze.comparison_column_names import all_human_vs_small_human_similarity_hdf5_data_path, \
     all_human_vs_human_28_similarity_hdf5_data_path, small_human_good_rounds, all_human_28_second_filter_good_rounds
 from learn_bot.latent.engagement.column_names import round_id_column, tick_id_column
-from learn_bot.latent.order.column_names import c4_pos_cols
+from learn_bot.latent.order.column_names import c4_pos_cols, team_strs
 from learn_bot.latent.place_area.column_names import specific_player_place_area_columns, get_similarity_column
 from learn_bot.latent.place_area.load_data import LoadDataResult, LoadDataOptions
 from learn_bot.latent.train import train_test_split_file_name
@@ -29,20 +29,30 @@ load_data_options = LoadDataOptions(
 
 hdf5_key_column = 'hdf5 key'
 plant_tick_id_column = 'plant tick id'
+num_ct_alive_column = 'number CT alive'
+num_t_alive_column = 'number CT alive'
 all_test_plant_states_file_name = 'test_plant_states.hdf5'
 push_only_test_plant_states_file_name = 'push_only_test_plant_states.hdf5'
 filter_for_push = True
+filter_for_players_alive = True
 
 def create_test_plant_states():
     load_data_result = LoadDataResult(load_data_options)
 
     cols_to_gets = [round_id_column, tick_id_column] + c4_pos_cols
     alive_cols = []
+    ct_alive_cols = []
+    t_alive_cols = []
 
     for player_place_area_columns in specific_player_place_area_columns:
         cols_to_gets += player_place_area_columns.pos + player_place_area_columns.view_angle + \
                         [player_place_area_columns.alive]
         alive_cols.append(player_place_area_columns.alive)
+        if team_strs[0] in player_place_area_columns.alive:
+            ct_alive_cols.append(player_place_area_columns.alive)
+        else:
+            t_alive_cols.append(player_place_area_columns.alive)
+
 
     test_start_dfs = []
     for hdf5_wrapper in load_data_result.multi_hdf5_wrapper.hdf5_wrappers:
@@ -56,10 +66,16 @@ def create_test_plant_states():
         start_df = df[df[plant_tick_id_column] == df[tick_id_column]]
         if filter_for_push:
             start_df = start_df[start_df[get_similarity_column(0)]]
-        test_start_df = start_df[~start_df[round_id_column].isin(train_test_split.train_group_ids)]
+        test_start_df = start_df[~start_df[round_id_column].isin(train_test_split.train_group_ids)].copy()
+        test_start_df[num_ct_alive_column] = test_start_df[ct_alive_cols].sum(axis=1)
+        test_start_df[num_t_alive_column] = test_start_df[t_alive_cols].sum(axis=1)
+        if filter_for_players_alive:
+            test_start_df = test_start_df[(test_start_df[num_ct_alive_column] <= 4) &
+                                          (test_start_df[num_t_alive_column] <= 3)]
         test_start_dfs.append(test_start_df)
 
     concat_test_start_df = pd.concat(test_start_dfs)
+    concat_test_start_df = concat_test_start_df.sample(frac=1., random_state=42)
 
     # add all the columns that are legacy from old analyses
     concat_test_start_df.loc[:, "round end tick id"] = -1
@@ -79,6 +95,7 @@ def create_test_plant_states():
     test_plant_states_path = \
         load_data_result.multi_hdf5_wrapper.train_test_split_path.parent / test_plant_states_file_name
     save_pd_to_hdf5(test_plant_states_path, concat_test_start_df)
+    print(f"num test rounds {len(concat_test_start_df)}")
 
 
 if __name__ == "__main__":
