@@ -145,7 +145,7 @@ rollout_vs_all_human_config = ComparisonConfig(
 )
 
 rollout_learned_load_data_option = dataclasses.replace(rollout_load_data_option,
-                                                       custom_rollout_extension= "_9_12_23_learned_300_rounds")
+                                                       custom_rollout_extension= "_9_13_23_learned_300_rounds")
 rollout_learned_vs_all_human_config = ComparisonConfig(
     rollout_learned_vs_all_human_similarity_hdf5_data_path,
     rollout_learned_load_data_option,
@@ -157,7 +157,7 @@ rollout_learned_vs_all_human_config = ComparisonConfig(
 )
 
 rollout_handcrafted_load_data_option = dataclasses.replace(rollout_load_data_option,
-                                                       custom_rollout_extension= "_9_12_23_handcrafted_300_rounds")
+                                                       custom_rollout_extension= "_9_13_23_handcrafted_300_rounds")
 rollout_handcrafted_vs_all_human_config = ComparisonConfig(
     rollout_handcrafted_vs_all_human_similarity_hdf5_data_path,
     rollout_handcrafted_load_data_option,
@@ -169,7 +169,7 @@ rollout_handcrafted_vs_all_human_config = ComparisonConfig(
 )
 
 rollout_default_load_data_option = dataclasses.replace(rollout_load_data_option,
-                                                           custom_rollout_extension= "_9_12_23_default_300_rounds")
+                                                           custom_rollout_extension= "_9_13_23_default_300_rounds")
 rollout_default_vs_all_human_config = ComparisonConfig(
     rollout_default_vs_all_human_similarity_hdf5_data_path,
     rollout_default_load_data_option,
