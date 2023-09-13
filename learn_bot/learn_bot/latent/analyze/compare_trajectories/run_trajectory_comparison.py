@@ -7,9 +7,11 @@ import time
 from learn_bot.latent.analyze.compare_trajectories.plot_trajectories_from_comparison import \
     plot_trajectory_comparison_heatmaps
 from learn_bot.latent.analyze.compare_trajectories.process_trajectory_comparison import ComparisonConfig, \
-    plot_trajectory_comparison_histograms, build_predicted_to_ground_truth_dict
+    plot_trajectory_comparison_histograms, build_predicted_to_ground_truth_dict, \
+    filter_similarity_for_first_n_test_rounds
 from learn_bot.latent.engagement.column_names import round_id_column
 from learn_bot.latent.load_model import load_model_file
+from learn_bot.latent.train import train_test_split_file_name
 from learn_bot.latent.vis.vis_two import vis_two
 from learn_bot.latent.place_area.load_data import LoadDataOptions, LoadDataResult
 from learn_bot.libs.hdf5_to_pd import load_hdf5_to_pd
@@ -143,7 +145,7 @@ rollout_vs_all_human_config = ComparisonConfig(
 )
 
 rollout_learned_load_data_option = dataclasses.replace(rollout_load_data_option,
-                                                       custom_rollout_extension= "_9_10_23_durst_learned")
+                                                       custom_rollout_extension= "_9_12_23_learned_300_rounds")
 rollout_learned_vs_all_human_config = ComparisonConfig(
     rollout_learned_vs_all_human_similarity_hdf5_data_path,
     rollout_learned_load_data_option,
@@ -155,7 +157,7 @@ rollout_learned_vs_all_human_config = ComparisonConfig(
 )
 
 rollout_handcrafted_load_data_option = dataclasses.replace(rollout_load_data_option,
-                                                       custom_rollout_extension= "_9_10_23_durst_handcrafted")
+                                                       custom_rollout_extension= "_9_12_23_handcrafted_300_rounds")
 rollout_handcrafted_vs_all_human_config = ComparisonConfig(
     rollout_handcrafted_vs_all_human_similarity_hdf5_data_path,
     rollout_handcrafted_load_data_option,
@@ -167,7 +169,7 @@ rollout_handcrafted_vs_all_human_config = ComparisonConfig(
 )
 
 rollout_default_load_data_option = dataclasses.replace(rollout_load_data_option,
-                                                           custom_rollout_extension= "_9_10_23_default")
+                                                           custom_rollout_extension= "_9_12_23_default_300_rounds")
 rollout_default_vs_all_human_config = ComparisonConfig(
     rollout_default_vs_all_human_similarity_hdf5_data_path,
     rollout_default_load_data_option,
@@ -176,6 +178,42 @@ rollout_default_vs_all_human_config = ComparisonConfig(
     False,
     "rollout_default_vs_all_human_distribution",
     "Rollout Default vs All Human Distribution"
+)
+
+test_all_human_load_data_option = dataclasses.replace(all_human_load_data_option,
+                                                      train_test_split_file_name=train_test_split_file_name)
+
+rollout_all_human_vs_learned_config = ComparisonConfig(
+    rollout_all_human_vs_learned_similarity_hdf5_data_path,
+    test_all_human_load_data_option,
+    rollout_learned_load_data_option,
+    False,
+    False,
+    "rollout_all_human_vs_learned_distribution",
+    "Rollout All Human vs Learned Distribution",
+    True
+)
+
+rollout_all_human_vs_handcrafted_config = ComparisonConfig(
+    rollout_all_human_vs_handcrafted_similarity_hdf5_data_path,
+    test_all_human_load_data_option,
+    rollout_handcrafted_load_data_option,
+    False,
+    False,
+    "rollout_all_human_vs_handcrafted_distribution",
+    "Rollout All Human vs Hand-Crafted Distribution",
+    True
+)
+
+rollout_all_human_vs_default_config = ComparisonConfig(
+    rollout_all_human_vs_default_similarity_hdf5_data_path,
+    test_all_human_load_data_option,
+    rollout_default_load_data_option,
+    False,
+    False,
+    "rollout_all_human_vs_default_distribution",
+    "Rollout All Human vs Default Distribution",
+    True
 )
 
 just_plot_summaries = True
@@ -203,10 +241,20 @@ def compare_trajectories(config_case: int):
         config = rollout_handcrafted_vs_all_human_config
     elif config_case == 9:
         config = rollout_default_vs_all_human_config
+    elif config_case == 10:
+        config = rollout_all_human_vs_learned_config
+    elif config_case == 11:
+        config = rollout_all_human_vs_handcrafted_config
+    elif config_case == 12:
+        config = rollout_all_human_vs_default_config
 
     os.makedirs(similarity_plots_path, exist_ok=True)
     similarity_df = load_hdf5_to_pd(config.similarity_data_path)
     similarity_df = similarity_df[similarity_df[dtw_cost_col] != 0.]
+    # need to load this early for filtering
+    predicted_data = LoadDataResult(config.predicted_load_data_options)
+    if config.limit_predicted_to_first_n_test_rounds:
+        similarity_df = filter_similarity_for_first_n_test_rounds(predicted_data, similarity_df)
     # remove this if later when updated all comparisons
     if config_case == 5:
         similarity_df = similarity_df[(similarity_df[predicted_round_number_col] != similarity_df[best_fit_ground_truth_round_number_col]) |
@@ -230,7 +278,6 @@ def compare_trajectories(config_case: int):
 
     # load data
     start_predicted_load_time = time.perf_counter()
-    predicted_data = LoadDataResult(config.predicted_load_data_options)
     if config.limit_predicted_df_to_bot_good:
         predicted_data.limit([lambda df: df[round_id_column].isin(bot_good_rounds)])
         #predicted_hdf5_wrapper = HDF5Wrapper(config.predicted_data_path, latent_id_cols)

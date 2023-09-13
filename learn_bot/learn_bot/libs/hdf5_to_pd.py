@@ -83,7 +83,7 @@ def load_hdf5_extra_column(hdf5_path: Path, column_name: str) -> np.ndarray:
     return result
 
 
-def save_pd_to_hdf5(hdf5_path: Path, df: pd.DataFrame, extra_df: Optional[pd.DataFrame]):
+def save_pd_to_hdf5(hdf5_path: Path, df: pd.DataFrame, extra_df: Optional[pd.DataFrame] = None):
     hdf5_file = h5py.File(hdf5_path, 'w')
     data_group = hdf5_file.create_group('data')
 

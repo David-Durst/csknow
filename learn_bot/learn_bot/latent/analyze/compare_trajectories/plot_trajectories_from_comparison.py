@@ -18,7 +18,7 @@ from learn_bot.latent.load_model import LoadedModel
 from learn_bot.latent.order.column_names import team_strs
 from learn_bot.latent.place_area.column_names import specific_player_place_area_columns
 
-plot_n_most_similar = 2
+plot_n_most_similar = 1
 
 
 @dataclass(frozen=True, eq=True)
@@ -58,7 +58,7 @@ def plot_trajectory_dfs(trajectory_dfs: List[pd.DataFrame], config: ComparisonCo
 
     all_player_d2_img_copy = d2_img.copy().convert("RGBA")
     # ground truth has many copies, scale it's color down so brightness comparable
-    color_alpha = 20 * plot_n_most_similar if predicted else 20
+    color_alpha = 20 #* plot_n_most_similar if predicted else 20
     ct_color = (bot_ct_color_list[0], bot_ct_color_list[1], bot_ct_color_list[2], color_alpha)
     t_color = (bot_t_color_list[0], bot_t_color_list[1], bot_t_color_list[2], color_alpha)
 

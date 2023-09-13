@@ -10,7 +10,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from learn_bot.latent.analyze.create_test_plant_states import test_plant_states_file_name, load_data_options
+from learn_bot.latent.analyze.create_test_plant_states import load_data_options
 from learn_bot.latent.analyze.humanness_metrics.column_names import *
 from learn_bot.latent.engagement.column_names import round_id_column
 from learn_bot.latent.place_area.column_names import get_similarity_column

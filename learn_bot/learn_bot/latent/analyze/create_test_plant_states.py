@@ -27,13 +27,13 @@ load_data_options = LoadDataOptions(
     train_test_split_file_name=train_test_split_file_name
 )
 
+hdf5_key_column = 'hdf5 key'
 plant_tick_id_column = 'plant tick id'
-test_plant_states_file_name = 'test_plant_states.hdf5'
+all_test_plant_states_file_name = 'test_plant_states.hdf5'
+push_only_test_plant_states_file_name = 'push_only_test_plant_states.hdf5'
 filter_for_push = True
 
 def create_test_plant_states():
-    global test_plant_states_file_name
-
     load_data_result = LoadDataResult(load_data_options)
 
     cols_to_gets = [round_id_column, tick_id_column] + c4_pos_cols
@@ -52,6 +52,7 @@ def create_test_plant_states():
             absolute_to_relative_train_test_key(hdf5_wrapper.hdf5_path)]
         df[plant_tick_id_column] = df.groupby(round_id_column)[tick_id_column].transform('min')
         df[get_similarity_column(0)] = id_df[get_similarity_column(0)]
+        df[hdf5_key_column] = str(absolute_to_relative_train_test_key(hdf5_wrapper.hdf5_path))
         start_df = df[df[plant_tick_id_column] == df[tick_id_column]]
         if filter_for_push:
             start_df = start_df[start_df[get_similarity_column(0)]]
@@ -72,8 +73,9 @@ def create_test_plant_states():
     for alive_col in alive_cols:
         concat_test_start_df.loc[:, alive_col] = concat_test_start_df.loc[:, alive_col].astype('bool')
 
+    test_plant_states_file_name = all_test_plant_states_file_name
     if filter_for_push:
-        test_plant_states_file_name = "push_only_" + test_plant_states_file_name
+        test_plant_states_file_name = push_only_test_plant_states_file_name
     test_plant_states_path = \
         load_data_result.multi_hdf5_wrapper.train_test_split_path.parent / test_plant_states_file_name
     save_pd_to_hdf5(test_plant_states_path, concat_test_start_df)

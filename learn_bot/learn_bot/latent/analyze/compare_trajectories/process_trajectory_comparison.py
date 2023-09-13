@@ -7,8 +7,12 @@ import numpy as np
 from dataclasses import dataclass
 from pathlib import Path
 
-from learn_bot.latent.place_area.load_data import LoadDataOptions
+from learn_bot.latent.analyze.create_test_plant_states import hdf5_key_column, push_only_test_plant_states_file_name
+from learn_bot.latent.engagement.column_names import round_id_column
+from learn_bot.latent.load_model import LoadedModel
+from learn_bot.latent.place_area.load_data import LoadDataOptions, LoadDataResult
 from learn_bot.latent.vis.vis_two import PredictedToGroundTruthDict, PredictedToGroundTruthRoundData
+from learn_bot.libs.hdf5_to_pd import load_hdf5_to_pd
 
 
 @dataclass
@@ -20,6 +24,7 @@ class ComparisonConfig:
     limit_predicted_df_to_human_good: bool
     metric_cost_file_name: str
     metric_cost_title: str
+    limit_predicted_to_first_n_test_rounds: bool = False
 
 
 def generate_bins(min_bin_start: int, max_bin_end: int, bin_width: int) -> List[int]:
@@ -47,6 +52,38 @@ def set_pd_print_options():
     pd.options.display.max_rows = None
     pd.options.display.width = 1000
     pd.set_option('display.float_format', lambda x: '%.2f' % x)
+
+
+def filter_similarity_for_first_n_test_rounds(loaded_data_result: LoadDataResult, similarity_df: pd.DataFrame,
+                                              top_n: int = 300) -> pd.DataFrame:
+    test_plant_states_path = \
+        loaded_data_result.multi_hdf5_wrapper.train_test_split_path.parent / push_only_test_plant_states_file_name
+    test_start_pd = load_hdf5_to_pd(test_plant_states_path).iloc[:top_n]
+
+    # convert keys to partial keys used in similarity_df, get round ids for each hdf5
+    hdf5_partial_key_to_round_ids: Dict[str, List[int]] = {}
+    hdf5_keys_series = test_start_pd[hdf5_key_column].str.decode('utf-8')
+    total_round_ids = 0
+    for hdf5_key in hdf5_keys_series.unique():
+        hdf5_partial_key = str(Path(hdf5_key).name)
+        hdf5_partial_key_to_round_ids[hdf5_partial_key] = \
+            list(test_start_pd[hdf5_keys_series == hdf5_key][round_id_column].unique())
+        total_round_ids += len(hdf5_partial_key_to_round_ids[hdf5_partial_key])
+
+    # build condition on similarity df
+    # start false so can build up ors
+    valid_hdf5_and_round_id_condition = \
+        similarity_df[predicted_trace_batch_col] != similarity_df[predicted_trace_batch_col]
+    predicted_trace_batch_series = similarity_df[predicted_trace_batch_col].str.decode('utf-8')
+    for hdf5_partial_key, round_ids in hdf5_partial_key_to_round_ids.items():
+        valid_hdf5_and_round_id_condition = valid_hdf5_and_round_id_condition | \
+                                            ((predicted_trace_batch_series == hdf5_partial_key) &
+                                             (similarity_df[predicted_round_id_col].isin(round_ids)))
+        #for round_id in round_ids:
+        #    if len(similarity_df[(predicted_trace_batch_series == hdf5_partial_key) & (similarity_df[predicted_round_id_col] == round_id)]) == 0:
+        #        print('test round without match in similarity df')
+
+    return similarity_df[valid_hdf5_and_round_id_condition]
 
 
 def plot_trajectory_comparison_histograms(similarity_df: pd.DataFrame, config: ComparisonConfig,
