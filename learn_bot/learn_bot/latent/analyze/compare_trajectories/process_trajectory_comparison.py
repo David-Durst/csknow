@@ -42,7 +42,7 @@ def percentile_filter_series(data: pd.Series, low_pct_to_remove=0.01, high_pct_t
     q_hi = data.quantile(1. - high_pct_to_remove)
     return data[(data <= q_hi) & (data >= q_low)]
 
-dtw_cost_bins = generate_bins(0, 15000, 1000)
+dtw_cost_bins = generate_bins(0, 8000, 250)
 delta_distance_bins = generate_bins(-20000, 20000, 2500)
 delta_time_bins = generate_bins(-40, 40, 5)
 
@@ -107,7 +107,11 @@ def plot_trajectory_comparison_histograms(similarity_df: pd.DataFrame, config: C
         plot_hist(axs[i, 0], metric_type_similarity_df[dtw_cost_col], dtw_cost_bins)
         axs[i, 0].set_title(metric_type_str + " DTW Cost")
         axs[i, 0].set_ylim(0., 0.6)
-        axs[i, 0].text(5000, 0.4, metric_type_similarity_df[dtw_cost_col].describe().to_string(), family='monospace')
+        dtw_description = metric_type_similarity_df[dtw_cost_col].describe()
+        if 'Slope' in metric_type_str:
+            with open(similarity_plots_path / (config.metric_cost_file_name + '.txt'), 'w') as cost_f:
+                cost_f.write(f"{config.metric_cost_title} & {dtw_description['mean']:.2f} & {dtw_description['std']:.2f} \\\\ \n")
+        axs[i, 0].text(5000, 0.4, dtw_description.to_string(), family='monospace')
         plot_hist(axs[i, 1], metric_type_similarity_df[delta_distance_col], delta_distance_bins)
         axs[i, 1].set_title(metric_type_str + " Delta Distance")
         axs[i, 1].set_ylim(0., 0.6)
@@ -117,6 +121,7 @@ def plot_trajectory_comparison_histograms(similarity_df: pd.DataFrame, config: C
         axs[i, 2].set_ylim(0., 0.6)
         axs[i, 2].text(0, 0.4, metric_type_similarity_df[delta_time_col].describe().to_string(), family='monospace')
     plt.savefig(similarity_plots_path / (config.metric_cost_file_name + '.png'))
+
 
 
 def build_predicted_to_ground_truth_dict(similarity_df: pd.DataFrame) -> PredictedToGroundTruthDict:
