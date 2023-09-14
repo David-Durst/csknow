@@ -428,6 +428,8 @@ def train(train_type: TrainType, multi_hdf5_wrapper: MultiHDF5Wrapper,
     multi_hdf5_wrapper.create_np_arrays(column_transformers)
     train_data = MultipleLatentHDF5Dataset(multi_hdf5_wrapper.train_hdf5_wrappers, column_transformers,
                                            multi_hdf5_wrapper.duplicate_last_hdf5_equal_to_rest)
+    #print(f"size all train data {len(train_data[[i for i in range(len(train_data))]])}")
+    #exit(0)
     test_data = MultipleLatentHDF5Dataset(multi_hdf5_wrapper.test_hdf5_wrappers, column_transformers,
                                           multi_hdf5_wrapper.duplicate_last_hdf5_equal_to_rest)
     batch_size = min(hyperparameter_options.batch_size, min(len(train_data), len(test_data)))
@@ -456,8 +458,8 @@ load_data_options = LoadDataOptions(
     use_synthetic_data=False,
     use_small_human_data=False,
     use_all_human_data=True,
-    add_manual_to_all_human_data=True,
-    limit_manual_data_to_no_enemies_nav=True,
+    add_manual_to_all_human_data=False,
+    limit_manual_data_to_no_enemies_nav=False,
     limit_manual_data_to_only_enemies_no_nav=False,
     #small_good_rounds=[small_human_good_rounds],
     #similarity_dfs=[load_hdf5_to_pd(all_human_vs_small_human_similarity_hdf5_data_path)],
