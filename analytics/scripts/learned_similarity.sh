@@ -20,7 +20,7 @@ cd ${script_dir}/../build
 cmake .. -DCMAKE_BUILD_TYPE=Release
 if make -j; then
     chmod a+x csknow_compare_train_datasets
-    ./csknow_compare_train_datasets ${script_dir}/../rollout_outputs/behaviorTreeTeamFeatureStore_9_14_23_learned_human_only_with_similarity_300_rounds.hdf5 ${script_dir}/../all_train_outputs learned_to_human_trajectorySimilarity.hdf5 0 0
+    ./csknow_compare_train_datasets ${script_dir}/../rollout_outputs/behaviorTreeTeamFeatureStore_9_15_23_learned_human_only_no_similarity_more_nav_300_rounds.hdf5 ${script_dir}/../all_train_outputs learned_to_human_trajectorySimilarity.hdf5 0 0
 
-    ./csknow_compare_train_datasets ${script_dir}/../all_train_outputs ${script_dir}/../rollout_outputs/behaviorTreeTeamFeatureStore_9_14_23_learned_human_only_with_similarity_300_rounds.hdf5 human_to_learned_trajectorySimilarity.hdf5 0 0
+    ./csknow_compare_train_datasets ${script_dir}/../all_train_outputs ${script_dir}/../rollout_outputs/behaviorTreeTeamFeatureStore_9_15_23_learned_human_only_no_similarity_more_nav_300_rounds.hdf5 human_to_learned_trajectorySimilarity.hdf5 0 0
 fi

@@ -1,1 +1,1 @@
-./process_rollout_specific.sh auto0-20230914-232829-649049770-de_dust2-international_house_of_short_people.dem 9_14_23_learned_human_only_with_similarity_300_rounds
+./process_rollout_specific.sh auto0-20230915-065415-293115767-de_dust2-international_house_of_short_people.dem 9_15_23_learned_human_only_no_similarity_more_nav_300_rounds
