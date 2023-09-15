@@ -350,6 +350,18 @@ class TargetAreaData {
 }
 
 let priorFrameShowAllNavs = false
+let removedAreas = new Set([
+    6938, 9026, // these are barrels on A that I get stuck on
+    8251, // this one is under t spawn
+    8631, // this one is on cat next to boxes, weird
+    //4232, 4417, // bad wall and box on long
+    8531, // mid doors ct side
+    8753, 8550, 8574, // b car
+    8594, 8600, 8601, 8602, 8607, // boxes under cat to a
+    8966, 8967, 8970, 8969, 8968, // t spawn
+    //8973 // under hole inside B
+    3973, 3999, 4000, // out of bounds near b tunnels entran
+])
 
 export function drawTick(e: InputEvent) {
     mainCtx.drawImage(minimap,0,0,minimapWidth,minimapHeight,0,0,
@@ -661,6 +673,10 @@ export function drawTick(e: InputEvent) {
         mainCtx.drawImage(cacheGridCanvas, 0, 0);
         // draw fill ins for all areas
         for (let o = 0; (showAllNavs || (drawTarget && targetAreaId != -1)) && o < overlayLabelsRows.length; o++) {
+            // this is area id
+            if (showAllNavs && removedAreas.has(parseInt(overlayLabelsRows[o].otherColumnValues[1]))) {
+                continue
+            }
             if (curOverlay.includes("visible")) {
                 const visDirA = curParser.blobAsMatrixValue(targetAreaIndex, o);
                 const visDirB = curParser.blobAsMatrixValue(o, targetAreaIndex);
@@ -694,7 +710,7 @@ export function drawTick(e: InputEvent) {
                     parseFloat(overlayLabelsRow.otherColumnValues[6]),
                     false);
                 if (showAllNavs) {
-                    cacheTargetCtx.fillStyle = `rgba(0, 255, 0, 0.1)`;
+                    cacheTargetCtx.fillStyle = `rgba(0, 150, 0, 1.0)`;
                 }
                 else {
                     const percentDistance = (valuesForColor[o] - minValueForColor) / (maxValueForColor - minValueForColor);
@@ -703,43 +719,19 @@ export function drawTick(e: InputEvent) {
                 cacheTargetCtx.fillRect(minCoordinate.getCanvasX(), minCoordinate.getCanvasY(),
                     maxCoordinate.getCanvasX() - minCoordinate.getCanvasX(),
                     maxCoordinate.getCanvasY() - minCoordinate.getCanvasY())
+                if (showAllNavs) {
+                    cacheTargetCtx.lineWidth = 1.
+                    cacheTargetCtx.strokeStyle = "orange";
+                    cacheTargetCtx.strokeRect(minCoordinate.getCanvasX(), minCoordinate.getCanvasY(),
+                        maxCoordinate.getCanvasX() - minCoordinate.getCanvasX(),
+                        maxCoordinate.getCanvasY() - minCoordinate.getCanvasY())
+                }
             }
         }
         if (drawTarget && targetAreaId != -1) {
             cacheTargetCtx.fillStyle = 'green'
             cacheTargetCtx.font = targetFontSize.toString() + "px Tahoma"
             cacheTargetCtx.fillText(targetAreaId.toString() + "," + targetPlaceName, targetX, targetY - 5.)
-        }
-
-        // draw overlay late if show all navs so over boxes interiors
-        for (let o = 0; showAllNavs && (drawOutlines || drawTarget) && o < overlayLabelsRows.length; o++) {
-            const overlayRow = overlayRows[o]
-            const overlayLabelsRow = overlayLabelsRows[o]
-            const minCoordinate = new MapCoordinate(
-                parseFloat(overlayLabelsRow.otherColumnValues[2]),
-                parseFloat(overlayLabelsRow.otherColumnValues[3]),
-                false);
-            const maxCoordinate = new MapCoordinate(
-                parseFloat(overlayLabelsRow.otherColumnValues[5]),
-                parseFloat(overlayLabelsRow.otherColumnValues[6]),
-                false);
-            const avgX = (minCoordinate.getCanvasX() + maxCoordinate.getCanvasX()) / 2
-            const avgY = (minCoordinate.getCanvasY() + maxCoordinate.getCanvasY()) / 2
-            const avgZ = (parseFloat(overlayLabelsRow.otherColumnValues[4]) + parseFloat(overlayLabelsRow.otherColumnValues[7])) / 2;
-            if (lastMousePosition.x >= minCoordinate.x &&
-                lastMousePosition.x <= maxCoordinate.x &&
-                lastMousePosition.y >= minCoordinate.y &&
-                lastMousePosition.y <= maxCoordinate.y) {
-                possibleTargetAreas.push(new TargetAreaData(o, avgX, avgY, avgZ, overlayRow, overlayLabelsRow,
-                    minCoordinate, maxCoordinate))
-            }
-            if (drawOutlines) {
-                cacheGridCtx.lineWidth = 5.
-                cacheGridCtx.strokeStyle = "black";
-                cacheGridCtx.strokeRect(minCoordinate.getCanvasX(), minCoordinate.getCanvasY(),
-                    maxCoordinate.getCanvasX() - minCoordinate.getCanvasX(),
-                    maxCoordinate.getCanvasY() - minCoordinate.getCanvasY())
-            }
         }
 
         mainCtx.drawImage(cacheTargetCanvas, 0, 0);
