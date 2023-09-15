@@ -51,27 +51,27 @@ using std::string;
 using std::reference_wrapper;
 
 int main(int argc, char * argv[]) {
-    if (argc != 5 && argc != 6) {
-        std::cout << "please call this code 5 arguments: " << std::endl;
+    if (argc != 4) {
+        std::cout << "please call this code with 3 arguments: " << std::endl;
         std::cout << "1. path/to/local_data" << std::endl;
         std::cout << "2. path/to/nav_meshes" << std::endl;
         std::cout << "3. run server (y or n)" << std::endl;
-        std::cout << "4. path/to/output/dir" << std::endl;
-        std::cout << "5. path/to/models/dir (optional)" << std::endl;
         return 1;
     }
 
     string dataPath = argv[1];
     string navPath = argv[2];
     bool runServer = argv[3][0] == 'y';
+    /*
     string outputDir = argv[4];
     bool haveModels = false;
     string modelsDir = "";
-    if (argc == 6) {
+    if (argc == 5) {
         haveModels = true;
-        modelsDir = argv[5];
+        modelsDir = argv[4];
     }
     (void) haveModels;
+     */
 
     std::map<std::string, nav_mesh::nav_file> map_navs;
     //Figure out from where to where you'd like to find a path
@@ -96,7 +96,7 @@ int main(int argc, char * argv[]) {
             map_visPoints.at(mapName).load(navPath, mapName, false, map_navs[mapName], true);
         }
     }
-    csknow::navigation::testNavImages(map_visPoints.at("de_dust2"), outputDir);
+    //csknow::navigation::testNavImages(map_visPoints.at("de_dust2"), outputDir);
 
     auto t = std::time(nullptr);
     auto tm = *std::localtime(&t);
@@ -521,7 +521,7 @@ int main(int argc, char * argv[]) {
         //fsOverride.close();
     }
      */
-    d2DistanceToPlacesResult.writeAreasPerPlace(outputDir + "/" + "areas_per_place.csv");
+    //d2DistanceToPlacesResult.writeAreasPerPlace(outputDir + "/" + "areas_per_place.csv");
 
     //vector<string> queryNames = {"games", "rounds", "players", "ticks", "playerAtTick", "aCatClusterSequence", "aCatClusters", "midCTClusterSequence", "midTClusters", "lookers"};
     map<string, reference_wrapper<QueryResult>> queries {

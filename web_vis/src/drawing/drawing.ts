@@ -59,7 +59,9 @@ let playerCopyText: HTMLInputElement = null;
 let configClientButton: HTMLAnchorElement = null;
 let toggleCanvasSizeButton: HTMLButtonElement = null;
 let togglePlayersButton: HTMLButtonElement = null;
+let showAllNavsButton: HTMLButtonElement = null;
 let showPlayers = true;
+let showAllNavs = false;
 let minZ = 0;
 let maxZ = 0;
 const black = "rgba(0,0,0,1.0)";
@@ -109,6 +111,17 @@ export function togglePlayers() {
         togglePlayersButton.innerText = "hide players"
     }
     showPlayers = !showPlayers
+    drawTick(null)
+}
+
+export function toggleAllNavs() {
+    if (showAllNavs) {
+        showAllNavsButton.innerText = "show all navs"
+    }
+    else {
+        showAllNavsButton.innerText = "show selected navs"
+    }
+    showAllNavs = !showAllNavs
     drawTick(null)
 }
 
@@ -336,6 +349,8 @@ class TargetAreaData {
     }
 }
 
+let priorFrameShowAllNavs = false
+
 export function drawTick(e: InputEvent) {
     mainCtx.drawImage(minimap,0,0,minimapWidth,minimapHeight,0,0,
         canvasWidth,canvasHeight);
@@ -481,9 +496,10 @@ export function drawTick(e: InputEvent) {
         lastMousePosition.getCanvasY() > 0. &&
         lastMousePosition.getCanvasY() < mainCanvas.height &&
         controlPressed;
-    if (drawOutlines || drawTarget) {
+    if (drawOutlines || drawTarget || showAllNavs || priorFrameShowAllNavs) {
         cacheTargetCtx.clearRect(0, 0, cacheTargetCanvas.width, cacheTargetCanvas.height)
     }
+    priorFrameShowAllNavs = showAllNavs
     if ((curOverlay.includes("mesh") || curOverlay.includes("cells")) && !curOverlay.includes("visible")) {
         mainCtx.fillStyle = green
         const overlayRows = filteredData.overlays.get(curOverlay)
@@ -590,7 +606,7 @@ export function drawTick(e: InputEvent) {
         let targetX = -1
         let targetY = -1
         let targetFontSize = -1
-        for (let o = 0; (drawOutlines || drawTarget) && o < overlayLabelsRows.length; o++) {
+        for (let o = 0; !showAllNavs && (drawOutlines || drawTarget) && o < overlayLabelsRows.length; o++) {
             const overlayRow = overlayRows[o]
             const overlayLabelsRow = overlayLabelsRows[o]
             const minCoordinate = new MapCoordinate(
@@ -644,7 +660,7 @@ export function drawTick(e: InputEvent) {
 
         mainCtx.drawImage(cacheGridCanvas, 0, 0);
         // draw fill ins for all areas
-        for (let o = 0; drawTarget && targetAreaId != -1 && o < overlayLabelsRows.length; o++) {
+        for (let o = 0; (showAllNavs || (drawTarget && targetAreaId != -1)) && o < overlayLabelsRows.length; o++) {
             if (curOverlay.includes("visible")) {
                 const visDirA = curParser.blobAsMatrixValue(targetAreaIndex, o);
                 const visDirB = curParser.blobAsMatrixValue(o, targetAreaIndex);
@@ -677,8 +693,13 @@ export function drawTick(e: InputEvent) {
                     parseFloat(overlayLabelsRow.otherColumnValues[5]),
                     parseFloat(overlayLabelsRow.otherColumnValues[6]),
                     false);
-                const percentDistance = (valuesForColor[o] - minValueForColor) / (maxValueForColor - minValueForColor);
-                cacheTargetCtx.fillStyle = `rgba(${percentDistance * 255}, 0, ${(1 - percentDistance) * 255}, 0.5)`;
+                if (showAllNavs) {
+                    cacheTargetCtx.fillStyle = `rgba(0, 255, 0, 1.0)`;
+                }
+                else {
+                    const percentDistance = (valuesForColor[o] - minValueForColor) / (maxValueForColor - minValueForColor);
+                    cacheTargetCtx.fillStyle = `rgba(${percentDistance * 255}, 0, ${(1 - percentDistance) * 255}, 0.5)`;
+                }
                 cacheTargetCtx.fillRect(minCoordinate.getCanvasX(), minCoordinate.getCanvasY(),
                     maxCoordinate.getCanvasX() - minCoordinate.getCanvasX(),
                     maxCoordinate.getCanvasY() - minCoordinate.getCanvasY())
@@ -689,6 +710,38 @@ export function drawTick(e: InputEvent) {
             cacheTargetCtx.font = targetFontSize.toString() + "px Tahoma"
             cacheTargetCtx.fillText(targetAreaId.toString() + "," + targetPlaceName, targetX, targetY - 5.)
         }
+
+        // draw overlay late if show all navs so over boxes interiors
+        for (let o = 0; false && showAllNavs && (drawOutlines || drawTarget) && o < overlayLabelsRows.length; o++) {
+            const overlayRow = overlayRows[o]
+            const overlayLabelsRow = overlayLabelsRows[o]
+            const minCoordinate = new MapCoordinate(
+                parseFloat(overlayLabelsRow.otherColumnValues[2]),
+                parseFloat(overlayLabelsRow.otherColumnValues[3]),
+                false);
+            const maxCoordinate = new MapCoordinate(
+                parseFloat(overlayLabelsRow.otherColumnValues[5]),
+                parseFloat(overlayLabelsRow.otherColumnValues[6]),
+                false);
+            const avgX = (minCoordinate.getCanvasX() + maxCoordinate.getCanvasX()) / 2
+            const avgY = (minCoordinate.getCanvasY() + maxCoordinate.getCanvasY()) / 2
+            const avgZ = (parseFloat(overlayLabelsRow.otherColumnValues[4]) + parseFloat(overlayLabelsRow.otherColumnValues[7])) / 2;
+            if (lastMousePosition.x >= minCoordinate.x &&
+                lastMousePosition.x <= maxCoordinate.x &&
+                lastMousePosition.y >= minCoordinate.y &&
+                lastMousePosition.y <= maxCoordinate.y) {
+                possibleTargetAreas.push(new TargetAreaData(o, avgX, avgY, avgZ, overlayRow, overlayLabelsRow,
+                    minCoordinate, maxCoordinate))
+            }
+            if (drawOutlines) {
+                cacheGridCtx.lineWidth = 1.
+                cacheGridCtx.strokeStyle = "orange";
+                cacheGridCtx.strokeRect(minCoordinate.getCanvasX(), minCoordinate.getCanvasY(),
+                    maxCoordinate.getCanvasX() - minCoordinate.getCanvasX(),
+                    maxCoordinate.getCanvasY() - minCoordinate.getCanvasY())
+            }
+        }
+
         mainCtx.drawImage(cacheTargetCanvas, 0, 0);
     }
     else if (curOverlay.includes("trajectory")) {
@@ -793,6 +846,8 @@ export function setupCanvas() {
     toggleCanvasSizeButton.addEventListener("click", toggleCanvasSize)
     togglePlayersButton = document.querySelector<HTMLButtonElement>("#players_toggle")
     togglePlayersButton.addEventListener("click", togglePlayers)
+    showAllNavsButton = document.querySelector<HTMLButtonElement>("#show_all_navs")
+    showAllNavsButton.addEventListener("click", toggleAllNavs)
     mainCanvas.addEventListener("mousemove", trackMouse)
     mainCanvas.addEventListener("mousedown", startingRegionFilter)
     mainCanvas.addEventListener("mouseup", finishedRegionFilter)
