@@ -674,9 +674,9 @@ export function drawTick(e: InputEvent) {
         // draw fill ins for all areas
         for (let o = 0; (showAllNavs || (drawTarget && targetAreaId != -1)) && o < overlayLabelsRows.length; o++) {
             // this is area id
-             (showAllNavs && removedAreas.has(parseInt(overlayLabelsRows[o].otherColumnValues[1]))) {
-                 continue
-             }
+            if (showAllNavs && removedAreas.has(parseInt(overlayLabelsRows[o].otherColumnValues[1]))) {
+                continue
+            }
 
             if (curOverlay.includes("visible")) {
                 const visDirA = curParser.blobAsMatrixValue(targetAreaIndex, o);
