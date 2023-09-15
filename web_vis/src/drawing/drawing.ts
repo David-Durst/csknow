@@ -484,7 +484,7 @@ export function drawTick(e: InputEvent) {
     // if not already cached for the cur overlay
     // draw all area outlines and compute target area
     let drawOutlines = false
-    if (lastCacheOverlay == null || lastCacheOverlay != curOverlay) {
+    if (lastCacheOverlay == null || lastCacheOverlay != curOverlay || showAllNavs || priorFrameShowAllNavs) {
         lastCacheOverlay = curOverlay
         drawOutlines = true
         cacheGridCtx.clearRect(0, 0, cacheGridCanvas.width, cacheGridCanvas.height)
@@ -694,7 +694,7 @@ export function drawTick(e: InputEvent) {
                     parseFloat(overlayLabelsRow.otherColumnValues[6]),
                     false);
                 if (showAllNavs) {
-                    cacheTargetCtx.fillStyle = `rgba(0, 255, 0, 1.0)`;
+                    cacheTargetCtx.fillStyle = `rgba(0, 255, 0, 0.1)`;
                 }
                 else {
                     const percentDistance = (valuesForColor[o] - minValueForColor) / (maxValueForColor - minValueForColor);
@@ -712,7 +712,7 @@ export function drawTick(e: InputEvent) {
         }
 
         // draw overlay late if show all navs so over boxes interiors
-        for (let o = 0; false && showAllNavs && (drawOutlines || drawTarget) && o < overlayLabelsRows.length; o++) {
+        for (let o = 0; showAllNavs && (drawOutlines || drawTarget) && o < overlayLabelsRows.length; o++) {
             const overlayRow = overlayRows[o]
             const overlayLabelsRow = overlayLabelsRows[o]
             const minCoordinate = new MapCoordinate(
@@ -734,8 +734,8 @@ export function drawTick(e: InputEvent) {
                     minCoordinate, maxCoordinate))
             }
             if (drawOutlines) {
-                cacheGridCtx.lineWidth = 1.
-                cacheGridCtx.strokeStyle = "orange";
+                cacheGridCtx.lineWidth = 5.
+                cacheGridCtx.strokeStyle = "black";
                 cacheGridCtx.strokeRect(minCoordinate.getCanvasX(), minCoordinate.getCanvasY(),
                     maxCoordinate.getCanvasX() - minCoordinate.getCanvasX(),
                     maxCoordinate.getCanvasY() - minCoordinate.getCanvasY())
