@@ -1,4 +1,3 @@
- /home/durst/dev/csknow/analytics/all_train_outputs humanTrajectorySimilarity.hdf5 0 0
 script_dir="tmp"
 #https://www.ostricher.com/2014/10/the-right-way-to-get-the-directory-of-a-bash-script/
 get_script_dir () {
