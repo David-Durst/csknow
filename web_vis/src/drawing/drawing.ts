@@ -350,18 +350,18 @@ class TargetAreaData {
 }
 
 let priorFrameShowAllNavs = false
-let removedAreas = new Set([
-    6938, 9026, // these are barrels on A that I get stuck on
-    8251, // this one is under t spawn
-    8631, // this one is on cat next to boxes, weird
-    //4232, 4417, // bad wall and box on long
-    8531, // mid doors ct side
-    8753, 8550, 8574, // b car
-    8594, 8600, 8601, 8602, 8607, // boxes under cat to a
-    8966, 8967, 8970, 8969, 8968, // t spawn
-    //8973 // under hole inside B
-    3973, 3999, 4000, // out of bounds near b tunnels entran
-])
+ let removedAreas = new Set([
+     6938, 9026, // these are barrels on A that I get stuck on
+     8251, // this one is under t spawn
+     8631, // this one is on cat next to boxes, weird
+     //4232, 4417, // bad wall and box on long
+     8531, // mid doors ct side
+     8753, 8550, 8574, // b car
+     8594, 8600, 8601, 8602, 8607, // boxes under cat to a
+     8966, 8967, 8970, 8969, 8968, // t spawn
+     //8973 // under hole inside B
+     3973, 3999, 4000, // out of bounds near b tunnels entran
+ ])
 
 export function drawTick(e: InputEvent) {
     mainCtx.drawImage(minimap,0,0,minimapWidth,minimapHeight,0,0,
@@ -496,7 +496,7 @@ export function drawTick(e: InputEvent) {
     // if not already cached for the cur overlay
     // draw all area outlines and compute target area
     let drawOutlines = false
-    if (lastCacheOverlay == null || lastCacheOverlay != curOverlay || showAllNavs || priorFrameShowAllNavs) {
+    if (lastCacheOverlay == null || lastCacheOverlay != curOverlay) {
         lastCacheOverlay = curOverlay
         drawOutlines = true
         cacheGridCtx.clearRect(0, 0, cacheGridCanvas.width, cacheGridCanvas.height)
@@ -674,9 +674,10 @@ export function drawTick(e: InputEvent) {
         // draw fill ins for all areas
         for (let o = 0; (showAllNavs || (drawTarget && targetAreaId != -1)) && o < overlayLabelsRows.length; o++) {
             // this is area id
-            if (showAllNavs && removedAreas.has(parseInt(overlayLabelsRows[o].otherColumnValues[1]))) {
-                continue
-            }
+             (showAllNavs && removedAreas.has(parseInt(overlayLabelsRows[o].otherColumnValues[1]))) {
+                 continue
+             }
+
             if (curOverlay.includes("visible")) {
                 const visDirA = curParser.blobAsMatrixValue(targetAreaIndex, o);
                 const visDirB = curParser.blobAsMatrixValue(o, targetAreaIndex);
