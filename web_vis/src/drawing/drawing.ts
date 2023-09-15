@@ -711,7 +711,7 @@ export function drawTick(e: InputEvent) {
                     parseFloat(overlayLabelsRow.otherColumnValues[6]),
                     false);
                 if (showAllNavs) {
-                    cacheTargetCtx.fillStyle = `rgba(0, 150, 0, 1.0)`;
+                    cacheTargetCtx.fillStyle = `rgba(0, 80, 0, 1.0)`;
                 }
                 else {
                     const percentDistance = (valuesForColor[o] - minValueForColor) / (maxValueForColor - minValueForColor);
@@ -721,8 +721,8 @@ export function drawTick(e: InputEvent) {
                     maxCoordinate.getCanvasX() - minCoordinate.getCanvasX(),
                     maxCoordinate.getCanvasY() - minCoordinate.getCanvasY())
                 if (showAllNavs) {
-                    cacheTargetCtx.lineWidth = 1.
-                    cacheTargetCtx.strokeStyle = "orange";
+                    cacheTargetCtx.lineWidth = 3.
+                    cacheTargetCtx.strokeStyle = `rgba(200, 0, 0, 1.0)`;
                     cacheTargetCtx.strokeRect(minCoordinate.getCanvasX(), minCoordinate.getCanvasY(),
                         maxCoordinate.getCanvasX() - minCoordinate.getCanvasX(),
                         maxCoordinate.getCanvasY() - minCoordinate.getCanvasY())
