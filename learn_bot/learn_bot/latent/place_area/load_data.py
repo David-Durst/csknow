@@ -42,7 +42,8 @@ class LoadDataOptions:
     use_all_human_data: bool
     add_manual_to_all_human_data: bool
     limit_manual_data_to_no_enemies_nav: bool
-    # set these if want to filter all human based on small human
+    # set these for similarity columns
+    # set these and limit_by_similarity if want to filter all human based on small human
     small_good_rounds: Optional[List[List[int]]] = None
     similarity_dfs: Optional[List[pd.DataFrame]] = None
     # limit or add feature based on matches
@@ -56,7 +57,8 @@ class LoadDataOptions:
     custom_limit_fn: Optional[SimilarityFn] = None
 
 
-
+# system depends on 2 similarity columns, in future should be more flexible
+default_similarity_columns = 2
 
 class LoadDataResult:
     diff_train_test: bool
@@ -131,12 +133,15 @@ class LoadDataResult:
                                                    force_test_hdf5=force_test_data,
                                                    duplicate_last_hdf5_equal_to_rest=duplicate_last_hdf5_equal_to_rest,
                                                    train_test_split_file_name=load_data_options.train_test_split_file_name)
+        # load similarity
         if not load_data_options.use_synthetic_data and \
                 load_data_options.small_good_rounds is not None and load_data_options.similarity_dfs is not None:
             for i in range(len(load_data_options.similarity_dfs)):
-                self.limit_big_good_rounds_from_small_good_rounds(load_data_options.similarity_dfs[i],
-                                                                  load_data_options.small_good_rounds[i],
-                                                                  load_data_options.limit_by_similarity, i)
+                self.load_similarity_columns_and_limit_from_small_good_rounds(load_data_options.similarity_dfs[i],
+                                                                              load_data_options.small_good_rounds[i],
+                                                                              load_data_options.limit_by_similarity, i)
+        else:
+            self.fill_empty_similarity_columns()
         if load_data_options.use_all_human_data and load_data_options.custom_limit_fn is not None:
             for _ in self.multi_hdf5_wrapper.hdf5_wrappers:
                 custom_limit_fns.append(load_data_options.custom_limit_fn)
@@ -160,8 +165,9 @@ class LoadDataResult:
             self.multi_hdf5_wrapper.hdf5_wrappers[i].add_extra_column(column_name,
                                                                       add_column_fns[i](self.multi_hdf5_wrapper.hdf5_wrappers[i].id_df))
 
-    def limit_big_good_rounds_from_small_good_rounds(self, similarity_df: pd.DataFrame, small_good_rounds: List[int],
-                                                     limit: bool, similarity_index: int):
+    def load_similarity_columns_and_limit_from_small_good_rounds(self, similarity_df: pd.DataFrame,
+                                                                 small_good_rounds: List[int],
+                                                                 limit: bool, similarity_index: int):
         big_good_rounds: Dict[str, List[int]] = {}
         best_match_similarity_df = similarity_df[(similarity_df[best_match_id_col] == 0) &
                                                  (similarity_df[metric_type_col] == b'Slope Constrained DTW')]
@@ -185,3 +191,9 @@ class LoadDataResult:
         self.add_column(similarity_fns, get_similarity_column(similarity_index))
 
 
+    def fill_empty_similarity_columns(self):
+        for similarity_index in range(default_similarity_columns):
+            similarity_fns: List[Optional[SimilarityFn]] = []
+            for i, hdf5_wrapper in enumerate(self.multi_hdf5_wrapper.hdf5_wrappers):
+                similarity_fns.append(lambda df: df[round_id_column] != df[round_id_column])
+            self.add_column(similarity_fns, get_similarity_column(similarity_index))
