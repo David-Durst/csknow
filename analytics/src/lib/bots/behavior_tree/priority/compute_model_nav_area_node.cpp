@@ -247,11 +247,17 @@ namespace csknow::compute_nav_area {
         }
         bool bothTeamsAlive = ctAlive && tAlive;
 
+        // default values are set to invalid where necessary, so this is fine
+        Priority & curPriority = blackboard.playerToPriority[treeThinker.csgoId];
+
         if (blackboard.inAnalysis || !getPlaceAreaModelProbabilities(curClient.team) ||
             !blackboard.inferenceManager.haveValidData() || !bothTeamsAlive) {
+            curPriority.learnedTargetPos = false;
             playerNodeState[treeThinker.csgoId] = NodeState::Failure;
             return playerNodeState[treeThinker.csgoId];
         }
+
+        curPriority.learnedTargetPos = true;
 
         const nav_mesh::nav_area & curArea = blackboard.navFile.get_nearest_area_by_position(
             vec3Conv(state.getClient(treeThinker.csgoId).getFootPosForPlayer()));
@@ -268,8 +274,6 @@ namespace csknow::compute_nav_area {
         }
          */
 
-        // default values are set to invalid where necessary, so this is fine
-        Priority & curPriority = blackboard.playerToPriority[treeThinker.csgoId];
         // if still in engagement, then this isn't reason to switch
         bool wasInEngagement = false;
         if (!inEngagePath) {

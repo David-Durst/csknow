@@ -40,7 +40,11 @@ namespace action {
             }
             else {
                 Vec2 curViewAngle = curClient.getCurrentViewAnglesWithAimpunch();
+                // if learned model, just run it's output, otherwise look at path
                 Vec3 targetVector = curPriority.targetPos - curClient.getFootPosForPlayer();
+                if (!curPriority.learnedTargetPos) {
+                    targetVector = curPath.waypoints[curPath.curWaypoint].pos - curClient.getFootPosForPlayer();
+                }
                 Vec3 finalVector = curPath.waypoints.back().pos - curClient.getFootPosForPlayer();
                 // add eye height since waypoints are on floor and aim is from eye
                 //targetVector.z += EYE_HEIGHT;

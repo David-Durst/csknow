@@ -69,6 +69,7 @@ struct Priority {
     PriorityType priorityType;
     uint32_t targetAreaId;
     Vec3 targetPos;
+    bool learnedTargetPos;
     TargetPlayer targetPlayer;
     NonDangerAimAreaType nonDangerAimAreaType;
     std::optional<AreaId> nonDangerAimArea;
