@@ -59,10 +59,11 @@ def plot_trajectory_dfs(trajectory_dfs: List[pd.DataFrame], config: ComparisonCo
                         max_trajectories: int) -> Image:
     all_player_d2_img_copy = d2_img.copy().convert("RGBA")
     # ground truth has many copies, scale it's color down so brightness comparable
-    color_alpha = 20 * int(ceil(float(max_trajectories) / float(len(trajectory_dfs))))
+    color_alpha = int(ceil(20 * float(max_trajectories) / float(len(trajectory_dfs))))
     ct_color = (bot_ct_color_list[0], bot_ct_color_list[1], bot_ct_color_list[2], color_alpha)
     t_color = (bot_t_color_list[0], bot_t_color_list[1], bot_t_color_list[2], color_alpha)
 
+    num_points = 0
     for trajectory_df in trajectory_dfs:
         # since this was split with : rather than _, need to remove last _
         for player_place_area_columns in specific_player_place_area_columns:
@@ -74,6 +75,7 @@ def plot_trajectory_dfs(trajectory_dfs: List[pd.DataFrame], config: ComparisonCo
             player_canvas_x_coords, player_canvas_y_coords = \
                 convert_to_canvas_coordinates(player_x_coords, player_y_coords)
             player_xy_coords = list(zip(list(player_canvas_x_coords), list(player_canvas_y_coords)))
+            num_points += len(player_x_coords)
 
             cur_player_d2_overlay_im = Image.new("RGBA", all_player_d2_img_copy.size, (255, 255, 255, 0))
             cur_player_d2_drw = ImageDraw.Draw(cur_player_d2_overlay_im)
@@ -91,6 +93,8 @@ def plot_trajectory_dfs(trajectory_dfs: List[pd.DataFrame], config: ComparisonCo
                 fill_color = t_color
             cur_player_d2_drw.line(xy=player_xy_coords, fill=fill_color, width=5)
             all_player_d2_img_copy.alpha_composite(cur_player_d2_overlay_im)
+
+    print(f"num trajectories in plot {len(trajectory_dfs)}, alpha {color_alpha}, num points {num_points}")
 
     return all_player_d2_img_copy
 
