@@ -60,7 +60,7 @@ int main(int argc, char * argv[]) {
 
     uint64_t numFailures = 0;
     Tree tree(modelsDir);
-    //std::thread filterReceiver(&Tree::readFilterNames, &tree);
+    std::thread filterReceiver(&Tree::readFilterNames, &tree);
 
     bool finishedTests = false;
     csknow::plant_states::PlantStatesResult plantStatesResult;

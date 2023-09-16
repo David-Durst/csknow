@@ -90,8 +90,10 @@ namespace csknow::compute_nav_area {
             }
         }
          */
+        /*
         curPriority.targetPos = vec3tConv(blackboard.navFile.get_nearest_point_in_area(
                 vec3Conv(curPriority.targetPos), blackboard.navFile.get_area_by_id_fast(curPriority.targetAreaId)));
+                */
 
         modelNavData.nextArea = curPriority.targetAreaId;
         return desiredPos;

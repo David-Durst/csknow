@@ -40,10 +40,10 @@ namespace action {
             }
             else {
                 Vec2 curViewAngle = curClient.getCurrentViewAnglesWithAimpunch();
-                Vec3 targetVector = curPath.waypoints[curPath.curWaypoint].pos - curClient.getEyePosForPlayer();
+                Vec3 targetVector = curPriority.targetPos - curClient.getFootPosForPlayer();
                 Vec3 finalVector = curPath.waypoints.back().pos - curClient.getFootPosForPlayer();
                 // add eye height since waypoints are on floor and aim is from eye
-                targetVector.z += EYE_HEIGHT;
+                //targetVector.z += EYE_HEIGHT;
                 Vec2 targetViewAngle = vectorAngles(targetVector);
                 targetViewAngle.makePitchNeg90To90();
 
