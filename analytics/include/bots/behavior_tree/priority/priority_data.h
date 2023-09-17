@@ -70,6 +70,7 @@ struct Priority {
     uint32_t targetAreaId;
     Vec3 targetPos;
     bool learnedTargetPos;
+    std::optional<bool> directPathToLearnedTargetPos;
     TargetPlayer targetPlayer;
     NonDangerAimAreaType nonDangerAimAreaType;
     std::optional<AreaId> nonDangerAimArea;

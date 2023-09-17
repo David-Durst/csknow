@@ -42,7 +42,8 @@ namespace action {
                 Vec2 curViewAngle = curClient.getCurrentViewAnglesWithAimpunch();
                 // if learned model, just run it's output, otherwise look at path
                 Vec3 targetVector = curPriority.targetPos - curClient.getFootPosForPlayer();
-                if (!curPriority.learnedTargetPos) {
+                if (!curPriority.learnedTargetPos ||
+                    !(curPriority.directPathToLearnedTargetPos && curPriority.directPathToLearnedTargetPos.value())) {
                     targetVector = curPath.waypoints[curPath.curWaypoint].pos - curClient.getFootPosForPlayer();
                 }
                 Vec3 finalVector = curPath.waypoints.back().pos - curClient.getFootPosForPlayer();
