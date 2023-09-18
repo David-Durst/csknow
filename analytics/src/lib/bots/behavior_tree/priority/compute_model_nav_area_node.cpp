@@ -105,7 +105,7 @@ namespace csknow::compute_nav_area {
     // 11 blend points as first one will be starting point. want 10 points over entire length
     constexpr int num_blend_points = 11;
 
-    void ComputeModelNavAreaNode::checkClearPathToTargetPos(const ServerState::Client & curClient,
+    bool ComputeModelNavAreaNode::checkClearPathToTargetPos(const ServerState::Client & curClient,
                                                             Priority & curPriority) {
         AreaId lastAreaId = INVALID_ID;
         // for each sample, verify that can walk from prior sample to next one
@@ -164,7 +164,7 @@ namespace csknow::compute_nav_area {
                 if (badStartIds.count(startAreaId) && badEndIds.count(endAreaId)) {
                     std::cout << "more weird" << std::endl;
                 }
-                return;
+                return false;
             }
             if (lastAreaId == 8107 && (curAreaId == 4138 || curAreaId == 4137 || curAreaId == 1414 || curAreaId == 7581)) {
                 std::cout << "bad" << std::endl;
@@ -177,6 +177,7 @@ namespace csknow::compute_nav_area {
             std::cout << "another bad" << std::endl;
         }
         curPriority.directPathToLearnedTargetPos = true;
+        return true;
     }
 
     void ComputeModelNavAreaNode::computeDeltaPosProbabilistic(const ServerState & state, Priority & curPriority,
@@ -202,48 +203,57 @@ namespace csknow::compute_nav_area {
         //if (curPriority.directPathToLearnedTargetPos) {
         //    checkClearPathToTargetPos(curClient, curPriority);
         //}
-        size_t deltaPosOption = 0;
-        // / *
-        bool setDeltaPosOption = false;
-        double probSample = blackboard.aggressionDis(blackboard.gen);
-        double weightSoFar = 0.;
-        modelNavData.deltaPosProbs.clear();
-        for (size_t i = 0; i < probabilities.size(); i++) {
-            weightSoFar += probabilities[i];
-            modelNavData.deltaPosProbs.push_back(probabilities[i]);
-            if (probSample < weightSoFar && !setDeltaPosOption) {
-                deltaPosOption = i;
-                setDeltaPosOption = true;
+        set<int> removedPosIndices;
+        double removedWeight = 0.;
+        do {
+            size_t deltaPosOption = 0;
+            // / *
+            bool setDeltaPosOption = false;
+            double probSample = blackboard.aggressionDis(blackboard.gen) * (1.0 - removedWeight);
+            double weightSoFar = 0.;
+            modelNavData.deltaPosProbs.clear();
+            for (size_t i = 0; i < probabilities.size(); i++) {
+                if (removedPosIndices.count(i)) {
+                    continue;
+                }
+                weightSoFar += probabilities[i];
+                modelNavData.deltaPosProbs.push_back(probabilities[i]);
+                if (probSample < weightSoFar && !setDeltaPosOption) {
+                    deltaPosOption = i;
+                    setDeltaPosOption = true;
+                    removedWeight += probabilities[i];
+                    removedPosIndices.insert(i);
+                }
             }
-        }
-        // * /
-        /*
-        double maxProb = -1.;
-        modelNavData.deltaPosProbs.clear();
-        for (size_t i = 0; i < probabilities.size(); i++) {
-            modelNavData.deltaPosProbs.push_back(probabilities[i]);
-            if (probabilities[i] > maxProb) {
-                deltaPosOption = i;
-                maxProb = probabilities[i];
+            // * /
+            /*
+            double maxProb = -1.;
+            modelNavData.deltaPosProbs.clear();
+            for (size_t i = 0; i < probabilities.size(); i++) {
+                modelNavData.deltaPosProbs.push_back(probabilities[i]);
+                if (probabilities[i] > maxProb) {
+                    deltaPosOption = i;
+                    maxProb = probabilities[i];
+                }
             }
-        }
-        */
-        modelNavData.radialVelIndex = deltaPosOption;
-        /*
-        if (modelNavData.radialVelIndex == 64 || modelNavData.radialVelIndex == 67 || modelNavData.radialVelIndex == 70 || modelNavData.radialVelIndex == 73 || modelNavData.radialVelIndex == 76 || modelNavData.radialVelIndex == 79 || modelNavData.radialVelIndex == 82) {
-            std::cout << "hi" << std::endl;
-        }
-         */
-        csknow::weapon_speed::MovementStatus movementStatus(static_cast<EngineWeaponId>(curClient.currentWeaponId),
-                                                            curClient.isScoped, modelNavData.radialVelIndex);
-        modelNavData.deltaXVal = movementStatus.vel.x;
-        modelNavData.deltaYVal = movementStatus.vel.y;
-        modelNavData.deltaZVal = movementStatus.zBin;
-        curPriority.moveOptions.walk = movementStatus.statureOption == weapon_speed::StatureOptions::Walking;
-        curPriority.moveOptions.crouch = movementStatus.statureOption == weapon_speed::StatureOptions::Ducking;
+            */
+            modelNavData.radialVelIndex = deltaPosOption;
+            /*
+            if (modelNavData.radialVelIndex == 64 || modelNavData.radialVelIndex == 67 || modelNavData.radialVelIndex == 70 || modelNavData.radialVelIndex == 73 || modelNavData.radialVelIndex == 76 || modelNavData.radialVelIndex == 79 || modelNavData.radialVelIndex == 82) {
+                std::cout << "hi" << std::endl;
+            }
+             */
+            csknow::weapon_speed::MovementStatus movementStatus(static_cast<EngineWeaponId>(curClient.currentWeaponId),
+                                                                curClient.isScoped, modelNavData.radialVelIndex);
+            modelNavData.deltaXVal = movementStatus.vel.x;
+            modelNavData.deltaYVal = movementStatus.vel.y;
+            modelNavData.deltaZVal = movementStatus.zBin;
+            curPriority.moveOptions.walk = movementStatus.statureOption == weapon_speed::StatureOptions::Walking;
+            curPriority.moveOptions.crouch = movementStatus.statureOption == weapon_speed::StatureOptions::Ducking;
 
-        tryDeltaPosTargetPos(state, curClient, curPriority, modelNavData);
-        checkClearPathToTargetPos(curClient, curPriority);
+            tryDeltaPosTargetPos(state, curClient, curPriority, modelNavData);
+        }
+        while (!checkClearPathToTargetPos(curClient, curPriority));
 
         /*
         // this triggers is in b and model never seen defuse (so trying to go away) but c4 active so go wrong way
