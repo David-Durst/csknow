@@ -202,49 +202,47 @@ namespace csknow::compute_nav_area {
         //if (curPriority.directPathToLearnedTargetPos) {
         //    checkClearPathToTargetPos(curClient, curPriority);
         //}
-        if (true || !curPriority.directPathToLearnedTargetPos || curPriority.directPathToLearnedTargetPos.value()) {
-            size_t deltaPosOption = 0;
-            // / *
-            bool setDeltaPosOption = false;
-            double probSample = blackboard.aggressionDis(blackboard.gen);
-            double weightSoFar = 0.;
-            modelNavData.deltaPosProbs.clear();
-            for (size_t i = 0; i < probabilities.size(); i++) {
-                weightSoFar += probabilities[i];
-                modelNavData.deltaPosProbs.push_back(probabilities[i]);
-                if (probSample < weightSoFar && !setDeltaPosOption) {
-                    deltaPosOption = i;
-                    setDeltaPosOption = true;
-                }
+        size_t deltaPosOption = 0;
+        // / *
+        bool setDeltaPosOption = false;
+        double probSample = blackboard.aggressionDis(blackboard.gen);
+        double weightSoFar = 0.;
+        modelNavData.deltaPosProbs.clear();
+        for (size_t i = 0; i < probabilities.size(); i++) {
+            weightSoFar += probabilities[i];
+            modelNavData.deltaPosProbs.push_back(probabilities[i]);
+            if (probSample < weightSoFar && !setDeltaPosOption) {
+                deltaPosOption = i;
+                setDeltaPosOption = true;
             }
-            // * /
-            /*
-            double maxProb = -1.;
-            modelNavData.deltaPosProbs.clear();
-            for (size_t i = 0; i < probabilities.size(); i++) {
-                modelNavData.deltaPosProbs.push_back(probabilities[i]);
-                if (probabilities[i] > maxProb) {
-                    deltaPosOption = i;
-                    maxProb = probabilities[i];
-                }
-            }
-            */
-            modelNavData.radialVelIndex = deltaPosOption;
-            /*
-            if (modelNavData.radialVelIndex == 64 || modelNavData.radialVelIndex == 67 || modelNavData.radialVelIndex == 70 || modelNavData.radialVelIndex == 73 || modelNavData.radialVelIndex == 76 || modelNavData.radialVelIndex == 79 || modelNavData.radialVelIndex == 82) {
-                std::cout << "hi" << std::endl;
-            }
-             */
-            csknow::weapon_speed::MovementStatus movementStatus(static_cast<EngineWeaponId>(curClient.currentWeaponId),
-                                                                curClient.isScoped, modelNavData.radialVelIndex);
-            modelNavData.deltaXVal = movementStatus.vel.x;
-            modelNavData.deltaYVal = movementStatus.vel.y;
-            modelNavData.deltaZVal = movementStatus.zBin;
-            curPriority.moveOptions.walk = movementStatus.statureOption == weapon_speed::StatureOptions::Walking;
-            curPriority.moveOptions.crouch = movementStatus.statureOption == weapon_speed::StatureOptions::Ducking;
-
-            tryDeltaPosTargetPos(state, curClient, curPriority, modelNavData);
         }
+        // * /
+        /*
+        double maxProb = -1.;
+        modelNavData.deltaPosProbs.clear();
+        for (size_t i = 0; i < probabilities.size(); i++) {
+            modelNavData.deltaPosProbs.push_back(probabilities[i]);
+            if (probabilities[i] > maxProb) {
+                deltaPosOption = i;
+                maxProb = probabilities[i];
+            }
+        }
+        */
+        modelNavData.radialVelIndex = deltaPosOption;
+        /*
+        if (modelNavData.radialVelIndex == 64 || modelNavData.radialVelIndex == 67 || modelNavData.radialVelIndex == 70 || modelNavData.radialVelIndex == 73 || modelNavData.radialVelIndex == 76 || modelNavData.radialVelIndex == 79 || modelNavData.radialVelIndex == 82) {
+            std::cout << "hi" << std::endl;
+        }
+         */
+        csknow::weapon_speed::MovementStatus movementStatus(static_cast<EngineWeaponId>(curClient.currentWeaponId),
+                                                            curClient.isScoped, modelNavData.radialVelIndex);
+        modelNavData.deltaXVal = movementStatus.vel.x;
+        modelNavData.deltaYVal = movementStatus.vel.y;
+        modelNavData.deltaZVal = movementStatus.zBin;
+        curPriority.moveOptions.walk = movementStatus.statureOption == weapon_speed::StatureOptions::Walking;
+        curPriority.moveOptions.crouch = movementStatus.statureOption == weapon_speed::StatureOptions::Ducking;
+
+        tryDeltaPosTargetPos(state, curClient, curPriority, modelNavData);
         checkClearPathToTargetPos(curClient, curPriority);
 
         /*
