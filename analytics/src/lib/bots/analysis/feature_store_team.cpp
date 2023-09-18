@@ -764,7 +764,9 @@ namespace csknow::feature_store {
     void TeamFeatureStoreResult::computeDecreaseDistanceToC4(
             int64_t curTick, CircularBuffer<int64_t> &futureTracker,
             array<csknow::feature_store::TeamFeatureStoreResult::ColumnPlayerData, max_enemies> &columnData,
-            DecreaseTimingOption decreaseTimingOption, const ReachableResult & reachableResult) {
+            DecreaseTimingOption decreaseTimingOption, const ReachableResult & reachableResult,
+            const DistanceToPlacesResult & distanceToPlacesResult,
+            const set<PlaceIndex> & aClosePlaces, const set<PlaceIndex> & bClosePlaces) {
         // skip if not enough history in the future
         if (futureTracker.getCurSize() < 2) {
             return;
@@ -817,8 +819,19 @@ namespace csknow::feature_store {
             double futureDistanceToC4 = reachableResult.getDistance(columnData[playerColumn].areaIndex[futureTickIndex],
                                                                     c4AreaIndex[futureTickIndex]);
 
-            bool decreaseDistance = (curDistanceToC4 < c4_distance_threshold && futureDistanceToC4 < c4_distance_threshold) ||
-                    (futureDistanceToC4 + c4_delta_distance_threshold < curDistanceToC4);
+            // base case for decreasing distance
+            bool decreaseDistance = futureDistanceToC4 + c4_delta_distance_threshold < curDistanceToC4;
+            // other cases for decreasing distance
+            // if on offense,
+            //      if A, on site, or A ramp or extended A
+            PlaceIndex futurePlaceIndex =
+                    distanceToPlacesResult.areaToPlace[columnData[playerColumn].areaIndex[futureTickIndex]];
+            if (c4PlantA[curTick]) {
+                decreaseDistance |= aClosePlaces.count(futurePlaceIndex);
+            }
+            else {
+                decreaseDistance |= bClosePlaces.count(futurePlaceIndex);
+            }
             /*
             if (curTick == 38 && playerColumn == 0) {
                 std::cout << "cur tick " << curTick << ", cur distance " << curDistanceToC4 << ", future tick " << futureTickIndex << ", future distance " << futureDistanceToC4 << std::endl;
@@ -869,7 +882,7 @@ namespace csknow::feature_store {
     void TeamFeatureStoreResult::computeAcausalLabels(const Games & games, const Rounds & rounds,
                                                       const Ticks & ticks,
                                                       const Players & players,
-                                                      const DistanceToPlacesResult &,
+                                                      const DistanceToPlacesResult & distanceToPlacesResult,
                                                       const ReachableResult & reachableResult,
                                                       const nav_mesh::nav_file &,
                                                       const csknow::key_retake_events::KeyRetakeEvents & keyRetakeEvents) {
@@ -883,6 +896,22 @@ namespace csknow::feature_store {
             }
         }
          */
+
+        // places where close enough to objective that alwys counts as decreasing
+        set<PlaceIndex> tAClosePlaces{distanceToPlacesResult.placeNameToIndex.at("BombsiteA"),
+                                       distanceToPlacesResult.placeNameToIndex.at("ARamp"),
+                                       distanceToPlacesResult.placeNameToIndex.at("Ramp"),
+                                       distanceToPlacesResult.placeNameToIndex.at("ExtendedA"),
+                                       distanceToPlacesResult.placeNameToIndex.at("LongA"),
+                                       distanceToPlacesResult.placeNameToIndex.at("Pit"),
+                                       distanceToPlacesResult.placeNameToIndex.at("Side")};
+        set<PlaceIndex> tBClosePlaces{distanceToPlacesResult.placeNameToIndex.at("BombsiteB"),
+                                      distanceToPlacesResult.placeNameToIndex.at("Hole"),
+                                      distanceToPlacesResult.placeNameToIndex.at("BDoors"),
+                                      distanceToPlacesResult.placeNameToIndex.at("UpperTunnel")};
+        set<PlaceIndex> ctAClosePlaces{distanceToPlacesResult.placeNameToIndex.at("BombsiteA")};
+        set<PlaceIndex> ctBClosePlaces{distanceToPlacesResult.placeNameToIndex.at("BombsiteB")};
+
 //#pragma omp parallel for
         for (int64_t roundIndex = 0; roundIndex < rounds.size; roundIndex++) {
             int64_t gameIndex = rounds.gameId[roundIndex];
@@ -957,17 +986,23 @@ namespace csknow::feature_store {
                 computeFutureDeltaPosACausalLabels(tickIndex, bothSidesTicks0_5sFutureTracker,
                                                    bothSidesTicks1_0sFutureTracker, columnTData, tickRates);
                 computeDecreaseDistanceToC4(tickIndex, bothSidesTicks5sFutureTracker, columnCTData,
-                                            DecreaseTimingOption::s5, reachableResult);
+                                            DecreaseTimingOption::s5, reachableResult, distanceToPlacesResult,
+                                            ctAClosePlaces, ctBClosePlaces);
                 computeDecreaseDistanceToC4(tickIndex, bothSidesTicks5sFutureTracker, columnTData,
-                                            DecreaseTimingOption::s5, reachableResult);
+                                            DecreaseTimingOption::s5, reachableResult, distanceToPlacesResult,
+                                            tAClosePlaces, tBClosePlaces);
                 computeDecreaseDistanceToC4(tickIndex, bothSidesTicks10sFutureTracker, columnCTData,
-                                            DecreaseTimingOption::s10, reachableResult);
+                                            DecreaseTimingOption::s10, reachableResult, distanceToPlacesResult,
+                                            ctAClosePlaces, ctBClosePlaces);
                 computeDecreaseDistanceToC4(tickIndex, bothSidesTicks10sFutureTracker, columnTData,
-                                            DecreaseTimingOption::s10, reachableResult);
+                                            DecreaseTimingOption::s10, reachableResult, distanceToPlacesResult,
+                                            tAClosePlaces, tBClosePlaces);
                 computeDecreaseDistanceToC4(tickIndex, bothSidesTicks20sFutureTracker, columnCTData,
-                                            DecreaseTimingOption::s20, reachableResult);
+                                            DecreaseTimingOption::s20, reachableResult, distanceToPlacesResult,
+                                            ctAClosePlaces, ctBClosePlaces);
                 computeDecreaseDistanceToC4(tickIndex, bothSidesTicks20sFutureTracker, columnTData,
-                                            DecreaseTimingOption::s20, reachableResult);
+                                            DecreaseTimingOption::s20, reachableResult, distanceToPlacesResult,
+                                            tAClosePlaces, tBClosePlaces);
                 //computePlaceAreaACausalLabels(ticks, tickRates, tickIndex, ticks15sFutureTracker, columnCTData);
                 //computePlaceAreaACausalLabels(ticks, tickRates, tickIndex, ticks15sFutureTracker, columnTData);
                 /*

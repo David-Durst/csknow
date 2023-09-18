@@ -34,7 +34,7 @@ namespace csknow::feature_store {
     constexpr double seconds_per_c4_timer_bucket = 10.;
     constexpr int num_c4_timer_buckets = 4;
     constexpr float c4_max_time_seconds = 40.;
-    constexpr int every_nth_row = 10;
+    constexpr int every_nth_row = 8;
     const string a_site = "BombsiteA", b_site = "BombsiteB";
     const Vec3 zeroVec = {0., 0., 0.};
     const Vec2 zeroVec2D = {0., 0.};
@@ -189,7 +189,9 @@ namespace csknow::feature_store {
         void computeDecreaseDistanceToC4(int64_t curTick, CircularBuffer<int64_t> & futureTracker,
                                           array<ColumnPlayerData,max_enemies> & columnData,
                                           DecreaseTimingOption decreaseTimingOption,
-                                          const ReachableResult & reachableResult);
+                                          const ReachableResult & reachableResult,
+                                          const DistanceToPlacesResult & distanceToPlacesResult,
+                                          const set<PlaceIndex> & aClosePlaces, const set<PlaceIndex> & bClosePlaces);
         void convertTraceNonReplayNamesToIndices(const Players & players, int64_t roundIndex, int64_t tickIndex);
         void computeAcausalLabels(const Games & games, const Rounds & rounds, const Ticks & ticks,
                                   const Players & players, const DistanceToPlacesResult & distanceToPlacesResult,

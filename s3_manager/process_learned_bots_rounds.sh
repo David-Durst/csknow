@@ -1,6 +1,6 @@
-hdf5_file_name=9_16_23_learned_human_only_no_nav_mesh_300_rounds
+hdf5_file_name=9_17_23_learned_nav_correct_300_rounds
 
-./process_rollout_specific.sh auto0-20230916-005052-1752109183-de_dust2-international_house_of_short_people.dem $hdf5_file_name
+./process_rollout_specific.sh auto0-20230918-012856-1607050854-de_dust2-international_house_of_short_people.dem $hdf5_file_name
 
 script_dir="tmp"
 #https://www.ostricher.com/2014/10/the-right-way-to-get-the-directory-of-a-bash-script/
