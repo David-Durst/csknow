@@ -760,7 +760,7 @@ namespace csknow::feature_store {
         }
     }
 
-    constexpr double c4_distance_threshold = 1000, c4_delta_distance_threshold = 150;
+    constexpr double c4_distance_threshold = 1000, c4_delta_distance_threshold = 250;
     void TeamFeatureStoreResult::computeDecreaseDistanceToC4(
             int64_t curTick, CircularBuffer<int64_t> &futureTracker,
             array<csknow::feature_store::TeamFeatureStoreResult::ColumnPlayerData, max_enemies> &columnData,
@@ -826,12 +826,32 @@ namespace csknow::feature_store {
             //      if A, on site, or A ramp or extended A
             PlaceIndex futurePlaceIndex =
                     distanceToPlacesResult.areaToPlace[columnData[playerColumn].areaIndex[futureTickIndex]];
+            // if cur place is invalid (empty string) find closest valid one
+            if (futurePlaceIndex >= distanceToPlacesResult.numPlaces) {
+                double minPlaceDistance = std::numeric_limits<double>::max();
+                for (PlaceIndex otherPlaceIndex = 0; otherPlaceIndex < distanceToPlacesResult.places.size();
+                    otherPlaceIndex++) {
+                    double newPlaceDistance = distanceToPlacesResult.getClosestDistance(columnData[playerColumn]
+                            .areaIndex[futureTickIndex], otherPlaceIndex);
+                    if (newPlaceDistance < minPlaceDistance) {
+                        futurePlaceIndex = otherPlaceIndex;
+                        minPlaceDistance = newPlaceDistance;
+                    }
+                }
+            }
             if (c4PlantA[curTick]) {
-                decreaseDistance |= aClosePlaces.count(futurePlaceIndex);
+                decreaseDistance = decreaseDistance || aClosePlaces.count(futurePlaceIndex);
             }
             else {
-                decreaseDistance |= bClosePlaces.count(futurePlaceIndex);
+                decreaseDistance = decreaseDistance || bClosePlaces.count(futurePlaceIndex);
             }
+            /*
+            if (curTick == 10152) {
+                std::cout << "ct team " << columnData[playerColumn].ctTeam[curTick] << " player index " << playerColumn;
+                std::cout << ", future distance " << futureDistanceToC4 << " cur distance " << curDistanceToC4 <<
+                    " future place " << distanceToPlacesResult.places[futurePlaceIndex] << std::endl;
+            }
+             */
             /*
             if (curTick == 38 && playerColumn == 0) {
                 std::cout << "cur tick " << curTick << ", cur distance " << curDistanceToC4 << ", future tick " << futureTickIndex << ", future distance " << futureDistanceToC4 << std::endl;
