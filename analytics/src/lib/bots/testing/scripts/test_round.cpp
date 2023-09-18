@@ -96,7 +96,7 @@ vector<Script::Ptr> createRoundScripts(const csknow::plant_states::PlantStatesRe
 
     size_t numRounds = 300;//static_cast<size_t>(plantStatesResult.size);
     for (size_t i = 0; i < numRounds; i++) {
-        result.push_back(make_unique<RoundScript>(plantStatesResult, 12/*205*/, numRounds));
+        result.push_back(make_unique<RoundScript>(plantStatesResult, i/*8*//*12*//*205*/, numRounds));
     }
     if (quitAtEnd) {
         result.push_back(make_unique<QuitScript>());

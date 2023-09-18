@@ -71,6 +71,7 @@ struct Priority {
     Vec3 targetPos;
     bool learnedTargetPos;
     std::optional<bool> directPathToLearnedTargetPos;
+    int numConsecutiveLearnedPathOverrides;
     TargetPlayer targetPlayer;
     NonDangerAimAreaType nonDangerAimAreaType;
     std::optional<AreaId> nonDangerAimArea;
