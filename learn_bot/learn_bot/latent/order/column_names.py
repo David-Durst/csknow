@@ -13,7 +13,7 @@ class C4Status(Enum):
 
 num_c4_status = 3
 num_orders_per_site = 3
-num_prior_ticks = 12
+num_prior_ticks = 24
 num_future_ticks = 2
 num_radial_ticks = num_future_ticks + 1
 num_places = 26
