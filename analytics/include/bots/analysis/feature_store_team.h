@@ -181,8 +181,8 @@ namespace csknow::feature_store {
                                           */
         void computeDeltaPosACausalLabels(int64_t curTick, CircularBuffer<int64_t> & futureTracker,
                                           array<ColumnPlayerData,max_enemies> & columnData);
-        void computeFutureDeltaPosACausalLabels(int64_t curTick, CircularBuffer<int64_t> & futureTracker0_5,
-                                                CircularBuffer<int64_t> & futureTracker1_0,
+        void computeFutureDeltaPosACausalLabels(int64_t curTick, CircularBuffer<int64_t> & futureTrackerNext,
+                                                CircularBuffer<int64_t> & futureTrackerAfterNext,
                                                 array<ColumnPlayerData,max_enemies> & columnData,
                                                 const TickRates & ticksRates);
         void removePartialACausalLabels(int64_t curTick, array<ColumnPlayerData,max_enemies> & columnData);
