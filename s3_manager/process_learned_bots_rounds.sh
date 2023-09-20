@@ -1,6 +1,6 @@
-hdf5_file_name=9_18_23_learned_update_weak_300_rounds
+hdf5_file_name=9_20_23_learned_3s_300_rounds
 
-./process_rollout_specific.sh auto0-20230918-234156-376514676-de_dust2-international_house_of_short_people.dem $hdf5_file_name
+./process_rollout_specific.sh auto0-20230920-190030-1023974231-de_dust2-international_house_of_short_people.dem $hdf5_file_name
 
 script_dir="tmp"
 #https://www.ostricher.com/2014/10/the-right-way-to-get-the-directory-of-a-bash-script/
