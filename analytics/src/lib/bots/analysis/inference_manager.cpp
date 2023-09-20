@@ -211,7 +211,7 @@ namespace csknow::inference_manager {
 
     void InferenceManager::runInferences() {
         if (!valid) {
-            inferenceSeconds = 0;
+            //inferenceSeconds = 0;
             return;
         }
 
@@ -266,7 +266,10 @@ namespace csknow::inference_manager {
         overallModelToRun = (overallModelToRun + 1) % 16;
         auto end = std::chrono::system_clock::now();
         std::chrono::duration<double> inferenceTime = end - start;
-        inferenceSeconds = inferenceTime.count();
+        double tmpInferenceSeconds = inferenceTime.count();
+        if (tmpInferenceSeconds > 1e-5) {
+            inferenceSeconds = tmpInferenceSeconds;
+        }
     }
 
     bool InferenceManager::haveValidData() const {
