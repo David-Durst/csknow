@@ -24,10 +24,11 @@ class LatentHDF5Dataset(Dataset):
 
     def __getitem__(self, idx):
         hdf5_id = self.data_hdf5.id_df.iloc[idx].loc['id']
-        x_tensor = torch.tensor(self.data_hdf5.get_input_data()[hdf5_id])
-        y_tensor = torch.tensor(self.data_hdf5.get_output_data()[hdf5_id])
+        x_tensor = torch.tensor(self.data_hdf5.get_input_data(hdf5_id))
+        y_tensor = torch.tensor(self.data_hdf5.get_output_data(hdf5_id))
         return x_tensor, y_tensor
 
+tmp = 0
 
 class MultipleLatentHDF5Dataset(Dataset):
     x_cols: List[str]
@@ -78,8 +79,10 @@ class MultipleLatentHDF5Dataset(Dataset):
             # for now, only thing without hdf5 is bot data, which always pushes to objective
             similarity_tensor = torch.tensor([True, True])
         hdf5_id = id_series.loc['id']
-        x_tensor = torch.tensor(self.data_hdf5s[hdf5_index].get_input_data()[hdf5_id])
-        y_tensor = torch.tensor(self.data_hdf5s[hdf5_index].get_output_data()[hdf5_id])
+        x_tensor = torch.tensor(self.data_hdf5s[hdf5_index].get_input_data(hdf5_id))
+        y_tensor = torch.tensor(self.data_hdf5s[hdf5_index].get_output_data(hdf5_id))
+        #x_tensor = torch.tensor(self.data_hdf5s[hdf5_index].input_data[self.data_hdf5s[hdf5_index].hdf5_path][hdf5_id])
+        #y_tensor = torch.tensor(self.data_hdf5s[hdf5_index].input_data[self.data_hdf5s[hdf5_index].hdf5_path][hdf5_id])
         return x_tensor, y_tensor, similarity_tensor, \
             torch.tensor(self.duplicate_last_equal_to_rest and (hdf5_index == len(self.data_hdf5s) - 1)), \
             torch.tensor([idx, hdf5_index, hdf5_id])

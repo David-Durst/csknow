@@ -47,17 +47,23 @@ class HDF5Wrapper:
     def create_np_array(self, cts: IOColumnTransformers, load_output_data: bool = True):
         # don't need to filder by id_df after limit, as data loader will get the id from the limited id_df for lookup
         # in entire np array
-        HDF5Wrapper.input_data[self.hdf5_path] = \
-            load_hdf5_to_np_array(self.hdf5_path, cts.input_types.column_names_all_categorical_columns(), True)
+        input_np = load_hdf5_to_np_array(self.hdf5_path, cts.input_types.column_names_all_categorical_columns(),
+                                         True).astype('float16')
+        input_mmap_path = (self.hdf5_path.parent / ('input_mmap_' + self.hdf5_path.name)).with_suffix('.npy')
+        np.save(str(input_mmap_path), input_np, allow_pickle=False)
+        HDF5Wrapper.input_data[self.hdf5_path] = np.load(input_mmap_path, mmap_mode='r')
         if load_output_data:
-            HDF5Wrapper.output_data[self.hdf5_path] = \
-                load_hdf5_to_np_array(self.hdf5_path, cts.output_types.column_names_all_categorical_columns(), False)
+            output_np = load_hdf5_to_np_array(self.hdf5_path, cts.output_types.column_names_all_categorical_columns(),
+                                              False).astype('float16')
+            output_mmap_path = (self.hdf5_path.parent / ('output_mmap_' + self.hdf5_path.name)).with_suffix('.npy')
+            np.save(str(output_mmap_path), output_np, allow_pickle=False)
+            HDF5Wrapper.output_data[self.hdf5_path] = np.load(output_mmap_path, mmap_mode='r')
 
-    def get_input_data(self) -> np.ndarray:
-        return HDF5Wrapper.input_data[self.hdf5_path]
+    def get_input_data(self, index: int) -> np.ndarray:
+        return HDF5Wrapper.input_data[self.hdf5_path][index]
 
-    def get_output_data(self) -> np.ndarray:
-        return HDF5Wrapper.output_data[self.hdf5_path]
+    def get_output_data(self, index: int) -> np.ndarray:
+        return HDF5Wrapper.output_data[self.hdf5_path][index]
 
 
 def load_hdf5_to_np_array(hdf5_path: Path, cols_to_get: List[str], cast_to_float: bool) -> np.ndarray:

@@ -65,7 +65,7 @@ class TrainType(Enum):
 @dataclass
 class HyperparameterOptions:
     num_epochs: int = 60
-    batch_size: int = 512
+    batch_size: int = 256
     learning_rate: float = 4e-5
     weight_decay: float = 0.
     layers: int = 2
@@ -239,8 +239,8 @@ def train(train_type: TrainType, multi_hdf5_wrapper: MultiHDF5Wrapper,
                 #if batch_num > 24:
                 #    break
                 if first_row is None:
-                    first_row = X[0:1, :]
-                    first_row_similarity = similarity[0:1, :]
+                    first_row = X[0:1, :].float()
+                    first_row_similarity = similarity[0:1, :].float()
                 if prior_bad_X is None:
                     X, Y, duplicated_last = X.to(device), Y.to(device), duplicated_last.to(device)
                     Y = Y.float()
