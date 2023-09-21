@@ -38,7 +38,7 @@ namespace csknow::inference_delta_pos {
                 result.rowCPP.push_back(static_cast<float>(columnPlayerData.footPos[rowIndex].x));
                 result.rowCPP.push_back(static_cast<float>(columnPlayerData.footPos[rowIndex].y));
                 result.rowCPP.push_back(static_cast<float>(columnPlayerData.footPos[rowIndex].z));
-                for (size_t priorTick = 0; priorTick < csknow::feature_store::num_prior_ticks; priorTick++) {
+                for (size_t priorTick = 0; priorTick < csknow::feature_store::num_prior_ticks_inference; priorTick++) {
                     result.rowCPP.push_back(static_cast<float>(
                                                 columnPlayerData.priorFootPos[priorTick][rowIndex].x));
                     result.rowCPP.push_back(static_cast<float>(
@@ -47,7 +47,7 @@ namespace csknow::inference_delta_pos {
                                                 columnPlayerData.priorFootPos[priorTick][rowIndex].z));
                 }
                 result.rowCPP.push_back(columnPlayerData.nearestCrosshairDistanceToEnemy[rowIndex]);
-                for (size_t priorTick = 0; priorTick < csknow::feature_store::num_prior_ticks; priorTick++) {
+                for (size_t priorTick = 0; priorTick < csknow::feature_store::num_prior_ticks_inference; priorTick++) {
                     result.rowCPP.push_back(columnPlayerData.priorNearestCrosshairDistanceToEnemy[priorTick][rowIndex]);
                 }
                 result.rowCPP.push_back(columnPlayerData.hurtInLast5s[rowIndex]);
