@@ -19,9 +19,37 @@ player_width = 32
 
 d2_top_left_x = -2476
 d2_top_left_y = 3239
-minimapWidth = 1300
-minimapHeight = 1300
-minimapScale = 4.4 * 1024 / minimapHeight
+
+_minimap_width = 1300
+_minimap_height = 1300
+_minimap_scale = 4.4 * 1024 / _minimap_height
+
+
+def scale_down():
+    global _minimap_width, _minimap_height, _minimap_scale
+    _minimap_width = 1300
+    _minimap_height = 1300
+    _minimap_scale = 4.4 * 1024 / _minimap_height
+
+
+def scale_up():
+    global _minimap_width, _minimap_height, _minimap_scale
+    _minimap_width = 2400
+    _minimap_height = 2400
+    _minimap_scale = 4.4 * 1024 / _minimap_height
+
+
+def minimap_width() -> int:
+    return _minimap_width
+
+
+def minimap_height() -> int:
+    return _minimap_height
+
+
+def minimap_scale() -> float:
+    return _minimap_scale
+
 
 bbox_scale_factor = 2
 dot_radius = 0.5
@@ -34,10 +62,10 @@ class VisMapCoordinate():
 
     def __init__(self, x: float, y: float, z: float, from_canvas_pixels: bool = False):
         if from_canvas_pixels:
-            pctX = x / minimapWidth
-            x = d2_top_left_x + minimapScale * minimapWidth * pctX
-            pctY = y / minimapHeight
-            y = d2_top_left_y - minimapScale * minimapHeight * pctY
+            pctX = x / minimap_width()
+            x = d2_top_left_x + minimap_scale() * minimap_width() * pctX
+            pctY = y / minimap_height()
+            y = d2_top_left_y - minimap_scale() * minimap_height() * pctY
         self.coords = Vec3(x, y, z)
         self.is_player = True
         self.is_prediction = False
@@ -45,8 +73,8 @@ class VisMapCoordinate():
 
     def get_canvas_coordinates(self) -> Vec3:
         return Vec3(
-            (self.coords.x - d2_top_left_x) / minimapScale,
-            (d2_top_left_y - self.coords.y) / minimapScale,
+            (self.coords.x - d2_top_left_x) / minimap_scale(),
+            (d2_top_left_y - self.coords.y) / minimap_scale(),
             self.coords.z
         )
 

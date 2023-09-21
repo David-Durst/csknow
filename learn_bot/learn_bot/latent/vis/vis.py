@@ -1,14 +1,16 @@
-from typing import Set, Callable
+from typing import Set, Callable, List
 
 from learn_bot.latent.analyze.compare_trajectories.process_trajectory_comparison import set_pd_print_options
+from learn_bot.latent.place_area.column_names import *
 from learn_bot.latent.load_model import LoadedModel
 from learn_bot.latent.train import default_selected_retake_rounds_path
 from learn_bot.libs.df_grouping import make_index_column
-from learn_bot.mining.area_cluster import *
-from learn_bot.latent.vis.draw_inference import draw_all_players, minimapWidth, minimapHeight
+from learn_bot.mining.area_cluster import d2_radar_path
+from learn_bot.latent.vis.draw_inference import draw_all_players, minimap_height, minimap_width, scale_down
 import tkinter as tk
 from tkinter import ttk, font
 from PIL import Image, ImageDraw, ImageTk as itk
+import pandas as pd
 
 
 def get_rounds_for_cur_hdf5(loaded_model: LoadedModel) -> List[int]:
@@ -41,7 +43,8 @@ def vis(loaded_model: LoadedModel, inference_fn: Callable[[LoadedModel], None], 
     img_frame = tk.Frame(window)
     img_frame.pack(pady=5)
     d2_img = Image.open(d2_radar_path)
-    d2_img = d2_img.resize((minimapWidth, minimapHeight), Image.ANTIALIAS)
+    scale_down()
+    d2_img = d2_img.resize((minimap_width(), minimap_height()), Image.ANTIALIAS)
     d2_img_draw = d2_img.copy()
     d2_photo_img = itk.PhotoImage(d2_img_draw)
     img_label = tk.Label(img_frame, image=d2_photo_img)

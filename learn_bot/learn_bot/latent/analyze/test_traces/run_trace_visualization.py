@@ -11,10 +11,12 @@ from PIL import Image, ImageDraw
 
 from learn_bot.libs.multi_hdf5_wrapper import train_test_split_folder_path
 from learn_bot.mining.area_cluster import d2_radar_path
-from learn_bot.latent.vis.draw_inference import minimapWidth, minimapHeight, d2_top_left_x, d2_top_left_y, minimapScale
+from learn_bot.latent.vis.draw_inference import minimap_width, minimap_height, d2_top_left_x, d2_top_left_y, \
+    minimap_scale, scale_up
 
 d2_img = Image.open(d2_radar_path)
-d2_img = d2_img.resize((minimapWidth, minimapHeight), Image.Resampling.LANCZOS)
+scale_up()
+d2_img = d2_img.resize((minimap_width(), minimap_height()), Image.Resampling.LANCZOS)
 
 bot_ct_color_list = [4, 190, 196, 0]
 replay_ct_color_list = [18, 237, 147, 0]
@@ -23,7 +25,7 @@ replay_t_color_list = [237, 18, 108, 0]
 
 
 def convert_to_canvas_coordinates(x_coords: pd.Series, y_coords: pd.Series) -> Tuple[pd.Series, pd.Series]:
-    return (x_coords - d2_top_left_x) / minimapScale, (d2_top_left_y - y_coords) / minimapScale
+    return (x_coords - d2_top_left_x) / minimap_scale(), (d2_top_left_y - y_coords) / minimap_scale()
 
 
 def draw_trace_paths(trace_df: pd.DataFrame, trace_extra_df: pd.DataFrame, trace_index: int, one_non_replay_bot: bool,
