@@ -187,7 +187,7 @@ namespace csknow::feature_store {
             }
             result[attacker.csgoId] = std::numeric_limits<double>::max();
             for (const auto & victim : state.clients) {
-                if (!victim.isAlive) {
+                if (!victim.isAlive || victim.team == attacker.team) {
                     continue;
                 }
                 Vec3 victimHeadPos = getCenterHeadCoordinatesForPlayer(victim.getFootPosForPlayer(), victim.getCurrentViewAngles(), victim.duckAmount);
@@ -198,12 +198,37 @@ namespace csknow::feature_store {
         }
         return result;
     }
-    /*
-     */
+
+    map<CSGOId, double> getNearestWorldDistanceToTeammateOrEnemy(const ServerState & state, bool toEnemy) {
+        map<CSGOId, double> result;
+        for (const auto & player : state.clients) {
+            if (!player.isAlive) {
+                continue;
+            }
+            result[player.csgoId] = std::numeric_limits<double>::max();
+            for (const auto & other : state.clients) {
+                bool teamCondition;
+                if (toEnemy) {
+                    teamCondition = player.team != other.team;
+                }
+                else {
+                    teamCondition = player.team == other.team;
+                }
+                if (!other.isAlive || !teamCondition) {
+                    continue;
+                }
+                result[player.csgoId] = std::min(result[player.csgoId], computeDistance(player.getFootPosForPlayer(),
+                                                                                        other.getFootPosForPlayer()));
+            }
+        }
+        return result;
+    }
 
     void FeatureStorePreCommitBuffer::updateCurTeamData(const ServerState & state, const nav_mesh::nav_file & navFile) {
         updatePlayerTickCounters(state);
         map<CSGOId, double> nearestCrosshairDistanceToEnemy = getNearestCrosshairDistanceToEnemy(state);
+        map<CSGOId, double> nearestWorldDistanceToEnemy = getNearestWorldDistanceToTeammateOrEnemy(state, true);
+        map<CSGOId, double> nearestWorldDistanceToTeammate = getNearestWorldDistanceToTeammateOrEnemy(state, false);
         btTeamPlayerData.clear();
 
         for (const auto & client : state.clients) {
@@ -222,6 +247,8 @@ namespace csknow::feature_store {
                                         client.getCurrentViewAngles(),
                                         client.getFootPosForPlayer(), client.getVelocity(),
                                         nearestCrosshairDistanceToEnemy[client.csgoId],
+                                        nearestWorldDistanceToEnemy[client.csgoId],
+                                        nearestWorldDistanceToTeammate[client.csgoId],
                                         client.health, client.armor,
                                         static_cast<EngineWeaponId>(client.currentWeaponId),
                                         client.isScoped, client.isAirborne, client.isWalking, client.duckKeyPressed});

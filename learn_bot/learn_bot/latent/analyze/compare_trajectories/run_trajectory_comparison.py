@@ -145,7 +145,7 @@ rollout_vs_all_human_config = ComparisonConfig(
 )
 
 rollout_learned_load_data_option = dataclasses.replace(rollout_load_data_option,
-                                                       custom_rollout_extension= "_9_20_23_learned_3s_300_rounds")
+                                                       custom_rollout_extension= "_9_20_23_learned_6s_300_rounds")
 rollout_learned_vs_all_human_config = ComparisonConfig(
     rollout_learned_vs_all_human_similarity_hdf5_data_path,
     rollout_learned_load_data_option,
@@ -248,7 +248,9 @@ def compare_trajectories(config_case: int):
     elif config_case == 12:
         config = rollout_all_human_vs_default_config
 
-    os.makedirs(similarity_plots_path, exist_ok=True)
+    cur_run_similarity_plots_path = similarity_plots_path / rollout_learned_load_data_option.custom_rollout_extension
+
+    os.makedirs(cur_run_similarity_plots_path, exist_ok=True)
     similarity_df = load_hdf5_to_pd(config.similarity_data_path)
     similarity_df = similarity_df[similarity_df[dtw_cost_col] != 0.]
     # need to load this early for filtering
@@ -262,7 +264,7 @@ def compare_trajectories(config_case: int):
     similarity_match_index_df = load_hdf5_to_pd(config.similarity_data_path, root_key='extra')
 
     start_similarity_plot_time = time.perf_counter()
-    plot_trajectory_comparison_histograms(similarity_df, config, similarity_plots_path)
+    plot_trajectory_comparison_histograms(similarity_df, config, cur_run_similarity_plots_path)
     end_similarity_plot_time = time.perf_counter()
     print(f"similarity plot time {end_similarity_plot_time - start_similarity_plot_time: 0.4f}")
 
@@ -306,7 +308,7 @@ def compare_trajectories(config_case: int):
     if plot_trajectories:
         start_heatmaps_plot_time = time.perf_counter()
         plot_trajectory_comparison_heatmaps(similarity_df, predicted_model, ground_truth_model,
-                                            config, similarity_plots_path)
+                                            config, cur_run_similarity_plots_path)
         end_heatmaps_plot_time = time.perf_counter()
         print(f"heatmaps plot time {end_heatmaps_plot_time - start_heatmaps_plot_time: 0.4f}")
 

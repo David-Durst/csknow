@@ -19,7 +19,7 @@ using std::reference_wrapper;
 void loadTraces(vector<csknow::feature_store::TeamFeatureStoreResult> & traces, const string & pathStr) {
     if (pathStr.find(".hdf5") != string::npos) {
         traces.emplace_back();
-        traces.back().load(pathStr);
+        traces.back().load(pathStr, false);
     }
     else {
         vector<fs::path> hdf5Paths;
@@ -35,7 +35,7 @@ void loadTraces(vector<csknow::feature_store::TeamFeatureStoreResult> & traces, 
         std::cout << "loading files" << std::endl;
 #pragma omp parallel for
         for (size_t i = 0; i < hdf5Paths.size(); i++) {
-            traces[i].load(hdf5Paths[i]);
+            traces[i].load(hdf5Paths[i], false);
             tracesLoaded++;
             printProgress(tracesLoaded, traces.size());
         }

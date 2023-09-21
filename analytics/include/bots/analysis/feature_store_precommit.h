@@ -22,7 +22,7 @@ namespace csknow::feature_store {
     using key_retake_events::max_enemies;
     constexpr double maxWorldDistance = 4000.;
     constexpr int prior_tick_spacing = 16;
-    constexpr int num_prior_ticks = 48;
+    constexpr int num_prior_ticks = 24;
     constexpr int num_future_ticks = 2;
 
     enum class DecreaseTimingOption {
@@ -52,6 +52,8 @@ namespace csknow::feature_store {
         Vec3 curFootPos;
         Vec3 velocity;
         double nearestCrosshairDistanceToEnemy;
+        double nearestWorldDistanceToEnemy;
+        double nearestWorldDistanceToTeammate;
         int health, armor;
         EngineWeaponId weaponId;
         bool scoped;

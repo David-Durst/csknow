@@ -113,7 +113,11 @@ namespace csknow::feature_store {
             array<vector<bool>, num_prior_ticks> priorFootPosValid;
             // state inputs
             vector<float> nearestCrosshairDistanceToEnemy;
+            vector<float> nearestWorldDistanceToEnemy;
+            vector<float> nearestWorldDistanceToTeammate;
             array<vector<float>, num_prior_ticks> priorNearestCrosshairDistanceToEnemy;
+            array<vector<float>, num_prior_ticks> priorNearestWorldDistanceToEnemy;
+            array<vector<float>, num_prior_ticks> priorNearestWorldDistanceToTeammate;
             // 0 means not shot or visible, 1 means shot cur frame or enemy currently visible
             vector<float> hurtInLast5s, fireInLast5s, noFOVEnemyVisibleInLast5s, fovEnemyVisibleInLast5s;
             vector<float> health, armor;
@@ -200,7 +204,7 @@ namespace csknow::feature_store {
                                   const csknow::key_retake_events::KeyRetakeEvents & keyRetakeEvents);
         void toHDF5Inner(HighFive::File & file) override;
         string fileName;
-        void load(const std::string &filePath);
+        void load(const std::string &filePath, bool includePriorFuture);
         /*
         void checkPossiblyBadValue() {
             std::cout << "checking possibly bad value on init " << columnTData[4].distributionNearestAOrders15s[0][8240] << std::endl;

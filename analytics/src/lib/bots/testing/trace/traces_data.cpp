@@ -6,7 +6,7 @@
 
 namespace csknow::tests::trace {
     TracesData::TracesData(const std::string &tracesPathStr) {
-        teamFeatureStoreResult.load(tracesPathStr);
+        teamFeatureStoreResult.load(tracesPathStr, false);
 
         HighFive::File file(tracesPathStr, HighFive::File::ReadOnly);
         demoFile = file.getDataSet("/extra/demo file").read<std::vector<string>>();

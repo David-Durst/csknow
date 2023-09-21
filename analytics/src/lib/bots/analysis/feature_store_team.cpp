@@ -73,10 +73,18 @@ namespace csknow::feature_store {
                 columnCTData[i].priorFootPosValid[j].resize(size, false);
             }
             columnTData[i].nearestCrosshairDistanceToEnemy.resize(size, 1.);
+            columnTData[i].nearestWorldDistanceToEnemy.resize(size, 1.);
+            columnTData[i].nearestWorldDistanceToTeammate.resize(size, 1.);
             columnCTData[i].nearestCrosshairDistanceToEnemy.resize(size, 1.);
+            columnCTData[i].nearestWorldDistanceToEnemy.resize(size, 1.);
+            columnCTData[i].nearestWorldDistanceToTeammate.resize(size, 1.);
             for (int j = 0; j < num_prior_ticks; j++) {
                 columnTData[i].priorNearestCrosshairDistanceToEnemy[j].resize(size, 1.);
+                columnTData[i].priorNearestWorldDistanceToEnemy[j].resize(size, 1.);
+                columnTData[i].priorNearestWorldDistanceToTeammate[j].resize(size, 1.);
                 columnCTData[i].priorNearestCrosshairDistanceToEnemy[j].resize(size, 1.);
+                columnCTData[i].priorNearestWorldDistanceToEnemy[j].resize(size, 1.);
+                columnCTData[i].priorNearestWorldDistanceToTeammate[j].resize(size, 1.);
             }
             columnTData[i].hurtInLast5s.resize(size, 1.);
             columnCTData[i].hurtInLast5s.resize(size, 1.);
@@ -307,10 +315,18 @@ namespace csknow::feature_store {
                     columnCTData[i].priorFootPosValid[j][rowIndex] = false;
                 }
                 columnTData[i].nearestCrosshairDistanceToEnemy[rowIndex] = 1.;
+                columnTData[i].nearestWorldDistanceToEnemy[rowIndex] = 1.;
+                columnTData[i].nearestWorldDistanceToTeammate[rowIndex] = 1.;
                 columnCTData[i].nearestCrosshairDistanceToEnemy[rowIndex] = 1.;
+                columnCTData[i].nearestWorldDistanceToEnemy[rowIndex] = 1.;
+                columnCTData[i].nearestWorldDistanceToTeammate[rowIndex] = 1.;
                 for (int j = 0; j < num_prior_ticks; j++) {
                     columnTData[i].priorNearestCrosshairDistanceToEnemy[j].resize(size, 1.);
+                    columnTData[i].priorNearestWorldDistanceToEnemy[j].resize(size, 1.);
+                    columnTData[i].priorNearestWorldDistanceToTeammate[j].resize(size, 1.);
                     columnCTData[i].priorNearestCrosshairDistanceToEnemy[j].resize(size, 1.);
+                    columnCTData[i].priorNearestWorldDistanceToEnemy[j].resize(size, 1.);
+                    columnCTData[i].priorNearestWorldDistanceToTeammate[j].resize(size, 1.);
                 }
                 columnTData[i].hurtInLast5s[rowIndex] = 1.;
                 columnCTData[i].hurtInLast5s[rowIndex] = 1.;;
@@ -408,6 +424,14 @@ namespace csknow::feature_store {
             yValue--;
         }
         return xValue + yValue * area_grid_dim;
+    }
+
+    float scaleWorldDistance(float worldDistance) {
+        // require distance be at least 1 so log non-negative
+        float flooredDistance = std::max(1.f, worldDistance);
+        // require distance be at most max distance so can scale post log
+        float ceiledDistance = std::min(static_cast<float>(maxWorldDistance), flooredDistance);
+        return log10(ceiledDistance) / log10(static_cast<float>(maxWorldDistance));
     }
 
     bool TeamFeatureStoreResult::commitTeamRow(const ServerState & state, FeatureStorePreCommitBuffer & buffer,
@@ -534,6 +558,10 @@ namespace csknow::feature_store {
             columnData[columnIndex].velocity[internalTickIndex] = btTeamPlayerData.velocity;
             columnData[columnIndex].nearestCrosshairDistanceToEnemy[internalTickIndex] =
                     std::min(1.f, static_cast<float>(btTeamPlayerData.nearestCrosshairDistanceToEnemy) / crosshair_max_distance);
+            columnData[columnIndex].nearestWorldDistanceToEnemy[internalTickIndex] =
+                    scaleWorldDistance(static_cast<float>(btTeamPlayerData.nearestWorldDistanceToEnemy));
+            columnData[columnIndex].nearestWorldDistanceToTeammate[internalTickIndex] =
+                    scaleWorldDistance(static_cast<float>(btTeamPlayerData.nearestWorldDistanceToTeammate));
             columnData[columnIndex].health[internalTickIndex] = static_cast<float>(btTeamPlayerData.health) / 100.;
             columnData[columnIndex].armor[internalTickIndex] = static_cast<float>(btTeamPlayerData.armor) / 100.;
             columnData[columnIndex].areaIndex[internalTickIndex] = btTeamPlayerData.curAreaIndex;
@@ -584,6 +612,10 @@ namespace csknow::feature_store {
                         columnData[columnIndex].priorVelocity[j][internalTickIndex] = priorBTTeamPlayerData.velocity;
                         columnData[columnIndex].priorNearestCrosshairDistanceToEnemy[j][internalTickIndex] =
                                 std::min(1.f, static_cast<float>(priorBTTeamPlayerData.nearestCrosshairDistanceToEnemy) / crosshair_max_distance);
+                        columnData[columnIndex].priorNearestWorldDistanceToEnemy[j][internalTickIndex] =
+                                scaleWorldDistance(static_cast<float>(priorBTTeamPlayerData.nearestWorldDistanceToEnemy));
+                        columnData[columnIndex].priorNearestWorldDistanceToTeammate[j][internalTickIndex] =
+                                scaleWorldDistance(static_cast<float>(priorBTTeamPlayerData.nearestWorldDistanceToTeammate));
                         if (isnan(priorBTTeamPlayerData.curFootPos.x) || isnan(priorBTTeamPlayerData.curFootPos.y) || isnan(priorBTTeamPlayerData.curFootPos.z) ) {
                             std::cout << "found nan" << std::endl;
                         }
@@ -1154,9 +1186,17 @@ namespace csknow::feature_store {
                                    columnData[columnPlayer].ducking, hdf5FlatCreateProps);
                 file.createDataSet("/data/player nearest crosshair distance to enemy " + columnTeam + " " + iStr,
                                    columnData[columnPlayer].nearestCrosshairDistanceToEnemy, hdf5FlatCreateProps);
+                file.createDataSet("/data/player nearest world distance to enemy " + columnTeam + " " + iStr,
+                                   columnData[columnPlayer].nearestWorldDistanceToEnemy, hdf5FlatCreateProps);
+                file.createDataSet("/data/player nearest world distance to teammate " + columnTeam + " " + iStr,
+                                   columnData[columnPlayer].nearestWorldDistanceToTeammate, hdf5FlatCreateProps);
                 for (int priorTick = 0; priorTick < num_prior_ticks; priorTick++) {
                     file.createDataSet("/data/player nearest crosshair distance to enemy " + columnTeam + " " + iStr + " t-" + std::to_string(priorTick+1),
                                        columnData[columnPlayer].priorNearestCrosshairDistanceToEnemy[priorTick], hdf5FlatCreateProps);
+                    file.createDataSet("/data/player nearest world distance to enemy " + columnTeam + " " + iStr + " t-" + std::to_string(priorTick+1),
+                                       columnData[columnPlayer].priorNearestWorldDistanceToEnemy[priorTick], hdf5FlatCreateProps);
+                    file.createDataSet("/data/player nearest world distance to teammate " + columnTeam + " " + iStr + " t-" + std::to_string(priorTick+1),
+                                       columnData[columnPlayer].priorNearestWorldDistanceToTeammate[priorTick], hdf5FlatCreateProps);
                 }
                 file.createDataSet("/data/player hurt in last 5s " + columnTeam + " " + iStr,
                                    columnData[columnPlayer].hurtInLast5s, hdf5FlatCreateProps);
@@ -1199,7 +1239,7 @@ namespace csknow::feature_store {
         }
     }
 
-    void TeamFeatureStoreResult::load(const std::string &filePath) {
+    void TeamFeatureStoreResult::load(const std::string &filePath, bool includePriorFuture) {
         HighFive::File file(filePath, HighFive::File::ReadOnly);
         fileName = std::filesystem::path(filePath).filename();
 
@@ -1259,13 +1299,15 @@ namespace csknow::feature_store {
                 loadVec2VectorFromHDF5(columnData[columnPlayer].viewAngle, file, "player view angle " + columnTeam + " " + iStr);
                 loadVec3VectorFromHDF5(columnData[columnPlayer].footPos, file, "player pos " + columnTeam + " " + iStr);
                 loadVec3VectorFromHDF5(columnData[columnPlayer].velocity, file, "player velocity " + columnTeam + " " + iStr);
-                for (int priorTick = 0; priorTick < num_prior_ticks; priorTick++) {
-                    loadVec3VectorFromHDF5(columnData[columnPlayer].priorFootPos[priorTick], file,
-                                           "player pos " + columnTeam + " " + iStr + " t-" + std::to_string(priorTick + 1));
-                    loadVec3VectorFromHDF5(columnData[columnPlayer].priorVelocity[priorTick], file,
-                                           "player velocity " + columnTeam + " " + iStr + " t-" + std::to_string(priorTick + 1));
-                    columnData[columnPlayer].priorFootPosValid[priorTick] =
-                            file.getDataSet("/data/player history valid " + columnTeam + " " + iStr + " t-" + std::to_string(priorTick + 1)).read<std::vector<bool>>();
+                if (includePriorFuture) {
+                    for (int priorTick = 0; priorTick < num_prior_ticks; priorTick++) {
+                        loadVec3VectorFromHDF5(columnData[columnPlayer].priorFootPos[priorTick], file,
+                                               "player pos " + columnTeam + " " + iStr + " t-" + std::to_string(priorTick + 1));
+                        loadVec3VectorFromHDF5(columnData[columnPlayer].priorVelocity[priorTick], file,
+                                               "player velocity " + columnTeam + " " + iStr + " t-" + std::to_string(priorTick + 1));
+                        columnData[columnPlayer].priorFootPosValid[priorTick] =
+                                file.getDataSet("/data/player history valid " + columnTeam + " " + iStr + " t-" + std::to_string(priorTick + 1)).read<std::vector<bool>>();
+                    }
                 }
                 columnData[columnPlayer].walking =
                         file.getDataSet("/data/player walking " + columnTeam + " " + iStr).read<std::vector<bool>>();
@@ -1273,9 +1315,19 @@ namespace csknow::feature_store {
                         file.getDataSet("/data/player ducking " + columnTeam + " " + iStr).read<std::vector<bool>>();
                 columnData[columnPlayer].nearestCrosshairDistanceToEnemy =
                         file.getDataSet("/data/player nearest crosshair distance to enemy " + columnTeam + " " + iStr).read<std::vector<float>>();
-                for (int priorTick = 0; priorTick < num_prior_ticks; priorTick++) {
-                    columnData[columnPlayer].priorNearestCrosshairDistanceToEnemy[priorTick] =
-                            file.getDataSet("/data/player nearest crosshair distance to enemy " + columnTeam + " " + iStr + " t-" + std::to_string(priorTick+1)).read<std::vector<float>>();
+                //columnData[columnPlayer].nearestWorldDistanceToEnemy =
+                //        file.getDataSet("/data/player nearest world distance to enemy " + columnTeam + " " + iStr).read<std::vector<float>>();
+                //columnData[columnPlayer].nearestWorldDistanceToTeammate =
+                //        file.getDataSet("/data/player nearest world distance to teammate " + columnTeam + " " + iStr).read<std::vector<float>>();
+                if (includePriorFuture) {
+                    for (int priorTick = 0; priorTick < num_prior_ticks; priorTick++) {
+                        columnData[columnPlayer].priorNearestCrosshairDistanceToEnemy[priorTick] =
+                                file.getDataSet("/data/player nearest crosshair distance to enemy " + columnTeam + " " + iStr + " t-" + std::to_string(priorTick+1)).read<std::vector<float>>();
+                        //columnData[columnPlayer].priorNearestWorldDistanceToEnemy[priorTick] =
+                        //        file.getDataSet("/data/player nearest world distance to enemy " + columnTeam + " " + iStr + " t-" + std::to_string(priorTick+1)).read<std::vector<float>>();
+                        //columnData[columnPlayer].priorNearestWorldDistanceToTeammate[priorTick] =
+                        //        file.getDataSet("/data/player nearest world distance to teammate " + columnTeam + " " + iStr + " t-" + std::to_string(priorTick+1)).read<std::vector<float>>();
+                    }
                 }
                 columnData[columnPlayer].hurtInLast5s = file.getDataSet("/data/player hurt in last 5s " + columnTeam + " " + iStr).read<std::vector<float>>();
                 columnData[columnPlayer].fireInLast5s = file.getDataSet("/data/player fire in last 5s " + columnTeam + " " + iStr).read<std::vector<float>>();
@@ -1301,12 +1353,14 @@ namespace csknow::feature_store {
                     columnData[columnPlayer].radialVel[radialVelindex] =
                             file.getDataSet("/data/radial vel " + std::to_string(radialVelindex) + " " + columnTeam + " " + iStr).read<std::vector<bool>>();
                 }
-                for (int futureTick = 0; futureTick < num_future_ticks; futureTick++) {
-                    for (int radialVelindex = 0; radialVelindex < weapon_speed::num_radial_bins; radialVelindex++) {
-                        columnData[columnPlayer].futureRadialVel[futureTick][radialVelindex] =
-                                file.getDataSet("/data/radial vel " + std::to_string(radialVelindex) + " "
-                                           + columnTeam + " " + iStr + " t+" + std::to_string(futureTick+1))
-                                           .read<std::vector<bool>>();
+                if (includePriorFuture) {
+                    for (int futureTick = 0; futureTick < num_future_ticks; futureTick++) {
+                        for (int radialVelindex = 0; radialVelindex < weapon_speed::num_radial_bins; radialVelindex++) {
+                            columnData[columnPlayer].futureRadialVel[futureTick][radialVelindex] =
+                                    file.getDataSet("/data/radial vel " + std::to_string(radialVelindex) + " "
+                                                    + columnTeam + " " + iStr + " t+" + std::to_string(futureTick+1))
+                                            .read<std::vector<bool>>();
+                        }
                     }
                 }
             }
