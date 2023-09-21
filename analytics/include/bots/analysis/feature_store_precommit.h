@@ -23,7 +23,7 @@ namespace csknow::feature_store {
     constexpr double maxWorldDistance = 4000.;
     constexpr int prior_tick_spacing = 16;
     constexpr int num_prior_ticks = 48;
-    constexpr int num_prior_ticks_inference = 48;
+    constexpr int num_prior_ticks_inference = 24;
     constexpr int num_future_ticks = 2;
 
     enum class DecreaseTimingOption {
