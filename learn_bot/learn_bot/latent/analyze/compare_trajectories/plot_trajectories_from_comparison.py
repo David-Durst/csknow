@@ -7,6 +7,7 @@ import numpy as np
 import pandas as pd
 from PIL import Image, ImageDraw, ImageFont
 from matplotlib import pyplot as plt
+from matplotlib.colors import LogNorm, TwoSlopeNorm
 
 from learn_bot.latent.analyze.compare_trajectories.process_trajectory_comparison import set_pd_print_options, \
     ComparisonConfig
@@ -186,11 +187,35 @@ def plot_distance_to_teammate_enemy_from_trajectory_dfs(trajectory_dfs: List[pd.
 
     grid_x, grid_y = np.meshgrid(x_bins, y_bins)
 
-    heatmap_im = ax.pcolormesh(grid_x, grid_y, sums_heatmap / counts_heatmap,
-                               #norm=LogNorm(vmin=1, vmax=sum_pos_heatmap.max()),
+    with np.errstate(divide='ignore', invalid='ignore'):
+        avg_heatmap = sums_heatmap / counts_heatmap
+    non_nan_min = np.nanmin(avg_heatmap)
+    non_nan_max = np.nanmax(avg_heatmap)
+    avg_heatmap[np.isnan(avg_heatmap)] = 0
+
+    if non_nan_min > 100.:
+        non_nan_min = 100.
+    elif non_nan_min > 10.:
+        non_nan_min = 10.
+    else:
+        non_nan_min = 1.
+
+    heatmap_im = ax.pcolormesh(grid_x, grid_y, avg_heatmap,
+                               norm=LogNorm(vmin=non_nan_min, vmax=non_nan_max),
+                               #vmin=non_nan_min,
+                               #vmax=non_nan_max,
+                               #norm=TwoSlopeNorm(vmin=non_nan_min, vcenter=3000, vmax=non_nan_max),
                                cmap='viridis')
     cbar = fig.colorbar(heatmap_im, ax=ax)
     cbar.ax.set_ylabel('Mean Distance To ' + teammate_text, rotation=270, labelpad=15, fontsize=14)
+
+    ## Get the default ticks and tick labels
+    #ticklabels = cbar.ax.get_ymajorticklabels()
+    #ticks = list(cbar.get_ticks())
+
+    ## Append the ticks (and their labels) for minimum and the maximum value
+    #cbar.set_ticks([non_nan_min, non_nan_max] + ticks)
+    #cbar.set_ticklabels([non_nan_min, non_nan_max] + ticklabels)
 
     plt.savefig(similarity_plots_path / (config.metric_cost_file_name + '_distance_' + teammate_text.lower() + '.png'))
 
