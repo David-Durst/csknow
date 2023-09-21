@@ -252,18 +252,18 @@ def plot_trajectory_comparison_heatmaps(similarity_df: pd.DataFrame, predicted_l
     print('loading predicted df')
     predicted_trajectory_dfs = select_trajectories_into_dfs(predicted_loaded_model,
                                                             list(predicted_rounds_for_comparison_heatmap))
-    #print('loading best fit ground truth df')
-    #best_fit_ground_truth_trajectory_dfs = \
-    #    select_trajectories_into_dfs(ground_truth_loaded_model,
-    #                                 list(best_fit_ground_truth_rounds_for_comparison_heatmap))
-    #max_trajectories = max(len(predicted_trajectory_dfs), len(best_fit_ground_truth_trajectory_dfs))
-    #predicted_image = plot_trajectory_dfs(predicted_trajectory_dfs, config, True, max_trajectories)
-    #ground_truth_image = plot_trajectory_dfs(best_fit_ground_truth_trajectory_dfs, config, False, max_trajectories)
+    print('loading best fit ground truth df')
+    best_fit_ground_truth_trajectory_dfs = \
+        select_trajectories_into_dfs(ground_truth_loaded_model,
+                                     list(best_fit_ground_truth_rounds_for_comparison_heatmap))
+    max_trajectories = max(len(predicted_trajectory_dfs), len(best_fit_ground_truth_trajectory_dfs))
+    predicted_image = plot_trajectory_dfs(predicted_trajectory_dfs, config, True, max_trajectories)
+    ground_truth_image = plot_trajectory_dfs(best_fit_ground_truth_trajectory_dfs, config, False, max_trajectories)
 
-    #combined_image = Image.new('RGB', (predicted_image.width + ground_truth_image.width, predicted_image.height))
-    #combined_image.paste(predicted_image, (0, 0))
-    #combined_image.paste(ground_truth_image, (predicted_image.width, 0))
-    #combined_image.save(similarity_plots_path / (config.metric_cost_file_name + '_trajectories' + '.png'))
+    combined_image = Image.new('RGB', (predicted_image.width + ground_truth_image.width, predicted_image.height))
+    combined_image.paste(predicted_image, (0, 0))
+    combined_image.paste(ground_truth_image, (predicted_image.width, 0))
+    combined_image.save(similarity_plots_path / (config.metric_cost_file_name + '_trajectories' + '.png'))
 
     print("plotting teammate")
     plot_distance_to_teammate_enemy_from_trajectory_dfs(predicted_trajectory_dfs, config, True, similarity_plots_path)

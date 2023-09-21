@@ -19,8 +19,14 @@ tmp_to_human_histograms=$(mktemp)
 tmp_to_human_trajectories=$(mktemp)
 tmp_from_human_histograms=$(mktemp)
 tmp_from_human_trajectories=$(mktemp)
+tmp_to_human_teammate=$(mktemp)
+tmp_to_human_enemy=$(mktemp)
+tmp_from_human_teammate=$(mktemp)
+tmp_from_human_enemy=$(mktemp)
 
 image_folder=${script_dir}/../learn_bot/latent/analyze/similarity_plots/_9_20_23_learned_3s_300_rounds
+
+# merge comparisons to human
 
 convert +append ${image_folder}/rollout_learned_vs_all_human_distribution.png \
     ${image_folder}/rollout_handcrafted_vs_all_human_distribution.png \
@@ -32,6 +38,18 @@ convert +append ${image_folder}/rollout_learned_vs_all_human_distribution_trajec
     ${image_folder}/rollout_default_vs_all_human_distribution_trajectories.png \
     "${tmp_to_human_trajectories}"
 
+convert +append ${image_folder}/rollout_learned_vs_all_human_distribution_distance_teammate.png \
+    ${image_folder}/rollout_handcrafted_vs_all_human_distribution_distance_teammate.png \
+    ${image_folder}/rollout_default_vs_all_human_distribution_distance_teammate.png \
+    "${tmp_to_human_teammate}"
+
+convert +append ${image_folder}/rollout_learned_vs_all_human_distribution_distance_enemy.png \
+    ${image_folder}/rollout_handcrafted_vs_all_human_distribution_distance_enemy.png \
+    ${image_folder}/rollout_default_vs_all_human_distribution_distance_enemy.png \
+    "${tmp_to_human_enemy}"
+
+# merge comparisons from human
+
 convert +append ${image_folder}/rollout_all_human_vs_learned_distribution.png \
     ${image_folder}/rollout_all_human_vs_handcrafted_distribution.png \
     ${image_folder}/rollout_all_human_vs_default_distribution.png \
@@ -42,11 +60,29 @@ convert +append ${image_folder}/rollout_all_human_vs_learned_distribution_trajec
     ${image_folder}/rollout_all_human_vs_default_distribution_trajectories.png \
     "${tmp_from_human_trajectories}"
 
+convert +append ${image_folder}/rollout_all_human_vs_learned_distribution_distance_teammate.png \
+    ${image_folder}/rollout_all_human_vs_handcrafted_distribution_distance_teammate.png \
+    ${image_folder}/rollout_all_human_vs_default_distribution_distance_teammate.png \
+    "${tmp_from_human_teammate}"
+
+convert +append ${image_folder}/rollout_all_human_vs_learned_distribution_distance_enemy.png \
+    ${image_folder}/rollout_all_human_vs_handcrafted_distribution_distance_enemy.png \
+    ${image_folder}/rollout_all_human_vs_default_distribution_distance_enemy.png \
+    "${tmp_from_human_enemy}"
+
+# merge temp files
+
 convert -append "${tmp_to_human_histograms}" "${tmp_from_human_histograms}" \
     ${image_folder}/many_to_from_human_distribution.png
 
 convert -append "${tmp_to_human_trajectories}" "${tmp_from_human_trajectories}" \
     ${image_folder}/many_to_from_human_distribution_trajectories.png
+
+convert -append "${tmp_to_human_teammate}" "${tmp_from_human_teammate}" \
+    ${image_folder}/many_to_from_human_distribution_distance_teammate.png
+
+convert -append "${tmp_to_human_enemy}" "${tmp_from_human_enemy}" \
+    ${image_folder}/many_to_from_human_distribution_distance_enemy.png
 
 cat ${image_folder}/rollout_learned_vs_all_human_distribution.txt \
     ${image_folder}/rollout_handcrafted_vs_all_human_distribution.txt \
@@ -58,3 +94,5 @@ cat ${image_folder}/rollout_learned_vs_all_human_distribution.txt \
 
 rm "${tmp_to_human_histograms}" "${tmp_to_human_trajectories}"
 rm "${tmp_from_human_histograms}" "${tmp_from_human_trajectories}"
+rm "${tmp_from_human_teammate}" "${tmp_to_human_teammate}"
+rm "${tmp_from_human_enemy}" "${tmp_to_human_enemy}"
