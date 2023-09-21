@@ -1,8 +1,9 @@
 from dataclasses import dataclass
 from math import ceil
 from pathlib import Path
-from typing import List, Set
+from typing import List, Set, Dict
 
+import numpy as np
 import pandas as pd
 from PIL import Image, ImageDraw, ImageFont
 from matplotlib import pyplot as plt
@@ -18,6 +19,7 @@ from learn_bot.latent.engagement.column_names import round_id_column, round_numb
 from learn_bot.latent.load_model import LoadedModel
 from learn_bot.latent.order.column_names import team_strs
 from learn_bot.latent.place_area.column_names import specific_player_place_area_columns
+from learn_bot.latent.transformer_nested_hidden_latent_model import d2_min, d2_max
 
 plot_n_most_similar = 1
 
@@ -99,6 +101,90 @@ def plot_trajectory_dfs(trajectory_dfs: List[pd.DataFrame], config: ComparisonCo
     return all_player_d2_img_copy
 
 
+max_distance = 4000.
+
+
+def plot_distance_to_teammate_enemy_from_trajectory_dfs(trajectory_dfs: List[pd.DataFrame], config: ComparisonConfig,
+                                                        teammate: bool, similarity_plots_path: Path):
+    counts_heatmap = None
+    sums_heatmap = None
+    x_bins = None
+    y_bins = None
+
+    for trajectory_df in trajectory_dfs:
+        # since this was split with : rather than _, need to remove last _
+        for player_place_area_columns in specific_player_place_area_columns:
+            # make sure player is alive
+            cur_player_trajectory_df = trajectory_df[trajectory_df[player_place_area_columns.alive] == 1]
+            if cur_player_trajectory_df.empty:
+                continue
+
+            # iterate over other players to find closest
+            conditional_distances: Dict[str, pd.Series] = {}
+            for other_player_place_area_columns in specific_player_place_area_columns:
+                # condition for counting is alive and same team (if plotting nearest teammate) or other team
+                # (if plotting nearest enemy)
+                other_condition = cur_player_trajectory_df[player_place_area_columns.alive] == 1
+                if teammate:
+                    other_condition = other_condition & \
+                                      (cur_player_trajectory_df[cur_player_trajectory_df[other_player_place_area_columns.ct_team] ==
+                                                                cur_player_trajectory_df[player_place_area_columns.ct_team]])
+                else:
+                    other_condition = other_condition & \
+                                      (cur_player_trajectory_df[cur_player_trajectory_df[other_player_place_area_columns.ct_team] !=
+                                                                cur_player_trajectory_df[player_place_area_columns.ct_team]])
+
+                delta_x = (cur_player_trajectory_df[player_place_area_columns.pos[0]] -
+                           cur_player_trajectory_df[other_player_place_area_columns.pos[0]]) ** 2.
+                delta_y = (cur_player_trajectory_df[player_place_area_columns.pos[1]] -
+                           cur_player_trajectory_df[other_player_place_area_columns.pos[1]]) ** 2.
+                delta_z = (cur_player_trajectory_df[player_place_area_columns.pos[2]] -
+                           cur_player_trajectory_df[other_player_place_area_columns.pos[2]]) ** 2.
+                distance = (delta_x + delta_y + delta_z).pow(0.5)
+                conditional_distances[other_player_place_area_columns.player_id] = \
+                    distance.where(other_condition, max_distance)
+
+            # compute values for this trajectory in heatmap
+            conditional_distances_df = pd.DataFrame(conditional_distances)
+            player_min_distances_to_other = conditional_distances_df.min(axis=1).to_numpy()
+            x_pos = cur_player_trajectory_df[player_place_area_columns.pos[0]].to_numpy()
+            y_pos = cur_player_trajectory_df[player_place_area_columns.pos[1]].to_numpy()
+
+            # add to heatmap bins
+            if x_bins is None:
+                counts_heatmap, x_bins, y_bins = np.histogram2d(x_pos, y_pos, bins=125,
+                                                                         range=[[d2_min[0], d2_max[0]],
+                                                                                [d2_min[1], d2_max[1]]])
+                sums_heatmap, _, _ = np.histogram2d(x_pos, y_pos, weights=player_min_distances_to_other,
+                                                    bins=[x_bins, y_bins])
+            else:
+                tmp_counts_heatmap, _, _ = np.histogram2d(x_pos, y_pos, bins=[x_bins, y_bins])
+                counts_heatmap += tmp_counts_heatmap
+                tmp_sums_heatmap, _, _ = np.histogram2d(x_pos, y_pos, weights=player_min_distances_to_other,
+                                                        bins=[x_bins, y_bins])
+                sums_heatmap += tmp_sums_heatmap
+
+    fig = plt.figure(figsize=(10, 10), constrained_layout=True)
+    teammate_text = "Teammate" if teammate else "Enemy"
+    fig.suptitle(config.metric_cost_title + " Distance To " + teammate_text + " Predicted", fontsize=16)
+    ax = fig.subplots(1, 1)
+
+    counts_heatmap = counts_heatmap.T
+    sums_heatmap = sums_heatmap.T
+
+    grid_x, grid_y = np.meshgrid(x_bins, y_bins)
+
+    heatmap_im = ax.pcolormesh(grid_x, grid_y, sums_heatmap / counts_heatmap,
+                               #norm=LogNorm(vmin=1, vmax=sum_pos_heatmap.max()),
+                               cmap='viridis')
+    cbar = fig.colorbar(heatmap_im, ax=ax)
+    cbar.ax.set_ylabel('Mean Distance To ' + teammate_text, rotation=270, labelpad=15, fontsize=14)
+
+    plt.savefig(Path(__file__).parent / 'plots' / 'coverage.png')
+
+    return similarity_plots_path / (config.metric_cost_file_name + '_distance_' + teammate_text.lower() + '.png')
+
+
 def plot_trajectory_comparison_heatmaps(similarity_df: pd.DataFrame, predicted_loaded_model: LoadedModel,
                                         ground_truth_loaded_model: LoadedModel,
                                         config: ComparisonConfig, similarity_plots_path: Path):
@@ -143,3 +229,6 @@ def plot_trajectory_comparison_heatmaps(similarity_df: pd.DataFrame, predicted_l
     combined_image.paste(predicted_image, (0, 0))
     combined_image.paste(ground_truth_image, (predicted_image.width, 0))
     combined_image.save(similarity_plots_path / (config.metric_cost_file_name + '_trajectories' + '.png'))
+
+    plot_distance_to_teammate_enemy_from_trajectory_dfs(predicted_trajectory_dfs, config, True, similarity_plots_path)
+    plot_distance_to_teammate_enemy_from_trajectory_dfs(predicted_trajectory_dfs, config, False, similarity_plots_path)

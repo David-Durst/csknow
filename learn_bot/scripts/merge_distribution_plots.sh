@@ -20,7 +20,7 @@ tmp_to_human_trajectories=$(mktemp)
 tmp_from_human_histograms=$(mktemp)
 tmp_from_human_trajectories=$(mktemp)
 
-image_folder=${script_dir}/../learn_bot/latent/analyze/similarity_plots
+image_folder=${script_dir}/../learn_bot/latent/analyze/similarity_plots/_9_20_23_learned_3s_300_rounds
 
 convert +append ${image_folder}/rollout_learned_vs_all_human_distribution.png \
     ${image_folder}/rollout_handcrafted_vs_all_human_distribution.png \
