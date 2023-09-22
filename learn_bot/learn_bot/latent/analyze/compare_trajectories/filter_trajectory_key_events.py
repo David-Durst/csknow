@@ -20,7 +20,7 @@ seconds_round_key_event = 0.2
 
 
 def filter_trajectory_by_key_events(filter_event_type: FilterEventType, trajectory_df: pd.DataFrame,
-                                    key_areas: Optional[KeyAreas] = None) -> pd.DataFrame:
+                                    key_areas: Optional[KeyAreas] = None) -> List[pd.DataFrame]:
 
     key_event_condition = trajectory_df[round_id_column] != trajectory_df[round_id_column]
     # since this was split with : rather than _, need to remove last _
@@ -48,4 +48,14 @@ def filter_trajectory_by_key_events(filter_event_type: FilterEventType, trajecto
         .rolling(int(ceil(data_ticks_per_second * seconds_round_key_event)) * 2 + 1, center=True, min_periods=1) \
         .apply(lambda x: x.any(), raw=True).astype(bool)
 
-    return trajectory_df[time_extended_condition]
+    # split into contiguous chunks
+    true_regions = (~time_extended_condition).cumsum()
+    true_regions = true_regions[time_extended_condition]
+    true_regions_df = pd.DataFrame({'data': true_regions, 'index': true_regions.index})
+    true_regions_start_end = true_regions_df.groupby('data').agg({'index': ['min', 'max']})
+
+    result: List[pd.DataFrame] = []
+    for _, true_region in true_regions_start_end['index'].iterrows():
+        result.append(trajectory_df.loc[true_region['min']:true_region['max']])
+
+    return result

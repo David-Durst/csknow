@@ -94,42 +94,46 @@ def plot_trajectory_dfs(trajectory_dfs: List[pd.DataFrame], config: ComparisonCo
 
     num_points = 0
     with tqdm(total=len(trajectory_dfs), disable=False) as pbar:
-        for trajectory_df in trajectory_dfs:
+        for round_trajectory_df in trajectory_dfs:
+            # split round trajectory by filter
             if filter_event_type is not None:
-                trajectory_df = filter_trajectory_by_key_events(filter_event_type, trajectory_df, key_areas)
+                round_trajectories = filter_trajectory_by_key_events(filter_event_type, round_trajectory_df, key_areas)
+            else:
+                round_trajectories = [round_trajectory_df]
 
-            # since this was split with : rather than _, need to remove last _
-            for player_place_area_columns in specific_player_place_area_columns:
-                cur_player_trajectory_df = trajectory_df[trajectory_df[player_place_area_columns.alive] == 1]
-                if cur_player_trajectory_df.empty:
-                    continue
-                player_x_coords = cur_player_trajectory_df.loc[:, player_place_area_columns.pos[0]]
-                player_y_coords = cur_player_trajectory_df.loc[:, player_place_area_columns.pos[1]]
-                player_canvas_x_coords, player_canvas_y_coords = \
-                    convert_to_canvas_coordinates(player_x_coords, player_y_coords)
-                player_xy_coords = list(zip(list(player_canvas_x_coords), list(player_canvas_y_coords)))
-                num_points += len(player_x_coords)
-
-                cur_player_d2_overlay_im = Image.new("RGBA", all_player_d2_img_copy.size, (255, 255, 255, 0))
-                cur_player_d2_drw = ImageDraw.Draw(cur_player_d2_overlay_im)
-                # drawing same text over and over again, so no big deal
-                title_text = extra_data_from_metric_title(config.metric_cost_title, predicted)
-                _, _, w, h = cur_player_d2_drw.textbbox((0, 0), title_text, font=title_font)
-                cur_player_d2_drw.text(((all_player_d2_img_copy.width - w) / 2,
-                                        (all_player_d2_img_copy.height * 0.1 - h) / 2),
-                                       title_text, fill=(255, 255, 255, 255), font=title_font)
-
-                ct_team = team_strs[0] in player_place_area_columns.player_id
-                if ct_team:
-                    if not include_ct:
+            for trajectory_df in round_trajectories:
+                # since this was split with : rather than _, need to remove last _
+                for player_place_area_columns in specific_player_place_area_columns:
+                    cur_player_trajectory_df = trajectory_df[trajectory_df[player_place_area_columns.alive] == 1]
+                    if cur_player_trajectory_df.empty:
                         continue
-                    fill_color = ct_color
-                else:
-                    if not include_t:
-                        continue
-                    fill_color = t_color
-                cur_player_d2_drw.line(xy=player_xy_coords, fill=fill_color, width=5)
-                all_player_d2_img_copy.alpha_composite(cur_player_d2_overlay_im)
+                    player_x_coords = cur_player_trajectory_df.loc[:, player_place_area_columns.pos[0]]
+                    player_y_coords = cur_player_trajectory_df.loc[:, player_place_area_columns.pos[1]]
+                    player_canvas_x_coords, player_canvas_y_coords = \
+                        convert_to_canvas_coordinates(player_x_coords, player_y_coords)
+                    player_xy_coords = list(zip(list(player_canvas_x_coords), list(player_canvas_y_coords)))
+                    num_points += len(player_x_coords)
+
+                    cur_player_d2_overlay_im = Image.new("RGBA", all_player_d2_img_copy.size, (255, 255, 255, 0))
+                    cur_player_d2_drw = ImageDraw.Draw(cur_player_d2_overlay_im)
+                    # drawing same text over and over again, so no big deal
+                    title_text = extra_data_from_metric_title(config.metric_cost_title, predicted)
+                    _, _, w, h = cur_player_d2_drw.textbbox((0, 0), title_text, font=title_font)
+                    cur_player_d2_drw.text(((all_player_d2_img_copy.width - w) / 2,
+                                            (all_player_d2_img_copy.height * 0.1 - h) / 2),
+                                           title_text, fill=(255, 255, 255, 255), font=title_font)
+
+                    ct_team = team_strs[0] in player_place_area_columns.player_id
+                    if ct_team:
+                        if not include_ct:
+                            continue
+                        fill_color = ct_color
+                    else:
+                        if not include_t:
+                            continue
+                        fill_color = t_color
+                    cur_player_d2_drw.line(xy=player_xy_coords, fill=fill_color, width=5)
+                    all_player_d2_img_copy.alpha_composite(cur_player_d2_overlay_im)
             pbar.update(1)
 
     print(f"num trajectories in plot {len(trajectory_dfs)}, alpha {color_alpha}, num points {num_points}")
