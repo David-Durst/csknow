@@ -58,6 +58,20 @@ def select_trajectories_into_dfs(loaded_model: LoadedModel,
 title_font = ImageFont.truetype("arial.ttf", 25)
 
 
+def extra_data_from_metric_title(metric_title: str, predicted: bool) -> str:
+    if predicted:
+        start_str = "Rollout "
+        end_str = " vs"
+    else:
+        start_str = "vs "
+        end_str = " Distribution"
+
+    start_index = metric_title.index(start_str) + len(start_str)
+    end_index = metric_title.index(end_str) + len(end_str)
+
+    return metric_title[start_index:end_index] + (" All Data" if predicted else " Most Similar")
+
+
 def plot_trajectory_dfs(trajectory_dfs: List[pd.DataFrame], config: ComparisonConfig, predicted: bool,
                         max_trajectories: int) -> Image:
     all_player_d2_img_copy = d2_img.copy().convert("RGBA")
@@ -83,7 +97,7 @@ def plot_trajectory_dfs(trajectory_dfs: List[pd.DataFrame], config: ComparisonCo
             cur_player_d2_overlay_im = Image.new("RGBA", all_player_d2_img_copy.size, (255, 255, 255, 0))
             cur_player_d2_drw = ImageDraw.Draw(cur_player_d2_overlay_im)
             # drawing same text over and over again, so no big deal
-            title_text = config.metric_cost_title + " " + ("Predicted" if predicted else "Ground Truth")
+            title_text = extra_data_from_metric_title(config.metric_cost_title, predicted)
             _, _, w, h = cur_player_d2_drw.textbbox((0, 0), title_text, font=title_font)
             cur_player_d2_drw.text(((all_player_d2_img_copy.width - w) / 2,
                                     (all_player_d2_img_copy.height * 0.1 - h) / 2),
@@ -179,7 +193,8 @@ def plot_distance_to_teammate_enemy_from_trajectory_dfs(trajectory_dfs: List[pd.
 
     fig = plt.figure(figsize=(10, 10), constrained_layout=True)
     teammate_text = "Teammate" if teammate else "Enemy"
-    fig.suptitle(config.metric_cost_title + " Distance To " + teammate_text + " Predicted", fontsize=16)
+    fig.suptitle(extra_data_from_metric_title(config.metric_cost_title, True) + " Distance To " + teammate_text,
+                 fontsize=16)
     ax = fig.subplots(1, 1)
 
     counts_heatmap = counts_heatmap.T
@@ -258,12 +273,13 @@ def plot_trajectory_comparison_heatmaps(similarity_df: pd.DataFrame, predicted_l
                                      list(best_fit_ground_truth_rounds_for_comparison_heatmap))
     max_trajectories = max(len(predicted_trajectory_dfs), len(best_fit_ground_truth_trajectory_dfs))
     predicted_image = plot_trajectory_dfs(predicted_trajectory_dfs, config, True, max_trajectories)
+    predicted_image.save(similarity_plots_path / (config.metric_cost_file_name + '_trajectories' + '.png'))
     ground_truth_image = plot_trajectory_dfs(best_fit_ground_truth_trajectory_dfs, config, False, max_trajectories)
 
     combined_image = Image.new('RGB', (predicted_image.width + ground_truth_image.width, predicted_image.height))
     combined_image.paste(predicted_image, (0, 0))
     combined_image.paste(ground_truth_image, (predicted_image.width, 0))
-    combined_image.save(similarity_plots_path / (config.metric_cost_file_name + '_trajectories' + '.png'))
+    combined_image.save(similarity_plots_path / (config.metric_cost_file_name + '_similarity_trajectories' + '.png'))
 
     print("plotting teammate")
     plot_distance_to_teammate_enemy_from_trajectory_dfs(predicted_trajectory_dfs, config, True, similarity_plots_path)
