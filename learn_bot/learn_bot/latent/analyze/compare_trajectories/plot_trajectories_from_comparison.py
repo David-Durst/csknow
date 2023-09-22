@@ -79,61 +79,70 @@ def extra_data_from_metric_title(metric_title: str, predicted: bool) -> str:
     return metric_title[start_index:end_index] + (" All Data" if predicted else " Most Similar")
 
 
-num_trajectories_for_color = 700
-
-
 def plot_trajectory_dfs(trajectory_dfs: List[pd.DataFrame], config: ComparisonConfig, predicted: bool,
                         include_ct: bool, include_t: bool,
                         filter_event_type: Optional[FilterEventType] = None,
                         key_areas: Optional[KeyAreas] = None) -> Image:
+    filtered_trajectory_dfs: List[pd.DataFrame] = []
+    num_points = 0
+    if filter_event_type is not None:
+        for round_trajectory_df in trajectory_dfs:
+            # split round trajectory by filter
+            cur_round_filtered_trajectory_dfs = filter_trajectory_by_key_events(filter_event_type, round_trajectory_df, key_areas)
+            filtered_trajectory_dfs += cur_round_filtered_trajectory_dfs
+            for df in cur_round_filtered_trajectory_dfs:
+                num_points += len(df)
+    else:
+        filtered_trajectory_dfs = trajectory_dfs
+        for df in trajectory_dfs:
+            num_points += len(df)
     all_player_d2_img_copy = d2_img.copy().convert("RGBA")
     # ground truth has many copies, scale it's color down so brightness comparable
-    color_alpha = int(ceil(20 * num_trajectories_for_color / float(len(trajectory_dfs))))
+    if filter_event_type is None:
+        num_points_for_color = 150000
+    elif filtered_trajectory_dfs == FilterEventType.Fire:
+        num_points_for_color = 70000
+    elif filtered_trajectory_dfs == FilterEventType.Kill:
+        num_points_for_color = 15000
+    else:
+        num_points_for_color = 20000
+    color_alpha = int(ceil(20 * num_points_for_color / float(num_points)))
     ct_color = (bot_ct_color_list[0], bot_ct_color_list[1], bot_ct_color_list[2], color_alpha)
     t_color = (bot_t_color_list[0], bot_t_color_list[1], bot_t_color_list[2], color_alpha)
 
-    num_points = 0
-    with tqdm(total=len(trajectory_dfs), disable=False) as pbar:
-        for round_trajectory_df in trajectory_dfs:
-            # split round trajectory by filter
-            if filter_event_type is not None:
-                round_trajectories = filter_trajectory_by_key_events(filter_event_type, round_trajectory_df, key_areas)
-            else:
-                round_trajectories = [round_trajectory_df]
+    with tqdm(total=len(filtered_trajectory_dfs), disable=False) as pbar:
+        for trajectory_df in filtered_trajectory_dfs:
+            # since this was split with : rather than _, need to remove last _
+            for player_place_area_columns in specific_player_place_area_columns:
+                cur_player_trajectory_df = trajectory_df[trajectory_df[player_place_area_columns.alive] == 1]
+                if cur_player_trajectory_df.empty:
+                    continue
+                player_x_coords = cur_player_trajectory_df.loc[:, player_place_area_columns.pos[0]]
+                player_y_coords = cur_player_trajectory_df.loc[:, player_place_area_columns.pos[1]]
+                player_canvas_x_coords, player_canvas_y_coords = \
+                    convert_to_canvas_coordinates(player_x_coords, player_y_coords)
+                player_xy_coords = list(zip(list(player_canvas_x_coords), list(player_canvas_y_coords)))
 
-            for trajectory_df in round_trajectories:
-                # since this was split with : rather than _, need to remove last _
-                for player_place_area_columns in specific_player_place_area_columns:
-                    cur_player_trajectory_df = trajectory_df[trajectory_df[player_place_area_columns.alive] == 1]
-                    if cur_player_trajectory_df.empty:
+                cur_player_d2_overlay_im = Image.new("RGBA", all_player_d2_img_copy.size, (255, 255, 255, 0))
+                cur_player_d2_drw = ImageDraw.Draw(cur_player_d2_overlay_im)
+                # drawing same text over and over again, so no big deal
+                title_text = extra_data_from_metric_title(config.metric_cost_title, predicted)
+                _, _, w, h = cur_player_d2_drw.textbbox((0, 0), title_text, font=title_font)
+                cur_player_d2_drw.text(((all_player_d2_img_copy.width - w) / 2,
+                                        (all_player_d2_img_copy.height * 0.1 - h) / 2),
+                                       title_text, fill=(255, 255, 255, 255), font=title_font)
+
+                ct_team = team_strs[0] in player_place_area_columns.player_id
+                if ct_team:
+                    if not include_ct:
                         continue
-                    player_x_coords = cur_player_trajectory_df.loc[:, player_place_area_columns.pos[0]]
-                    player_y_coords = cur_player_trajectory_df.loc[:, player_place_area_columns.pos[1]]
-                    player_canvas_x_coords, player_canvas_y_coords = \
-                        convert_to_canvas_coordinates(player_x_coords, player_y_coords)
-                    player_xy_coords = list(zip(list(player_canvas_x_coords), list(player_canvas_y_coords)))
-                    num_points += len(player_x_coords)
-
-                    cur_player_d2_overlay_im = Image.new("RGBA", all_player_d2_img_copy.size, (255, 255, 255, 0))
-                    cur_player_d2_drw = ImageDraw.Draw(cur_player_d2_overlay_im)
-                    # drawing same text over and over again, so no big deal
-                    title_text = extra_data_from_metric_title(config.metric_cost_title, predicted)
-                    _, _, w, h = cur_player_d2_drw.textbbox((0, 0), title_text, font=title_font)
-                    cur_player_d2_drw.text(((all_player_d2_img_copy.width - w) / 2,
-                                            (all_player_d2_img_copy.height * 0.1 - h) / 2),
-                                           title_text, fill=(255, 255, 255, 255), font=title_font)
-
-                    ct_team = team_strs[0] in player_place_area_columns.player_id
-                    if ct_team:
-                        if not include_ct:
-                            continue
-                        fill_color = ct_color
-                    else:
-                        if not include_t:
-                            continue
-                        fill_color = t_color
-                    cur_player_d2_drw.line(xy=player_xy_coords, fill=fill_color, width=5)
-                    all_player_d2_img_copy.alpha_composite(cur_player_d2_overlay_im)
+                    fill_color = ct_color
+                else:
+                    if not include_t:
+                        continue
+                    fill_color = t_color
+                cur_player_d2_drw.line(xy=player_xy_coords, fill=fill_color, width=5)
+                all_player_d2_img_copy.alpha_composite(cur_player_d2_overlay_im)
             pbar.update(1)
 
     print(f"num trajectories in plot {len(trajectory_dfs)}, alpha {color_alpha}, num points {num_points}")
@@ -313,14 +322,14 @@ def plot_trajectory_comparison_heatmaps(similarity_df: pd.DataFrame, predicted_l
             select_trajectories_into_dfs(ground_truth_loaded_model,
                                          list(best_fit_ground_truth_rounds_for_comparison_heatmap))
 
-    #print("plotting predicted")
-    #predicted_image = plot_trajectory_dfs(predicted_trajectory_dfs, config, True, max_trajectories, True, True)
-    #predicted_image.save(similarity_plots_path / (config.metric_cost_file_name + '_trajectories.png'))
+    print("plotting predicted")
+    predicted_image = plot_trajectory_dfs(predicted_trajectory_dfs, config, True, True, True)
+    predicted_image.save(similarity_plots_path / (config.metric_cost_file_name + '_trajectories.png'))
     #print("plotting predicted just ct")
-    #predicted_ct_image = plot_trajectory_dfs(predicted_trajectory_dfs, config, True, max_trajectories, True, False)
+    #predicted_ct_image = plot_trajectory_dfs(predicted_trajectory_dfs, config, True, True, False)
     #predicted_ct_image.save(similarity_plots_path / (config.metric_cost_file_name + '_trajectories_ct.png'))
     #print("plotting predicted just t")
-    #predicted_t_image = plot_trajectory_dfs(predicted_trajectory_dfs, config, True, max_trajectories, False, True)
+    #predicted_t_image = plot_trajectory_dfs(predicted_trajectory_dfs, config, True, False, True)
     #predicted_t_image.save(similarity_plots_path / (config.metric_cost_file_name + '_trajectories_t.png'))
     print("plotting predicted fire events")
     predicted_image = plot_trajectory_dfs(predicted_trajectory_dfs, config, True, True, True,
@@ -337,6 +346,8 @@ def plot_trajectory_comparison_heatmaps(similarity_df: pd.DataFrame, predicted_l
     predicted_image = plot_trajectory_dfs(predicted_trajectory_dfs, config, True, True, True,
                                           FilterEventType.KeyArea, key_areas)
     predicted_image.save(similarity_plots_path / (config.metric_cost_file_name + '_trajectories_area.png'))
+
+    quit(0)
 
 
     if plot_ground_truth:

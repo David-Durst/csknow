@@ -14,6 +14,14 @@ class FilterEventType(Enum):
     Kill = 2
     KeyArea = 3
 
+    def __str__(self) -> str:
+        if self == FilterEventType.Fire:
+            return "Fire"
+        elif self == FilterEventType.Kill:
+            return "Kill"
+        else:
+            return "KeyArea"
+
 
 KeyAreas = List[AABB]
 seconds_round_key_event = 0.2
