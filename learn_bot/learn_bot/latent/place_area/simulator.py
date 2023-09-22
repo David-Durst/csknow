@@ -16,7 +16,7 @@ from learn_bot.latent.load_model import load_model_file, LoadedModel
 from learn_bot.latent.order.column_names import num_radial_ticks
 from learn_bot.latent.place_area.pos_abs_from_delta_grid_or_radial import delta_pos_grid_num_cells_per_xy_dim, \
     delta_pos_grid_cell_dim, \
-    delta_pos_grid_num_xy_cells_per_z_change, compute_new_pos, NavData, sim_tick_frequency
+    delta_pos_grid_num_xy_cells_per_z_change, compute_new_pos, NavData, data_ticks_per_sim_tick
 from learn_bot.latent.place_area.load_data import human_latent_team_hdf5_data_path, manual_latent_team_hdf5_data_path, \
     rollout_latent_team_hdf5_data_path, LoadDataResult, LoadDataOptions, SimilarityFn
 from learn_bot.latent.train import train_test_split_file_name
@@ -45,7 +45,7 @@ def limit_to_every_nth_row(df: pd.DataFrame):
     condition = df[tick_id_column] != df[tick_id_column]
     for round_id, round_row in grouped_df.iterrows():
         condition = condition | ((df[round_id_column] == round_id) &
-                                 ((df[tick_id_column] - round_row[tick_id_column]) % sim_tick_frequency == 0))
+                                 ((df[tick_id_column] - round_row[tick_id_column]) % data_ticks_per_sim_tick == 0))
     return condition
 
 
@@ -56,7 +56,7 @@ def get_round_lengths(df: pd.DataFrame) -> RoundLengths:
     list_id = 0
     for round_id, round_row in grouped_df[tick_id_column].iterrows():
         result.round_ids.append(round_id)
-        result.round_to_tick_ids[round_id] = range(round_row['min'], round_row['max']+1, sim_tick_frequency)
+        result.round_to_tick_ids[round_id] = range(round_row['min'], round_row['max'] + 1, data_ticks_per_sim_tick)
         result.round_to_length[round_id] = len(result.round_to_tick_ids[round_id])
         result.round_id_to_list_id[round_id] = list_id
 

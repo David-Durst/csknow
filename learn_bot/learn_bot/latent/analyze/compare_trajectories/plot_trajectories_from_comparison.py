@@ -3,14 +3,17 @@ import pickle
 from dataclasses import dataclass
 from math import ceil
 from pathlib import Path
-from typing import List, Set, Dict
+from typing import List, Set, Dict, Optional
 
 import numpy as np
 import pandas as pd
 from PIL import Image, ImageDraw, ImageFont
 from matplotlib import pyplot as plt
 from matplotlib.colors import LogNorm, TwoSlopeNorm
+from tqdm import tqdm
 
+from learn_bot.latent.analyze.compare_trajectories.filter_trajectory_key_events import FilterEventType, \
+    filter_trajectory_by_key_events, KeyAreas
 from learn_bot.latent.analyze.compare_trajectories.process_trajectory_comparison import set_pd_print_options, \
     ComparisonConfig
 from learn_bot.latent.analyze.comparison_column_names import metric_type_col, dtw_cost_col, \
@@ -22,7 +25,9 @@ from learn_bot.latent.engagement.column_names import round_id_column, round_numb
 from learn_bot.latent.load_model import LoadedModel
 from learn_bot.latent.order.column_names import team_strs
 from learn_bot.latent.place_area.column_names import specific_player_place_area_columns
+from learn_bot.latent.place_area.pos_abs_from_delta_grid_or_radial import AABB
 from learn_bot.latent.transformer_nested_hidden_latent_model import d2_min, d2_max
+from learn_bot.libs.vec import Vec3
 
 plot_n_most_similar = 1
 
@@ -69,13 +74,15 @@ def extra_data_from_metric_title(metric_title: str, predicted: bool) -> str:
         end_str = " Distribution"
 
     start_index = metric_title.index(start_str) + len(start_str)
-    end_index = metric_title.index(end_str) + len(end_str)
+    end_index = metric_title.index(end_str)
 
     return metric_title[start_index:end_index] + (" All Data" if predicted else " Most Similar")
 
 
 def plot_trajectory_dfs(trajectory_dfs: List[pd.DataFrame], config: ComparisonConfig, predicted: bool,
-                        max_trajectories: int, include_ct: bool, include_t: bool) -> Image:
+                        max_trajectories: int, include_ct: bool, include_t: bool,
+                        filter_event_type: Optional[FilterEventType] = None,
+                        key_areas: Optional[KeyAreas] = None) -> Image:
     all_player_d2_img_copy = d2_img.copy().convert("RGBA")
     # ground truth has many copies, scale it's color down so brightness comparable
     color_alpha = int(ceil(20 * float(max_trajectories) / float(len(trajectory_dfs))))
@@ -83,39 +90,44 @@ def plot_trajectory_dfs(trajectory_dfs: List[pd.DataFrame], config: ComparisonCo
     t_color = (bot_t_color_list[0], bot_t_color_list[1], bot_t_color_list[2], color_alpha)
 
     num_points = 0
-    for trajectory_df in trajectory_dfs:
-        # since this was split with : rather than _, need to remove last _
-        for player_place_area_columns in specific_player_place_area_columns:
-            cur_player_trajectory_df = trajectory_df[trajectory_df[player_place_area_columns.alive] == 1]
-            if cur_player_trajectory_df.empty:
-                continue
-            player_x_coords = cur_player_trajectory_df.loc[:, player_place_area_columns.pos[0]]
-            player_y_coords = cur_player_trajectory_df.loc[:, player_place_area_columns.pos[1]]
-            player_canvas_x_coords, player_canvas_y_coords = \
-                convert_to_canvas_coordinates(player_x_coords, player_y_coords)
-            player_xy_coords = list(zip(list(player_canvas_x_coords), list(player_canvas_y_coords)))
-            num_points += len(player_x_coords)
+    with tqdm(total=len(trajectory_dfs), disable=False) as pbar:
+        for trajectory_df in trajectory_dfs:
+            if filter_event_type is not None:
+                trajectory_df = filter_trajectory_by_key_events(filter_event_type, trajectory_df, key_areas)
 
-            cur_player_d2_overlay_im = Image.new("RGBA", all_player_d2_img_copy.size, (255, 255, 255, 0))
-            cur_player_d2_drw = ImageDraw.Draw(cur_player_d2_overlay_im)
-            # drawing same text over and over again, so no big deal
-            title_text = extra_data_from_metric_title(config.metric_cost_title, predicted)
-            _, _, w, h = cur_player_d2_drw.textbbox((0, 0), title_text, font=title_font)
-            cur_player_d2_drw.text(((all_player_d2_img_copy.width - w) / 2,
-                                    (all_player_d2_img_copy.height * 0.1 - h) / 2),
-                                   title_text, fill=(255, 255, 255, 255), font=title_font)
+            # since this was split with : rather than _, need to remove last _
+            for player_place_area_columns in specific_player_place_area_columns:
+                cur_player_trajectory_df = trajectory_df[trajectory_df[player_place_area_columns.alive] == 1]
+                if cur_player_trajectory_df.empty:
+                    continue
+                player_x_coords = cur_player_trajectory_df.loc[:, player_place_area_columns.pos[0]]
+                player_y_coords = cur_player_trajectory_df.loc[:, player_place_area_columns.pos[1]]
+                player_canvas_x_coords, player_canvas_y_coords = \
+                    convert_to_canvas_coordinates(player_x_coords, player_y_coords)
+                player_xy_coords = list(zip(list(player_canvas_x_coords), list(player_canvas_y_coords)))
+                num_points += len(player_x_coords)
 
-            ct_team = team_strs[0] in player_place_area_columns.player_id
-            if ct_team:
-                if not include_ct:
-                    continue
-                fill_color = ct_color
-            else:
-                if not include_t:
-                    continue
-                fill_color = t_color
-            cur_player_d2_drw.line(xy=player_xy_coords, fill=fill_color, width=5)
-            all_player_d2_img_copy.alpha_composite(cur_player_d2_overlay_im)
+                cur_player_d2_overlay_im = Image.new("RGBA", all_player_d2_img_copy.size, (255, 255, 255, 0))
+                cur_player_d2_drw = ImageDraw.Draw(cur_player_d2_overlay_im)
+                # drawing same text over and over again, so no big deal
+                title_text = extra_data_from_metric_title(config.metric_cost_title, predicted)
+                _, _, w, h = cur_player_d2_drw.textbbox((0, 0), title_text, font=title_font)
+                cur_player_d2_drw.text(((all_player_d2_img_copy.width - w) / 2,
+                                        (all_player_d2_img_copy.height * 0.1 - h) / 2),
+                                       title_text, fill=(255, 255, 255, 255), font=title_font)
+
+                ct_team = team_strs[0] in player_place_area_columns.player_id
+                if ct_team:
+                    if not include_ct:
+                        continue
+                    fill_color = ct_color
+                else:
+                    if not include_t:
+                        continue
+                    fill_color = t_color
+                cur_player_d2_drw.line(xy=player_xy_coords, fill=fill_color, width=5)
+                all_player_d2_img_copy.alpha_composite(cur_player_d2_overlay_im)
+            pbar.update(1)
 
     print(f"num trajectories in plot {len(trajectory_dfs)}, alpha {color_alpha}, num points {num_points}")
 
@@ -241,7 +253,7 @@ def plot_distance_to_teammate_enemy_from_trajectory_dfs(trajectory_dfs: List[pd.
     plt.savefig(similarity_plots_path / (config.metric_cost_file_name + '_distance_' + teammate_text.lower() + '.png'))
 
 
-debug_caching = False
+debug_caching = True
 remove_debug_cache = False
 plot_ground_truth = False
 
@@ -299,13 +311,29 @@ def plot_trajectory_comparison_heatmaps(similarity_df: pd.DataFrame, predicted_l
 
     print("plotting predicted")
     predicted_image = plot_trajectory_dfs(predicted_trajectory_dfs, config, True, max_trajectories, True, True)
-    predicted_image.save(similarity_plots_path / (config.metric_cost_file_name + '_trajectories' + '.png'))
-    print("plotting predicted just ct")
-    predicted_ct_image = plot_trajectory_dfs(predicted_trajectory_dfs, config, True, max_trajectories, True, False)
-    predicted_ct_image.save(similarity_plots_path / (config.metric_cost_file_name + '_trajectories_ct' + '.png'))
-    print("plotting predicted just t")
-    predicted_t_image = plot_trajectory_dfs(predicted_trajectory_dfs, config, True, max_trajectories, False, True)
-    predicted_t_image.save(similarity_plots_path / (config.metric_cost_file_name + '_trajectories_t' + '.png'))
+    predicted_image.save(similarity_plots_path / (config.metric_cost_file_name + '_trajectories.png'))
+    #print("plotting predicted just ct")
+    #predicted_ct_image = plot_trajectory_dfs(predicted_trajectory_dfs, config, True, max_trajectories, True, False)
+    #predicted_ct_image.save(similarity_plots_path / (config.metric_cost_file_name + '_trajectories_ct.png'))
+    #print("plotting predicted just t")
+    #predicted_t_image = plot_trajectory_dfs(predicted_trajectory_dfs, config, True, max_trajectories, False, True)
+    #predicted_t_image.save(similarity_plots_path / (config.metric_cost_file_name + '_trajectories_t.png'))
+    print("plotting predicted fire events")
+    predicted_image = plot_trajectory_dfs(predicted_trajectory_dfs, config, True, max_trajectories, True, True,
+                                          FilterEventType.Fire)
+    predicted_image.save(similarity_plots_path / (config.metric_cost_file_name + '_trajectories_fire.png'))
+    print("plotting predicted kill events")
+    predicted_image = plot_trajectory_dfs(predicted_trajectory_dfs, config, True, max_trajectories, True, True,
+                                          FilterEventType.Kill)
+    predicted_image.save(similarity_plots_path / (config.metric_cost_file_name + '_trajectories_kill.png'))
+    # first key area is cat, second is bdoors
+    key_areas: KeyAreas = [AABB(Vec3(245., 1920., -50), Vec3(510., 2070., 10000)),
+                           AABB(Vec3(-1450., 2030., -10000), Vec3(-1000., 2890., 10000))]
+    print("plotting predicted key area events")
+    predicted_image = plot_trajectory_dfs(predicted_trajectory_dfs, config, True, max_trajectories, True, True,
+                                          FilterEventType.KeyArea, key_areas)
+    predicted_image.save(similarity_plots_path / (config.metric_cost_file_name + '_trajectories_area.png'))
+
 
     if plot_ground_truth:
         ground_truth_image = plot_trajectory_dfs(best_fit_ground_truth_trajectory_dfs, config, False, max_trajectories,
