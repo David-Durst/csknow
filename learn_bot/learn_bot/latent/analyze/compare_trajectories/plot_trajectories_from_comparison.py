@@ -1,3 +1,5 @@
+import os
+import pickle
 from dataclasses import dataclass
 from math import ceil
 from pathlib import Path
@@ -73,7 +75,7 @@ def extra_data_from_metric_title(metric_title: str, predicted: bool) -> str:
 
 
 def plot_trajectory_dfs(trajectory_dfs: List[pd.DataFrame], config: ComparisonConfig, predicted: bool,
-                        max_trajectories: int) -> Image:
+                        max_trajectories: int, include_ct: bool, include_t: bool) -> Image:
     all_player_d2_img_copy = d2_img.copy().convert("RGBA")
     # ground truth has many copies, scale it's color down so brightness comparable
     color_alpha = int(ceil(20 * float(max_trajectories) / float(len(trajectory_dfs))))
@@ -105,8 +107,12 @@ def plot_trajectory_dfs(trajectory_dfs: List[pd.DataFrame], config: ComparisonCo
 
             ct_team = team_strs[0] in player_place_area_columns.player_id
             if ct_team:
+                if not include_ct:
+                    continue
                 fill_color = ct_color
             else:
+                if not include_t:
+                    continue
                 fill_color = t_color
             cur_player_d2_drw.line(xy=player_xy_coords, fill=fill_color, width=5)
             all_player_d2_img_copy.alpha_composite(cur_player_d2_overlay_im)
@@ -235,6 +241,10 @@ def plot_distance_to_teammate_enemy_from_trajectory_dfs(trajectory_dfs: List[pd.
     plt.savefig(similarity_plots_path / (config.metric_cost_file_name + '_distance_' + teammate_text.lower() + '.png'))
 
 
+debug_caching = False
+remove_debug_cache = False
+plot_ground_truth = False
+
 def plot_trajectory_comparison_heatmaps(similarity_df: pd.DataFrame, predicted_loaded_model: LoadedModel,
                                         ground_truth_loaded_model: LoadedModel,
                                         config: ComparisonConfig, similarity_plots_path: Path):
@@ -265,21 +275,46 @@ def plot_trajectory_comparison_heatmaps(similarity_df: pd.DataFrame, predicted_l
         )
 
     print('loading predicted df')
-    predicted_trajectory_dfs = select_trajectories_into_dfs(predicted_loaded_model,
-                                                            list(predicted_rounds_for_comparison_heatmap))
-    print('loading best fit ground truth df')
-    best_fit_ground_truth_trajectory_dfs = \
-        select_trajectories_into_dfs(ground_truth_loaded_model,
-                                     list(best_fit_ground_truth_rounds_for_comparison_heatmap))
-    max_trajectories = max(len(predicted_trajectory_dfs), len(best_fit_ground_truth_trajectory_dfs))
-    predicted_image = plot_trajectory_dfs(predicted_trajectory_dfs, config, True, max_trajectories)
-    predicted_image.save(similarity_plots_path / (config.metric_cost_file_name + '_trajectories' + '.png'))
-    ground_truth_image = plot_trajectory_dfs(best_fit_ground_truth_trajectory_dfs, config, False, max_trajectories)
+    debug_cache_path = similarity_plots_path / "predicted_trajectory_dfs.pickle"
+    if debug_caching and debug_cache_path.is_file():
+        with open(debug_cache_path, "rb") as pickle_file:
+            predicted_trajectory_dfs = pickle.load(pickle_file)
+    else:
+        predicted_trajectory_dfs = select_trajectories_into_dfs(predicted_loaded_model,
+                                                                list(predicted_rounds_for_comparison_heatmap))
+        if debug_caching:
+            with open(debug_cache_path, "wb") as pickle_file:
+                pickle.dump(predicted_trajectory_dfs, pickle_file)
+        elif remove_debug_cache:
+            debug_cache_path.unlink(missing_ok=True)
 
-    combined_image = Image.new('RGB', (predicted_image.width + ground_truth_image.width, predicted_image.height))
-    combined_image.paste(predicted_image, (0, 0))
-    combined_image.paste(ground_truth_image, (predicted_image.width, 0))
-    combined_image.save(similarity_plots_path / (config.metric_cost_file_name + '_similarity_trajectories' + '.png'))
+    if plot_ground_truth:
+        print('loading best fit ground truth df')
+        best_fit_ground_truth_trajectory_dfs = \
+            select_trajectories_into_dfs(ground_truth_loaded_model,
+                                         list(best_fit_ground_truth_rounds_for_comparison_heatmap))
+        max_trajectories = max(len(predicted_trajectory_dfs), len(best_fit_ground_truth_trajectory_dfs))
+    else:
+        max_trajectories = len(predicted_trajectory_dfs)
+
+    print("plotting predicted")
+    predicted_image = plot_trajectory_dfs(predicted_trajectory_dfs, config, True, max_trajectories, True, True)
+    predicted_image.save(similarity_plots_path / (config.metric_cost_file_name + '_trajectories' + '.png'))
+    print("plotting predicted just ct")
+    predicted_ct_image = plot_trajectory_dfs(predicted_trajectory_dfs, config, True, max_trajectories, True, False)
+    predicted_ct_image.save(similarity_plots_path / (config.metric_cost_file_name + '_trajectories_ct' + '.png'))
+    print("plotting predicted just t")
+    predicted_t_image = plot_trajectory_dfs(predicted_trajectory_dfs, config, True, max_trajectories, False, True)
+    predicted_t_image.save(similarity_plots_path / (config.metric_cost_file_name + '_trajectories_t' + '.png'))
+
+    if plot_ground_truth:
+        ground_truth_image = plot_trajectory_dfs(best_fit_ground_truth_trajectory_dfs, config, False, max_trajectories,
+                                                 True, True)
+
+        combined_image = Image.new('RGB', (predicted_image.width + ground_truth_image.width, predicted_image.height))
+        combined_image.paste(predicted_image, (0, 0))
+        combined_image.paste(ground_truth_image, (predicted_image.width, 0))
+        combined_image.save(similarity_plots_path / (config.metric_cost_file_name + '_similarity_trajectories' + '.png'))
 
     print("plotting teammate")
     plot_distance_to_teammate_enemy_from_trajectory_dfs(predicted_trajectory_dfs, config, True, similarity_plots_path)

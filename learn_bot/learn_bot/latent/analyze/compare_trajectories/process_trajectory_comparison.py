@@ -58,7 +58,7 @@ def filter_similarity_for_first_n_test_rounds(loaded_data_result: LoadDataResult
                                               top_n: int = 300) -> pd.DataFrame:
     test_plant_states_path = \
         loaded_data_result.multi_hdf5_wrapper.train_test_split_path.parent / push_only_test_plant_states_file_name
-    test_start_pd = load_hdf5_to_pd(test_plant_states_path).iloc[:top_n]
+    test_start_pd = load_hdf5_to_pd(test_plant_states_path)#.iloc[:top_n]
 
     # convert keys to partial keys used in similarity_df, get round ids for each hdf5
     hdf5_partial_key_to_round_ids: Dict[str, List[int]] = {}
