@@ -79,13 +79,16 @@ def extra_data_from_metric_title(metric_title: str, predicted: bool) -> str:
     return metric_title[start_index:end_index] + (" All Data" if predicted else " Most Similar")
 
 
+num_trajectories_for_color = 700
+
+
 def plot_trajectory_dfs(trajectory_dfs: List[pd.DataFrame], config: ComparisonConfig, predicted: bool,
-                        max_trajectories: int, include_ct: bool, include_t: bool,
+                        include_ct: bool, include_t: bool,
                         filter_event_type: Optional[FilterEventType] = None,
                         key_areas: Optional[KeyAreas] = None) -> Image:
     all_player_d2_img_copy = d2_img.copy().convert("RGBA")
     # ground truth has many copies, scale it's color down so brightness comparable
-    color_alpha = int(ceil(20 * float(max_trajectories) / float(len(trajectory_dfs))))
+    color_alpha = int(ceil(20 * num_trajectories_for_color / float(len(trajectory_dfs))))
     ct_color = (bot_ct_color_list[0], bot_ct_color_list[1], bot_ct_color_list[2], color_alpha)
     t_color = (bot_t_color_list[0], bot_t_color_list[1], bot_t_color_list[2], color_alpha)
 
@@ -305,13 +308,10 @@ def plot_trajectory_comparison_heatmaps(similarity_df: pd.DataFrame, predicted_l
         best_fit_ground_truth_trajectory_dfs = \
             select_trajectories_into_dfs(ground_truth_loaded_model,
                                          list(best_fit_ground_truth_rounds_for_comparison_heatmap))
-        max_trajectories = max(len(predicted_trajectory_dfs), len(best_fit_ground_truth_trajectory_dfs))
-    else:
-        max_trajectories = len(predicted_trajectory_dfs)
 
-    print("plotting predicted")
-    predicted_image = plot_trajectory_dfs(predicted_trajectory_dfs, config, True, max_trajectories, True, True)
-    predicted_image.save(similarity_plots_path / (config.metric_cost_file_name + '_trajectories.png'))
+    #print("plotting predicted")
+    #predicted_image = plot_trajectory_dfs(predicted_trajectory_dfs, config, True, max_trajectories, True, True)
+    #predicted_image.save(similarity_plots_path / (config.metric_cost_file_name + '_trajectories.png'))
     #print("plotting predicted just ct")
     #predicted_ct_image = plot_trajectory_dfs(predicted_trajectory_dfs, config, True, max_trajectories, True, False)
     #predicted_ct_image.save(similarity_plots_path / (config.metric_cost_file_name + '_trajectories_ct.png'))
@@ -319,25 +319,24 @@ def plot_trajectory_comparison_heatmaps(similarity_df: pd.DataFrame, predicted_l
     #predicted_t_image = plot_trajectory_dfs(predicted_trajectory_dfs, config, True, max_trajectories, False, True)
     #predicted_t_image.save(similarity_plots_path / (config.metric_cost_file_name + '_trajectories_t.png'))
     print("plotting predicted fire events")
-    predicted_image = plot_trajectory_dfs(predicted_trajectory_dfs, config, True, max_trajectories, True, True,
+    predicted_image = plot_trajectory_dfs(predicted_trajectory_dfs, config, True, True, True,
                                           FilterEventType.Fire)
     predicted_image.save(similarity_plots_path / (config.metric_cost_file_name + '_trajectories_fire.png'))
     print("plotting predicted kill events")
-    predicted_image = plot_trajectory_dfs(predicted_trajectory_dfs, config, True, max_trajectories, True, True,
+    predicted_image = plot_trajectory_dfs(predicted_trajectory_dfs, config, True, True, True,
                                           FilterEventType.Kill)
     predicted_image.save(similarity_plots_path / (config.metric_cost_file_name + '_trajectories_kill.png'))
     # first key area is cat, second is bdoors
-    key_areas: KeyAreas = [AABB(Vec3(245., 1920., -50), Vec3(510., 2070., 10000)),
-                           AABB(Vec3(-1450., 2030., -10000), Vec3(-1000., 2890., 10000))]
+    key_areas: KeyAreas = [AABB(Vec3(245., 1920., -50), Vec3(510., 2070., 10000))]
+                           #AABB(Vec3(-1450., 2030., -10000), Vec3(-1000., 2890., 10000))]
     print("plotting predicted key area events")
-    predicted_image = plot_trajectory_dfs(predicted_trajectory_dfs, config, True, max_trajectories, True, True,
+    predicted_image = plot_trajectory_dfs(predicted_trajectory_dfs, config, True, True, True,
                                           FilterEventType.KeyArea, key_areas)
     predicted_image.save(similarity_plots_path / (config.metric_cost_file_name + '_trajectories_area.png'))
 
 
     if plot_ground_truth:
-        ground_truth_image = plot_trajectory_dfs(best_fit_ground_truth_trajectory_dfs, config, False, max_trajectories,
-                                                 True, True)
+        ground_truth_image = plot_trajectory_dfs(best_fit_ground_truth_trajectory_dfs, config, False, True, True)
 
         combined_image = Image.new('RGB', (predicted_image.width + ground_truth_image.width, predicted_image.height))
         combined_image.paste(predicted_image, (0, 0))

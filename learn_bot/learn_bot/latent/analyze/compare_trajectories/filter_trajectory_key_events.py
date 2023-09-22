@@ -1,4 +1,5 @@
 from enum import Enum
+from math import ceil
 from typing import List, Optional
 
 import pandas as pd
@@ -15,7 +16,7 @@ class FilterEventType(Enum):
 
 
 KeyAreas = List[AABB]
-seconds_round_key_event = 3
+seconds_round_key_event = 0.2
 
 
 def filter_trajectory_by_key_events(filter_event_type: FilterEventType, trajectory_df: pd.DataFrame,
@@ -29,10 +30,8 @@ def filter_trajectory_by_key_events(filter_event_type: FilterEventType, trajecto
                                   (trajectory_df[player_place_area_columns.player_fire_in_last_5s] <= 0.05)
         elif filter_event_type == FilterEventType.Kill:
             lagged_alive = trajectory_df[player_place_area_columns.alive].shift(periods=1)
-            lagged_round_id = trajectory_df[round_id_column].shift(periods=1)
             key_event_condition = key_event_condition | \
-                                  (lagged_alive & ~trajectory_df[player_place_area_columns.alive] &
-                                   trajectory_df[round_id_column] == lagged_round_id)
+                                  (lagged_alive & ~trajectory_df[player_place_area_columns.alive])
         else:
             assert key_areas is not None
             for key_area in key_areas:
@@ -46,7 +45,7 @@ def filter_trajectory_by_key_events(filter_event_type: FilterEventType, trajecto
 
     # mul by 2 for both directions, add 1 so odd and contain center
     time_extended_condition: pd.Series = key_event_condition \
-        .rolling(data_ticks_per_second * seconds_round_key_event * 2 + 1, center=True, min_periods=1) \
+        .rolling(int(ceil(data_ticks_per_second * seconds_round_key_event)) * 2 + 1, center=True, min_periods=1) \
         .apply(lambda x: x.any(), raw=True).astype(bool)
 
     return trajectory_df[time_extended_condition]
