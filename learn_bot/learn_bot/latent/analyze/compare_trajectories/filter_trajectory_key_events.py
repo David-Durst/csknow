@@ -41,19 +41,17 @@ def filter_trajectory_by_key_events(filter_event_type: FilterEventType, trajecto
                                     key_areas: Optional[KeyAreas] = None,
                                     key_area_team: KeyAreaTeam = KeyAreaTeam.Both) -> List[pd.DataFrame]:
 
-    key_event_condition = trajectory_df[round_id_column] != trajectory_df[round_id_column]
-    # since this was split with : rather than _, need to remove last _
-    # want someone firing, and player on right team in the key area
+    fire_condition = trajectory_df[round_id_column] != trajectory_df[round_id_column]
+    kill_condition = trajectory_df[round_id_column] != trajectory_df[round_id_column]
+    key_area_condition = trajectory_df[round_id_column] != trajectory_df[round_id_column]
     for player_place_area_columns in specific_player_place_area_columns:
-        # allow anding conditions per player
-        per_player_condition = trajectory_df[round_id_column] == trajectory_df[round_id_column]
         if filter_event_type == FilterEventType.Fire or filter_event_type == FilterEventType.FireAndKeyArea:
-            per_player_condition = per_player_condition & \
-                                   (trajectory_df[player_place_area_columns.player_fire_in_last_5s] <= 0.05)
+            fire_condition = fire_condition | \
+                             (trajectory_df[player_place_area_columns.player_fire_in_last_5s] <= 0.05)
         if filter_event_type == FilterEventType.Kill:
             lagged_alive = trajectory_df[player_place_area_columns.alive].shift(periods=1)
-            per_player_condition = per_player_condition & \
-                                   (lagged_alive & ~trajectory_df[player_place_area_columns.alive])
+            kill_condition = kill_condition | \
+                             (lagged_alive & ~trajectory_df[player_place_area_columns.alive])
         if filter_event_type == FilterEventType.KeyArea or filter_event_type == FilterEventType.FireAndKeyArea:
             is_ct_player = team_strs[0] in player_place_area_columns.player_id
             assert key_areas is not None
@@ -67,8 +65,14 @@ def filter_trajectory_by_key_events(filter_event_type: FilterEventType, trajecto
                                   (trajectory_df[player_place_area_columns.pos[1]] <= key_area.max.y)
                     z_condition = (trajectory_df[player_place_area_columns.pos[2]] >= key_area.min.z) & \
                                   (trajectory_df[player_place_area_columns.pos[2]] <= key_area.max.z)
-                    per_player_condition = per_player_condition & (x_condition & y_condition & z_condition)
-        key_event_condition = key_event_condition | per_player_condition
+                    key_area_condition = key_area_condition | (x_condition & y_condition & z_condition)
+
+    # if just a single condition, or them all together
+    if filter_event_type in [FilterEventType.Fire, FilterEventType.Kill, FilterEventType.KeyArea]:
+        key_event_condition = fire_condition | kill_condition | key_area_condition
+    # for and, want anyone firing while a player (of right time) is in the key area
+    else:
+        key_event_condition = fire_condition & key_area_condition
 
     # mul by 2 for both directions, add 1 so odd and contain center
     time_extended_condition: pd.Series = key_event_condition \
