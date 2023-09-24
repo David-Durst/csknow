@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 from typing import List, Dict, Optional
 
@@ -45,19 +46,28 @@ class HDF5Wrapper:
         return result
 
     def create_np_array(self, cts: IOColumnTransformers, load_output_data: bool = True):
-        # don't need to filder by id_df after limit, as data loader will get the id from the limited id_df for lookup
+        # don't need to filter by id_df after limit, as data loader will get the id from the limited id_df for lookup
         # in entire np array
-        input_np = load_hdf5_to_np_array(self.hdf5_path, cts.input_types.column_names_all_categorical_columns(),
-                                         True).astype('float16')
         input_mmap_path = (self.hdf5_path.parent / ('input_mmap_' + self.hdf5_path.name)).with_suffix('.npy')
-        np.save(str(input_mmap_path), input_np, allow_pickle=False)
-        HDF5Wrapper.input_data[self.hdf5_path] = np.load(input_mmap_path, mmap_mode='r')
+        output_mmap_path = (self.hdf5_path.parent / ('output_mmap_' + self.hdf5_path.name)).with_suffix('.npy')
+
+        hdf5_timestamp = os.path.getmtime(self.hdf5_path)
+        input_timestamp = os.path.getmtime(input_mmap_path) if input_mmap_path.is_file() else None
+        output_timestamp = os.path.getmtime(output_mmap_path) if output_mmap_path.is_file() else None
+
+        # no need to recreate np files if they were made after hdf5, as hdf5 haven't updated
+        if input_timestamp is None or input_timestamp < hdf5_timestamp:
+            input_np = load_hdf5_to_np_array(self.hdf5_path, cts.input_types.column_names_all_categorical_columns(),
+                                             True).astype('float16')
+            np.save(str(input_mmap_path), input_np, allow_pickle=False)
+        HDF5Wrapper.input_data[self.hdf5_path] = np.load(str(input_mmap_path), mmap_mode='r')
         if load_output_data:
-            output_np = load_hdf5_to_np_array(self.hdf5_path, cts.output_types.column_names_all_categorical_columns(),
-                                              False).astype('float16')
-            output_mmap_path = (self.hdf5_path.parent / ('output_mmap_' + self.hdf5_path.name)).with_suffix('.npy')
-            np.save(str(output_mmap_path), output_np, allow_pickle=False)
-            HDF5Wrapper.output_data[self.hdf5_path] = np.load(output_mmap_path, mmap_mode='r')
+            if output_timestamp is None or output_timestamp < hdf5_timestamp:
+                output_np = load_hdf5_to_np_array(self.hdf5_path,
+                                                  cts.output_types.column_names_all_categorical_columns(),
+                                                  False).astype('float16')
+                np.save(str(output_mmap_path), output_np, allow_pickle=False)
+            HDF5Wrapper.output_data[self.hdf5_path] = np.load(str(output_mmap_path), mmap_mode='r')
 
     def get_input_data(self, index: int) -> np.ndarray:
         return HDF5Wrapper.input_data[self.hdf5_path][index]
