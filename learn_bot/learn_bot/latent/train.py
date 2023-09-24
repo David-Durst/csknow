@@ -478,6 +478,7 @@ def run_single_training():
     if len(sys.argv) > 1:
         hyperparameter_indices = [int(i) for i in sys.argv[1].split(",")]
         for index in hyperparameter_indices:
+            total_epochs = 0
             hyperparameter_options = hyperparameter_option_range[index]
             hyperparameter_options.comment = load_data_result.dataset_comment
             train(TrainType.DeltaPos, load_data_result.multi_hdf5_wrapper, hyperparameter_options,
