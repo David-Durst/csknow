@@ -79,13 +79,14 @@ def plot_trajectory_dfs(trajectory_dfs: List[pd.DataFrame], config: ComparisonCo
         for df in trajectory_dfs:
             num_points += len(df)
     all_player_d2_img_copy = d2_img.copy().convert("RGBA")
-    color_alpha = int(25. / log(4 + num_points / 2000, 10))
+    color_alpha = int(25. / log(2.2 + num_points / 1300, 10))
     ct_color = (bot_ct_color_list[0], bot_ct_color_list[1], bot_ct_color_list[2], color_alpha)
     t_color = (bot_t_color_list[0], bot_t_color_list[1], bot_t_color_list[2], color_alpha)
 
     first_title = True
     team_text = f" CT: {include_ct}, T: {include_t}"
     event_text = "" if filter_event_type is None else (" " + str(filter_event_type))
+    points_text = f"\nNum Points {num_points} Alpha {color_alpha}"
 
     with tqdm(total=len(filtered_trajectory_dfs), disable=False) as pbar:
         for trajectory_df in filtered_trajectory_dfs:
@@ -104,7 +105,7 @@ def plot_trajectory_dfs(trajectory_dfs: List[pd.DataFrame], config: ComparisonCo
                 cur_player_d2_drw = ImageDraw.Draw(cur_player_d2_overlay_im)
                 if first_title:
                     title_text = extra_data_from_metric_title(config.metric_cost_title, predicted) + \
-                                 event_text + team_text + title_appendix
+                                 event_text + team_text + title_appendix + points_text
                     _, _, w, h = cur_player_d2_drw.textbbox((0, 0), title_text, font=title_font)
                     cur_player_d2_drw.text(((all_player_d2_img_copy.width - w) / 2,
                                             (all_player_d2_img_copy.height * 0.1 - h) / 2),
@@ -134,12 +135,14 @@ key_areas: KeyAreas = [
     AABB(Vec3(245., 2000., -50), Vec3(510., 2070., 10000)),
     # longa
     AABB(Vec3(1160., 1130., -10000), Vec3(1640., 1300., 10000)),
+    # underA
+    AABB(Vec3(1010., 2020., -10000), Vec3(1210., 2300., 10000)),
     # bdoors
     AABB(Vec3(-1450., 2030., -10000), Vec3(-1000., 2890., 10000)),
     # btuns
     AABB(Vec3(-2100., 1220., -10000), Vec3(-1880., 1550., 10000))
 ]
-key_area_names = ['ACat', 'LongA', 'BDoors', 'BTuns']
+key_area_names = ['ACat', 'LongA', 'UnderA', 'BDoors', 'BTuns']
 
 
 class TrajectoryPlots:
