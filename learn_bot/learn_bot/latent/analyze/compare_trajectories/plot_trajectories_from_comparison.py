@@ -92,6 +92,16 @@ def plot_trajectory_dfs(trajectory_dfs: List[pd.DataFrame], config: ComparisonCo
         for trajectory_df in filtered_trajectory_dfs:
             # since this was split with : rather than _, need to remove last _
             for player_place_area_columns in specific_player_place_area_columns:
+                ct_team = team_strs[0] in player_place_area_columns.player_id
+                if ct_team:
+                    if not include_ct:
+                        continue
+                    fill_color = ct_color
+                else:
+                    if not include_t:
+                        continue
+                    fill_color = t_color
+
                 cur_player_trajectory_df = trajectory_df[trajectory_df[player_place_area_columns.alive] == 1]
                 if cur_player_trajectory_df.empty:
                     continue
@@ -112,15 +122,6 @@ def plot_trajectory_dfs(trajectory_dfs: List[pd.DataFrame], config: ComparisonCo
                                            title_text, fill=(255, 255, 255, 255), font=title_font)
                     first_title = False
 
-                ct_team = team_strs[0] in player_place_area_columns.player_id
-                if ct_team:
-                    if not include_ct:
-                        continue
-                    fill_color = ct_color
-                else:
-                    if not include_t:
-                        continue
-                    fill_color = t_color
                 cur_player_d2_drw.line(xy=player_xy_coords, fill=fill_color, width=5)
                 all_player_d2_img_copy.alpha_composite(cur_player_d2_overlay_im)
             pbar.update(1)
