@@ -1,6 +1,6 @@
 import pickle
 from dataclasses import dataclass
-from math import ceil
+from math import ceil, log
 from pathlib import Path
 from typing import List, Set, Optional
 
@@ -79,18 +79,7 @@ def plot_trajectory_dfs(trajectory_dfs: List[pd.DataFrame], config: ComparisonCo
         for df in trajectory_dfs:
             num_points += len(df)
     all_player_d2_img_copy = d2_img.copy().convert("RGBA")
-    # ground truth has many copies, scale it's color down so brightness comparable
-    if filter_event_type is None:
-        num_points_for_color = 150000
-    elif filter_event_type == FilterEventType.Fire:
-        num_points_for_color = 60000
-    elif filter_event_type == FilterEventType.Kill:
-        num_points_for_color = 30000
-    elif filter_event_type == FilterEventType.KeyArea:
-        num_points_for_color = 20000
-    else:
-        num_points_for_color = 3000
-    color_alpha = int(ceil(20 * num_points_for_color / float(num_points)))
+    color_alpha = int(25. / log(4 + num_points / 2000, 10))
     ct_color = (bot_ct_color_list[0], bot_ct_color_list[1], bot_ct_color_list[2], color_alpha)
     t_color = (bot_t_color_list[0], bot_t_color_list[1], bot_t_color_list[2], color_alpha)
 
@@ -140,20 +129,25 @@ def plot_trajectory_dfs(trajectory_dfs: List[pd.DataFrame], config: ComparisonCo
     return all_player_d2_img_copy
 
 
-debug_caching = True
-remove_debug_cache = False
-plot_ground_truth = False
-# first key area is cat, second is bdoors
-key_areas: KeyAreas = [AABB(Vec3(245., 2000., -50), Vec3(510., 2070., 10000)),
-                       AABB(Vec3(-1450., 2030., -10000), Vec3(-1000., 2890., 10000))]
+key_areas: KeyAreas = [
+    # cat
+    AABB(Vec3(245., 2000., -50), Vec3(510., 2070., 10000)),
+    # longa
+    AABB(Vec3(1160., 1130., -10000), Vec3(1640., 1300., 10000)),
+    # bdoors
+    AABB(Vec3(-1450., 2030., -10000), Vec3(-1000., 2890., 10000)),
+    # btuns
+    AABB(Vec3(-2100., 1220., -10000), Vec3(-1880., 1550., 10000))
+]
+key_area_names = ['ACat', 'LongA', 'BDoors', 'BTuns']
 
 
 class TrajectoryPlots:
     unfiltered: Image
     filtered_fire: Image
     filtered_kill: Image
-    filtered_areas: List[Image]
-    filtered_fire_and_areas: List[Image]
+    filtered_areas: List[Image.Image]
+    filtered_fire_and_areas: List[Image.Image]
 
 
 def plot_predicted_trajectory_per_team(predicted_trajectory_dfs: List[pd.DataFrame], config: ComparisonConfig,
@@ -184,36 +178,26 @@ def plot_predicted_trajectory_per_team(predicted_trajectory_dfs: List[pd.DataFra
     result.filtered_kill.save(similarity_plots_path / (config.metric_cost_file_name + '_trajectories_kill' +
                                                        team_file_ending))
 
-    print("plotting predicted key area events cat" + use_team_str)
     result.filtered_areas = []
-    result.filtered_areas.append(plot_trajectory_dfs(predicted_trajectory_dfs, config, True, include_ct, include_t,
-                                                     FilterEventType.KeyArea, [key_areas[0]], title_appendix= " Cat"))
-    result.filtered_areas[-1].save(similarity_plots_path / (config.metric_cost_file_name + '_trajectories_area_cat' +
-                                                            team_file_ending))
-
-    print("plotting predicted fire and key area events cat" + use_team_str)
     result.filtered_fire_and_areas = []
-    result.filtered_fire_and_areas.append(plot_trajectory_dfs(predicted_trajectory_dfs, config, True,
-                                                              include_ct, include_t, FilterEventType.FireAndKeyArea,
-                                                              [key_areas[0]], title_appendix= " Cat"))
-    result.filtered_fire_and_areas[-1].save(similarity_plots_path /
-                                            (config.metric_cost_file_name + '_trajectories_fire_and_area_cat' +
-                                             team_file_ending))
+    for i in range(len(key_areas)):
+        title_appendix = " " + key_area_names[i]
+        print("plotting predicted key area events" + title_appendix + use_team_str)
+        result.filtered_areas.append(plot_trajectory_dfs(predicted_trajectory_dfs, config, True, include_ct, include_t,
+                                                         FilterEventType.KeyArea, [key_areas[i]],
+                                                         title_appendix=title_appendix))
+        result.filtered_areas[-1].save(similarity_plots_path / (config.metric_cost_file_name +
+                                                                '_trajectories_area_' + key_area_names[i] +
+                                                                team_file_ending))
 
-    print("plotting predicted key area events bdoors" + use_team_str)
-    result.filtered_areas.append(plot_trajectory_dfs(predicted_trajectory_dfs, config, True, include_ct, include_t,
-                                                     FilterEventType.KeyArea, [key_areas[1]], title_appendix= " BDoors"))
-    result.filtered_areas[-1].save(similarity_plots_path / (config.metric_cost_file_name + '_trajectories_area_bdoors' +
-                                                            team_file_ending))
-
-    print("plotting predicted fire and key area events bdoors" + use_team_str)
-    result.filtered_fire_and_areas = []
-    result.filtered_fire_and_areas.append(plot_trajectory_dfs(predicted_trajectory_dfs, config, True,
-                                                              include_ct, include_t, FilterEventType.FireAndKeyArea,
-                                                              [key_areas[1]], title_appendix= " BDoors"))
-    result.filtered_fire_and_areas[-1].save(similarity_plots_path /
-                                            (config.metric_cost_file_name + '_trajectories_fire_and_area_bdoors' +
-                                             team_file_ending))
+        print("plotting predicted fire and key area events" + title_appendix + use_team_str)
+        result.filtered_fire_and_areas.append(plot_trajectory_dfs(predicted_trajectory_dfs, config, True,
+                                                                  include_ct, include_t, FilterEventType.FireAndKeyArea,
+                                                                  [key_areas[i]],
+                                                                  title_appendix=title_appendix))
+        result.filtered_fire_and_areas[-1].save(similarity_plots_path /
+                                                (config.metric_cost_file_name + '_trajectories_fire_and_area_' +
+                                                 key_area_names[i] + team_file_ending))
 
     return result
 
@@ -237,28 +221,55 @@ def concat_vertical(ims: List[Image.Image]) -> Image.Image:
 
 
 def concat_trajectory_plots(trajectory_plots: List[TrajectoryPlots], similarity_plots_path: Path,
-                            config: ComparisonConfig):
+                            config: ComparisonConfig) -> TrajectoryPlots:
     result = TrajectoryPlots()
     result.unfiltered = concat_horizontal([t.unfiltered for t in trajectory_plots])
+    result.unfiltered.save(similarity_plots_path / (config.metric_cost_file_name + '_trajectories_all_teams.png'))
     result.filtered_fire = concat_horizontal([t.filtered_fire for t in trajectory_plots])
+    result.filtered_fire.save(similarity_plots_path / (config.metric_cost_file_name + '_fire_all_teams.png'))
     result.filtered_kill = concat_horizontal([t.filtered_kill for t in trajectory_plots])
+    result.filtered_kill.save(similarity_plots_path / (config.metric_cost_file_name + '_kill_all_teams.png'))
     result.filtered_areas = []
     result.filtered_fire_and_areas = []
     for i in range(len(trajectory_plots[0].filtered_areas)):
         result.filtered_areas.append(concat_horizontal([t.filtered_areas[i] for t in trajectory_plots]))
+        result.filtered_areas[-1].save(similarity_plots_path / (config.metric_cost_file_name + '_area_' +
+                                                                key_area_names[i] + '.png'))
         result.filtered_fire_and_areas.append(concat_horizontal([t.filtered_fire_and_areas[i] for t in trajectory_plots]))
+        result.filtered_fire_and_areas[-1].save(similarity_plots_path / (config.metric_cost_file_name +
+                                                                         '_fire_and_area_' +
+                                                                         key_area_names[i] + '.png'))
+    return result
 
-    im_to_concat_vert = [result.unfiltered, result.filtered_fire, result.filtered_kill]
+
+def concat_trajectory_plots_across_player_type(trajectory_plots: List[TrajectoryPlots], similarity_plots_path: Path):
+    result = TrajectoryPlots()
+    result.unfiltered = concat_vertical([t.unfiltered for t in trajectory_plots])
+    result.unfiltered.save(similarity_plots_path / 'all_player_types_trajectories_all_teams.png')
+    result.filtered_fire = concat_vertical([t.filtered_fire for t in trajectory_plots])
+    result.filtered_fire.save(similarity_plots_path / 'all_player_types_trajectories_fire_all_teams.png')
+    result.filtered_kill = concat_vertical([t.filtered_kill for t in trajectory_plots])
+    result.filtered_kill.save(similarity_plots_path / 'all_player_types_trajectories_kill_all_teams.png')
+    result.filtered_areas = []
+    result.filtered_fire_and_areas = []
     for i in range(len(trajectory_plots[0].filtered_areas)):
-        im_to_concat_vert.append(result.filtered_areas[i])
-        im_to_concat_vert.append(result.filtered_fire_and_areas[i])
-    result_im = concat_vertical(im_to_concat_vert)
-    result_im.save(similarity_plots_path / (config.metric_cost_file_name + '_trajectories_all_events_teams.png'))
+        result.filtered_areas.append(concat_vertical([t.filtered_areas[i] for t in trajectory_plots]))
+        result.filtered_areas[-1].save(similarity_plots_path / ('all_player_types_trajectories_area_' +
+                                                                key_area_names[i] + '.png'))
+        result.filtered_fire_and_areas.append(concat_vertical([t.filtered_fire_and_areas[i] for t in trajectory_plots]))
+        result.filtered_fire_and_areas[-1].save(similarity_plots_path / ('all_player_types_trajectories_fire_and_area_'
+                                                                         + key_area_names[i] + '.png'))
+
+
+debug_caching = True
+remove_debug_cache = False
+plot_ground_truth = False
 
 
 def plot_trajectory_comparison_heatmaps(similarity_df: pd.DataFrame, predicted_loaded_model: LoadedModel,
                                         ground_truth_loaded_model: LoadedModel,
-                                        config: ComparisonConfig, similarity_plots_path: Path):
+                                        config: ComparisonConfig, similarity_plots_path: Path,
+                                        debug_caching_override: bool = False) -> TrajectoryPlots:
     set_pd_print_options()
     # print(similarity_df.loc[:, [predicted_round_id_col, best_fit_ground_truth_round_id_col, metric_type_col,
     #                            dtw_cost_col, delta_distance_col, delta_time_col]])
@@ -287,13 +298,13 @@ def plot_trajectory_comparison_heatmaps(similarity_df: pd.DataFrame, predicted_l
 
     print('loading predicted df')
     debug_cache_path = similarity_plots_path / "predicted_trajectory_dfs.pickle"
-    if debug_caching and debug_cache_path.is_file():
+    if debug_caching and debug_caching_override and debug_cache_path.is_file():
         with open(debug_cache_path, "rb") as pickle_file:
             predicted_trajectory_dfs = pickle.load(pickle_file)
     else:
         predicted_trajectory_dfs = select_trajectories_into_dfs(predicted_loaded_model,
                                                                 list(predicted_rounds_for_comparison_heatmap))
-        if debug_caching:
+        if debug_caching and debug_caching_override:
             with open(debug_cache_path, "wb") as pickle_file:
                 pickle.dump(predicted_trajectory_dfs, pickle_file)
         elif remove_debug_cache:
@@ -311,9 +322,8 @@ def plot_trajectory_comparison_heatmaps(similarity_df: pd.DataFrame, predicted_l
         plot_predicted_trajectory_per_team(predicted_trajectory_dfs, config, similarity_plots_path, True, False)
     t_predicted_images = \
         plot_predicted_trajectory_per_team(predicted_trajectory_dfs, config, similarity_plots_path, False, True)
-    concat_trajectory_plots([both_teams_predicted_images, ct_predicted_images, t_predicted_images],
-                            similarity_plots_path, config)
-    quit(0)
+    return concat_trajectory_plots([both_teams_predicted_images, ct_predicted_images, t_predicted_images],
+                                   similarity_plots_path, config)
 
 
     if plot_ground_truth:

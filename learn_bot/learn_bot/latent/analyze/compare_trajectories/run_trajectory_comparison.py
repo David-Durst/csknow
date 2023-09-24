@@ -3,9 +3,10 @@ import os
 import sys
 
 import time
+from typing import Optional
 
 from learn_bot.latent.analyze.compare_trajectories.plot_trajectories_from_comparison import \
-    plot_trajectory_comparison_heatmaps
+    plot_trajectory_comparison_heatmaps, TrajectoryPlots, concat_trajectory_plots_across_player_type
 from learn_bot.latent.analyze.compare_trajectories.process_trajectory_comparison import ComparisonConfig, \
     plot_trajectory_comparison_histograms, build_predicted_to_ground_truth_dict, \
     filter_similarity_for_first_n_test_rounds
@@ -220,7 +221,7 @@ just_plot_summaries = True
 plot_trajectories = True
 
 
-def compare_trajectories(config_case: int):
+def compare_trajectories(config_case: int) -> Optional[TrajectoryPlots]:
     if config_case == 0:
         config = hand_crafted_bot_vs_hand_crafted_bot_config
     elif config_case == 1:
@@ -305,20 +306,27 @@ def compare_trajectories(config_case: int):
     end_ground_truth_load_time = time.perf_counter()
     print(f"ground truth load time {end_ground_truth_load_time - start_ground_truth_load_time: 0.4f}")
 
+    trajectory_plots = None
     if plot_trajectories:
         start_heatmaps_plot_time = time.perf_counter()
-        plot_trajectory_comparison_heatmaps(similarity_df, predicted_model, ground_truth_model,
-                                            config, cur_run_similarity_plots_path)
+        trajectory_plots = plot_trajectory_comparison_heatmaps(similarity_df, predicted_model, ground_truth_model,
+                                                               config, cur_run_similarity_plots_path,
+                                                               debug_caching_override=config_case >= 10)
         end_heatmaps_plot_time = time.perf_counter()
         print(f"heatmaps plot time {end_heatmaps_plot_time - start_heatmaps_plot_time: 0.4f}")
 
     if just_plot_summaries:
-        return
+        return trajectory_plots
 
     vis_two(predicted_model, ground_truth_model, predicted_to_ground_truth_dict, similarity_match_index_df)
 
 
 if __name__ == "__main__":
     config_cases_str = sys.argv[2]
+    trajectory_plots_by_player_type = []
     for config_case_str in config_cases_str.split(','):
-        compare_trajectories(int(config_case_str))
+        trajectory_plots_by_player_type.append(compare_trajectories(int(config_case_str)))
+    if len(trajectory_plots_by_player_type) > 1 and trajectory_plots_by_player_type[0] is not None:
+        concat_trajectory_plots_across_player_type(
+            trajectory_plots_by_player_type,
+            similarity_plots_path / rollout_learned_load_data_option.custom_rollout_extension)
