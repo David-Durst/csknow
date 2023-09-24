@@ -11,7 +11,7 @@ from tqdm import tqdm
 from learn_bot.latent.analyze.compare_trajectories.filter_trajectory_key_events import FilterEventType, \
     filter_trajectory_by_key_events, KeyAreas
 from learn_bot.latent.analyze.compare_trajectories.plot_distance_to_other_player import \
-    plot_distance_to_teammate_enemy_from_trajectory_dfs, extra_data_from_metric_title
+    plot_occupancy_heatmap, extra_data_from_metric_title
 from learn_bot.latent.analyze.compare_trajectories.process_trajectory_comparison import set_pd_print_options, \
     ComparisonConfig
 from learn_bot.latent.analyze.comparison_column_names import metric_type_col, best_fit_ground_truth_trace_batch_col, predicted_trace_batch_col, best_match_id_col, predicted_round_id_col, \
@@ -59,6 +59,12 @@ def select_trajectories_into_dfs(loaded_model: LoadedModel,
 
 
 title_font = ImageFont.truetype("arial.ttf", 25)
+
+
+#@dataclass
+#class LineAndHeatmapPlots:
+#    trajectory_plot: Image.Image
+#    heatmap_plot: Image.Image
 
 
 def plot_trajectory_dfs(trajectory_dfs: List[pd.DataFrame], config: ComparisonConfig, predicted: bool,
@@ -128,7 +134,10 @@ def plot_trajectory_dfs(trajectory_dfs: List[pd.DataFrame], config: ComparisonCo
 
     print(f"num trajectories in plot {len(trajectory_dfs)}, alpha {color_alpha}, num points {num_points}")
 
-    return all_player_d2_img_copy
+    #heatmap = plot_occupancy_heatmap(filtered_trajectory_dfs, config, distance_to_other_player=False,
+    #                                 teammate=False, similarity_plots_path=None)
+
+    return all_player_d2_img_copy#LineAndHeatmapPlots(all_player_d2_img_copy, heatmap)
 
 
 key_areas: KeyAreas = [
@@ -168,19 +177,19 @@ def plot_predicted_trajectory_per_team(predicted_trajectory_dfs: List[pd.DataFra
 
     print("plotting predicted" + use_team_str)
     result.unfiltered = plot_trajectory_dfs(predicted_trajectory_dfs, config, True, include_ct, include_t)
-    result.unfiltered.save(similarity_plots_path / (config.metric_cost_file_name + '_trajectories' + team_file_ending))
+    #result.unfiltered.save(similarity_plots_path / (config.metric_cost_file_name + '_trajectories' + team_file_ending))
 
     print("plotting predicted fire events" + use_team_str)
     result.filtered_fire = plot_trajectory_dfs(predicted_trajectory_dfs, config, True, include_ct, include_t,
                                                FilterEventType.Fire)
-    result.filtered_fire.save(similarity_plots_path / (config.metric_cost_file_name + '_trajectories_fire' +
-                                                       team_file_ending))
+    #result.filtered_fire.save(similarity_plots_path / (config.metric_cost_file_name + '_trajectories_fire' +
+    #                                                   team_file_ending))
 
     print("plotting predicted kill events" + use_team_str)
     result.filtered_kill = plot_trajectory_dfs(predicted_trajectory_dfs, config, True, include_ct, include_t,
                                                FilterEventType.Kill)
-    result.filtered_kill.save(similarity_plots_path / (config.metric_cost_file_name + '_trajectories_kill' +
-                                                       team_file_ending))
+    #result.filtered_kill.save(similarity_plots_path / (config.metric_cost_file_name + '_trajectories_kill' +
+    #                                                   team_file_ending))
 
     result.filtered_areas = []
     result.filtered_fire_and_areas = []
@@ -228,21 +237,21 @@ def concat_trajectory_plots(trajectory_plots: List[TrajectoryPlots], similarity_
                             config: ComparisonConfig) -> TrajectoryPlots:
     result = TrajectoryPlots()
     result.unfiltered = concat_horizontal([t.unfiltered for t in trajectory_plots])
-    result.unfiltered.save(similarity_plots_path / (config.metric_cost_file_name + '_trajectories_all_teams.png'))
+    #result.unfiltered.save(similarity_plots_path / (config.metric_cost_file_name + '_trajectories_all_teams.png'))
     result.filtered_fire = concat_horizontal([t.filtered_fire for t in trajectory_plots])
-    result.filtered_fire.save(similarity_plots_path / (config.metric_cost_file_name + '_fire_all_teams.png'))
+    #result.filtered_fire.save(similarity_plots_path / (config.metric_cost_file_name + '_fire_all_teams.png'))
     result.filtered_kill = concat_horizontal([t.filtered_kill for t in trajectory_plots])
-    result.filtered_kill.save(similarity_plots_path / (config.metric_cost_file_name + '_kill_all_teams.png'))
+    #result.filtered_kill.save(similarity_plots_path / (config.metric_cost_file_name + '_kill_all_teams.png'))
     result.filtered_areas = []
     result.filtered_fire_and_areas = []
     for i in range(len(trajectory_plots[0].filtered_areas)):
         result.filtered_areas.append(concat_horizontal([t.filtered_areas[i] for t in trajectory_plots]))
-        result.filtered_areas[-1].save(similarity_plots_path / (config.metric_cost_file_name + '_area_' +
-                                                                key_area_names[i] + '.png'))
+        #result.filtered_areas[-1].save(similarity_plots_path / (config.metric_cost_file_name + '_area_' +
+        #                                                        key_area_names[i] + '.png'))
         result.filtered_fire_and_areas.append(concat_horizontal([t.filtered_fire_and_areas[i] for t in trajectory_plots]))
-        result.filtered_fire_and_areas[-1].save(similarity_plots_path / (config.metric_cost_file_name +
-                                                                         '_fire_and_area_' +
-                                                                         key_area_names[i] + '.png'))
+        #result.filtered_fire_and_areas[-1].save(similarity_plots_path / (config.metric_cost_file_name +
+        #                                                                 '_fire_and_area_' +
+        #                                                                 key_area_names[i] + '.png'))
     return result
 
 
@@ -270,10 +279,10 @@ remove_debug_cache = False
 plot_ground_truth = False
 
 
-def plot_trajectory_comparison_heatmaps(similarity_df: pd.DataFrame, predicted_loaded_model: LoadedModel,
-                                        ground_truth_loaded_model: LoadedModel,
-                                        config: ComparisonConfig, similarity_plots_path: Path,
-                                        debug_caching_override: bool = False) -> TrajectoryPlots:
+def plot_trajectory_comparisons(similarity_df: pd.DataFrame, predicted_loaded_model: LoadedModel,
+                                ground_truth_loaded_model: LoadedModel,
+                                config: ComparisonConfig, similarity_plots_path: Path,
+                                debug_caching_override: bool = False) -> TrajectoryPlots:
     set_pd_print_options()
     # print(similarity_df.loc[:, [predicted_round_id_col, best_fit_ground_truth_round_id_col, metric_type_col,
     #                            dtw_cost_col, delta_distance_col, delta_time_col]])
@@ -330,8 +339,8 @@ def plot_trajectory_comparison_heatmaps(similarity_df: pd.DataFrame, predicted_l
                                    similarity_plots_path, config)
 
 
-    if plot_ground_truth:
-        assert False
+    #if plot_ground_truth:
+    #    assert False
     #    ground_truth_image = plot_trajectory_dfs(best_fit_ground_truth_trajectory_dfs, config, False, True, True)
 
     #    combined_image = Image.new('RGB', (predicted_image.width + ground_truth_image.width, predicted_image.height))
@@ -339,7 +348,9 @@ def plot_trajectory_comparison_heatmaps(similarity_df: pd.DataFrame, predicted_l
     #    combined_image.paste(ground_truth_image, (predicted_image.width, 0))
     #    combined_image.save(similarity_plots_path / (config.metric_cost_file_name + '_similarity_trajectories' + '.png'))
 
-    print("plotting teammate")
-    plot_distance_to_teammate_enemy_from_trajectory_dfs(predicted_trajectory_dfs, config, True, similarity_plots_path)
-    print("plotting enemy")
-    plot_distance_to_teammate_enemy_from_trajectory_dfs(predicted_trajectory_dfs, config, False, similarity_plots_path)
+    #print("plotting teammate")
+    #plot_occupancy_heatmap(predicted_trajectory_dfs, config, distance_to_other_player=True,
+    #                       teammate=True, similarity_plots_path=similarity_plots_path)
+    #print("plotting enemy")
+    #plot_occupancy_heatmap(predicted_trajectory_dfs, config, distance_to_other_player=True,
+    #                       teammate=False, similarity_plots_path=similarity_plots_path)

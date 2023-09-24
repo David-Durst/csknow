@@ -6,7 +6,7 @@ import time
 from typing import Optional
 
 from learn_bot.latent.analyze.compare_trajectories.plot_trajectories_from_comparison import \
-    plot_trajectory_comparison_heatmaps, TrajectoryPlots, concat_trajectory_plots_across_player_type
+    plot_trajectory_comparisons, TrajectoryPlots, concat_trajectory_plots_across_player_type
 from learn_bot.latent.analyze.compare_trajectories.process_trajectory_comparison import ComparisonConfig, \
     plot_trajectory_comparison_histograms, build_predicted_to_ground_truth_dict, \
     filter_similarity_for_first_n_test_rounds
@@ -309,9 +309,9 @@ def compare_trajectories(config_case: int) -> Optional[TrajectoryPlots]:
     trajectory_plots = None
     if plot_trajectories:
         start_heatmaps_plot_time = time.perf_counter()
-        trajectory_plots = plot_trajectory_comparison_heatmaps(similarity_df, predicted_model, ground_truth_model,
-                                                               config, cur_run_similarity_plots_path,
-                                                               debug_caching_override=config_case >= 10)
+        trajectory_plots = plot_trajectory_comparisons(similarity_df, predicted_model, ground_truth_model,
+                                                       config, cur_run_similarity_plots_path,
+                                                       debug_caching_override=config_case >= 10)
         end_heatmaps_plot_time = time.perf_counter()
         print(f"heatmaps plot time {end_heatmaps_plot_time - start_heatmaps_plot_time: 0.4f}")
 

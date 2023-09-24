@@ -1,8 +1,9 @@
 from pathlib import Path
-from typing import List, Dict
+from typing import List, Dict, Optional
 
 import numpy as np
 import pandas as pd
+from PIL import Image
 from matplotlib import pyplot as plt
 from matplotlib.colors import LogNorm
 
@@ -26,9 +27,8 @@ def extra_data_from_metric_title(metric_title: str, predicted: bool) -> str:
     return metric_title[start_index:end_index] + (" All Data" if predicted else " Most Similar")
 
 
-
-def plot_distance_to_teammate_enemy_from_trajectory_dfs(trajectory_dfs: List[pd.DataFrame], config: ComparisonConfig,
-                                                        teammate: bool, similarity_plots_path: Path):
+def plot_occupancy_heatmap(trajectory_dfs: List[pd.DataFrame], config: ComparisonConfig, distance_to_other_player: bool,
+                           teammate: bool, similarity_plots_path: Optional[Path]) -> Optional[Image.Image]:
     counts_heatmap = None
     sums_heatmap = None
     x_bins = None
@@ -123,14 +123,25 @@ def plot_distance_to_teammate_enemy_from_trajectory_dfs(trajectory_dfs: List[pd.
     else:
         non_nan_min = 1.
 
-    heatmap_im = ax.pcolormesh(grid_x, grid_y, avg_heatmap,
-                               norm=LogNorm(vmin=non_nan_min, vmax=non_nan_max),
-                               #vmin=non_nan_min,
-                               #vmax=non_nan_max,
-                               #norm=TwoSlopeNorm(vmin=non_nan_min, vcenter=3000, vmax=non_nan_max),
-                               cmap='viridis')
+    if distance_to_other_player:
+        heatmap_im = ax.pcolormesh(grid_x, grid_y, avg_heatmap,
+                                   norm=LogNorm(vmin=non_nan_min, vmax=non_nan_max),
+                                   #vmin=non_nan_min,
+                                   #vmax=non_nan_max,
+                                   #norm=TwoSlopeNorm(vmin=non_nan_min, vcenter=3000, vmax=non_nan_max),
+                                   cmap='viridis')
+    else:
+        heatmap_im = ax.pcolormesh(grid_x, grid_y, counts_heatmap,
+                                   norm=LogNorm(vmin=non_nan_min, vmax=non_nan_max),
+                                   # vmin=non_nan_min,
+                                   # vmax=non_nan_max,
+                                   # norm=TwoSlopeNorm(vmin=non_nan_min, vcenter=3000, vmax=non_nan_max),
+                                   cmap='viridis')
     cbar = fig.colorbar(heatmap_im, ax=ax)
-    cbar.ax.set_ylabel('Mean Distance To ' + teammate_text, rotation=270, labelpad=15, fontsize=14)
+    if distance_to_other_player:
+        cbar.ax.set_ylabel('Mean Distance To ' + teammate_text, rotation=270, labelpad=15, fontsize=14)
+    else:
+        cbar.ax.set_ylabel('Number of Per-Player Data Points', rotation=270, labelpad=15, fontsize=14)
 
     ## Get the default ticks and tick labels
     #ticklabels = cbar.ax.get_ymajorticklabels()
@@ -140,4 +151,8 @@ def plot_distance_to_teammate_enemy_from_trajectory_dfs(trajectory_dfs: List[pd.
     #cbar.set_ticks([non_nan_min, non_nan_max] + ticks)
     #cbar.set_ticklabels([non_nan_min, non_nan_max] + ticklabels)
 
-    plt.savefig(similarity_plots_path / (config.metric_cost_file_name + '_distance_' + teammate_text.lower() + '.png'))
+    if similarity_plots_path is None:
+        return Image.frombytes('RGB', fig.canvas.get_width_height(), fig.canvas.tostring_rgb())
+    else:
+        plt.savefig(similarity_plots_path / (config.metric_cost_file_name + '_distance_' + teammate_text.lower() + '.png'))
+        return None
