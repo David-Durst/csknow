@@ -1,4 +1,4 @@
-import pickle
+import picklme
 from dataclasses import dataclass
 from math import ceil, log
 from pathlib import Path
@@ -9,7 +9,7 @@ from PIL import Image, ImageDraw, ImageFont
 from tqdm import tqdm
 
 from learn_bot.latent.analyze.compare_trajectories.filter_trajectory_key_events import FilterEventType, \
-    filter_trajectory_by_key_events, KeyAreas
+    filter_trajectory_by_key_events, KeyAreas, KeyAreaTeam
 from learn_bot.latent.analyze.compare_trajectories.plot_distance_to_other_player import \
     plot_occupancy_heatmap, extra_data_from_metric_title
 from learn_bot.latent.analyze.compare_trajectories.process_trajectory_comparison import set_pd_print_options, \
@@ -70,13 +70,15 @@ title_font = ImageFont.truetype("arial.ttf", 25)
 def plot_trajectory_dfs(trajectory_dfs: List[pd.DataFrame], config: ComparisonConfig, predicted: bool,
                         include_ct: bool, include_t: bool,
                         filter_event_type: Optional[FilterEventType] = None,
-                        key_areas: Optional[KeyAreas] = None, title_appendix: str = "") -> Image.Image:
+                        key_areas: Optional[KeyAreas] = None, key_area_team: KeyAreaTeam = KeyAreaTeam.Both,
+                        title_appendix: str = "") -> Image.Image:
     filtered_trajectory_dfs: List[pd.DataFrame] = []
     num_points = 0
     if filter_event_type is not None:
         for round_trajectory_df in trajectory_dfs:
             # split round trajectory by filter
-            cur_round_filtered_trajectory_dfs = filter_trajectory_by_key_events(filter_event_type, round_trajectory_df, key_areas)
+            cur_round_filtered_trajectory_dfs = filter_trajectory_by_key_events(filter_event_type, round_trajectory_df,
+                                                                                key_areas, key_area_team)
             filtered_trajectory_dfs += cur_round_filtered_trajectory_dfs
             for df in cur_round_filtered_trajectory_dfs:
                 num_points += len(df)
@@ -153,7 +155,7 @@ key_areas: KeyAreas = [
     AABB(Vec3(-2100., 1220., -10000), Vec3(-1880., 1550., 10000))
 ]
 key_area_names = ['ACat', 'LongA', 'UnderA', 'BDoors', 'BTuns']
-
+key_area_team = ['']
 
 class TrajectoryPlots:
     unfiltered: Image
@@ -197,7 +199,7 @@ def plot_predicted_trajectory_per_team(predicted_trajectory_dfs: List[pd.DataFra
         title_appendix = " " + key_area_names[i]
         print("plotting predicted key area events" + title_appendix + use_team_str)
         result.filtered_areas.append(plot_trajectory_dfs(predicted_trajectory_dfs, config, True, include_ct, include_t,
-                                                         FilterEventType.KeyArea, [key_areas[i]],
+                                                         FilterEventType.KeyArea, [key_areas[i]], KeyAreaTeam.CT,
                                                          title_appendix=title_appendix))
         result.filtered_areas[-1].save(similarity_plots_path / (config.metric_cost_file_name +
                                                                 '_trajectories_area_' + key_area_names[i] +
@@ -206,7 +208,7 @@ def plot_predicted_trajectory_per_team(predicted_trajectory_dfs: List[pd.DataFra
         print("plotting predicted fire and key area events" + title_appendix + use_team_str)
         result.filtered_fire_and_areas.append(plot_trajectory_dfs(predicted_trajectory_dfs, config, True,
                                                                   include_ct, include_t, FilterEventType.FireAndKeyArea,
-                                                                  [key_areas[i]],
+                                                                  [key_areas[i]], KeyAreaTeam.CT,
                                                                   title_appendix=title_appendix))
         result.filtered_fire_and_areas[-1].save(similarity_plots_path /
                                                 (config.metric_cost_file_name + '_trajectories_fire_and_area_' +

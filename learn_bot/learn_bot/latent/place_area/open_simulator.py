@@ -359,8 +359,8 @@ def run_analysis(loaded_model: LoadedModel):
 
 
 nav_data = None
-perform_analysis = True
-vis_player_mask_config = PlayerMaskConfig.NONE
+perform_analysis = False
+vis_player_mask_config = PlayerMaskConfig.ALL
 
 if __name__ == "__main__":
     nav_data = NavData(CUDA_DEVICE_STR)
