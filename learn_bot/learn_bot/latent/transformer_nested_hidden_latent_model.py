@@ -162,6 +162,7 @@ class TransformerNestedHiddenLatentModel(nn.Module):
         else:
             pos_scaled[:, :, 0] = (pos[:, :, 0] - self.d2_min_cpu) / (self.d2_max_cpu - self.d2_min_cpu)
         if self.num_input_time_steps > 1:
+            # TODO: fix this for updated pos frequency
             pos_scaled[:, :, 1:] = (pos[:, :, 1:] - max_speed_per_half_second) / (2 * max_speed_per_half_second)
         pos_scaled = torch.clamp(pos_scaled, 0, 1)
         pos_scaled = (pos_scaled * 2) - 1

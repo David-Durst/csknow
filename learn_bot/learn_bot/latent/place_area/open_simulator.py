@@ -20,7 +20,8 @@ from learn_bot.latent.load_model import load_model_file
 from learn_bot.latent.order.column_names import flatten_list
 from learn_bot.latent.place_area.column_names import specific_player_place_area_columns
 from learn_bot.latent.place_area.load_data import LoadDataResult
-from learn_bot.latent.place_area.pos_abs_from_delta_grid_or_radial import NavData
+from learn_bot.latent.place_area.pos_abs_from_delta_grid_or_radial import NavData, data_ticks_per_second, \
+    data_ticks_per_sim_tick
 from learn_bot.latent.place_area.simulator import LoadedModel, RoundLengths, PlayerEnableMask, max_enemies, \
     build_rollout_and_similarity_tensors, match_round_lengths, step, get_round_lengths, load_data_options, \
     limit_to_every_nth_row
@@ -29,7 +30,8 @@ from learn_bot.libs.io_transforms import CUDA_DEVICE_STR
 
 # this is a open loop version of the simulator for computing metrics based on short time horizons
 
-num_time_steps = 11
+num_seconds_per_loop = 5
+num_time_steps = data_ticks_per_second / data_ticks_per_sim_tick * num_seconds_per_loop
 
 
 class PlayerMaskConfig(IntEnum):
@@ -38,7 +40,8 @@ class PlayerMaskConfig(IntEnum):
     T = 2
     LAST_ALIVE = 3
     CONSTANT_VELOCITY = 4
-    NUM_MASK_CONFIGS = 5
+    NONE = 5
+    NUM_MASK_CONFIGS = 6
 
     def __str__(self) -> str:
         if self == PlayerMaskConfig.ALL:
@@ -51,6 +54,12 @@ class PlayerMaskConfig(IntEnum):
             return "Last Alive"
         if self == PlayerMaskConfig.CONSTANT_VELOCITY:
             return "Constant Velocity"
+        if self == PlayerMaskConfig.NONE:
+            return "None"
+
+
+# debugging flag where compute errors on players who are masked out (aka using ground truth)
+include_ground_truth_players_in_afde = False
 
 
 def compute_mask_elements_per_player(loaded_model: LoadedModel) -> int:
@@ -78,6 +87,9 @@ def build_player_mask(loaded_model: LoadedModel, config: PlayerMaskConfig,
         elif config == PlayerMaskConfig.LAST_ALIVE:
             for _, last_alive in round_lengths.round_to_last_alive_index.items():
                 enabled_player_columns.append([i == last_alive for i in range(0, 2 * max_enemies)])
+        elif config == PlayerMaskConfig.NONE:
+            for _ in range(round_lengths.num_rounds):
+                enabled_player_columns.append([False for _ in range(0, 2 * max_enemies)])
         player_enable_mask = torch.tensor(enabled_player_columns)
         repeated_player_enable_mask = rearrange(repeat(
             rearrange(player_enable_mask, 'b p -> b p 1'), 'b p 1 -> b p r',
@@ -218,7 +230,7 @@ def compare_predicted_rollout_indices(orig_df: pd.DataFrame, pred_df: pd.DataFra
             {round_id_column: 'first', pred_vs_orig_total_delta_column: 'mean'})
         player_valid_round_ids = []
         for round_index, round_id in enumerate(round_lengths.round_ids):
-            if player_enable_mask is None or \
+            if include_ground_truth_players_in_afde or player_enable_mask is None or \
                     player_enable_mask[round_index, column_index * compute_mask_elements_per_player(loaded_model)]:
                 player_valid_round_ids.append(round_id)
         result.player_round_ades += list(player_round_ades[player_round_ades[round_id_column]
@@ -269,6 +281,8 @@ def run_analysis_per_mask(loaded_model: LoadedModel, player_mask_config: PlayerM
         Tuple[pd.Series, pd.Series]:
     displacement_errors = DisplacementErrors()
     for i, hdf5_wrapper in enumerate(loaded_model.dataset.data_hdf5s):
+        if i > 1:
+            break
         print(f"Processing hdf5 {i} / {len(loaded_model.dataset.data_hdf5s)}: {hdf5_wrapper.hdf5_path}")
         per_iteration_displacement_errors: List[DisplacementErrors] = []
         for iteration in range(num_iterations):
@@ -318,7 +332,8 @@ def run_analysis(loaded_model: LoadedModel):
     player_mask_configs = [PlayerMaskConfig.ALL,
                            PlayerMaskConfig.CT, PlayerMaskConfig.T,
                            PlayerMaskConfig.LAST_ALIVE,
-                           PlayerMaskConfig.CONSTANT_VELOCITY]
+                           PlayerMaskConfig.CONSTANT_VELOCITY,
+                           PlayerMaskConfig.NONE]
     ades_per_mask_config: List[pd.Series] = []
     fdes_per_mask_config: List[pd.Series] = []
     for i, player_mask_config in enumerate(player_mask_configs):
@@ -345,7 +360,7 @@ def run_analysis(loaded_model: LoadedModel):
 
 nav_data = None
 perform_analysis = True
-vis_player_mask_config = PlayerMaskConfig.CONSTANT_VELOCITY
+vis_player_mask_config = PlayerMaskConfig.NONE
 
 if __name__ == "__main__":
     nav_data = NavData(CUDA_DEVICE_STR)

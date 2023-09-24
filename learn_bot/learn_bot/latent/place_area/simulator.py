@@ -64,6 +64,7 @@ def get_round_lengths(df: pd.DataFrame) -> RoundLengths:
         for column_index, player_place_area_columns in enumerate(specific_player_place_area_columns):
             if last_row[player_place_area_columns.alive]:
                 result.round_to_last_alive_index[round_id] = column_index
+                break
         if round_id not in result.round_to_last_alive_index:
             print(f'no one alive at end of {round_id}')
 
@@ -180,9 +181,9 @@ load_data_options = LoadDataOptions(
     use_all_human_data=True,
     add_manual_to_all_human_data=False,
     limit_manual_data_to_no_enemies_nav=True,
-    small_good_rounds=[small_human_good_rounds, all_human_28_second_filter_good_rounds],
-    similarity_dfs=[load_hdf5_to_pd(all_human_vs_small_human_similarity_hdf5_data_path),
-                    load_hdf5_to_pd(all_human_vs_human_28_similarity_hdf5_data_path)],
+    #small_good_rounds=[small_human_good_rounds, all_human_28_second_filter_good_rounds],
+    #similarity_dfs=[load_hdf5_to_pd(all_human_vs_small_human_similarity_hdf5_data_path),
+    #                load_hdf5_to_pd(all_human_vs_human_28_similarity_hdf5_data_path)],
     limit_by_similarity=False,
     train_test_split_file_name=train_test_split_file_name
 )
