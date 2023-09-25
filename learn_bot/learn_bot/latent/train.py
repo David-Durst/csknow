@@ -477,6 +477,7 @@ load_data_options = LoadDataOptions(
 
 
 def run_single_training():
+    global total_epochs
     load_data_result = LoadDataResult(load_data_options)
     if len(sys.argv) > 1:
         hyperparameter_indices = [int(i) for i in sys.argv[1].split(",")]
