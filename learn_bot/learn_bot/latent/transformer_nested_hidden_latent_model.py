@@ -1,3 +1,4 @@
+import math
 from typing import List, Callable
 
 import torch
@@ -8,7 +9,7 @@ from learn_bot.latent.order.column_names import team_strs, player_team_str, flat
 from learn_bot.latent.place_area.column_names import specific_player_place_area_columns, num_radial_bins, \
     walking_modifier, ducking_modifier
 from learn_bot.latent.place_area.pos_abs_from_delta_grid_or_radial import NavData, \
-    one_hot_max_to_index, one_hot_prob_to_index, max_speed_per_half_second, max_speed_per_second
+    one_hot_max_to_index, one_hot_prob_to_index, max_speed_per_second
 from learn_bot.libs.io_transforms import IOColumnTransformers, CUDA_DEVICE_STR, CPU_DEVICE_STR
 from learn_bot.libs.positional_encoding import *
 from einops import rearrange, repeat
@@ -46,7 +47,7 @@ class TransformerNestedHiddenLatentModel(nn.Module):
     noise_var: float
 
     def __init__(self, cts: IOColumnTransformers, num_players: int, num_output_time_steps, num_radial_bins: int,
-                 num_layers, num_heads):
+                 num_layers: int, num_heads: int, mask_other_players: bool):
         super(TransformerNestedHiddenLatentModel, self).__init__()
         self.cts = cts
         # transformed/transformed doesn't matter since no angles and all categorical variables are
@@ -84,11 +85,22 @@ class TransformerNestedHiddenLatentModel(nn.Module):
         self.num_players_per_team = self.num_players // 2
 
         # only different players in same time step to talk to each other
-        num_temporal_tokens = self.num_players * self.num_input_time_steps
-        self.temporal_mask_cpu = torch.zeros([num_temporal_tokens, num_temporal_tokens])
-        for i in range(num_temporal_tokens):
-            for j in range(num_temporal_tokens):
-                self.temporal_mask_cpu[i, j] = (i // num_temporal_tokens) != (j // num_temporal_tokens)
+        def build_per_player_mask(per_player_mask: torch.Tensor, num_temporal_tokens: int, num_time_steps: int):
+            for i in range(num_temporal_tokens):
+                for j in range(num_temporal_tokens):
+                    per_player_mask[i, j] = (i // num_time_steps) != (j // num_time_steps)
+
+        num_input_temporal_tokens = self.num_players * self.num_input_time_steps
+        self.input_per_player_mask_cpu = torch.zeros([num_input_temporal_tokens, num_input_temporal_tokens],
+                                                     dtype=torch.bool)
+        build_per_player_mask(self.input_per_player_mask_cpu, num_input_temporal_tokens, self.num_input_time_steps)
+
+        num_output_temporal_tokens = self.num_players * self.num_output_time_steps
+        self.output_per_player_mask_cpu = torch.zeros([num_output_temporal_tokens, num_output_temporal_tokens],
+                                                      dtype=torch.bool)
+        build_per_player_mask(self.output_per_player_mask_cpu, num_output_temporal_tokens, self.num_output_time_steps)
+
+        self.mask_other_players = mask_other_players
 
         self.alive_columns = flatten_list(
             [range_list_to_index_list(cts.get_name_ranges(True, True, contained_str=player_place_area_columns.alive))
@@ -162,8 +174,9 @@ class TransformerNestedHiddenLatentModel(nn.Module):
         else:
             pos_scaled[:, :, 0] = (pos[:, :, 0] - self.d2_min_cpu) / (self.d2_max_cpu - self.d2_min_cpu)
         if self.num_input_time_steps > 1:
-            # TODO: fix this for updated pos frequency
-            pos_scaled[:, :, 1:] = (pos[:, :, 1:] - max_speed_per_half_second) / (2 * max_speed_per_half_second)
+            # this may divide by a little too much (if time between pos < 1s, but future proof for later with variable
+            # tick rate inputs)
+            pos_scaled[:, :, 1:] = (pos[:, :, 1:]) / max_speed_per_second
         pos_scaled = torch.clamp(pos_scaled, 0, 1)
         pos_scaled = (pos_scaled * 2) - 1
 
@@ -255,7 +268,7 @@ class TransformerNestedHiddenLatentModel(nn.Module):
                                                              t=self.num_input_time_steps)
         x_temporal_embedded_player_time_flattened = \
             self.temporal_transformer_encoder(x_temporal_encoded_player_time_flattened,
-                                              mask=self.temporal_mask_cpu.to(x.device.type))
+                                              mask=self.input_per_player_mask_cpu.to(x.device.type))
         # take last token per player
         x_temporal_embedded = rearrange(x_temporal_embedded_player_time_flattened, "b (p t) d -> b p t d",
                                         p=self.num_players, t=self.num_input_time_steps)
@@ -275,8 +288,14 @@ class TransformerNestedHiddenLatentModel(nn.Module):
             torch.cat([x_pos_encoded_no_noise, x_crosshair, x_non_pos], -1)[:, :, 0:self.num_output_time_steps, :],
             "b p t d -> b (p t) d")
         x_embedded_no_noise = self.embedding_model(x_gathered_no_noise)
-        transformed = self.transformer_model(x_temporal_embedded_flattened, x_embedded_no_noise, tgt_mask=tgt_mask,
-                                             src_key_padding_mask=dead_gathered)
+        if self.mask_other_players:
+            output_per_player_mask = self.output_per_player_mask_cpu.to(x.device.type)
+            tgt_mask = tgt_mask + (torch.where(output_per_player_mask, -1. * math.inf, 0.))
+            transformed = self.transformer_model(x_temporal_embedded_flattened, x_embedded_no_noise, tgt_mask=tgt_mask,
+                                                 src_mask=output_per_player_mask)
+        else:
+            transformed = self.transformer_model(x_temporal_embedded_flattened, x_embedded_no_noise, tgt_mask=tgt_mask,
+                                                 src_key_padding_mask=dead_gathered)
         transformed_nested = rearrange(transformed, "b (p t) d -> b p t d",
                                        p=self.num_players, t=self.num_output_time_steps)
         latent = self.decoder(transformed_nested)

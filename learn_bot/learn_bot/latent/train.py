@@ -71,12 +71,13 @@ class HyperparameterOptions:
     layers: int = 2
     heads: int = 4
     noise_var: float = 20.
+    mask_other_players: bool = False
     comment: str = ""
 
     def to_str(self, model: TransformerNestedHiddenLatentModel):
         return f"{now_str}_e_{self.num_epochs}_b_{self.batch_size}_lr_{self.learning_rate}_wd_{self.weight_decay}_" \
                f"l_{self.layers}_h_{self.heads}_n_{self.noise_var}_t_{model.num_input_time_steps}_" \
-               f"c_{self.comment}"
+               f"m_{self.mask_other_players}_c_{self.comment}"
 
     def get_checkpoints_path(self, model: TransformerNestedHiddenLatentModel) -> Path:
         return checkpoints_path / self.to_str(model)
@@ -84,6 +85,7 @@ class HyperparameterOptions:
 
 default_hyperparameter_options = HyperparameterOptions()
 hyperparameter_option_range = [HyperparameterOptions(),
+                               HyperparameterOptions(mask_other_players=True),
                                HyperparameterOptions(layers=4, heads=8),
                                HyperparameterOptions(layers=8, heads=8),
                                HyperparameterOptions(weight_decay=0.1),
@@ -175,7 +177,8 @@ def train(train_type: TrainType, multi_hdf5_wrapper: MultiHDF5Wrapper,
         # plus 1 on future ticks to include present tick
         model = TransformerNestedHiddenLatentModel(column_transformers, 2 * max_enemies,
                                                    num_radial_ticks, num_radial_bins,
-                                                   hyperparameter_options.layers, hyperparameter_options.heads)
+                                                   hyperparameter_options.layers, hyperparameter_options.heads,
+                                                   hyperparameter_options.mask_other_players)
         if load_model_path:
             model_file = torch.load(load_model_path)
             model.load_state_dict(model_file['model_state_dict'])

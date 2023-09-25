@@ -46,7 +46,6 @@ class NavData:
 
 
 # 130 units per half second (rounded up), 12.8 ticks per second
-max_speed_per_half_second = 130.
 max_speed_per_second = 250.
 # 130 is rounded up speed for half second, mul by 2 to sacle to full second, divide by 12.8 as 12.8 ticks per second
 # (128 tick server, decimated to 1/10th rate in data set) and jumping by 6 ticks at a time to approximate half second of movement
