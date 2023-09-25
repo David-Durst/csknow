@@ -285,13 +285,19 @@ def run_analysis_per_mask(loaded_model: LoadedModel, player_mask_config: PlayerM
             break
         print(f"Processing hdf5 {i} / {len(loaded_model.dataset.data_hdf5s)}: {hdf5_wrapper.hdf5_path}")
         per_iteration_displacement_errors: List[DisplacementErrors] = []
+
+        loaded_model.cur_hdf5_index = i
+        loaded_model.load_cur_hdf5_as_pd()
+
+        # running rollout updates df, so keep original copy for analysis
+        orig_loaded_df = loaded_model.cur_loaded_df.copy()
+
         for iteration in range(num_iterations):
             print(f"iteration {iteration} / {num_iterations}")
-            loaded_model.cur_hdf5_index = i
-            loaded_model.load_cur_hdf5_as_pd()
 
-            # running rollout updates df, so keep original copy for analysis
-            orig_loaded_df = loaded_model.cur_loaded_df.copy()
+            # reset cur_loaded_df
+            if iteration != 0:
+                loaded_model.cur_loaded_df = orig_loaded_df.copy()
             round_lengths = get_round_lengths(loaded_model.cur_loaded_df)
             player_enable_mask = build_player_mask(loaded_model, player_mask_config, round_lengths)
             delta_pos_open_rollout(loaded_model, round_lengths, player_enable_mask,
@@ -359,7 +365,7 @@ def run_analysis(loaded_model: LoadedModel):
 
 
 nav_data = None
-perform_analysis = False
+perform_analysis = True
 vis_player_mask_config = PlayerMaskConfig.ALL
 
 if __name__ == "__main__":

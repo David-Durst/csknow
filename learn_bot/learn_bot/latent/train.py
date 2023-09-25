@@ -350,7 +350,8 @@ def train(train_type: TrainType, multi_hdf5_wrapper: MultiHDF5Wrapper,
             'model_state_dict': model.state_dict(),
             'optimizer_state_dict': optimizer.state_dict(),
             'column_transformers': column_transformers,
-            'diff_test_train': diff_train_test
+            'diff_test_train': diff_train_test,
+            'hyperparameter_options': hyperparameter_options
         }, model_path)
         with torch.no_grad():
             model.eval()
