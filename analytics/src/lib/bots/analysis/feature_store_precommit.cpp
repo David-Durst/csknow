@@ -279,6 +279,7 @@ namespace csknow::feature_store {
         historicalPlayerDataBuffer.clear();
         // needed since I carry over tick counters between frames
         btTeamPlayerData.clear();
+        playerTickCounters.clear();
     }
 
     int64_t FeatureStorePreCommitBuffer::getPlayerOldestContiguousHistoryIndex(int64_t playerId) {

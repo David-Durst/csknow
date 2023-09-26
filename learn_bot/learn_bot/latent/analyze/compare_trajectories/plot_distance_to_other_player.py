@@ -31,7 +31,7 @@ def extra_data_from_metric_title(metric_title: str, predicted: bool) -> str:
 
 
 def plot_occupancy_heatmap(trajectory_dfs: List[pd.DataFrame], config: ComparisonConfig, distance_to_other_player: bool,
-                           teammate: bool, similarity_plots_path: Path, return_image: bool,
+                           teammate: bool, similarity_plots_path: Optional[Path],
                            valid_players_dfs: List[pd.DataFrame] = []) -> Optional[Image.Image]:
     counts_heatmap = None
     sums_heatmap = None
@@ -172,7 +172,13 @@ def plot_occupancy_heatmap(trajectory_dfs: List[pd.DataFrame], config: Compariso
     #cbar.set_ticklabels([non_nan_min, non_nan_max] + ticklabels)
 
     if similarity_plots_path is None:
-        return Image.frombytes('RGB', fig.canvas.get_width_height(), fig.canvas.tostring_rgb())
+        tmp_dir = tempfile.gettempdir()
+        tmp_file = Path(tmp_dir) / 'tmp_heatmap.png'
+        plt.savefig(tmp_file)
+        img = Image.open(tmp_file)
+        img.load()
+        tmp_file.unlink()
+        return img
     else:
         plt.savefig(similarity_plots_path / (config.metric_cost_file_name + '_distance_' + teammate_text.lower() + '.png'))
         return None

@@ -54,12 +54,18 @@ def filter_trajectory_by_key_events(filter_event_type: FilterEventType, trajecto
     for player_place_area_columns in specific_player_place_area_columns:
         per_player_condition = trajectory_df[round_id_column] == trajectory_df[round_id_column]
         if filter_event_type == FilterEventType.Fire or filter_event_type == FilterEventType.FireAndKeyArea:
-             per_player_condition = per_player_condition & \
-                                    (trajectory_df[player_place_area_columns.player_fire_in_last_5s] <= 0.05)
-        if filter_event_type == FilterEventType.Kill:
-            lagged_alive = trajectory_df[player_place_area_columns.alive].shift(periods=1)
+            lagged_fire = trajectory_df[player_place_area_columns.player_fire_in_last_5s].shift(periods=1)
+            lagged_fire.iloc[0] = 1.
+            # new fire if time since last fire hasn't gone up and number small enough that would've gone up if
+            # fire hadn't occured
             per_player_condition = per_player_condition & \
-                                   (lagged_alive & ~trajectory_df[player_place_area_columns.alive])
+                                   ((trajectory_df[player_place_area_columns.player_fire_in_last_5s] <= lagged_fire) &
+                                    (trajectory_df[player_place_area_columns.player_fire_in_last_5s]) < .1)
+        if filter_event_type == FilterEventType.Kill:
+            lead_alive = trajectory_df[player_place_area_columns.alive].shift(periods=-1)
+            lead_alive.iloc[-1] = lead_alive.iloc[-2]
+            per_player_condition = per_player_condition & \
+                                   (~lead_alive & trajectory_df[player_place_area_columns.alive])
         if filter_event_type == FilterEventType.KeyArea or filter_event_type == FilterEventType.FireAndKeyArea:
             is_ct_player = team_strs[0] in player_place_area_columns.player_id
             assert key_areas is not None
