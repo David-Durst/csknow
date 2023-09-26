@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from enum import Enum
 from math import ceil
-from typing import List, Optional
+from typing import List, Optional, Dict
 
 import pandas as pd
 
@@ -41,15 +41,16 @@ class KeyAreaTeam(Enum):
 @dataclass
 class TrajectoryEvents:
     data: List[pd.DataFrame]
-    valid_players: pd.DataFrame
+    valid_players: List[pd.DataFrame]
 
 
 def filter_trajectory_by_key_events(filter_event_type: FilterEventType, trajectory_df: pd.DataFrame,
+                                    time_extend: bool,
                                     key_areas: Optional[KeyAreas] = None,
                                     key_area_team: KeyAreaTeam = KeyAreaTeam.Both) -> TrajectoryEvents:
 
     key_event_condition = trajectory_df[round_id_column] != trajectory_df[round_id_column]
-    player_conditions: List[pd.Series] = []
+    player_conditions: Dict[str, pd.Series] = {}
     for player_place_area_columns in specific_player_place_area_columns:
         per_player_condition = trajectory_df[round_id_column] == trajectory_df[round_id_column]
         if filter_event_type == FilterEventType.Fire or filter_event_type == FilterEventType.FireAndKeyArea:
@@ -73,8 +74,10 @@ def filter_trajectory_by_key_events(filter_event_type: FilterEventType, trajecto
                     z_condition = (trajectory_df[player_place_area_columns.pos[2]] >= key_area.min.z) & \
                                   (trajectory_df[player_place_area_columns.pos[2]] <= key_area.max.z)
                     per_player_condition = per_player_condition & (x_condition & y_condition & z_condition)
+        player_conditions[player_place_area_columns.player_id] = per_player_condition
         key_event_condition = key_event_condition | per_player_condition
 
+    player_conditions_df = pd.DataFrame(player_conditions)
     # if just a single condition, or them all together
     #if filter_event_type in [FilterEventType.Fire, FilterEventType.Kill, FilterEventType.KeyArea]:
     #    key_event_condition = fire_condition | kill_condition | key_area_condition
@@ -83,9 +86,12 @@ def filter_trajectory_by_key_events(filter_event_type: FilterEventType, trajecto
     #    key_event_condition = fire_condition & key_area_condition
 
     # mul by 2 for both directions, add 1 so odd and contain center
-    time_extended_condition: pd.Series = key_event_condition \
-        .rolling(int(ceil(data_ticks_per_second * seconds_round_key_event)) * 2 + 1, center=True, min_periods=1) \
-        .apply(lambda x: x.any(), raw=True).astype(bool)
+    if time_extend:
+        time_extended_condition: pd.Series = key_event_condition \
+            .rolling(int(ceil(data_ticks_per_second * seconds_round_key_event)) * 2 + 1, center=True, min_periods=1) \
+            .apply(lambda x: x.any(), raw=True).astype(bool)
+    else:
+        time_extended_condition: pd.Series = key_event_condition.astype(bool)
 
     # split into contiguous chunks
     true_regions = (~time_extended_condition).cumsum()
@@ -93,8 +99,10 @@ def filter_trajectory_by_key_events(filter_event_type: FilterEventType, trajecto
     true_regions_df = pd.DataFrame({'data': true_regions, 'index': true_regions.index})
     true_regions_start_end = true_regions_df.groupby('data').agg({'index': ['min', 'max']})
 
-    result: List[pd.DataFrame] = []
+    data_per_event_dfs: List[pd.DataFrame] = []
+    player_conditions_per_event_dfs: List[pd.DataFrame] = []
     for _, true_region in true_regions_start_end['index'].iterrows():
-        result.append(trajectory_df.loc[true_region['min']:true_region['max']])
+        data_per_event_dfs.append(trajectory_df.loc[true_region['min']:true_region['max']])
+        player_conditions_per_event_dfs.append(player_conditions_df.loc[true_region['min']:true_region['max']])
 
-    return result
+    return TrajectoryEvents(data_per_event_dfs, player_conditions_per_event_dfs)

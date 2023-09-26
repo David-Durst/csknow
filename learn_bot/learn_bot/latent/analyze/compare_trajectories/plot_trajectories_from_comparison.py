@@ -1,27 +1,21 @@
 import pickle
 from dataclasses import dataclass
-from math import ceil, log
 from pathlib import Path
-from typing import List, Set, Optional
+from typing import List, Set
 
 import pandas as pd
-from PIL import Image, ImageDraw, ImageFont
-from tqdm import tqdm
+from PIL import Image, ImageFont
 
 from learn_bot.latent.analyze.compare_trajectories.filter_trajectory_key_events import FilterEventType, \
-    filter_trajectory_by_key_events, KeyAreas, KeyAreaTeam
-from learn_bot.latent.analyze.compare_trajectories.plot_distance_to_other_player import \
-    plot_occupancy_heatmap, extra_data_from_metric_title
+    KeyAreas, KeyAreaTeam
+from learn_bot.latent.analyze.compare_trajectories.plot_trajectories_and_events import FilterPlayerType, \
+    plot_trajectory_dfs_and_event
 from learn_bot.latent.analyze.compare_trajectories.process_trajectory_comparison import set_pd_print_options, \
     ComparisonConfig
 from learn_bot.latent.analyze.comparison_column_names import metric_type_col, best_fit_ground_truth_trace_batch_col, predicted_trace_batch_col, best_match_id_col, predicted_round_id_col, \
     best_fit_ground_truth_round_id_col, predicted_round_number_col, best_fit_ground_truth_round_number_col
-from learn_bot.latent.analyze.test_traces.run_trace_visualization import d2_img, convert_to_canvas_coordinates, \
-    bot_ct_color_list, bot_t_color_list
 from learn_bot.latent.engagement.column_names import round_id_column, round_number_column
 from learn_bot.latent.load_model import LoadedModel
-from learn_bot.latent.order.column_names import team_strs
-from learn_bot.latent.place_area.column_names import specific_player_place_area_columns
 from learn_bot.latent.place_area.pos_abs_from_delta_grid_or_radial import AABB
 from learn_bot.libs.vec import Vec3
 
@@ -56,90 +50,6 @@ def select_trajectories_into_dfs(loaded_model: LoadedModel,
                 assert selected_dfs[-1][round_number_column].iloc[0] == round_for_comparison.round_number
 
     return selected_dfs
-
-
-title_font = ImageFont.truetype("arial.ttf", 25)
-
-
-#@dataclass
-#class LineAndHeatmapPlots:
-#    trajectory_plot: Image.Image
-#    heatmap_plot: Image.Image
-
-
-def plot_trajectory_dfs(trajectory_dfs: List[pd.DataFrame], config: ComparisonConfig, predicted: bool,
-                        include_ct: bool, include_t: bool,
-                        filter_event_type: Optional[FilterEventType] = None,
-                        key_areas: Optional[KeyAreas] = None, key_area_team: KeyAreaTeam = KeyAreaTeam.Both,
-                        title_appendix: str = "") -> Image.Image:
-    filtered_trajectory_dfs: List[pd.DataFrame] = []
-    num_points = 0
-    if filter_event_type is not None:
-        for round_trajectory_df in trajectory_dfs:
-            # split round trajectory by filter
-            cur_round_filtered_trajectory_dfs = filter_trajectory_by_key_events(filter_event_type, round_trajectory_df,
-                                                                                key_areas, key_area_team)
-            filtered_trajectory_dfs += cur_round_filtered_trajectory_dfs
-            for df in cur_round_filtered_trajectory_dfs:
-                num_points += len(df)
-    else:
-        filtered_trajectory_dfs = trajectory_dfs
-        for df in trajectory_dfs:
-            num_points += len(df)
-    all_player_d2_img_copy = d2_img.copy().convert("RGBA")
-    color_alpha = int(25. / log(2.2 + num_points / 1300, 10))
-    ct_color = (bot_ct_color_list[0], bot_ct_color_list[1], bot_ct_color_list[2], color_alpha)
-    t_color = (bot_t_color_list[0], bot_t_color_list[1], bot_t_color_list[2], color_alpha)
-
-    first_title = True
-    team_text = f" CT: {include_ct}, T: {include_t}"
-    event_text = "" if filter_event_type is None else (" " + str(filter_event_type))
-    points_text = f"\nNum Points {num_points} Alpha {color_alpha}"
-
-    with tqdm(total=len(filtered_trajectory_dfs), disable=False) as pbar:
-        for trajectory_df in filtered_trajectory_dfs:
-            # since this was split with : rather than _, need to remove last _
-            for player_place_area_columns in specific_player_place_area_columns:
-                ct_team = team_strs[0] in player_place_area_columns.player_id
-                if ct_team:
-                    if not include_ct:
-                        continue
-                    fill_color = ct_color
-                else:
-                    if not include_t:
-                        continue
-                    fill_color = t_color
-
-                cur_player_trajectory_df = trajectory_df[trajectory_df[player_place_area_columns.alive] == 1]
-                if cur_player_trajectory_df.empty:
-                    continue
-                player_x_coords = cur_player_trajectory_df.loc[:, player_place_area_columns.pos[0]]
-                player_y_coords = cur_player_trajectory_df.loc[:, player_place_area_columns.pos[1]]
-                player_canvas_x_coords, player_canvas_y_coords = \
-                    convert_to_canvas_coordinates(player_x_coords, player_y_coords)
-                player_xy_coords = list(zip(list(player_canvas_x_coords), list(player_canvas_y_coords)))
-
-                cur_player_d2_overlay_im = Image.new("RGBA", all_player_d2_img_copy.size, (255, 255, 255, 0))
-                cur_player_d2_drw = ImageDraw.Draw(cur_player_d2_overlay_im)
-                if first_title:
-                    title_text = extra_data_from_metric_title(config.metric_cost_title, predicted) + \
-                                 event_text + team_text + title_appendix + points_text
-                    _, _, w, h = cur_player_d2_drw.textbbox((0, 0), title_text, font=title_font)
-                    cur_player_d2_drw.text(((all_player_d2_img_copy.width - w) / 2,
-                                            (all_player_d2_img_copy.height * 0.1 - h) / 2),
-                                           title_text, fill=(255, 255, 255, 255), font=title_font)
-                    first_title = False
-
-                cur_player_d2_drw.line(xy=player_xy_coords, fill=fill_color, width=5)
-                all_player_d2_img_copy.alpha_composite(cur_player_d2_overlay_im)
-            pbar.update(1)
-
-    print(f"num trajectories in plot {len(trajectory_dfs)}, alpha {color_alpha}, num points {num_points}")
-
-    #heatmap = plot_occupancy_heatmap(filtered_trajectory_dfs, config, distance_to_other_player=False,
-    #                                 teammate=False, similarity_plots_path=None)
-
-    return all_player_d2_img_copy#LineAndHeatmapPlots(all_player_d2_img_copy, heatmap)
 
 
 key_areas: KeyAreas = [
@@ -177,39 +87,45 @@ def plot_predicted_trajectory_per_team(predicted_trajectory_dfs: List[pd.DataFra
 
     result = TrajectoryPlots()
 
-    print("plotting predicted" + use_team_str)
-    result.unfiltered = plot_trajectory_dfs(predicted_trajectory_dfs, config, True, include_ct, include_t)
+    #print("plotting predicted" + use_team_str)
+    #result.unfiltered = plot_trajectory_dfs_and_event(predicted_trajectory_dfs, config, True, include_ct, include_t)
     #result.unfiltered.save(similarity_plots_path / (config.metric_cost_file_name + '_trajectories' + team_file_ending))
 
     print("plotting predicted fire events" + use_team_str)
-    result.filtered_fire = plot_trajectory_dfs(predicted_trajectory_dfs, config, True, include_ct, include_t,
-                                               FilterEventType.Fire)
-    #result.filtered_fire.save(similarity_plots_path / (config.metric_cost_file_name + '_trajectories_fire' +
-    #                                                   team_file_ending))
+    result.filtered_fire = plot_trajectory_dfs_and_event(predicted_trajectory_dfs, config, True, include_ct, include_t,
+                                                         FilterPlayerType.IncludeOnlyInEvent,
+                                                         FilterEventType.Fire)
+    result.filtered_fire.save(similarity_plots_path / (config.metric_cost_file_name + '_trajectories_fire' +
+                                                       team_file_ending))
 
     print("plotting predicted kill events" + use_team_str)
-    result.filtered_kill = plot_trajectory_dfs(predicted_trajectory_dfs, config, True, include_ct, include_t,
-                                               FilterEventType.Kill)
-    #result.filtered_kill.save(similarity_plots_path / (config.metric_cost_file_name + '_trajectories_kill' +
-    #                                                   team_file_ending))
+    result.filtered_kill = plot_trajectory_dfs_and_event(predicted_trajectory_dfs, config, True, include_ct, include_t,
+                                                         FilterPlayerType.IncludeOnlyInEvent,
+                                                         FilterEventType.Kill)
+    result.filtered_kill.save(similarity_plots_path / (config.metric_cost_file_name + '_trajectories_kill' +
+                                                       team_file_ending))
+    quit(0)
 
     result.filtered_areas = []
     result.filtered_fire_and_areas = []
     for i in range(len(key_areas)):
         title_appendix = " " + key_area_names[i]
         print("plotting predicted key area events" + title_appendix + use_team_str)
-        result.filtered_areas.append(plot_trajectory_dfs(predicted_trajectory_dfs, config, True, include_ct, include_t,
-                                                         FilterEventType.KeyArea, [key_areas[i]], KeyAreaTeam.CT,
-                                                         title_appendix=title_appendix))
+        result.filtered_areas.append(plot_trajectory_dfs_and_event(predicted_trajectory_dfs, config, True, include_ct, include_t,
+                                                                   FilterPlayerType.ExcludeOneInEvent,
+                                                                   FilterEventType.KeyArea, [key_areas[i]], KeyAreaTeam.CT,
+                                                                   title_appendix=title_appendix))
         result.filtered_areas[-1].save(similarity_plots_path / (config.metric_cost_file_name +
                                                                 '_trajectories_area_' + key_area_names[i] +
                                                                 team_file_ending))
 
         print("plotting predicted fire and key area events" + title_appendix + use_team_str)
-        result.filtered_fire_and_areas.append(plot_trajectory_dfs(predicted_trajectory_dfs, config, True,
-                                                                  include_ct, include_t, FilterEventType.FireAndKeyArea,
-                                                                  [key_areas[i]], KeyAreaTeam.CT,
-                                                                  title_appendix=title_appendix))
+        result.filtered_fire_and_areas.append(plot_trajectory_dfs_and_event(predicted_trajectory_dfs, config, True,
+                                                                            include_ct, include_t,
+                                                                            FilterPlayerType.ExcludeOneInEvent,
+                                                                            FilterEventType.FireAndKeyArea,
+                                                                            [key_areas[i]], KeyAreaTeam.CT,
+                                                                            title_appendix=title_appendix))
         result.filtered_fire_and_areas[-1].save(similarity_plots_path /
                                                 (config.metric_cost_file_name + '_trajectories_fire_and_area_' +
                                                  key_area_names[i] + team_file_ending))
