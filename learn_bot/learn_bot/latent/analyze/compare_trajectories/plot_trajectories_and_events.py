@@ -53,7 +53,7 @@ def plot_trajectory_dfs_and_event(trajectory_dfs: List[pd.DataFrame], config: Co
             num_points += len(df)
 
     if filter_players == FilterPlayerType.IncludeOnlyInEvent:
-        return plot_events(filtered_trajectory_dfs, valid_players_dfs, num_points, len(trajectory_dfs),
+        return plot_events(filtered_trajectory_dfs, valid_players_dfs,
                            config, predicted, include_ct, include_t,
                            filter_players, filter_event_type, title_appendix)
     else:
@@ -65,16 +65,17 @@ def plot_trajectory_dfs_and_event(trajectory_dfs: List[pd.DataFrame], config: Co
 
 
 def plot_events(filtered_trajectory_dfs: List[pd.DataFrame], valid_players_dfs: List[pd.DataFrame],
-                num_points: int, num_unfiltered_trajectories: int, config: ComparisonConfig,
-                predicted: bool, include_ct: bool, include_t: bool,
+                config: ComparisonConfig, predicted: bool, include_ct: bool, include_t: bool,
                 filter_players: Optional[FilterPlayerType] = FilterPlayerType.IncludeAll,
                 filter_event_type: Optional[FilterEventType] = None,
                 title_appendix: str = "") -> Image.Image:
+    assert filter_players == FilterPlayerType.IncludeOnlyInEvent
     team_text = f" CT: {include_ct}, T: {include_t}"
     event_text = "" if filter_event_type is None else (" " + str(filter_event_type))
     title_text = extra_data_from_metric_title(config.metric_cost_title, predicted) + \
                  event_text + team_text + title_appendix
     return plot_occupancy_heatmap(filtered_trajectory_dfs, config, False, False, None, valid_players_dfs,
+                                  include_ct=include_ct, include_t=include_t,
                                   title_text=title_text)
 
 

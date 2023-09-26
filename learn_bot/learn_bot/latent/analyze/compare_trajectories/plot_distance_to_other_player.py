@@ -13,6 +13,7 @@ from tqdm import tqdm
 
 from learn_bot.latent.analyze.compare_trajectories.process_trajectory_comparison import ComparisonConfig
 from learn_bot.latent.analyze.run_coverage import coverage_pickle_path
+from learn_bot.latent.order.column_names import team_strs
 from learn_bot.latent.place_area.column_names import specific_player_place_area_columns
 from learn_bot.latent.transformer_nested_hidden_latent_model import d2_min, d2_max
 
@@ -35,6 +36,7 @@ def extra_data_from_metric_title(metric_title: str, predicted: bool) -> str:
 def plot_occupancy_heatmap(trajectory_dfs: List[pd.DataFrame], config: ComparisonConfig, distance_to_other_player: bool,
                            teammate: bool, similarity_plots_path: Optional[Path],
                            valid_players_dfs: List[pd.DataFrame] = [],
+                           include_ct: bool = True, include_t: bool = True,
                            title_text: Optional[str] = None) -> Optional[Image.Image]:
     counts_heatmap = None
     sums_heatmap = None
@@ -55,6 +57,12 @@ def plot_occupancy_heatmap(trajectory_dfs: List[pd.DataFrame], config: Compariso
     valid_players_df = pd.concat(valid_players_dfs)
 
     for player_place_area_columns in specific_player_place_area_columns:
+        ct_team = team_strs[0] in player_place_area_columns.player_id
+        if ct_team and not include_ct:
+            continue
+        elif not ct_team and not include_t:
+            continue
+
         # make sure player is alive if don't have another condition
         if len(valid_players_df) == 0:
             cur_player_trajectory_df = trajectory_df[trajectory_df[player_place_area_columns.alive] == 1]
