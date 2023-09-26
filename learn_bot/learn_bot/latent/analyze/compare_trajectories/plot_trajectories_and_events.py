@@ -63,69 +63,19 @@ def plot_trajectory_dfs_and_event(trajectory_dfs: List[pd.DataFrame], config: Co
                                    filter_event_type,
                                    title_appendix)
 
+
 def plot_events(filtered_trajectory_dfs: List[pd.DataFrame], valid_players_dfs: List[pd.DataFrame],
                 num_points: int, num_unfiltered_trajectories: int, config: ComparisonConfig,
                 predicted: bool, include_ct: bool, include_t: bool,
                 filter_players: Optional[FilterPlayerType] = FilterPlayerType.IncludeAll,
                 filter_event_type: Optional[FilterEventType] = None,
                 title_appendix: str = "") -> Image.Image:
-    all_player_d2_img_copy = d2_img.copy().convert("RGBA")
-    color_alpha = int(25. / log(2.2 + num_points / 1300, 10))
-    ct_color = (bot_ct_color_list[0], bot_ct_color_list[1], bot_ct_color_list[2], color_alpha)
-    t_color = (bot_t_color_list[0], bot_t_color_list[1], bot_t_color_list[2], color_alpha)
-    return plot_occupancy_heatmap(filtered_trajectory_dfs, config, False, False, None, valid_players_dfs)
-
-    first_title = True
     team_text = f" CT: {include_ct}, T: {include_t}"
     event_text = "" if filter_event_type is None else (" " + str(filter_event_type))
-    points_text = f"\nNum Points {num_points} Alpha {color_alpha}"
-
-    with tqdm(total=len(filtered_trajectory_dfs), disable=False) as pbar:
-        for trajectory_df, valid_players_df in zip(filtered_trajectory_dfs, valid_players_dfs):
-            assert filter_players == FilterPlayerType.IncludeOnlyInEvent
-
-            for player_place_area_columns in specific_player_place_area_columns:
-                ct_team = team_strs[0] in player_place_area_columns.player_id
-                if ct_team:
-                    if not include_ct:
-                        continue
-                    fill_color = ct_color
-                else:
-                    if not include_t:
-                        continue
-                    fill_color = t_color
-
-                player_specific_df = trajectory_df[valid_players_df[player_place_area_columns.player_id]]
-                for _, row in player_specific_df.iterrows():
-                    half_width = delta_pos_grid_cell_dim / 2
-                    x_min = row[player_place_area_columns.pos[0]] - half_width
-                    y_min = row[player_place_area_columns.pos[1]] - half_width
-                    canvas_min = VisMapCoordinate(x_min, y_min, 0)
-                    canvas_min_vec = canvas_min.get_canvas_coordinates()
-                    x_max = row[player_place_area_columns.pos[0]] + half_width
-                    y_max = row[player_place_area_columns.pos[1]] + half_width
-                    canvas_max = VisMapCoordinate(x_max, y_max, 0)
-                    canvas_max_vec = canvas_max.get_canvas_coordinates()
-
-                    cur_player_d2_overlay_im = Image.new("RGBA", all_player_d2_img_copy.size, (255, 255, 255, 0))
-                    cur_player_d2_drw = ImageDraw.Draw(cur_player_d2_overlay_im)
-                    if first_title:
-                        title_text = extra_data_from_metric_title(config.metric_cost_title, predicted) + \
-                                     event_text + team_text + title_appendix + points_text
-                        _, _, w, h = cur_player_d2_drw.textbbox((0, 0), title_text, font=title_font)
-                        cur_player_d2_drw.text(((all_player_d2_img_copy.width - w) / 2,
-                                                (all_player_d2_img_copy.height * 0.1 - h) / 2),
-                                               title_text, fill=(255, 255, 255, 255), font=title_font)
-                        first_title = False
-
-                    cur_player_d2_drw.rectangle([canvas_min_vec.x, canvas_max_vec.y,
-                                                 canvas_max_vec.x, canvas_min_vec.y], fill=fill_color)
-                    all_player_d2_img_copy.alpha_composite(cur_player_d2_overlay_im)
-            pbar.update(1)
-
-    print(f"num trajectories in plot {num_unfiltered_trajectories}, alpha {color_alpha}, num points {num_points}")
-
-    return all_player_d2_img_copy#LineAndHeatmapPlots(all_player_d2_img_copy, heatmap)
+    title_text = extra_data_from_metric_title(config.metric_cost_title, predicted) + \
+                 event_text + team_text + title_appendix
+    return plot_occupancy_heatmap(filtered_trajectory_dfs, config, False, False, None, valid_players_dfs,
+                                  title_text=title_text)
 
 
 def plot_trajectory_dfs(filtered_trajectory_dfs: List[pd.DataFrame], valid_players_dfs: List[pd.DataFrame],
@@ -153,10 +103,11 @@ def plot_trajectory_dfs(filtered_trajectory_dfs: List[pd.DataFrame], valid_playe
             if filter_players == FilterPlayerType.ExcludeOneInEvent:
                 max_player_id_col_name = None
                 max_player_valids = 0
-                for player_id_col_name, player_valids_series in valid_players_df:
-                    if sum(player_valids_series) > max_player_valids:
+                for player_id_col_name in valid_players_df.columns:
+                    cur_player_valids = sum(valid_players_df[player_id_col_name])
+                    if cur_player_valids > max_player_valids:
                         max_player_id_col_name = player_id_col_name
-                        max_player_valids = sum(player_valids_series)
+                        max_player_valids = cur_player_valids
                 player_ids_to_exclude.add(max_player_id_col_name)
 
             for player_place_area_columns in specific_player_place_area_columns:

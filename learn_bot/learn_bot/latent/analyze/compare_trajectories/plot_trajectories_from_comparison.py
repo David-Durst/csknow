@@ -87,24 +87,23 @@ def plot_predicted_trajectory_per_team(predicted_trajectory_dfs: List[pd.DataFra
 
     result = TrajectoryPlots()
 
-    #print("plotting predicted" + use_team_str)
-    #result.unfiltered = plot_trajectory_dfs_and_event(predicted_trajectory_dfs, config, True, include_ct, include_t)
+    print("plotting predicted" + use_team_str)
+    result.unfiltered = plot_trajectory_dfs_and_event(predicted_trajectory_dfs, config, True, include_ct, include_t)
     #result.unfiltered.save(similarity_plots_path / (config.metric_cost_file_name + '_trajectories' + team_file_ending))
 
     print("plotting predicted fire events" + use_team_str)
     result.filtered_fire = plot_trajectory_dfs_and_event(predicted_trajectory_dfs, config, True, include_ct, include_t,
                                                          FilterPlayerType.IncludeOnlyInEvent,
                                                          FilterEventType.Fire)
-    result.filtered_fire.save(similarity_plots_path / (config.metric_cost_file_name + '_trajectories_fire' +
-                                                       team_file_ending))
+    #result.filtered_fire.save(similarity_plots_path / (config.metric_cost_file_name + '_trajectories_fire' +
+    #                                                   team_file_ending))
 
     print("plotting predicted kill events" + use_team_str)
     result.filtered_kill = plot_trajectory_dfs_and_event(predicted_trajectory_dfs, config, True, include_ct, include_t,
                                                          FilterPlayerType.IncludeOnlyInEvent,
                                                          FilterEventType.Kill)
-    result.filtered_kill.save(similarity_plots_path / (config.metric_cost_file_name + '_trajectories_kill' +
-                                                       team_file_ending))
-    quit(0)
+    #result.filtered_kill.save(similarity_plots_path / (config.metric_cost_file_name + '_trajectories_kill' +
+    #                                                   team_file_ending))
 
     result.filtered_areas = []
     result.filtered_fire_and_areas = []

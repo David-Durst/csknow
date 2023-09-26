@@ -34,7 +34,8 @@ def extra_data_from_metric_title(metric_title: str, predicted: bool) -> str:
 
 def plot_occupancy_heatmap(trajectory_dfs: List[pd.DataFrame], config: ComparisonConfig, distance_to_other_player: bool,
                            teammate: bool, similarity_plots_path: Optional[Path],
-                           valid_players_dfs: List[pd.DataFrame] = []) -> Optional[Image.Image]:
+                           valid_players_dfs: List[pd.DataFrame] = [],
+                           title_text: Optional[str] = None) -> Optional[Image.Image]:
     counts_heatmap = None
     sums_heatmap = None
     #x_bins = None
@@ -130,9 +131,12 @@ def plot_occupancy_heatmap(trajectory_dfs: List[pd.DataFrame], config: Compariso
     sums_heatmap = np.ma.masked_where(coverage_heatmap < 0.5, sums_heatmap)
 
     fig = plt.figure(figsize=(10, 10), constrained_layout=True)
-    teammate_text = "Teammate" if teammate else "Enemy"
-    fig.suptitle(extra_data_from_metric_title(config.metric_cost_title, True) + " Distance To " + teammate_text,
-                 fontsize=16)
+    if title_text is None:
+        teammate_text = "Teammate" if teammate else "Enemy"
+        fig.suptitle(extra_data_from_metric_title(config.metric_cost_title, True) + " Distance To " + teammate_text,
+                     fontsize=16)
+    else:
+        fig.suptitle(title_text, fontsize=16)
     ax = fig.subplots(1, 1)
 
     counts_heatmap = counts_heatmap.T
