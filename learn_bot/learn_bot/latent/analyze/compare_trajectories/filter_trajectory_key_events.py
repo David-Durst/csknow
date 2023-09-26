@@ -99,10 +99,15 @@ def filter_trajectory_by_key_events(filter_event_type: FilterEventType, trajecto
     true_regions_df = pd.DataFrame({'data': true_regions, 'index': true_regions.index})
     true_regions_start_end = true_regions_df.groupby('data').agg({'index': ['min', 'max']})
 
-    data_per_event_dfs: List[pd.DataFrame] = []
-    player_conditions_per_event_dfs: List[pd.DataFrame] = []
-    for _, true_region in true_regions_start_end['index'].iterrows():
-        data_per_event_dfs.append(trajectory_df.loc[true_region['min']:true_region['max']])
-        player_conditions_per_event_dfs.append(player_conditions_df.loc[true_region['min']:true_region['max']])
+    # if not time extending, then just looking for individual events, so keep them as one df
+    if time_extend:
+        data_per_event_dfs: List[pd.DataFrame] = []
+        player_conditions_per_event_dfs: List[pd.DataFrame] = []
+        for _, true_region in true_regions_start_end['index'].iterrows():
+            data_per_event_dfs.append(trajectory_df.loc[true_region['min']:true_region['max']])
+            player_conditions_per_event_dfs.append(player_conditions_df.loc[true_region['min']:true_region['max']])
+        return TrajectoryEvents(data_per_event_dfs, player_conditions_per_event_dfs)
+    else:
+        return TrajectoryEvents([trajectory_df[time_extended_condition]],
+                                [player_conditions_df[time_extended_condition]])
 
-    return TrajectoryEvents(data_per_event_dfs, player_conditions_per_event_dfs)

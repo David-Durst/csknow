@@ -8,7 +8,8 @@ from tqdm import tqdm
 
 from learn_bot.latent.analyze.compare_trajectories.filter_trajectory_key_events import FilterEventType, KeyAreas, \
     KeyAreaTeam, filter_trajectory_by_key_events
-from learn_bot.latent.analyze.compare_trajectories.plot_distance_to_other_player import extra_data_from_metric_title
+from learn_bot.latent.analyze.compare_trajectories.plot_distance_to_other_player import extra_data_from_metric_title, \
+    plot_occupancy_heatmap
 from learn_bot.latent.analyze.compare_trajectories.process_trajectory_comparison import ComparisonConfig
 from learn_bot.latent.analyze.test_traces.run_trace_visualization import d2_img, bot_ct_color_list, bot_t_color_list, \
     convert_to_canvas_coordinates
@@ -38,7 +39,7 @@ def plot_trajectory_dfs_and_event(trajectory_dfs: List[pd.DataFrame], config: Co
             # split round trajectory by filter
             cur_round_filtered_trajectory_dfs = \
                 filter_trajectory_by_key_events(filter_event_type, round_trajectory_df,
-                                                filtered_trajectory_dfs != FilterPlayerType.IncludeOnlyInEvent,
+                                                filter_players != FilterPlayerType.IncludeOnlyInEvent,
                                                 key_areas, key_area_team)
             for data_df in cur_round_filtered_trajectory_dfs.data:
                 filtered_trajectory_dfs.append(data_df)
@@ -72,6 +73,7 @@ def plot_events(filtered_trajectory_dfs: List[pd.DataFrame], valid_players_dfs: 
     color_alpha = int(25. / log(2.2 + num_points / 1300, 10))
     ct_color = (bot_ct_color_list[0], bot_ct_color_list[1], bot_ct_color_list[2], color_alpha)
     t_color = (bot_t_color_list[0], bot_t_color_list[1], bot_t_color_list[2], color_alpha)
+    return plot_occupancy_heatmap(filtered_trajectory_dfs, config, False, False, None, valid_players_dfs)
 
     first_title = True
     team_text = f" CT: {include_ct}, T: {include_t}"
