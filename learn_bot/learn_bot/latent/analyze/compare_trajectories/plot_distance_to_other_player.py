@@ -1,4 +1,5 @@
 import os
+import pickle
 import tempfile
 from pathlib import Path
 from typing import List, Dict, Optional
@@ -11,6 +12,7 @@ from matplotlib.colors import LogNorm
 from tqdm import tqdm
 
 from learn_bot.latent.analyze.compare_trajectories.process_trajectory_comparison import ComparisonConfig
+from learn_bot.latent.analyze.run_coverage import coverage_pickle_path
 from learn_bot.latent.place_area.column_names import specific_player_place_area_columns
 from learn_bot.latent.transformer_nested_hidden_latent_model import d2_min, d2_max
 
@@ -35,8 +37,15 @@ def plot_occupancy_heatmap(trajectory_dfs: List[pd.DataFrame], config: Compariso
                            valid_players_dfs: List[pd.DataFrame] = []) -> Optional[Image.Image]:
     counts_heatmap = None
     sums_heatmap = None
-    x_bins = None
-    y_bins = None
+    #x_bins = None
+    #y_bins = None
+
+    with open(coverage_pickle_path, "rb") as infile:
+        (coverage_heatmap, x_bins, y_bins) = pickle.load(infile)
+    #empty_removed = np.where(coverage_heatmap < 0.5, -1., coverage_heatmap)
+    #zeros_in_valid = np.where(empty_removed > 0.5, 0., empty_removed)
+    #counts_heatmap = zeros_in_valid
+    #sums_heatmap = zeros_in_valid.copy()
 
     if len(valid_players_dfs) == 0:
         valid_players_dfs = [pd.DataFrame() for _ in trajectory_dfs]
@@ -106,10 +115,8 @@ def plot_occupancy_heatmap(trajectory_dfs: List[pd.DataFrame], config: Compariso
         y_pos = player_xy_pos_distance_df["y pos"].to_numpy()
 
         # add to heatmap bins
-        if x_bins is None:
-            counts_heatmap, x_bins, y_bins = np.histogram2d(x_pos, y_pos, bins=125,
-                                                                     range=[[d2_min[0], d2_max[0]],
-                                                                            [d2_min[1], d2_max[1]]])
+        if counts_heatmap is None:
+            counts_heatmap, _, _ = np.histogram2d(x_pos, y_pos, bins=[x_bins, y_bins])
             sums_heatmap, _, _ = np.histogram2d(x_pos, y_pos, weights=player_min_distances_to_other,
                                                 bins=[x_bins, y_bins])
         else:
@@ -118,6 +125,9 @@ def plot_occupancy_heatmap(trajectory_dfs: List[pd.DataFrame], config: Compariso
             tmp_sums_heatmap, _, _ = np.histogram2d(x_pos, y_pos, weights=player_min_distances_to_other,
                                                     bins=[x_bins, y_bins])
             sums_heatmap += tmp_sums_heatmap
+
+    counts_heatmap = np.ma.masked_where(coverage_heatmap < 0.5, counts_heatmap)
+    sums_heatmap = np.ma.masked_where(coverage_heatmap < 0.5, sums_heatmap)
 
     fig = plt.figure(figsize=(10, 10), constrained_layout=True)
     teammate_text = "Teammate" if teammate else "Enemy"
@@ -152,9 +162,9 @@ def plot_occupancy_heatmap(trajectory_dfs: List[pd.DataFrame], config: Compariso
                                    cmap='viridis')
     else:
         heatmap_im = ax.pcolormesh(grid_x, grid_y, counts_heatmap,
-                                   norm=LogNorm(vmin=non_nan_min, vmax=non_nan_max),
-                                   # vmin=non_nan_min,
-                                   # vmax=non_nan_max,
+                                   #norm=LogNorm(vmin=non_nan_min, vmax=non_nan_max),
+                                   #vmin=0,
+                                   #vmax=np.max(counts_heatmap),
                                    # norm=TwoSlopeNorm(vmin=non_nan_min, vcenter=3000, vmax=non_nan_max),
                                    cmap='viridis')
     cbar = fig.colorbar(heatmap_im, ax=ax)

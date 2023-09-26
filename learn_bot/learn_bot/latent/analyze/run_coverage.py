@@ -10,7 +10,7 @@ from matplotlib.colors import TwoSlopeNorm, LinearSegmentedColormap, LogNorm
 from learn_bot.latent.place_area.column_names import PlayerPlaceAreaColumns
 from learn_bot.latent.place_area.simulator import *
 
-tmp_file = Path(__file__).parent / 'plots' / 'coverage.pickle'
+coverage_pickle_path = Path(__file__).parent / 'plots' / 'coverage.pickle'
 
 def compute_coverage_metrics(loaded_model: LoadedModel):
     num_ticks = 0
@@ -20,7 +20,7 @@ def compute_coverage_metrics(loaded_model: LoadedModel):
     x_pos_bins = None
     y_pos_bins = None
 
-    os.makedirs(tmp_file.parent, exist_ok=True)
+    os.makedirs(coverage_pickle_path.parent, exist_ok=True)
     if True:
         for i, hdf5_wrapper in enumerate(loaded_model.dataset.data_hdf5s):
             print(f"Processing hdf5 {i + 1} / {len(loaded_model.dataset.data_hdf5s)}: {hdf5_wrapper.hdf5_path}")
@@ -39,11 +39,11 @@ def compute_coverage_metrics(loaded_model: LoadedModel):
                 else:
                     pos_heatmap, _, _ = np.histogram2d(x_pos, y_pos, bins=[x_pos_bins, y_pos_bins])
                     sum_pos_heatmap += pos_heatmap
-        with open(tmp_file, "wb") as outfile:
+        with open(coverage_pickle_path, "wb") as outfile:
             # "wb" argument opens the file in binary mode
             pickle.dump((sum_pos_heatmap, x_pos_bins, y_pos_bins), outfile)
     else:
-        with open(tmp_file, "rb") as infile:
+        with open(coverage_pickle_path, "rb") as infile:
             (sum_pos_heatmap, x_pos_bins, y_pos_bins) = pickle.load(infile)
 
 
