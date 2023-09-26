@@ -1,4 +1,5 @@
 import math
+from enum import Enum
 from typing import List, Callable
 
 import torch
@@ -38,6 +39,19 @@ stature_to_speed_list = [max_speed_per_second, max_speed_per_second * walking_mo
                          max_speed_per_second * ducking_modifier]
 
 
+class PlayerMaskType(Enum):
+    NoMask = 1
+    EveryoneTemporalOnlyMask = 2
+    EveryoneFullMask = 3
+
+    def __str__(self) -> str:
+        if self == PlayerMaskType.NoMask:
+            return "NoMask"
+        elif self == PlayerMaskType.EveryoneTemporalOnlyMask:
+            return "EveryoneTemporalOnlyMask"
+        else:
+            return "EveryoneFullMask"
+
 
 class TransformerNestedHiddenLatentModel(nn.Module):
     internal_width = 128
@@ -47,7 +61,7 @@ class TransformerNestedHiddenLatentModel(nn.Module):
     noise_var: float
 
     def __init__(self, cts: IOColumnTransformers, num_players: int, num_output_time_steps, num_radial_bins: int,
-                 num_layers: int, num_heads: int, mask_other_players: bool):
+                 num_layers: int, num_heads: int, player_mask_type: PlayerMaskType):
         super(TransformerNestedHiddenLatentModel, self).__init__()
         self.cts = cts
         # transformed/transformed doesn't matter since no angles and all categorical variables are
@@ -93,14 +107,16 @@ class TransformerNestedHiddenLatentModel(nn.Module):
         num_input_temporal_tokens = self.num_players * self.num_input_time_steps
         self.input_per_player_mask_cpu = torch.zeros([num_input_temporal_tokens, num_input_temporal_tokens],
                                                      dtype=torch.bool)
-        build_per_player_mask(self.input_per_player_mask_cpu, num_input_temporal_tokens, self.num_input_time_steps)
+        if player_mask_type != PlayerMaskType.NoMask:
+            build_per_player_mask(self.input_per_player_mask_cpu, num_input_temporal_tokens, self.num_input_time_steps)
 
         num_output_temporal_tokens = self.num_players * self.num_output_time_steps
         self.output_per_player_mask_cpu = torch.zeros([num_output_temporal_tokens, num_output_temporal_tokens],
                                                       dtype=torch.bool)
-        build_per_player_mask(self.output_per_player_mask_cpu, num_output_temporal_tokens, self.num_output_time_steps)
+        if player_mask_type != PlayerMaskType.NoMask:
+            build_per_player_mask(self.output_per_player_mask_cpu, num_output_temporal_tokens, self.num_output_time_steps)
 
-        self.mask_other_players = mask_other_players
+        self.player_mask_type = player_mask_type
 
         self.alive_columns = flatten_list(
             [range_list_to_index_list(cts.get_name_ranges(True, True, contained_str=player_place_area_columns.alive))
@@ -288,7 +304,7 @@ class TransformerNestedHiddenLatentModel(nn.Module):
             torch.cat([x_pos_encoded_no_noise, x_crosshair, x_non_pos], -1)[:, :, 0:self.num_output_time_steps, :],
             "b p t d -> b (p t) d")
         x_embedded_no_noise = self.embedding_model(x_gathered_no_noise)
-        if self.mask_other_players:
+        if self.player_mask_type == PlayerMaskType.EveryoneFullMask:
             output_per_player_mask = self.output_per_player_mask_cpu.to(x.device.type)
             tgt_mask = tgt_mask + (torch.where(output_per_player_mask, -1. * math.inf, 0.))
             transformed = self.transformer_model(x_temporal_embedded_flattened, x_embedded_no_noise, tgt_mask=tgt_mask,

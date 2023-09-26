@@ -86,7 +86,8 @@ def load_model_file(loaded_data: LoadDataResult, use_test_data_only: bool = Fals
                                                hdf5_wrappers[0].sample_df)
 
     model = TransformerNestedHiddenLatentModel(model_file['column_transformers'], 2 * max_enemies,
-                                               num_radial_ticks, num_radial_bins, 2, 4, False)
+                                               num_radial_ticks, num_radial_bins, 2, 4,
+                                               model_file['hyperparamter_options'].player_mask_type)
     model.load_state_dict(model_file['model_state_dict'])
     model.to(CUDA_DEVICE_STR)
 
