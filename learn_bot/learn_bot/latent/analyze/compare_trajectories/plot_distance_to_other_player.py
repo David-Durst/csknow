@@ -157,6 +157,9 @@ def plot_occupancy_heatmap(trajectory_dfs: List[pd.DataFrame], config: Compariso
     else:
         non_nan_min = 1.
 
+    cmap = plt.get_cmap('viridis').copy()
+    cmap.set_under('gray')
+
     if distance_to_other_player:
         heatmap_im = ax.pcolormesh(grid_x, grid_y, avg_heatmap,
                                    norm=LogNorm(vmin=non_nan_min, vmax=non_nan_max),
@@ -167,10 +170,10 @@ def plot_occupancy_heatmap(trajectory_dfs: List[pd.DataFrame], config: Compariso
     else:
         heatmap_im = ax.pcolormesh(grid_x, grid_y, counts_heatmap,
                                    #norm=LogNorm(vmin=non_nan_min, vmax=non_nan_max),
-                                   #vmin=0,
+                                   vmin=1,
                                    #vmax=np.max(counts_heatmap),
                                    # norm=TwoSlopeNorm(vmin=non_nan_min, vcenter=3000, vmax=non_nan_max),
-                                   cmap='viridis')
+                                   cmap=cmap)
     cbar = fig.colorbar(heatmap_im, ax=ax)
     if distance_to_other_player:
         cbar.ax.set_ylabel('Mean Distance To ' + teammate_text, rotation=270, labelpad=15, fontsize=14)
