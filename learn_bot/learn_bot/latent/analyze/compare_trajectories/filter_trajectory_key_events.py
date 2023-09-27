@@ -70,8 +70,8 @@ def filter_trajectory_by_key_events(filter_event_type: FilterEventType, trajecto
             is_ct_player = team_strs[0] in player_place_area_columns.player_id
             assert key_areas is not None
             if (key_area_team == KeyAreaTeam.Both) or \
-                    (key_area_team == KeyAreaTeam.CT and is_ct_player) or (
-                    key_area_team == KeyAreaTeam.T and not is_ct_player):
+                    (key_area_team == KeyAreaTeam.CT and is_ct_player) or \
+                    (key_area_team == KeyAreaTeam.T and not is_ct_player):
                 for key_area in key_areas:
                     x_condition = (trajectory_df[player_place_area_columns.pos[0]] >= key_area.min.x) & \
                                   (trajectory_df[player_place_area_columns.pos[0]] <= key_area.max.x)
@@ -80,6 +80,8 @@ def filter_trajectory_by_key_events(filter_event_type: FilterEventType, trajecto
                     z_condition = (trajectory_df[player_place_area_columns.pos[2]] >= key_area.min.z) & \
                                   (trajectory_df[player_place_area_columns.pos[2]] <= key_area.max.z)
                     per_player_condition = per_player_condition & (x_condition & y_condition & z_condition)
+            else:
+                per_player_condition = trajectory_df[round_id_column] != trajectory_df[round_id_column]
         player_conditions[player_place_area_columns.player_id] = per_player_condition
         key_event_condition = key_event_condition | per_player_condition
 

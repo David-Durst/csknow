@@ -114,9 +114,9 @@ def plot_predicted_trajectory_per_team(predicted_trajectory_dfs: List[pd.DataFra
                                                                    FilterPlayerType.ExcludeOneInEvent,
                                                                    FilterEventType.KeyArea, [key_areas[i]], KeyAreaTeam.CT,
                                                                    title_appendix=title_appendix))
-        result.filtered_areas[-1].save(similarity_plots_path / (config.metric_cost_file_name +
-                                                                '_trajectories_area_' + key_area_names[i] +
-                                                                team_file_ending))
+        #result.filtered_areas[-1].save(similarity_plots_path / (config.metric_cost_file_name +
+        #                                                        '_trajectories_area_' + key_area_names[i] +
+        #                                                        team_file_ending))
 
         print("plotting predicted fire and key area events" + title_appendix + use_team_str)
         result.filtered_fire_and_areas.append(plot_trajectory_dfs_and_event(predicted_trajectory_dfs, config, True,
@@ -125,9 +125,9 @@ def plot_predicted_trajectory_per_team(predicted_trajectory_dfs: List[pd.DataFra
                                                                             FilterEventType.FireAndKeyArea,
                                                                             [key_areas[i]], KeyAreaTeam.CT,
                                                                             title_appendix=title_appendix))
-        result.filtered_fire_and_areas[-1].save(similarity_plots_path /
-                                                (config.metric_cost_file_name + '_trajectories_fire_and_area_' +
-                                                 key_area_names[i] + team_file_ending))
+        #result.filtered_fire_and_areas[-1].save(similarity_plots_path /
+        #                                        (config.metric_cost_file_name + '_trajectories_fire_and_area_' +
+        #                                         key_area_names[i] + team_file_ending))
 
     return result
 
