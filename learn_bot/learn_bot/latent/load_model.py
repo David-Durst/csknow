@@ -21,7 +21,7 @@ from learn_bot.libs.df_grouping import make_index_column
 from learn_bot.libs.hdf5_to_pd import load_hdf5_to_pd, load_hdf5_extra_column
 from learn_bot.libs.hdf5_wrapper import HDF5Wrapper
 from learn_bot.libs.io_transforms import IOColumnTransformers, CUDA_DEVICE_STR
-from learn_bot.latent.transformer_nested_hidden_latent_model import TransformerNestedHiddenLatentModel
+from learn_bot.latent.transformer_nested_hidden_latent_model import TransformerNestedHiddenLatentModel, PlayerMaskType
 from learn_bot.latent.train import checkpoints_path, TrainResult, ColumnsToFlip
 
 
@@ -87,7 +87,7 @@ def load_model_file(loaded_data: LoadDataResult, use_test_data_only: bool = Fals
 
     model = TransformerNestedHiddenLatentModel(model_file['column_transformers'], 2 * max_enemies,
                                                num_radial_ticks, num_radial_bins, 2, 4,
-                                               model_file['hyperparamter_options'].player_mask_type)
+                                               PlayerMaskType.NoMask)#model_file['hyperparamter_options'].player_mask_type)
     model.load_state_dict(model_file['model_state_dict'])
     model.to(CUDA_DEVICE_STR)
 
