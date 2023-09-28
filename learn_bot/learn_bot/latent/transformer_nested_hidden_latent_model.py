@@ -192,7 +192,7 @@ class TransformerNestedHiddenLatentModel(nn.Module):
         if self.num_input_time_steps > 1:
             # this may divide by a little too much (if time between pos < 1s, but future proof for later with variable
             # tick rate inputs)
-            pos_scaled[:, :, 1:] = (pos[:, :, 1:]) / max_speed_per_second
+            pos_scaled[:, :, 1:] = (pos[:, :, 1:] - 130) / (130 * 2)
         pos_scaled = torch.clamp(pos_scaled, 0, 1)
         pos_scaled = (pos_scaled * 2) - 1
 
