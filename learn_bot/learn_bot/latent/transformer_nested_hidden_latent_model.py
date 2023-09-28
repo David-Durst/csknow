@@ -10,7 +10,7 @@ from learn_bot.latent.order.column_names import team_strs, player_team_str, flat
 from learn_bot.latent.place_area.column_names import specific_player_place_area_columns, num_radial_bins, \
     walking_modifier, ducking_modifier
 from learn_bot.latent.place_area.pos_abs_from_delta_grid_or_radial import NavData, \
-    one_hot_max_to_index, one_hot_prob_to_index, max_speed_per_second
+    one_hot_max_to_index, one_hot_prob_to_index, max_speed_per_second, max_run_speed_per_sim_tick
 from learn_bot.libs.io_transforms import IOColumnTransformers, CUDA_DEVICE_STR, CPU_DEVICE_STR
 from learn_bot.libs.positional_encoding import *
 from einops import rearrange, repeat
@@ -190,9 +190,9 @@ class TransformerNestedHiddenLatentModel(nn.Module):
         else:
             pos_scaled[:, :, 0] = (pos[:, :, 0] - self.d2_min_cpu) / (self.d2_max_cpu - self.d2_min_cpu)
         if self.num_input_time_steps > 1:
-            # this may divide by a little too much (if time between pos < 1s, but future proof for later with variable
-            # tick rate inputs)
-            pos_scaled[:, :, 1:] = (pos[:, :, 1:] - 130) / (130 * 2)
+            # + rather than - here as speed is positive, d2 dimensions are negative
+            # multiply by 2 so be sure to capture outliers
+            pos_scaled[:, :, 1:] = 0.#**(pos[:, :, 1:] + (2 * max_run_speed_per_sim_tick)) / (4 * max_run_speed_per_sim_tick)
         pos_scaled = torch.clamp(pos_scaled, 0, 1)
         pos_scaled = (pos_scaled * 2) - 1
 
