@@ -60,7 +60,8 @@ class TransformerNestedHiddenLatentModel(nn.Module):
     latent_to_distributions: Callable
     noise_var: float
 
-    def __init__(self, cts: IOColumnTransformers, num_players: int, num_output_time_steps, num_radial_bins: int,
+    def __init__(self, cts: IOColumnTransformers, num_players: int, num_input_time_steps: int,
+                 num_output_time_steps: int, num_radial_bins: int,
                  num_layers: int, num_heads: int, player_mask_type: PlayerMaskType):
         super(TransformerNestedHiddenLatentModel, self).__init__()
         self.cts = cts
@@ -92,7 +93,10 @@ class TransformerNestedHiddenLatentModel(nn.Module):
 
         self.num_players = len(players_columns)
         self.num_dim = 3
-        self.num_input_time_steps = len(self.players_pos_columns) // self.num_dim // self.num_players
+        # may have more input time steps loaded than used
+        self.total_input_time_steps = len(self.players_pos_columns) // self.num_dim // self.num_players
+        self.num_input_time_steps = num_input_time_steps
+        assert self.num_input_time_steps <= self.total_input_time_steps
         self.num_output_time_steps = num_output_time_steps
         assert self.num_output_time_steps <= self.num_input_time_steps or self.num_input_time_steps == 1
         assert self.num_players == num_players
@@ -140,7 +144,8 @@ class TransformerNestedHiddenLatentModel(nn.Module):
         self.columns_per_player_time_step = (len(self.players_non_temporal_columns) // self.num_players) + \
                                             self.num_similarity_columns + \
                                             self.spatial_positional_encoder_out_dim + \
-                                            len(self.players_nearest_crosshair_to_enemy_columns) // self.num_players // self.num_input_time_steps # + \
+                                            1 # for the nearest_crosshair_to_enemy_columns instead of next line
+                                            #len(self.players_nearest_crosshair_to_enemy_columns) // self.num_players // self.num_input_time_steps # + \
                                             #(len(self.players_vel_columns) // self.num_players // self.num_time_steps)
 
         # positional encoding library doesn't play well with torchscript, so I'll just make the
@@ -244,13 +249,20 @@ class TransformerNestedHiddenLatentModel(nn.Module):
         return team_mask
 
     def forward(self, x, similarity, temperature):
-        x_pos = rearrange(x[:, self.players_pos_columns], "b (p t d) -> b p t d", p=self.num_players,
-                          t=self.num_input_time_steps, d=self.num_dim)
-        x_crosshair = rearrange(x[:, self.players_nearest_crosshair_to_enemy_columns], "b (p t) -> b p t 1",
-                                p=self.num_players, t=self.num_input_time_steps)
+        x_pos_all_time_steps = rearrange(x[:, self.players_pos_columns], "b (p t d) -> b p t d", p=self.num_players,
+                                         t=self.total_input_time_steps, d=self.num_dim)
+        x_crosshair_all_time_steps = rearrange(x[:, self.players_nearest_crosshair_to_enemy_columns], "b (p t) -> b p t 1",
+                                p=self.num_players, t=self.total_input_time_steps)
         # delta encode prior pos
-        x_pos_lagged = torch.roll(x_pos, 1, 2)
-        x_pos[:, :, 1:] = x_pos_lagged[:, :, 1:] - x_pos[:, :, 1:]
+        if self.num_input_time_steps < self.total_input_time_steps:
+            x_pos = x_pos_all_time_steps[:, :, 0:self.num_input_time_steps, :]
+            x_crosshair = x_crosshair_all_time_steps[:, :, 0:self.num_input_time_steps, :]
+        else:
+            x_pos = x_pos_all_time_steps
+            x_crosshair = x_crosshair_all_time_steps
+        if self.num_input_time_steps > 1:
+            x_pos_lagged = torch.roll(x_pos, 1, 2)
+            x_pos[:, :, 1:] = x_pos_lagged[:, :, 1:] - x_pos[:, :, 1:]
         x_pos_encoded = self.encode_pos(x_pos)
 
         #x_vel = rearrange(x[:, self.players_vel_columns], "b (p t d) -> b p t d", p=self.num_players,
@@ -292,7 +304,6 @@ class TransformerNestedHiddenLatentModel(nn.Module):
             x_temporal_embedded_repeated = repeat(x_temporal_embedded[:, :, 0:self.num_output_time_steps, :],
                                                   "b p t d -> b p (t repeat) d", repeat=self.num_output_time_steps)
             x_temporal_embedded_flattened = rearrange(x_temporal_embedded_repeated, "b p t d -> b (p t) d")
-
 
         alive_gathered = x[:, self.alive_columns]
         alive_gathered_temporal = repeat(alive_gathered, 'b p -> b (p repeat)', repeat=self.num_output_time_steps)

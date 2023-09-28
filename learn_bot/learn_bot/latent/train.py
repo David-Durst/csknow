@@ -66,6 +66,7 @@ class TrainType(Enum):
 class HyperparameterOptions:
     num_epochs: int = 30
     batch_size: int = 512
+    num_input_time_steps: int = 1
     learning_rate: float = 4e-5
     weight_decay: float = 0.
     layers: int = 2
@@ -177,6 +178,7 @@ def train(train_type: TrainType, multi_hdf5_wrapper: MultiHDF5Wrapper,
                                                    multi_hdf5_wrapper.train_hdf5_wrappers[0].sample_df)
         # plus 1 on future ticks to include present tick
         model = TransformerNestedHiddenLatentModel(column_transformers, 2 * max_enemies,
+                                                   hyperparameter_options.num_input_time_steps,
                                                    num_radial_ticks, num_radial_bins,
                                                    hyperparameter_options.layers, hyperparameter_options.heads,
                                                    hyperparameter_options.player_mask_type)
@@ -271,9 +273,6 @@ def train(train_type: TrainType, multi_hdf5_wrapper: MultiHDF5Wrapper,
                     model.noise_var = hyperparameter_options.noise_var
                     optimizer.zero_grad()
                 with autocast(device, enabled=True):
-                    if torch.isnan(X).any():
-                        print('bad X early')
-                        sys.exit(0)
                     pred = model(X, similarity, temperature_gpu)
                     model.noise_var = -1.
                     if torch.isnan(X).any():
