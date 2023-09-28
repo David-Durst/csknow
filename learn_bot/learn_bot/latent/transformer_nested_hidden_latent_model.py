@@ -94,7 +94,7 @@ class TransformerNestedHiddenLatentModel(nn.Module):
         self.num_dim = 3
         self.num_input_time_steps = len(self.players_pos_columns) // self.num_dim // self.num_players
         self.num_output_time_steps = num_output_time_steps
-        assert self.num_output_time_steps <= self.num_input_time_steps
+        assert self.num_output_time_steps <= self.num_input_time_steps or self.num_input_time_steps == 1
         assert self.num_players == num_players
         self.num_players_per_team = self.num_players // 2
 
@@ -192,7 +192,7 @@ class TransformerNestedHiddenLatentModel(nn.Module):
         if self.num_input_time_steps > 1:
             # + rather than - here as speed is positive, d2 dimensions are negative
             # multiply by 2 so be sure to capture outliers
-            pos_scaled[:, :, 1:] = 0.#**(pos[:, :, 1:] + (2 * max_run_speed_per_sim_tick)) / (4 * max_run_speed_per_sim_tick)
+            pos_scaled[:, :, 1:] = (pos[:, :, 1:] + (2 * max_run_speed_per_sim_tick)) / (4 * max_run_speed_per_sim_tick)
         pos_scaled = torch.clamp(pos_scaled, 0, 1)
         pos_scaled = (pos_scaled * 2) - 1
 
@@ -244,9 +244,6 @@ class TransformerNestedHiddenLatentModel(nn.Module):
         return team_mask
 
     def forward(self, x, similarity, temperature):
-        if self.num_input_time_steps < 2:
-            raise Exception("must have history")
-
         x_pos = rearrange(x[:, self.players_pos_columns], "b (p t d) -> b p t d", p=self.num_players,
                           t=self.num_input_time_steps, d=self.num_dim)
         x_crosshair = rearrange(x[:, self.players_nearest_crosshair_to_enemy_columns], "b (p t) -> b p t 1",
@@ -288,8 +285,13 @@ class TransformerNestedHiddenLatentModel(nn.Module):
         # take last token per player
         x_temporal_embedded = rearrange(x_temporal_embedded_player_time_flattened, "b (p t) d -> b p t d",
                                         p=self.num_players, t=self.num_input_time_steps)
-        x_temporal_embedded_flattened = rearrange(x_temporal_embedded[:, :, 0:self.num_output_time_steps, :],
-                                                  "b p t d -> b (p t) d")
+        if self.num_output_time_steps <= self.num_input_time_steps:
+            x_temporal_embedded_flattened = rearrange(x_temporal_embedded[:, :, 0:self.num_output_time_steps, :],
+                                                      "b p t d -> b (p t) d")
+        else:
+            x_temporal_embedded_repeated = repeat(x_temporal_embedded[:, :, 0:self.num_output_time_steps, :],
+                                                  "b p t d -> b p (t repeat) d", repeat=self.num_output_time_steps)
+            x_temporal_embedded_flattened = rearrange(x_temporal_embedded_repeated, "b p t d -> b (p t) d")
 
 
         alive_gathered = x[:, self.alive_columns]
@@ -300,10 +302,16 @@ class TransformerNestedHiddenLatentModel(nn.Module):
         tgt_mask = self.generate_tgt_mask(x.device.type)
 
         x_pos_encoded_no_noise = self.encode_pos(x_pos, enable_noise=False)
-        x_gathered_no_noise = rearrange(
-            torch.cat([x_pos_encoded_no_noise, x_crosshair, x_non_pos], -1)[:, :, 0:self.num_output_time_steps, :],
-            "b p t d -> b (p t) d")
+        if self.num_output_time_steps <= self.num_input_time_steps:
+            x_gathered_no_noise = rearrange(
+                torch.cat([x_pos_encoded_no_noise, x_crosshair, x_non_pos], -1)[:, :, 0:self.num_output_time_steps, :],
+                "b p t d -> b (p t) d")
+        else:
+            x_gathered_no_noise_repeated = repeat(torch.cat([x_pos_encoded_no_noise, x_crosshair, x_non_pos], -1),
+                                                  "b p t d -> b p (t repeat) d", repeat=self.num_output_time_steps)
+            x_gathered_no_noise = rearrange(x_gathered_no_noise_repeated, "b p t d -> b (p t) d")
         x_embedded_no_noise = self.embedding_model(x_gathered_no_noise)
+
         if self.player_mask_type == PlayerMaskType.EveryoneFullMask:
             output_per_player_mask = self.output_per_player_mask_cpu.to(x.device.type)
             tgt_mask = tgt_mask + (torch.where(output_per_player_mask, -1. * math.inf, 0.))
