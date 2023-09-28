@@ -75,17 +75,18 @@ class HyperparameterOptions:
     player_mask_type: PlayerMaskType = PlayerMaskType.NoMask
     comment: str = ""
 
-    def to_str(self, model: TransformerNestedHiddenLatentModel):
-        return f"{now_str}_e_{self.num_epochs}_b_{self.batch_size}_lr_{self.learning_rate}_wd_{self.weight_decay}_" \
-               f"l_{self.layers}_h_{self.heads}_n_{self.noise_var}_t_{model.num_input_time_steps}_" \
+    def __str__(self):
+        return f"{now_str}_e_{self.num_epochs}_b_{self.batch_size}_it_{self.num_input_time_steps}_" \
+               f"lr_{self.learning_rate}_wd_{self.weight_decay}_" \
+               f"l_{self.layers}_h_{self.heads}_n_{self.noise_var}_" \
                f"m_{str(self.player_mask_type)}_c_{self.comment}"
 
-    def get_checkpoints_path(self, model: TransformerNestedHiddenLatentModel) -> Path:
-        return checkpoints_path / self.to_str(model)
+    def get_checkpoints_path(self) -> Path:
+        return checkpoints_path / str(self)
 
 
 default_hyperparameter_options = HyperparameterOptions()
-hyperparameter_option_range = [HyperparameterOptions(),
+hyperparameter_option_range = [HyperparameterOptions(num_input_time_steps=25),
                                HyperparameterOptions(player_mask_type=PlayerMaskType.EveryoneTemporalOnlyMask),
                                HyperparameterOptions(player_mask_type=PlayerMaskType.EveryoneFullMask),
                                HyperparameterOptions(layers=4, heads=8),
@@ -202,7 +203,7 @@ def train(train_type: TrainType, multi_hdf5_wrapper: MultiHDF5Wrapper,
     for param_layer in params:
         print(param_layer.shape)
 
-    run_checkpoints_path = hyperparameter_options.get_checkpoints_path(model)
+    run_checkpoints_path = hyperparameter_options.get_checkpoints_path()
     run_checkpoints_path.mkdir(parents=True, exist_ok=True)
     train_checkpoint_paths.best_path = run_checkpoints_path
 
@@ -371,7 +372,7 @@ def train(train_type: TrainType, multi_hdf5_wrapper: MultiHDF5Wrapper,
                         f.write(f'''{str(k)} : {','.join(map(str, v))}''')
             model.to(device)
 
-    cur_runs_path = runs_path / hyperparameter_options.to_str(model)
+    cur_runs_path = runs_path / str(hyperparameter_options)
     writer = SummaryWriter(cur_runs_path)
     def save_tensorboard(train_loss: LatentLosses, test_loss: LatentLosses, train_accuracy: Dict, test_accuracy: Dict,
                          train_delta_diff_xy: Dict, test_delta_diff_xy: Dict,
@@ -401,7 +402,7 @@ def train(train_type: TrainType, multi_hdf5_wrapper: MultiHDF5Wrapper,
                 if False:
                     with profile(activities=[ProfilerActivity.CPU, ProfilerActivity.CUDA],
                                  on_trace_ready=torch.profiler.tensorboard_trace_handler(
-                                     str(runs_path / ('trace_' + hyperparameter_options.to_str(model)))),
+                                     str(runs_path / ('trace_' + str(hyperparameter_options)))),
                                  schedule=schedule(wait=2, warmup=3, active=30, repeat=1),
                                  profile_memory=True,
                                  with_stack=True) as prof:
@@ -442,8 +443,8 @@ def train(train_type: TrainType, multi_hdf5_wrapper: MultiHDF5Wrapper,
     test_data = MultipleLatentHDF5Dataset(multi_hdf5_wrapper.test_hdf5_wrappers, column_transformers,
                                           multi_hdf5_wrapper.duplicate_last_hdf5_equal_to_rest)
     batch_size = min(hyperparameter_options.batch_size, min(len(train_data), len(test_data)))
-    train_dataloader = DataLoader(train_data, batch_size=batch_size, num_workers=0, shuffle=True, pin_memory=True)
-    test_dataloader = DataLoader(test_data, batch_size=batch_size, num_workers=0, shuffle=True, pin_memory=True)
+    train_dataloader = DataLoader(train_data, batch_size=batch_size, num_workers=3, shuffle=True, pin_memory=True)
+    test_dataloader = DataLoader(test_data, batch_size=batch_size, num_workers=3, shuffle=True, pin_memory=True)
 
     print(f"num train examples: {len(train_data)}")
     print(f"num test examples: {len(test_data)}")
