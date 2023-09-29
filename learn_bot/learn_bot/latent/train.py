@@ -55,13 +55,11 @@ class TrainType(Enum):
     DeltaPos = 1
 
 
-behavior_cloning_rollout_length = 1
-scheduled_sampling_rollout_length = 20
-num_seconds_per_loop = 5
-
 @dataclass
 class HyperparameterOptions:
     num_epochs: int = 30
+    bc_epochs: int = 10
+    dad_epochs: int = 10
     batch_size: int = 512
     num_input_time_steps: int = 1
     learning_rate: float = 4e-5
@@ -82,12 +80,21 @@ class HyperparameterOptions:
     def get_checkpoints_path(self) -> Path:
         return checkpoints_path / str(self)
 
-    def get_num_time_steps(self):
+    def get_rollout_steps(self):
         # 1 for behavior cloning if no rollout
         if self.rollout_seconds is None:
             return 1
         else:
             return int(data_ticks_per_second / data_ticks_per_sim_tick * self.rollout_seconds)
+
+    def compute_percent_steps_ground_truth(self, epoch_num: int) -> float:
+        assert self.bc_epochs + self.dad_epochs <= self.num_epochs
+        scheduled_sampling_epochs = self.num_epochs - self.bc_epochs - self.dad_epochs
+        if epoch_num < self.bc_epochs:
+            return 0.
+        else:
+            return min(1., (epoch_num - self.bc_epochs) * 1. / scheduled_sampling_epochs)
+
 
 
 default_hyperparameter_options = HyperparameterOptions()
@@ -250,6 +257,7 @@ def train(train_type: TrainType, multi_hdf5_wrapper: MultiHDF5Wrapper,
         prior_bad_duplicated_last = None
         prior_bad_indices = None
         start_epoch_time = time.perf_counter()
+        dataloader.dataset.rollout_steps = hyperparameter_options.get_rollout_steps()
         with tqdm(total=len(dataloader), disable=False) as pbar:
             for batch, (X, Y, similarity, duplicated_last, indices) in enumerate(dataloader):
                 batch_num += 1
@@ -282,7 +290,10 @@ def train(train_type: TrainType, multi_hdf5_wrapper: MultiHDF5Wrapper,
                     model.noise_var = hyperparameter_options.noise_var
                     optimizer.zero_grad()
                 with autocast(device, enabled=True):
-                    pred = model(X, similarity, temperature_gpu)
+                    if hyperparameter_options.get_rollout_steps() == 1:
+                        pred = model(X, similarity, temperature_gpu)
+                    else:
+                        raise NotImplementedError
                     model.noise_var = -1.
                     if torch.isnan(X).any():
                         print('bad X')
@@ -452,8 +463,8 @@ def train(train_type: TrainType, multi_hdf5_wrapper: MultiHDF5Wrapper,
     test_data = MultipleLatentHDF5Dataset(multi_hdf5_wrapper.test_hdf5_wrappers, column_transformers,
                                           multi_hdf5_wrapper.duplicate_last_hdf5_equal_to_rest)
     batch_size = min(hyperparameter_options.batch_size, min(len(train_data), len(test_data)))
-    train_dataloader = DataLoader(train_data, batch_size=batch_size, num_workers=0, shuffle=True, pin_memory=True)
-    test_dataloader = DataLoader(test_data, batch_size=batch_size, num_workers=0, shuffle=True, pin_memory=True)
+    train_dataloader = DataLoader(train_data, batch_size=batch_size, num_workers=3, shuffle=True, pin_memory=True)
+    test_dataloader = DataLoader(test_data, batch_size=batch_size, num_workers=3, shuffle=True, pin_memory=True)
 
     print(f"num train examples: {len(train_data)}")
     print(f"num test examples: {len(test_data)}")

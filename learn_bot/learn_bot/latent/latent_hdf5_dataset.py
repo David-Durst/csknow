@@ -38,9 +38,10 @@ class MultipleLatentHDF5Dataset(Dataset):
     hdf5s_cum_len: List[int]
     total_len: int
     duplicate_last_equal_to_rest: bool
+    rollout_steps: int
 
     def __init__(self, data_hdf5s: List[HDF5Wrapper], cts: IOColumnTransformers,
-                 duplicate_last_equal_to_rest: bool = False):
+                 duplicate_last_equal_to_rest: bool = False, rollout_length: int = 1):
         self.x_cols = cts.input_types.column_names_all_categorical_columns()
         self.y_cols = cts.output_types.column_names_all_categorical_columns()
         self.data_hdf5s = data_hdf5s
@@ -57,19 +58,21 @@ class MultipleLatentHDF5Dataset(Dataset):
                 # handle cases where prior hdf5 have less elements than one to duplicate
                 self.total_len += max(self.total_len // 4, len(data_hdf5))
                 self.hdf5s_cum_len.append(self.total_len)
+        self.rollout_steps = rollout_length
 
     def __len__(self):
         return self.total_len
 
     def __getitem__(self, idx):
-        x_tensor0, y_tensor0, similarity_tensor0, duplicated_last0, indices0 = self.inner_getitem(idx)
-        x_tensor1, y_tensor1, similarity_tensor1, duplicated_last1, indices1 = \
-            self.inner_getitem(min(idx+1, len(self) - 1))
-        return torch.stack([x_tensor0, x_tensor1]), \
-            torch.stack([y_tensor0, y_tensor1]), \
-            torch.stack([similarity_tensor0, similarity_tensor1]), \
-            torch.stack([duplicated_last0, duplicated_last1]), \
-            torch.stack([indices0, indices1])
+        if self.rollout_steps == 1:
+            return self.inner_getitem(idx)
+        else:
+            inner_items = [self.inner_getitem(min(i+1, len(self) - 1)) for i in range(idx, idx + self.rollout_steps)]
+            return torch.stack([item[0] for item in inner_items]), \
+                torch.stack([item[1] for item in inner_items]), \
+                torch.stack([item[2] for item in inner_items]), \
+                torch.stack([item[3] for item in inner_items]), \
+                torch.stack([item[4] for item in inner_items])
 
     def inner_getitem(self, idx):
         # hdf5_index selects file, idx_in_hdf5 selects location in file
