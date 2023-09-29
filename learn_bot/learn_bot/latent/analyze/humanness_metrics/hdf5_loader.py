@@ -15,7 +15,7 @@ from learn_bot.latent.analyze.humanness_metrics.column_names import *
 from learn_bot.latent.engagement.column_names import round_id_column
 from learn_bot.latent.place_area.column_names import get_similarity_column
 from learn_bot.latent.place_area.load_data import LoadDataResult
-from learn_bot.latent.train import train_test_split_file_name
+from learn_bot.latent.train_paths import train_test_split_file_name
 from learn_bot.libs.df_grouping import TrainTestSplit
 from learn_bot.libs.hdf5_to_pd import load_hdf5_to_pd
 from learn_bot.libs.multi_hdf5_wrapper import train_test_split_folder_path, make_train_test_splits_relative, \

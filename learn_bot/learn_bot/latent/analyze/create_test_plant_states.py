@@ -7,7 +7,7 @@ from learn_bot.latent.engagement.column_names import round_id_column, tick_id_co
 from learn_bot.latent.order.column_names import c4_pos_cols, team_strs
 from learn_bot.latent.place_area.column_names import specific_player_place_area_columns, get_similarity_column
 from learn_bot.latent.place_area.load_data import LoadDataResult, LoadDataOptions
-from learn_bot.latent.train import train_test_split_file_name
+from learn_bot.latent.train_paths import train_test_split_file_name
 from learn_bot.libs.hdf5_to_pd import load_hdf5_to_pd, save_pd_to_hdf5
 from learn_bot.libs.multi_hdf5_wrapper import absolute_to_relative_train_test_key
 

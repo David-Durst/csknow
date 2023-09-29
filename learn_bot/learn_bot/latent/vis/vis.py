@@ -3,7 +3,7 @@ from typing import Set, Callable, List
 from learn_bot.latent.analyze.compare_trajectories.process_trajectory_comparison import set_pd_print_options
 from learn_bot.latent.place_area.column_names import *
 from learn_bot.latent.load_model import LoadedModel
-from learn_bot.latent.train import default_selected_retake_rounds_path
+from learn_bot.latent.train_paths import default_selected_retake_rounds_path
 from learn_bot.libs.df_grouping import make_index_column
 from learn_bot.mining.area_cluster import d2_radar_path
 from learn_bot.latent.vis.draw_inference import draw_all_players, minimap_height, minimap_width, scale_down

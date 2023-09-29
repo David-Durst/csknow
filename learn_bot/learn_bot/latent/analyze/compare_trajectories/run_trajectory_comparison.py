@@ -12,7 +12,7 @@ from learn_bot.latent.analyze.compare_trajectories.process_trajectory_comparison
     filter_similarity_for_first_n_test_rounds
 from learn_bot.latent.engagement.column_names import round_id_column
 from learn_bot.latent.load_model import load_model_file
-from learn_bot.latent.train import train_test_split_file_name
+from learn_bot.latent.train_paths import train_test_split_file_name
 from learn_bot.latent.vis.vis_two import vis_two
 from learn_bot.latent.place_area.load_data import LoadDataOptions, LoadDataResult
 from learn_bot.libs.hdf5_to_pd import load_hdf5_to_pd

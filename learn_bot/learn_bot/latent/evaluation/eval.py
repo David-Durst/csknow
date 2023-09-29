@@ -6,7 +6,7 @@ from matplotlib import pyplot as plt
 from learn_bot.latent.dataset import latent_hdf5_data_path
 from learn_bot.latent.engagement.column_names import get_ith_enemy_columns
 from learn_bot.libs.hdf5_to_pd import load_hdf5_to_pd
-from learn_bot.latent.train import plot_path
+from learn_bot.latent.train_paths import plot_path
 
 rounds_hdf5_data_path = Path(__file__).parent / '..' / '..' / '..' / '..' / 'analytics' / 'csv_outputs' / 'rounds.hdf5'
 weapon_fire_hdf5_data_path = Path(__file__).parent / '..' / '..' / '..' / '..' / 'analytics' / 'csv_outputs' / 'weaponFire.hdf5'

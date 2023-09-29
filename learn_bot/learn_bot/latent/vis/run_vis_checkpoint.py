@@ -3,7 +3,7 @@ from learn_bot.latent.analyze.comparison_column_names import small_human_good_ro
     all_human_vs_human_28_similarity_hdf5_data_path
 from learn_bot.latent.load_model import load_model_file
 from learn_bot.latent.place_area.load_data import LoadDataResult, LoadDataOptions
-from learn_bot.latent.train import train_test_split_file_name
+from learn_bot.latent.train_paths import train_test_split_file_name
 from learn_bot.latent.vis.off_policy_inference import off_policy_inference
 from learn_bot.latent.vis.vis import vis
 from learn_bot.libs.hdf5_to_pd import load_hdf5_to_pd

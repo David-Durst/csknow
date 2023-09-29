@@ -22,7 +22,7 @@ from learn_bot.libs.hdf5_to_pd import load_hdf5_to_pd, load_hdf5_extra_column
 from learn_bot.libs.hdf5_wrapper import HDF5Wrapper
 from learn_bot.libs.io_transforms import IOColumnTransformers, CUDA_DEVICE_STR
 from learn_bot.latent.transformer_nested_hidden_latent_model import TransformerNestedHiddenLatentModel, PlayerMaskType
-from learn_bot.latent.train import checkpoints_path, TrainResult, ColumnsToFlip
+from learn_bot.latent.train_paths import checkpoints_path
 
 
 class LoadedModel:

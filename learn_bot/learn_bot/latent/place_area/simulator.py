@@ -19,7 +19,7 @@ from learn_bot.latent.place_area.pos_abs_from_delta_grid_or_radial import delta_
     delta_pos_grid_num_xy_cells_per_z_change, compute_new_pos, NavData, data_ticks_per_sim_tick
 from learn_bot.latent.place_area.load_data import human_latent_team_hdf5_data_path, manual_latent_team_hdf5_data_path, \
     rollout_latent_team_hdf5_data_path, LoadDataResult, LoadDataOptions, SimilarityFn
-from learn_bot.latent.train import train_test_split_file_name
+from learn_bot.latent.train_paths import train_test_split_file_name
 from learn_bot.latent.transformer_nested_hidden_latent_model import *
 from learn_bot.latent.vis.vis import vis
 from learn_bot.libs.hdf5_to_pd import load_hdf5_to_pd, load_hdf5_extra_to_list
@@ -49,7 +49,7 @@ def limit_to_every_nth_row(df: pd.DataFrame):
     return condition
 
 
-def get_round_lengths(df: pd.DataFrame) -> RoundLengths:
+def get_round_lengths(df: pd.DataFrame, compute_last_player_alive: bool = True) -> RoundLengths:
     grouped_df = df.groupby([round_id_column]).agg({tick_id_column: ['count', 'min', 'max'],
                                                     'index': ['count', 'min', 'max']})
     result = RoundLengths(len(grouped_df), max(grouped_df[tick_id_column]['count']), [], {}, {}, {}, {}, False, {})
@@ -61,12 +61,13 @@ def get_round_lengths(df: pd.DataFrame) -> RoundLengths:
         result.round_id_to_list_id[round_id] = list_id
 
         last_row = df.loc[grouped_df['index'].loc[round_id, 'max']]
-        for column_index, player_place_area_columns in enumerate(specific_player_place_area_columns):
-            if last_row[player_place_area_columns.alive]:
-                result.round_to_last_alive_index[round_id] = column_index
-                break
-        if round_id not in result.round_to_last_alive_index:
-            print(f'no one alive at end of {round_id}')
+        if compute_last_player_alive:
+            for column_index, player_place_area_columns in enumerate(specific_player_place_area_columns):
+                if last_row[player_place_area_columns.alive]:
+                    result.round_to_last_alive_index[round_id] = column_index
+                    break
+            if round_id not in result.round_to_last_alive_index:
+                print(f'no one alive at end of {round_id}')
 
         list_id += 1
     result.ct_first = team_strs[0] in specific_player_place_area_columns[0].player_id

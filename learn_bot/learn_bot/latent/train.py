@@ -12,21 +12,19 @@ from torch.utils.data import DataLoader
 
 from torch.utils.tensorboard import SummaryWriter
 
-from learn_bot.latent.analyze.comparison_column_names import small_human_good_rounds, \
-    all_human_vs_small_human_similarity_hdf5_data_path, all_human_28_second_filter_good_rounds, \
-    all_human_vs_human_28_similarity_hdf5_data_path
 from learn_bot.latent.dataset import *
 from learn_bot.latent.engagement.column_names import round_id_column
 from learn_bot.latent.latent_hdf5_dataset import MultipleLatentHDF5Dataset
-from learn_bot.latent.order.column_names import num_future_ticks, num_radial_ticks
+from learn_bot.latent.order.column_names import num_radial_ticks
 from learn_bot.latent.place_area.load_data import human_latent_team_hdf5_data_path, manual_latent_team_hdf5_data_path, \
     LoadDataResult, LoadDataOptions
-from learn_bot.latent.place_area.pos_abs_from_delta_grid_or_radial import delta_pos_grid_num_cells
 from learn_bot.latent.place_area.column_names import place_area_input_column_types, radial_vel_output_column_types, \
     test_success_col, num_radial_bins
+from learn_bot.latent.place_area.pos_abs_from_delta_grid_or_radial import data_ticks_per_second, data_ticks_per_sim_tick
 from learn_bot.latent.profiling import profile_latent_model
+from learn_bot.latent.train_paths import checkpoints_path, runs_path, train_test_split_file_name, \
+    default_selected_retake_rounds_path
 from learn_bot.latent.transformer_nested_hidden_latent_model import TransformerNestedHiddenLatentModel, PlayerMaskType
-from learn_bot.libs.hdf5_to_pd import load_hdf5_to_pd
 from learn_bot.libs.hdf5_wrapper import HDF5Wrapper
 from learn_bot.libs.io_transforms import CUDA_DEVICE_STR
 from learn_bot.latent.accuracy_and_loss import compute_loss, compute_accuracy_and_delta_diff, \
@@ -34,17 +32,12 @@ from learn_bot.latent.accuracy_and_loss import compute_loss, compute_accuracy_an
     CPU_DEVICE_STR, LatentLosses, duplicated_name_str
 from learn_bot.libs.multi_hdf5_wrapper import MultiHDF5Wrapper
 from tqdm import tqdm
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Optional
 
-checkpoints_path = Path(__file__).parent / 'checkpoints'
-plot_path = Path(__file__).parent / 'distributions'
-default_selected_retake_rounds_path = Path(__file__).parent / 'vis' / 'good_retake_round_ids.txt'
-
 now = datetime.now()
 now_str = now.strftime("%m_%d_%Y__%H_%M_%S")
-runs_path = Path(__file__).parent / 'runs'
 
 time_model = False
 
@@ -62,6 +55,10 @@ class TrainType(Enum):
     DeltaPos = 1
 
 
+behavior_cloning_rollout_length = 1
+scheduled_sampling_rollout_length = 20
+num_seconds_per_loop = 5
+
 @dataclass
 class HyperparameterOptions:
     num_epochs: int = 30
@@ -72,6 +69,7 @@ class HyperparameterOptions:
     layers: int = 2
     heads: int = 4
     noise_var: float = 20.
+    rollout_seconds: Optional[float] = None
     player_mask_type: PlayerMaskType = PlayerMaskType.NoMask
     comment: str = ""
 
@@ -79,10 +77,17 @@ class HyperparameterOptions:
         return f"{now_str}_e_{self.num_epochs}_b_{self.batch_size}_it_{self.num_input_time_steps}_" \
                f"lr_{self.learning_rate}_wd_{self.weight_decay}_" \
                f"l_{self.layers}_h_{self.heads}_n_{self.noise_var}_" \
-               f"m_{str(self.player_mask_type)}_c_{self.comment}"
+               f"ros_{self.rollout_seconds}_m_{str(self.player_mask_type)}_c_{self.comment}"
 
     def get_checkpoints_path(self) -> Path:
         return checkpoints_path / str(self)
+
+    def get_num_time_steps(self):
+        # 1 for behavior cloning if no rollout
+        if self.rollout_seconds is None:
+            return 1
+        else:
+            return int(data_ticks_per_second / data_ticks_per_sim_tick * self.rollout_seconds)
 
 
 default_hyperparameter_options = HyperparameterOptions()
@@ -447,8 +452,8 @@ def train(train_type: TrainType, multi_hdf5_wrapper: MultiHDF5Wrapper,
     test_data = MultipleLatentHDF5Dataset(multi_hdf5_wrapper.test_hdf5_wrappers, column_transformers,
                                           multi_hdf5_wrapper.duplicate_last_hdf5_equal_to_rest)
     batch_size = min(hyperparameter_options.batch_size, min(len(train_data), len(test_data)))
-    train_dataloader = DataLoader(train_data, batch_size=batch_size, num_workers=3, shuffle=True, pin_memory=True)
-    test_dataloader = DataLoader(test_data, batch_size=batch_size, num_workers=3, shuffle=True, pin_memory=True)
+    train_dataloader = DataLoader(train_data, batch_size=batch_size, num_workers=0, shuffle=True, pin_memory=True)
+    test_dataloader = DataLoader(test_data, batch_size=batch_size, num_workers=0, shuffle=True, pin_memory=True)
 
     print(f"num train examples: {len(train_data)}")
     print(f"num test examples: {len(test_data)}")
@@ -463,8 +468,6 @@ def train(train_type: TrainType, multi_hdf5_wrapper: MultiHDF5Wrapper,
 
 
 latent_id_cols = ['id', round_id_column, test_success_col]
-
-train_test_split_file_name = 'all_human_and_manual.pickle'
 
 load_data_options = LoadDataOptions(
     use_manual_data=False,

@@ -62,6 +62,16 @@ class MultipleLatentHDF5Dataset(Dataset):
         return self.total_len
 
     def __getitem__(self, idx):
+        x_tensor0, y_tensor0, similarity_tensor0, duplicated_last0, indices0 = self.inner_getitem(idx)
+        x_tensor1, y_tensor1, similarity_tensor1, duplicated_last1, indices1 = \
+            self.inner_getitem(min(idx+1, len(self) - 1))
+        return torch.stack([x_tensor0, x_tensor1]), \
+            torch.stack([y_tensor0, y_tensor1]), \
+            torch.stack([similarity_tensor0, similarity_tensor1]), \
+            torch.stack([duplicated_last0, duplicated_last1]), \
+            torch.stack([indices0, indices1])
+
+    def inner_getitem(self, idx):
         # hdf5_index selects file, idx_in_hdf5 selects location in file
         hdf5_index = 0
         idx_in_hdf5 = 0
