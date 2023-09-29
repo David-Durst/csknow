@@ -86,7 +86,9 @@ class HyperparameterOptions:
 
 
 default_hyperparameter_options = HyperparameterOptions()
-hyperparameter_option_range = [HyperparameterOptions(num_input_time_steps=25),
+hyperparameter_option_range = [HyperparameterOptions(num_input_time_steps=1, num_epochs=20),
+                               HyperparameterOptions(num_input_time_steps=5, num_epochs=40),
+                               HyperparameterOptions(num_input_time_steps=25, num_epochs=40),
                                HyperparameterOptions(player_mask_type=PlayerMaskType.EveryoneTemporalOnlyMask),
                                HyperparameterOptions(player_mask_type=PlayerMaskType.EveryoneFullMask),
                                HyperparameterOptions(layers=4, heads=8),
@@ -355,7 +357,8 @@ def train(train_type: TrainType, multi_hdf5_wrapper: MultiHDF5Wrapper,
             'optimizer_state_dict': optimizer.state_dict(),
             'column_transformers': column_transformers,
             'diff_test_train': diff_train_test,
-            'hyperparameter_options': hyperparameter_options
+            'hyperparameter_options': hyperparameter_options,
+            'total_epochs': total_epochs
         }, model_path)
         with torch.no_grad():
             model.eval()
