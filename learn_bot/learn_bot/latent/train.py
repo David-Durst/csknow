@@ -21,6 +21,7 @@ from learn_bot.latent.place_area.load_data import human_latent_team_hdf5_data_pa
 from learn_bot.latent.place_area.column_names import place_area_input_column_types, radial_vel_output_column_types, \
     test_success_col, num_radial_bins
 from learn_bot.latent.place_area.pos_abs_from_delta_grid_or_radial import data_ticks_per_second, data_ticks_per_sim_tick
+from learn_bot.latent.place_area.rollout_simulator import rollout_simulate
 from learn_bot.latent.profiling import profile_latent_model
 from learn_bot.latent.train_paths import checkpoints_path, runs_path, train_test_split_file_name, \
     default_selected_retake_rounds_path
@@ -80,14 +81,7 @@ class HyperparameterOptions:
     def get_checkpoints_path(self) -> Path:
         return checkpoints_path / str(self)
 
-    def get_rollout_steps(self):
-        # 1 for behavior cloning if no rollout
-        if self.rollout_seconds is None:
-            return 1
-        else:
-            return int(data_ticks_per_second / data_ticks_per_sim_tick * self.rollout_seconds)
-
-    def compute_percent_steps_ground_truth(self, epoch_num: int) -> float:
+    def percent_rollout_steps_predicted(self, epoch_num: int) -> float:
         assert self.bc_epochs + self.dad_epochs <= self.num_epochs
         scheduled_sampling_epochs = self.num_epochs - self.bc_epochs - self.dad_epochs
         if epoch_num < self.bc_epochs:
@@ -95,10 +89,17 @@ class HyperparameterOptions:
         else:
             return min(1., (epoch_num - self.bc_epochs) * 1. / scheduled_sampling_epochs)
 
+    def get_rollout_steps(self, epoch_num: int):
+        percent_rollout_steps_predicted = self.percent_rollout_steps_predicted(epoch_num)
+        # 1 for behavior cloning if no rollout
+        if self.rollout_seconds is None or percent_rollout_steps_predicted == 0.:
+            return 1
+        else:
+            return int(data_ticks_per_second / data_ticks_per_sim_tick * self.rollout_seconds)
 
 
 default_hyperparameter_options = HyperparameterOptions()
-hyperparameter_option_range = [HyperparameterOptions(num_input_time_steps=1, num_epochs=20),
+hyperparameter_option_range = [HyperparameterOptions(num_input_time_steps=1, num_epochs=20, rollout_seconds=5),
                                HyperparameterOptions(num_input_time_steps=3, num_epochs=40),
                                HyperparameterOptions(num_input_time_steps=5, num_epochs=40),
                                HyperparameterOptions(num_input_time_steps=25, num_epochs=40),
@@ -251,31 +252,13 @@ def train(train_type: TrainType, multi_hdf5_wrapper: MultiHDF5Wrapper,
         #losses = []
         # bar = Bar('Processing', max=size)
         batch_num = 0
-        prior_bad_X = None
-        prior_bad_Y = None
-        prior_bad_similarity = None
-        prior_bad_duplicated_last = None
-        prior_bad_indices = None
         start_epoch_time = time.perf_counter()
-        dataloader.dataset.rollout_steps = hyperparameter_options.get_rollout_steps()
+        dataloader.dataset.rollout_steps = hyperparameter_options.get_rollout_steps(total_epochs)
         with tqdm(total=len(dataloader), disable=False) as pbar:
             for batch, (X, Y, similarity, duplicated_last, indices) in enumerate(dataloader):
                 batch_num += 1
                 #if batch_num > 24:
                 #    break
-                if first_row is None:
-                    first_row = X[0:1, :].float()
-                    first_row_similarity = similarity[0:1, :].float()
-                if prior_bad_X is None:
-                    X, Y, duplicated_last = X.to(device), Y.to(device), duplicated_last.to(device)
-                    Y = Y.float()
-                    similarity = similarity.to(device).float()
-                else:
-                    X = prior_bad_X
-                    Y = prior_bad_Y
-                    similarity = prior_bad_similarity
-                    duplicated_last = prior_bad_duplicated_last
-                    indices = prior_bad_indices
                 # XR = torch.randn_like(X, device=device)
                 # XR[:,0] = X[:,0]
                 # YZ = torch.zeros_like(Y) + 0.1
@@ -290,10 +273,19 @@ def train(train_type: TrainType, multi_hdf5_wrapper: MultiHDF5Wrapper,
                     model.noise_var = hyperparameter_options.noise_var
                     optimizer.zero_grad()
                 with autocast(device, enabled=True):
-                    if hyperparameter_options.get_rollout_steps() == 1:
+                    percent_rollout_steps_predicted = \
+                        hyperparameter_options.percent_rollout_steps_predicted(total_epochs)
+                    if hyperparameter_options.get_rollout_steps(total_epochs) == 1:
                         pred = model(X, similarity, temperature_gpu)
+                        pred_flattened = pred
+                        Y_flattened = Y
+                        duplicated_last_flattened = duplicated_last
                     else:
-                        raise NotImplementedError
+                        rollout_batch_result = rollout_simulate(X, Y, similarity, duplicated_last, indices, model,
+                                                                1.)#percent_rollout_steps_predicted)
+                        pred_flattened = rollout_batch_result.pred_flattend
+                        Y_flattened = rollout_batch_result.Y_flattened
+                        duplicated_last_flattened = rollout_batch_result.duplicated_last_flattened
                     model.noise_var = -1.
                     if torch.isnan(X).any():
                         print('bad X')
@@ -308,11 +300,6 @@ def train(train_type: TrainType, multi_hdf5_wrapper: MultiHDF5Wrapper,
                         bad_batch_row = torch.isnan(pred[0]).nonzero()[0,0].item()
                         print(indices[bad_batch_row])
                         print('bad pred')
-                        prior_bad_X = X.detach()
-                        prior_bad_Y = Y.detach()
-                        prior_bad_similarity = similarity.detach()
-                        prior_bad_duplicated_last = duplicated_last.detach()
-                        prior_bad_indices = indices
                         sys.exit(0)
                     batch_loss = compute_loss(pred, Y, duplicated_last, model.num_players)
                     # uncomment here and below causes memory issues
@@ -325,7 +312,8 @@ def train(train_type: TrainType, multi_hdf5_wrapper: MultiHDF5Wrapper,
                     scaler.step(optimizer)
                     scaler.update()
 
-                compute_accuracy_and_delta_diff(pred, Y, duplicated_last, accuracy, delta_diff_xy, delta_diff_xyz,
+                compute_accuracy_and_delta_diff(pred_flattened, Y_flattened, duplicated_last_flattened,
+                                                accuracy, delta_diff_xy, delta_diff_xyz,
                                                 valids_per_accuracy_column, model.num_players, column_transformers,
                                                 model.stature_to_speed_gpu)
                 pbar.update(1)
@@ -463,8 +451,8 @@ def train(train_type: TrainType, multi_hdf5_wrapper: MultiHDF5Wrapper,
     test_data = MultipleLatentHDF5Dataset(multi_hdf5_wrapper.test_hdf5_wrappers, column_transformers,
                                           multi_hdf5_wrapper.duplicate_last_hdf5_equal_to_rest)
     batch_size = min(hyperparameter_options.batch_size, min(len(train_data), len(test_data)))
-    train_dataloader = DataLoader(train_data, batch_size=batch_size, num_workers=3, shuffle=True, pin_memory=True)
-    test_dataloader = DataLoader(test_data, batch_size=batch_size, num_workers=3, shuffle=True, pin_memory=True)
+    train_dataloader = DataLoader(train_data, batch_size=batch_size, num_workers=0, shuffle=True, pin_memory=True)
+    test_dataloader = DataLoader(test_data, batch_size=batch_size, num_workers=0, shuffle=True, pin_memory=True)
 
     print(f"num train examples: {len(train_data)}")
     print(f"num test examples: {len(test_data)}")

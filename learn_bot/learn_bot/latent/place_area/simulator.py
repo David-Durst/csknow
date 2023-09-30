@@ -100,7 +100,7 @@ PlayerEnableMask = Optional[torch.Tensor]
 
 def step(rollout_tensor: torch.Tensor, all_similarity_tensor: torch.Tensor, pred_tensor: torch.Tensor,
          model: TransformerNestedHiddenLatentModel, round_lengths: RoundLengths, step_index: int, nav_data: NavData,
-         player_enable_mask: PlayerEnableMask = None, fixed_pred: bool = False):
+         player_enable_mask: PlayerEnableMask = None, fixed_pred: bool = False, convert_to_cpu: bool = True):
     # skip rounds that are over, I know we have space, but wasteful as just going to filter out extra rows later
     # and cause problems as don't have non-computed input features (like visibility) at those time steps
     # and will crash open loop as everyone is 0
@@ -119,7 +119,11 @@ def step(rollout_tensor: torch.Tensor, all_similarity_tensor: torch.Tensor, pred
         temperature = torch.Tensor([1.]).to(CUDA_DEVICE_STR)
         pred = model(input_tensor, similarity_tensor, temperature)
         pred_prob = get_untransformed_outputs(pred)
-        pred_tensor[rollout_tensor_input_indices] = rearrange(pred_prob, 'b p t d -> b (p t d)').to(CPU_DEVICE_STR)
+        new_pred_tensor = rearrange(pred_prob, 'b p t d -> b (p t d)')
+        if convert_to_cpu:
+            pred_tensor[rollout_tensor_input_indices] = new_pred_tensor.to(CPU_DEVICE_STR)
+        else:
+            pred_tensor[rollout_tensor_input_indices] = new_pred_tensor
         nested_pred_labels = get_label_outputs(pred)
     else:
         nested_pred_labels = one_hot_max_to_index(
@@ -129,7 +133,9 @@ def step(rollout_tensor: torch.Tensor, all_similarity_tensor: torch.Tensor, pred
 
     tmp_rollout = rollout_tensor[rollout_tensor_output_indices]
     new_player_pos = rearrange(compute_new_pos(input_pos_tensor, pred_labels, nav_data, False,
-                                               model.stature_to_speed_gpu).to(CPU_DEVICE_STR), "b p t d -> b (p t d)")
+                                               model.stature_to_speed_gpu), "b p t d -> b (p t d)")
+    if convert_to_cpu:
+        new_player_pos = new_player_pos.to(CPU_DEVICE_STR)
     if player_enable_mask is not None:
         tmp_rollout[:, model.players_pos_columns] = torch.where(player_enable_mask[rounds_containing_step_index],
                                                                 new_player_pos,
