@@ -259,6 +259,12 @@ def train(train_type: TrainType, multi_hdf5_wrapper: MultiHDF5Wrapper,
                 batch_num += 1
                 #if batch_num > 24:
                 #    break
+                if first_row is None:
+                    first_row = X[0:1, :].float()
+                    first_row_similarity = similarity[0:1, :].float()
+                X, Y, duplicated_last = X.to(device), Y.to(device), duplicated_last.to(device)
+                Y = Y.float()
+                similarity = similarity.to(device).float()
                 # XR = torch.randn_like(X, device=device)
                 # XR[:,0] = X[:,0]
                 # YZ = torch.zeros_like(Y) + 0.1
