@@ -58,9 +58,9 @@ class TrainType(Enum):
 
 @dataclass
 class HyperparameterOptions:
-    num_epochs: int = 30
     bc_epochs: int = 10
-    dad_epochs: int = 10
+    probabilistic_rollout_epochs: int = 5
+    full_rollout_epochs: int = 5
     batch_size: int = 512
     num_input_time_steps: int = 1
     learning_rate: float = 4e-5
@@ -68,12 +68,13 @@ class HyperparameterOptions:
     layers: int = 2
     heads: int = 4
     noise_var: float = 20.
-    rollout_seconds: Optional[float] = None
+    rollout_seconds: Optional[float] = 2.
     player_mask_type: PlayerMaskType = PlayerMaskType.NoMask
     comment: str = ""
 
     def __str__(self):
-        return f"{now_str}_e_{self.num_epochs}_b_{self.batch_size}_it_{self.num_input_time_steps}_" \
+        return f"{now_str}_bc_{self.bc_epochs}_pr_{self.probabilistic_rollout_epochs}_fr_{self.full_rollout_epochs}_" \
+               f"b_{self.batch_size}_it_{self.num_input_time_steps}_" \
                f"lr_{self.learning_rate}_wd_{self.weight_decay}_" \
                f"l_{self.layers}_h_{self.heads}_n_{self.noise_var}_" \
                f"ros_{self.rollout_seconds}_m_{str(self.player_mask_type)}_c_{self.comment}"
@@ -81,15 +82,19 @@ class HyperparameterOptions:
     def get_checkpoints_path(self) -> Path:
         return checkpoints_path / str(self)
 
+    def num_epochs(self) -> int:
+        return self.bc_epochs + self.probabilistic_rollout_epochs + self.full_rollout_epochs
+
     def percent_rollout_steps_predicted(self, epoch_num: int) -> float:
-        assert self.bc_epochs + self.dad_epochs <= self.num_epochs
-        scheduled_sampling_epochs = self.num_epochs - self.bc_epochs - self.dad_epochs
         if epoch_num < self.bc_epochs:
             return 0.
+        elif epoch_num >= self.bc_epochs + self.probabilistic_rollout_epochs:
+            return 1.
         else:
-            return min(1., (epoch_num - self.bc_epochs) * 1. / scheduled_sampling_epochs)
+            return (epoch_num - self.bc_epochs) / self.probabilistic_rollout_epochs
 
     def get_rollout_steps(self, epoch_num: int):
+        assert epoch_num < self.num_epochs()
         percent_rollout_steps_predicted = self.percent_rollout_steps_predicted(epoch_num)
         # 1 for behavior cloning if no rollout
         if self.rollout_seconds is None or percent_rollout_steps_predicted == 0.:
@@ -99,10 +104,10 @@ class HyperparameterOptions:
 
 
 default_hyperparameter_options = HyperparameterOptions()
-hyperparameter_option_range = [HyperparameterOptions(num_input_time_steps=1, num_epochs=20, rollout_seconds=5),
-                               HyperparameterOptions(num_input_time_steps=3, num_epochs=40),
-                               HyperparameterOptions(num_input_time_steps=5, num_epochs=40),
-                               HyperparameterOptions(num_input_time_steps=25, num_epochs=40),
+hyperparameter_option_range = [HyperparameterOptions(num_input_time_steps=1, bc_epochs=0, probabilistic_rollout_epochs=0),
+                               HyperparameterOptions(num_input_time_steps=3, bc_epochs=40),
+                               HyperparameterOptions(num_input_time_steps=5, bc_epochs=40),
+                               HyperparameterOptions(num_input_time_steps=25, bc_epochs=40),
                                HyperparameterOptions(player_mask_type=PlayerMaskType.EveryoneTemporalOnlyMask),
                                HyperparameterOptions(player_mask_type=PlayerMaskType.EveryoneFullMask),
                                HyperparameterOptions(layers=4, heads=8),
@@ -110,8 +115,8 @@ hyperparameter_option_range = [HyperparameterOptions(num_input_time_steps=1, num
                                HyperparameterOptions(weight_decay=0.1),
                                HyperparameterOptions(weight_decay=1e-3),
                                HyperparameterOptions(batch_size=256),
-                               HyperparameterOptions(num_epochs=1024),
-                               HyperparameterOptions(num_epochs=2048),
+                               HyperparameterOptions(bc_epochs=1024),
+                               HyperparameterOptions(bc_epochs=2048),
                                HyperparameterOptions(learning_rate=1e-4),
                                HyperparameterOptions(learning_rate=1e-5),
                                HyperparameterOptions(learning_rate=1e-6),
@@ -468,7 +473,7 @@ def train(train_type: TrainType, multi_hdf5_wrapper: MultiHDF5Wrapper,
         print(f"Train shape of Y: {Y.shape} {Y.dtype}")
         break
 
-    train_and_test_SL(model, train_dataloader, test_dataloader, hyperparameter_options.num_epochs)
+    train_and_test_SL(model, train_dataloader, test_dataloader, hyperparameter_options.num_epochs())
     return train_checkpoint_paths
 
 
