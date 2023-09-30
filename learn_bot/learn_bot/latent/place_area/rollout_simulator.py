@@ -42,12 +42,12 @@ def rollout_simulate(X: torch.Tensor, Y: torch.Tensor, similarity: torch.Tensor,
     Y_flattened = rearrange(Y, 'b t d -> (b t) d')
     # step assumes one similarity row per round, so just take first row per round
     similarity_flattened = similarity[:, 0, :]
-    pred_flattened = torch.zeros(X_flattened.shape[0], Y.shape[2], dtype=Y.dtype)
+    pred_flattened = torch.zeros(X_flattened.shape[0], Y.shape[2], dtype=Y.dtype, device=X.device)
 
     for i in range(round_lengths.max_length_per_round):
         if random() <= percent_steps_predicted:
             step(X_flattened, similarity_flattened, pred_flattened, model, round_lengths, i, model.nav_data_cuda,
-                 convert_to_cpu=False)
+                 convert_to_cpu=False, save_new_pos=i < (round_lengths.max_length_per_round - 1))
         else:
             step_flattened_indices = [round_index * round_lengths.max_length_per_round + i
                                       for round_index in range(round_lengths.num_rounds)]

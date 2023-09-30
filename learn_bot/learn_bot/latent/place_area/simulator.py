@@ -100,7 +100,8 @@ PlayerEnableMask = Optional[torch.Tensor]
 
 def step(rollout_tensor: torch.Tensor, all_similarity_tensor: torch.Tensor, pred_tensor: torch.Tensor,
          model: TransformerNestedHiddenLatentModel, round_lengths: RoundLengths, step_index: int, nav_data: NavData,
-         player_enable_mask: PlayerEnableMask = None, fixed_pred: bool = False, convert_to_cpu: bool = True):
+         player_enable_mask: PlayerEnableMask = None, fixed_pred: bool = False, convert_to_cpu: bool = True,
+         save_new_pos: bool = True):
     # skip rounds that are over, I know we have space, but wasteful as just going to filter out extra rows later
     # and cause problems as don't have non-computed input features (like visibility) at those time steps
     # and will crash open loop as everyone is 0
@@ -133,18 +134,21 @@ def step(rollout_tensor: torch.Tensor, all_similarity_tensor: torch.Tensor, pred
                       p=model.num_players, t=num_radial_ticks)).to(CUDA_DEVICE_STR)
     pred_labels = rearrange(nested_pred_labels, 'b p t d -> b (p t d)')
 
-    tmp_rollout = rollout_tensor[rollout_tensor_output_indices]
-    new_player_pos = rearrange(compute_new_pos(input_pos_tensor, pred_labels, nav_data, False,
-                                               model.stature_to_speed_gpu), "b p t d -> b (p t d)")
-    if convert_to_cpu:
-        new_player_pos = new_player_pos.to(CPU_DEVICE_STR)
-    if player_enable_mask is not None:
-        tmp_rollout[:, model.players_pos_columns] = torch.where(player_enable_mask[rounds_containing_step_index],
-                                                                new_player_pos,
-                                                                tmp_rollout[:, model.players_pos_columns])
-    else:
-        tmp_rollout[:, model.players_pos_columns] = new_player_pos
-    rollout_tensor[rollout_tensor_output_indices] = tmp_rollout
+    # for rollout simulation, only want predictions for loss computation, no need to save last time step positions
+    # also this will out of bounds in that case, as need prediction at time t and no position at t+1 to save at
+    if save_new_pos:
+        tmp_rollout = rollout_tensor[rollout_tensor_output_indices]
+        new_player_pos = rearrange(compute_new_pos(input_pos_tensor, pred_labels, nav_data, False,
+                                                   model.stature_to_speed_gpu), "b p t d -> b (p t d)")
+        if convert_to_cpu:
+            new_player_pos = new_player_pos.to(CPU_DEVICE_STR)
+        if player_enable_mask is not None:
+            tmp_rollout[:, model.players_pos_columns] = torch.where(player_enable_mask[rounds_containing_step_index],
+                                                                    new_player_pos,
+                                                                    tmp_rollout[:, model.players_pos_columns])
+        else:
+            tmp_rollout[:, model.players_pos_columns] = new_player_pos
+        rollout_tensor[rollout_tensor_output_indices] = tmp_rollout
 
 
 # undo the fixed length across all rounds, just get right length for each round

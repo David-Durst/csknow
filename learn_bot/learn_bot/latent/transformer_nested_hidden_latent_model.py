@@ -267,9 +267,9 @@ class TransformerNestedHiddenLatentModel(nn.Module):
 
     def forward(self, x, similarity, temperature):
         x_pos = rearrange(x[:, self.players_pos_columns], "b (p t d) -> b p t d", p=self.num_players,
-                          t=self.total_input_time_steps, d=self.num_dim)
+                          t=self.num_input_time_steps, d=self.num_dim)
         x_crosshair = rearrange(x[:, self.players_nearest_crosshair_to_enemy_columns], "b (p t) -> b p t 1",
-                                p=self.num_players, t=self.total_input_time_steps)
+                                p=self.num_players, t=self.num_input_time_steps)
         # delta encode prior pos
         #if self.num_input_time_steps < self.total_input_time_steps:
         #    x_pos = x_pos_all_time_steps[:, :, 0:self.num_input_time_steps, :]
