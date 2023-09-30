@@ -6,7 +6,7 @@ import torch
 from torch import nn
 
 from learn_bot.latent.engagement.column_names import max_enemies
-from learn_bot.latent.order.column_names import team_strs, player_team_str, flatten_list
+from learn_bot.latent.order.column_names import team_strs, player_team_str, flatten_list, all_prior_and_cur_ticks
 from learn_bot.latent.place_area.column_names import specific_player_place_area_columns, num_radial_bins, \
     walking_modifier, ducking_modifier
 from learn_bot.latent.place_area.pos_abs_from_delta_grid_or_radial import NavData, \
@@ -72,9 +72,27 @@ class TransformerNestedHiddenLatentModel(nn.Module):
         players_columns = [c4_columns_ranges + #baiting_columns_ranges +
                           range_list_to_index_list(cts.get_name_ranges(True, True, contained_str=" " + player_team_str(team_str, player_index)))
                           for team_str in team_strs for player_index in range(max_enemies)]
-        self.players_pos_columns = get_player_columns_by_str(cts, "player pos")
-        self.players_nearest_crosshair_to_enemy_columns = \
+        self.num_players = len(players_columns)
+        self.num_dim = 3
+
+        all_players_pos_columns = get_player_columns_by_str(cts, "player pos")
+        all_players_pos_columns_tensor = torch.IntTensor(all_players_pos_columns)
+        nested_players_pos_columns_tensor = rearrange(all_players_pos_columns_tensor, '(p t d) -> p t d',
+                                                      p=self.num_players, t=all_prior_and_cur_ticks, d=self.num_dim)
+        self.players_pos_columns = rearrange(nested_players_pos_columns_tensor[:, 0:num_input_time_steps, :],
+                                             'p t d -> (p t d)',
+                                             p=self.num_players, t=num_input_time_steps, d=self.num_dim).tolist()
+        all_players_nearest_crosshair_to_enemy_columns = \
             get_player_columns_by_str(cts, "player nearest crosshair distance to enemy")
+        all_players_nearest_crosshair_to_enemy_columns_tensor = \
+            torch.IntTensor(all_players_nearest_crosshair_to_enemy_columns)
+        nested_players_nearest_crosshair_to_enemy_columns_tensor = \
+            rearrange(all_players_nearest_crosshair_to_enemy_columns_tensor, '(p t) -> p t', p=self.num_players,
+                      t=all_prior_and_cur_ticks)
+        self.players_nearest_crosshair_to_enemy_columns = \
+            rearrange(nested_players_nearest_crosshair_to_enemy_columns_tensor[:, 0:num_input_time_steps],
+                      'p t -> (p t)', p=self.num_players, t=num_input_time_steps).tolist()
+
         #self.players_hurt_in_last_5s_columns = get_player_columns_by_str(cts, "player hurt in last 5s")
         #self.players_fire_in_last_5s_columns = get_player_columns_by_str(cts, "player fire in last 5s")
         #self.players_enemy_visible_in_last_5s_columns = get_player_columns_by_str(cts, "player enemy visible in last 5s")
@@ -84,17 +102,16 @@ class TransformerNestedHiddenLatentModel(nn.Module):
         #    [range_list_to_index_list(cts.get_name_ranges(True, False, contained_str="player velocity " + player_team_str(team_str, player_index)))
         #     for team_str in team_strs for player_index in range(max_enemies)]
         #)
-        self.player_temporal_columns = self.players_pos_columns + self.players_nearest_crosshair_to_enemy_columns
+        self.player_all_temporal_columns = all_players_pos_columns + all_players_nearest_crosshair_to_enemy_columns
         self.players_non_temporal_columns = flatten_list([
-            [player_column for player_column in player_columns if player_column not in self.player_temporal_columns]
+            [player_column for player_column in player_columns if player_column not in self.player_all_temporal_columns]
             for player_columns in players_columns
         ])
         self.num_similarity_columns = 2
 
-        self.num_players = len(players_columns)
-        self.num_dim = 3
         # may have more input time steps loaded than used
-        self.total_input_time_steps = len(self.players_pos_columns) // self.num_dim // self.num_players
+        self.total_input_time_steps = len(all_players_pos_columns) // self.num_dim // self.num_players
+        assert all_prior_and_cur_ticks == self.total_input_time_steps
         self.num_input_time_steps = num_input_time_steps
         assert self.num_input_time_steps <= self.total_input_time_steps
         self.num_output_time_steps = num_output_time_steps
@@ -249,17 +266,17 @@ class TransformerNestedHiddenLatentModel(nn.Module):
         return team_mask
 
     def forward(self, x, similarity, temperature):
-        x_pos_all_time_steps = rearrange(x[:, self.players_pos_columns], "b (p t d) -> b p t d", p=self.num_players,
-                                         t=self.total_input_time_steps, d=self.num_dim)
-        x_crosshair_all_time_steps = rearrange(x[:, self.players_nearest_crosshair_to_enemy_columns], "b (p t) -> b p t 1",
+        x_pos = rearrange(x[:, self.players_pos_columns], "b (p t d) -> b p t d", p=self.num_players,
+                          t=self.total_input_time_steps, d=self.num_dim)
+        x_crosshair = rearrange(x[:, self.players_nearest_crosshair_to_enemy_columns], "b (p t) -> b p t 1",
                                 p=self.num_players, t=self.total_input_time_steps)
         # delta encode prior pos
-        if self.num_input_time_steps < self.total_input_time_steps:
-            x_pos = x_pos_all_time_steps[:, :, 0:self.num_input_time_steps, :]
-            x_crosshair = x_crosshair_all_time_steps[:, :, 0:self.num_input_time_steps, :]
-        else:
-            x_pos = x_pos_all_time_steps
-            x_crosshair = x_crosshair_all_time_steps
+        #if self.num_input_time_steps < self.total_input_time_steps:
+        #    x_pos = x_pos_all_time_steps[:, :, 0:self.num_input_time_steps, :]
+        #    x_crosshair = x_crosshair_all_time_steps[:, :, 0:self.num_input_time_steps, :]
+        #else:
+        #    x_pos = x_pos_all_time_steps
+        #    x_crosshair = x_crosshair_all_time_steps
         if self.num_input_time_steps > 1:
             x_pos_lagged = torch.roll(x_pos, 1, 2)
             x_pos[:, :, 1:] = x_pos_lagged[:, :, 1:] - x_pos[:, :, 1:]

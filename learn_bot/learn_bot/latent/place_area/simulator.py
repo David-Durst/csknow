@@ -109,6 +109,8 @@ def step(rollout_tensor: torch.Tensor, all_similarity_tensor: torch.Tensor, pred
     rollout_tensor_input_indices = [step_index + round_lengths.max_length_per_round * round_index
                                     for round_index in range(round_lengths.num_rounds)
                                     if rounds_containing_step_index[round_index]]
+    if len(rollout_tensor_input_indices) == 0:
+        print('empty rollout tensor input indices')
     similarity_tensor = all_similarity_tensor[rounds_containing_step_index]
     rollout_tensor_output_indices = [index + 1 for index in rollout_tensor_input_indices]
 

@@ -16,7 +16,7 @@ def get_rollout_round_lengths(indices: torch.Tensor) -> RoundLengths:
     # this can only go bad if each hdf5 file is so short that you can go from one to next and get back to original
     # round id, which isn't possible for 2 hour long hdf5 ids and 5 second sequences
     length_per_round = same_round.sum(axis=1)
-    return RoundLengths(indices.shape[0], indices.shape[1], list(range(indices.shape[1])),
+    return RoundLengths(indices.shape[0], indices.shape[1], list(range(indices.shape[0])),
                         {}, {}, {i: length_per_round[i] for i in range(indices.shape[0])}, {}, True, {})
 
 
@@ -40,7 +40,8 @@ def rollout_simulate(X: torch.Tensor, Y: torch.Tensor, similarity: torch.Tensor,
 
     X_flattened = rearrange(X, 'b t d -> (b t) d')
     Y_flattened = rearrange(Y, 'b t d -> (b t) d')
-    similarity_flattened = rearrange(similarity, 'b t d -> (b t) d')
+    # step assumes one similarity row per round, so just take first row per round
+    similarity_flattened = similarity[:, 0, :]
     pred_flattened = torch.zeros(X_flattened.shape[0], Y.shape[2], dtype=Y.dtype)
 
     for i in range(round_lengths.max_length_per_round):
