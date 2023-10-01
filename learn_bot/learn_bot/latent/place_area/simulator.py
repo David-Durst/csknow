@@ -155,7 +155,8 @@ def step(rollout_tensor: torch.Tensor, all_similarity_tensor: torch.Tensor, pred
                                                                     tmp_rollout[:, model.players_pos_columns])
         else:
             tmp_rollout[:, model.players_pos_columns] = new_player_pos
-        rollout_tensor[rollout_tensor_output_indices] = tmp_rollout
+        # detach so that if using this in scheduled sampling rollout, don't propagate gradients between time steps
+        rollout_tensor[rollout_tensor_output_indices] = tmp_rollout.detach()
 
 
 # undo the fixed length across all rounds, just get right length for each round

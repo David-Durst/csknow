@@ -91,7 +91,7 @@ class HyperparameterOptions:
         elif epoch_num >= self.bc_epochs + self.probabilistic_rollout_epochs:
             return 1.
         else:
-            return (epoch_num - self.bc_epochs) / self.probabilistic_rollout_epochs
+            return (1 + epoch_num - self.bc_epochs) / self.probabilistic_rollout_epochs
 
     def get_rollout_steps(self, epoch_num: int):
         assert epoch_num < self.num_epochs()

@@ -52,20 +52,26 @@ def rollout_simulate(X: torch.Tensor, Y: torch.Tensor, similarity: torch.Tensor,
     duplicated_last_flattened = rearrange(duplicated_last, 'b t -> (b t)')
 
     had_random = False
+    predicted_flattened_indices = []
     for i in range(round_lengths.max_length_per_round):
+        step_flattened_indices = [round_index * round_lengths.max_length_per_round + i
+                                  for round_index in range(round_lengths.num_rounds)]
         # if got to end and didn't have a random yet, make sure to make one random so have something to back prop
         if random() <= percent_steps_predicted or (not had_random and i == round_lengths.max_length_per_round - 1):
             step(X_flattened, similarity_flattened, pred_flattened, model, round_lengths, i, model.nav_data_cuda,
                  convert_to_cpu=False, save_new_pos=i < (round_lengths.max_length_per_round - 1),
                  pred_untransformed=pred_untransformed, pred_transformed=pred_transformed)
             had_random = True
+            predicted_flattened_indices += step_flattened_indices
         else:
-            step_flattened_indices = [round_index * round_lengths.max_length_per_round + i
-                                      for round_index in range(round_lengths.num_rounds)]
             pred_flattened[step_flattened_indices] = Y[:, i, :]
 
-    return RolloutBatchResult((pred_transformed[valid_flattened_indices], pred_untransformed[valid_flattened_indices]),
-                              Y_flattened[valid_flattened_indices],
-                              duplicated_last_flattened[valid_flattened_indices])
+    predicted_and_valid_flattened_indices = \
+        list(set(valid_flattened_indices).intersection(set(predicted_flattened_indices)))
+
+    return RolloutBatchResult((pred_transformed[predicted_and_valid_flattened_indices],
+                               pred_untransformed[predicted_and_valid_flattened_indices]),
+                              Y_flattened[predicted_and_valid_flattened_indices],
+                              duplicated_last_flattened[predicted_and_valid_flattened_indices])
 
 
