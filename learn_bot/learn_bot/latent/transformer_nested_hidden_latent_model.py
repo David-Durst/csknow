@@ -67,11 +67,16 @@ class TransformerNestedHiddenLatentModel(nn.Module):
         self.cts = cts
         # transformed/transformed doesn't matter since no angles and all categorical variables are
         # "distirbution" type meaning pre one hot encoded
-        c4_columns_ranges = range_list_to_index_list(cts.get_name_ranges(True, True, contained_str="c4"))
+        all_c4_columns_ranges = range_list_to_index_list(cts.get_name_ranges(True, True, contained_str="c4"))
+        #_, c4_columns_names = cts.get_name_ranges(True, True, contained_str="c4", include_names=True)
+        c4_decrease_distance_columns_ranges = range_list_to_index_list(cts.get_name_ranges(True, True, contained_str="decrease distance to c4"))
+        non_player_c4_columns_ranges = [i for i in all_c4_columns_ranges if i not in c4_decrease_distance_columns_ranges]
         #baiting_columns_ranges = range_list_to_index_list(cts.get_name_ranges(True, True, contained_str="baiting"))
-        players_columns = [c4_columns_ranges + #baiting_columns_ranges +
+        players_columns = [non_player_c4_columns_ranges + #baiting_columns_ranges +
                           range_list_to_index_list(cts.get_name_ranges(True, True, contained_str=" " + player_team_str(team_str, player_index)))
                           for team_str in team_strs for player_index in range(max_enemies)]
+        #players_columns_names = [cts.get_name_ranges(True, True, contained_str=" " + player_team_str(team_str, player_index), include_names=True)[1]
+        #                         for team_str in team_strs for player_index in range(max_enemies)]
         self.num_players = len(players_columns)
         self.num_dim = 3
 

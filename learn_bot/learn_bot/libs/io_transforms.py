@@ -571,8 +571,10 @@ class IOColumnTransformers:
 
     @cache
     def get_name_ranges(self, input: bool, transformed: bool, types: frozenset[ColumnTransformerType] = ALL_TYPES,
-                        only_wrap_cols: bool = False, contained_str: Optional[str] = None) -> List[range]:
+                        only_wrap_cols: bool = False, contained_str: Optional[str] = None,
+                        include_names: bool = False) -> Union[List[range], Tuple[List[range], List[range]]]:
         result: List[range] = []
+        result_names: List[str] = []
         cur_start: int = 0
 
         column_types: ColumnTypes = self.input_types if input else self.output_types
@@ -585,6 +587,7 @@ class IOColumnTransformers:
                     (not only_wrap_cols or col_name in column_types.float_180_wrap_cols) and \
                     (contained_str is None or contained_str in col_name):
                 result.append(range(cur_start, cur_start + 1))
+                result_names.append(col_name)
             cur_start += 1
 
         for col_name in column_types.float_delta_cols:
@@ -592,6 +595,7 @@ class IOColumnTransformers:
                     (not only_wrap_cols or col_name in column_types.float_180_wrap_cols) and \
                     (contained_str is None or contained_str in col_name):
                 result.append(range(cur_start, cur_start + 1))
+                result_names.append(col_name)
             cur_start += 1
 
         for col_name in column_types.float_180_angle_cols:
@@ -599,6 +603,7 @@ class IOColumnTransformers:
                     (not only_wrap_cols or col_name in column_types.float_180_wrap_cols) and \
                     (contained_str is None or contained_str in col_name):
                 result.append(range(cur_start, cur_start + angle_columns))
+                result_names.append(col_name)
             cur_start += angle_columns
 
         for col_name in column_types.float_180_angle_delta_cols:
@@ -606,6 +611,7 @@ class IOColumnTransformers:
                     (not only_wrap_cols or col_name in column_types.float_180_wrap_cols) and \
                     (contained_str is None or contained_str in col_name):
                 result.append(range(cur_start, cur_start + angle_columns))
+                result_names.append(col_name)
             cur_start += angle_columns
 
         for col_name in column_types.float_90_angle_cols:
@@ -613,6 +619,7 @@ class IOColumnTransformers:
                     (not only_wrap_cols or col_name in column_types.float_180_wrap_cols) and \
                     (contained_str is None or contained_str in col_name):
                 result.append(range(cur_start, cur_start + angle_columns))
+                result_names.append(col_name)
             cur_start += angle_columns
 
         for col_name in column_types.float_90_angle_delta_cols:
@@ -620,6 +627,7 @@ class IOColumnTransformers:
                     (not only_wrap_cols or col_name in column_types.float_180_wrap_cols) and \
                     (contained_str is None or contained_str in col_name):
                 result.append(range(cur_start, cur_start + angle_columns))
+                result_names.append(col_name)
             cur_start += angle_columns
 
         for ct in cts:
@@ -628,11 +636,13 @@ class IOColumnTransformers:
                     if ColumnTransformerType.CATEGORICAL in types and not only_wrap_cols and \
                             (contained_str is None or contained_str in ct.col_name):
                         result.append(range(cur_start, cur_start + ct.num_classes))
+                        result_names.append(col_name)
                     cur_start += ct.num_classes
                 else:
                     if ColumnTransformerType.CATEGORICAL in types and not only_wrap_cols and \
                             (contained_str is None or contained_str in ct.col_name):
                         result.append(range(cur_start, cur_start + 1))
+                        result_names.append(col_name)
                     cur_start += 1
 
         for ct in cts:
@@ -640,9 +650,13 @@ class IOColumnTransformers:
                 if ColumnTransformerType.CATEGORICAL_DISTRIBUTION in types and not only_wrap_cols and \
                         (contained_str is None or contained_str in ct.col_names[0]):
                     result.append(range(cur_start, cur_start + len(ct.col_names)))
+                    result_names.append(ct.col_names[0])
                 cur_start += len(ct.col_names)
 
-        return result
+        if include_names:
+            return result, result_names
+        else:
+            return result
 
     @cache
     def get_name_ranges_dict(self, input: bool, transformed: bool, separate_distribution_cols: bool = False) -> Dict[str, range]:
