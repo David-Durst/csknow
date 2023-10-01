@@ -58,9 +58,9 @@ class TrainType(Enum):
 
 @dataclass
 class HyperparameterOptions:
-    bc_epochs: int = 10
-    probabilistic_rollout_epochs: int = 5
-    full_rollout_epochs: int = 5
+    bc_epochs: int = 8
+    probabilistic_rollout_epochs: int = 3
+    full_rollout_epochs: int = 3
     batch_size: int = 512
     num_input_time_steps: int = 1
     learning_rate: float = 4e-5
@@ -104,8 +104,8 @@ class HyperparameterOptions:
 
 
 default_hyperparameter_options = HyperparameterOptions()
-hyperparameter_option_range = [HyperparameterOptions(num_input_time_steps=1, bc_epochs=0, probabilistic_rollout_epochs=0),
-                               HyperparameterOptions(num_input_time_steps=3, bc_epochs=40),
+hyperparameter_option_range = [HyperparameterOptions(num_input_time_steps=1),
+                               HyperparameterOptions(num_input_time_steps=3),
                                HyperparameterOptions(num_input_time_steps=5, bc_epochs=40),
                                HyperparameterOptions(num_input_time_steps=25, bc_epochs=40),
                                HyperparameterOptions(player_mask_type=PlayerMaskType.EveryoneTemporalOnlyMask),
@@ -284,16 +284,15 @@ def train(train_type: TrainType, multi_hdf5_wrapper: MultiHDF5Wrapper,
                     model.noise_var = hyperparameter_options.noise_var
                     optimizer.zero_grad()
                 with autocast(device, enabled=True):
-                    percent_rollout_steps_predicted = \
-                        hyperparameter_options.percent_rollout_steps_predicted(total_epochs)
                     if hyperparameter_options.get_rollout_steps(total_epochs) == 1:
                         pred = model(X, similarity, temperature_gpu)
                         pred_flattened = pred
                         Y_flattened = Y
                         duplicated_last_flattened = duplicated_last
                     else:
-                        rollout_batch_result = rollout_simulate(X, Y, similarity, duplicated_last, indices, model,
-                                                                1.)#percent_rollout_steps_predicted)
+                        rollout_batch_result = \
+                            rollout_simulate(X, Y, similarity, duplicated_last, indices, model,
+                                             hyperparameter_options.percent_rollout_steps_predicted(total_epochs))
                         pred_flattened = rollout_batch_result.model_pred_flattened
                         Y_flattened = rollout_batch_result.Y_flattened
                         duplicated_last_flattened = rollout_batch_result.duplicated_last_flattened
@@ -447,7 +446,7 @@ def train(train_type: TrainType, multi_hdf5_wrapper: MultiHDF5Wrapper,
             if cur_test_loss_float < min_test_loss:
                 save_model(False, total_epochs)
                 min_test_loss = cur_test_loss_float
-            if (total_epochs + 1) % 10 == 0:
+            if True or (total_epochs + 1) % 10 == 0:
                 save_model(True, total_epochs)
             save_tensorboard(train_loss, test_loss, train_accuracy, test_accuracy,
                              train_delta_diff_xy, test_delta_diff_xy, train_delta_diff_xyz, test_delta_diff_xyz,
