@@ -294,25 +294,25 @@ def train(train_type: TrainType, multi_hdf5_wrapper: MultiHDF5Wrapper,
                     else:
                         rollout_batch_result = rollout_simulate(X, Y, similarity, duplicated_last, indices, model,
                                                                 1.)#percent_rollout_steps_predicted)
-                        pred_flattened = rollout_batch_result.pred_flattend
+                        pred_flattened = rollout_batch_result.model_pred_flattened
                         Y_flattened = rollout_batch_result.Y_flattened
                         duplicated_last_flattened = rollout_batch_result.duplicated_last_flattened
                     model.noise_var = -1.
                     if torch.isnan(X).any():
                         print('bad X')
                         sys.exit(0)
-                    if torch.isnan(Y).any():
+                    if torch.isnan(Y_flattened).any():
                         print('bad Y')
                         sys.exit(0)
-                    if torch.isnan(pred[0]).any():
+                    if torch.isnan(pred_flattened[0]).any():
                         print(X)
-                        print(pred[0])
-                        print(torch.isnan(pred[0]).nonzero())
-                        bad_batch_row = torch.isnan(pred[0]).nonzero()[0,0].item()
-                        print(indices[bad_batch_row])
-                        print('bad pred')
+                        print(pred_flattened[0, 0])
+                        #print(torch.isnan(pred_flattened[0,0]).nonzero())
+                        #bad_batch_row = torch.isnan(pred_flattened[0,0]).nonzero()[0,0].item()
+                        #print(indices[bad_batch_row])
+                        #print('bad pred')
                         sys.exit(0)
-                    batch_loss = compute_loss(pred, Y, duplicated_last, model.num_players)
+                    batch_loss = compute_loss(pred_flattened, Y_flattened, duplicated_last_flattened, model.num_players)
                     # uncomment here and below causes memory issues
                     cumulative_loss += batch_loss
                     #losses.append(batch_loss.total_loss.tolist()[0])
@@ -462,8 +462,8 @@ def train(train_type: TrainType, multi_hdf5_wrapper: MultiHDF5Wrapper,
     test_data = MultipleLatentHDF5Dataset(multi_hdf5_wrapper.test_hdf5_wrappers, column_transformers,
                                           multi_hdf5_wrapper.duplicate_last_hdf5_equal_to_rest)
     batch_size = min(hyperparameter_options.batch_size, min(len(train_data), len(test_data)))
-    train_dataloader = DataLoader(train_data, batch_size=batch_size, num_workers=0, shuffle=True, pin_memory=True)
-    test_dataloader = DataLoader(test_data, batch_size=batch_size, num_workers=0, shuffle=True, pin_memory=True)
+    train_dataloader = DataLoader(train_data, batch_size=batch_size, num_workers=5, shuffle=True, pin_memory=True)
+    test_dataloader = DataLoader(test_data, batch_size=batch_size, num_workers=5, shuffle=True, pin_memory=True)
 
     print(f"num train examples: {len(train_data)}")
     print(f"num test examples: {len(test_data)}")

@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from random import random
-from typing import Optional
+from typing import Optional, Tuple
 import torch
 from einops import rearrange
 
@@ -22,7 +22,7 @@ def get_rollout_round_lengths(indices: torch.Tensor) -> RoundLengths:
 
 @dataclass
 class RolloutBatchResult:
-    pred_flattend: torch.Tensor
+    model_pred_flattened: Tuple[torch.Tensor, torch.Tensor]
     Y_flattened: torch.Tensor
     duplicated_last_flattened: torch.Tensor
 
@@ -43,17 +43,26 @@ def rollout_simulate(X: torch.Tensor, Y: torch.Tensor, similarity: torch.Tensor,
     # step assumes one similarity row per round, so just take first row per round
     similarity_flattened = similarity[:, 0, :]
     pred_flattened = torch.zeros(X_flattened.shape[0], Y.shape[2], dtype=Y.dtype, device=X.device)
+    pred_transformed = torch.zeros(X_flattened.shape[0], model.num_players, model.num_output_time_steps,
+                                   Y.shape[2] // model.num_players // model.num_output_time_steps,
+                                   dtype=X.dtype, device=Y.device)
+    pred_untransformed = torch.zeros(X_flattened.shape[0], model.num_players, model.num_output_time_steps,
+                                     Y.shape[2] // model.num_players // model.num_output_time_steps,
+                                     dtype=Y.dtype, device=Y.device)
+    duplicated_last_flattened = rearrange(duplicated_last, 'b t -> (b t)')
 
     for i in range(round_lengths.max_length_per_round):
         if random() <= percent_steps_predicted:
             step(X_flattened, similarity_flattened, pred_flattened, model, round_lengths, i, model.nav_data_cuda,
-                 convert_to_cpu=False, save_new_pos=i < (round_lengths.max_length_per_round - 1))
+                 convert_to_cpu=False, save_new_pos=i < (round_lengths.max_length_per_round - 1),
+                 pred_untransformed=pred_untransformed, pred_transformed=pred_transformed)
         else:
             step_flattened_indices = [round_index * round_lengths.max_length_per_round + i
                                       for round_index in range(round_lengths.num_rounds)]
             pred_flattened[step_flattened_indices] = Y[:, i, :]
 
-    return RolloutBatchResult(pred_flattened[valid_flattened_indices], Y_flattened[valid_flattened_indices],
-                              duplicated_last[valid_flattened_indices])
+    return RolloutBatchResult((pred_transformed[valid_flattened_indices], pred_untransformed[valid_flattened_indices]),
+                              Y_flattened[valid_flattened_indices],
+                              duplicated_last_flattened[valid_flattened_indices])
 
 

@@ -23,7 +23,8 @@ from learn_bot.latent.train_paths import train_test_split_file_name
 from learn_bot.latent.transformer_nested_hidden_latent_model import *
 from learn_bot.latent.vis.vis import vis
 from learn_bot.libs.hdf5_to_pd import load_hdf5_to_pd, load_hdf5_extra_to_list
-from learn_bot.libs.io_transforms import get_untransformed_outputs, CPU_DEVICE_STR, get_label_outputs
+from learn_bot.libs.io_transforms import get_untransformed_outputs, CPU_DEVICE_STR, get_label_outputs, \
+    get_transformed_outputs
 
 
 @dataclass
@@ -101,7 +102,8 @@ PlayerEnableMask = Optional[torch.Tensor]
 def step(rollout_tensor: torch.Tensor, all_similarity_tensor: torch.Tensor, pred_tensor: torch.Tensor,
          model: TransformerNestedHiddenLatentModel, round_lengths: RoundLengths, step_index: int, nav_data: NavData,
          player_enable_mask: PlayerEnableMask = None, fixed_pred: bool = False, convert_to_cpu: bool = True,
-         save_new_pos: bool = True):
+         save_new_pos: bool = True, pred_transformed: Optional[torch.Tensor] = None,
+         pred_untransformed: Optional[torch.Tensor] = None):
     # skip rounds that are over, I know we have space, but wasteful as just going to filter out extra rows later
     # and cause problems as don't have non-computed input features (like visibility) at those time steps
     # and will crash open loop as everyone is 0
@@ -127,6 +129,11 @@ def step(rollout_tensor: torch.Tensor, all_similarity_tensor: torch.Tensor, pred
             pred_tensor[rollout_tensor_input_indices] = new_pred_tensor.to(CPU_DEVICE_STR)
         else:
             pred_tensor[rollout_tensor_input_indices] = new_pred_tensor
+            # when want to save model outputs exactly
+            if pred_transformed is not None:
+                pred_transformed[rollout_tensor_input_indices] = get_transformed_outputs(pred)
+            if pred_untransformed is not None:
+                pred_untransformed[rollout_tensor_input_indices] = pred_prob
         nested_pred_labels = get_label_outputs(pred)
     else:
         nested_pred_labels = one_hot_max_to_index(
