@@ -105,7 +105,7 @@ class HyperparameterOptions:
 
 default_hyperparameter_options = HyperparameterOptions()
 hyperparameter_option_range = [HyperparameterOptions(num_input_time_steps=1),
-                               HyperparameterOptions(num_input_time_steps=3),
+                               HyperparameterOptions(num_input_time_steps=3, bc_epochs=0),
                                HyperparameterOptions(num_input_time_steps=5, bc_epochs=40),
                                HyperparameterOptions(num_input_time_steps=25, bc_epochs=40),
                                HyperparameterOptions(player_mask_type=PlayerMaskType.EveryoneTemporalOnlyMask),
