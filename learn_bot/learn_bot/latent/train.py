@@ -61,7 +61,7 @@ class HyperparameterOptions:
     bc_epochs: int = 8
     probabilistic_rollout_epochs: int = 3
     full_rollout_epochs: int = 3
-    batch_size: int = 512
+    batch_size: int = 400
     num_input_time_steps: int = 1
     learning_rate: float = 4e-5
     weight_decay: float = 0.
@@ -91,7 +91,7 @@ class HyperparameterOptions:
         elif epoch_num >= self.bc_epochs + self.probabilistic_rollout_epochs:
             return 1.
         else:
-            return (1 + epoch_num - self.bc_epochs) / self.probabilistic_rollout_epochs
+            return (epoch_num - self.bc_epochs) / self.probabilistic_rollout_epochs
 
     def get_rollout_steps(self, epoch_num: int):
         assert epoch_num < self.num_epochs()
@@ -105,7 +105,7 @@ class HyperparameterOptions:
 
 default_hyperparameter_options = HyperparameterOptions()
 hyperparameter_option_range = [HyperparameterOptions(num_input_time_steps=1),
-                               HyperparameterOptions(num_input_time_steps=3, bc_epochs=0),
+                               HyperparameterOptions(num_input_time_steps=3, full_rollout_epochs=10),
                                HyperparameterOptions(num_input_time_steps=5, bc_epochs=40),
                                HyperparameterOptions(num_input_time_steps=25, bc_epochs=40),
                                HyperparameterOptions(player_mask_type=PlayerMaskType.EveryoneTemporalOnlyMask),
@@ -265,8 +265,12 @@ def train(train_type: TrainType, multi_hdf5_wrapper: MultiHDF5Wrapper,
                 #if batch_num > 24:
                 #    break
                 if first_row is None:
-                    first_row = X[0:1, :].float()
-                    first_row_similarity = similarity[0:1, :].float()
+                    if hyperparameter_options.get_rollout_steps(total_epochs) == 1:
+                        first_row = X[0:1, :].float()
+                        first_row_similarity = similarity[0:1, :].float()
+                    else:
+                        first_row = X[0:1, 0, :].float()
+                        first_row_similarity = similarity[0:1, 0, :].float()
                 X, Y, duplicated_last = X.to(device), Y.to(device), duplicated_last.to(device)
                 Y = Y.float()
                 similarity = similarity.to(device).float()
