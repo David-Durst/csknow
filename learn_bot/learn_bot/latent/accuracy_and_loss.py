@@ -17,53 +17,54 @@ from torch import nn
 # https://stackoverflow.com/questions/65192475/pytorch-logsoftmax-vs-softmax-for-crossentropyloss
 # no need to do softmax for classification output
 cross_entropy_loss_fn = nn.CrossEntropyLoss(reduction='none')
-huber_loss_fn = nn.HuberLoss(reduction='none')
+#huber_loss_fn = nn.HuberLoss(reduction='none')
+mse_loss_fn = nn.MSELoss(reduction='none')
 
 class LatentLosses:
     cat_loss: torch.Tensor
     cat_accumulator: float
-    #float_loss: torch.Tensor
-    #float_accumulator: float
+    float_loss: torch.Tensor
+    float_accumulator: float
     duplicate_last_cat_loss: torch.Tensor
     duplicate_last_cat_accumulator: float
-    #duplicate_last_float_loss: torch.Tensor
-    #duplicate_last_float_accumulator: float
+    duplicate_last_float_loss: torch.Tensor
+    duplicate_last_float_accumulator: float
     total_loss: torch.Tensor
     total_accumulator: float
 
     def __init__(self):
         self.cat_loss = torch.zeros([1]).to(CUDA_DEVICE_STR)
         self.cat_accumulator = 0.
-        #self.float_loss = torch.zeros([1]).to(CUDA_DEVICE_STR)
-        #self.float_accumulator = 0.
+        self.float_loss = torch.zeros([1]).to(CUDA_DEVICE_STR)
+        self.float_accumulator = 0.
         self.duplicate_last_cat_loss = torch.zeros([1]).to(CUDA_DEVICE_STR)
         self.duplicate_last_cat_accumulator = 0.
-        #self.duplicate_last_float_loss = torch.zeros([1]).to(CUDA_DEVICE_STR)
-        #self.duplicate_last_float_accumulator = 0.
+        self.duplicate_last_float_loss = torch.zeros([1]).to(CUDA_DEVICE_STR)
+        self.duplicate_last_float_accumulator = 0.
         self.total_loss = torch.zeros([1]).to(CUDA_DEVICE_STR)
         self.total_accumulator = 0.
 
     def __iadd__(self, other):
         self.cat_accumulator += other.cat_loss.item()
-        #self.float_accumulator += other.float_loss.item()
+        self.float_accumulator += other.float_loss.item()
         self.duplicate_last_cat_accumulator += other.duplicate_last_cat_loss.item()
-        #self.duplicate_last_float_accumulator += other.duplicate_last_float_loss.item()
+        self.duplicate_last_float_accumulator += other.duplicate_last_float_loss.item()
         self.total_accumulator += other.total_loss.item()
         return self
 
     def __itruediv__(self, other):
         self.cat_accumulator /= other
-        #self.float_accumulator /= other
+        self.float_accumulator /= other
         self.duplicate_last_cat_accumulator /= other
-        #self.duplicate_last_float_accumulator /= other
+        self.duplicate_last_float_accumulator /= other
         self.total_accumulator /= other
         return self
 
     def add_scalars(self, writer: SummaryWriter, prefix: str, total_epoch_num: int):
         writer.add_scalar(prefix + '/loss/cat', self.cat_accumulator, total_epoch_num)
-        #writer.add_scalar(prefix + '/loss/float', self.float_accumulator, total_epoch_num)
+        writer.add_scalar(prefix + '/loss/float', self.float_accumulator, total_epoch_num)
         writer.add_scalar(prefix + '/loss/repeated cat', self.duplicate_last_cat_accumulator, total_epoch_num)
-        #writer.add_scalar(prefix + '/loss/repeated float', self.duplicate_last_float_accumulator, total_epoch_num)
+        writer.add_scalar(prefix + '/loss/repeated float', self.duplicate_last_float_accumulator, total_epoch_num)
         writer.add_scalar(prefix + '/loss/total', self.total_accumulator, total_epoch_num)
 
 
@@ -108,8 +109,13 @@ def compute_loss(model: TransformerNestedHiddenLatentModel, pred, Y, X_orig: Opt
         losses.cat_loss = torch.mean(cat_loss)
         losses_to_cat.append(cat_loss)
         if X_orig is not None:
-            float_loss = huber_loss_fn(valid_X_rollout_cur_pos_per_players[~valid_duplicated_one_time_step],
-                                       valid_X_orig_cur_pos_per_players[~valid_duplicated_one_time_step]) / 5.
+            # mse + sum across x/y/z and sqrt == L2 distance
+            float_loss = mse_loss_fn(valid_X_rollout_cur_pos_per_players[~valid_duplicated_one_time_step],
+                                     valid_X_orig_cur_pos_per_players[~valid_duplicated_one_time_step]) / 5.
+            # repeat the L2 distance for each time step that has a categorical prediction)
+            float_loss = rearrange(
+                repeat(torch.sqrt(torch.sum(float_loss, axis=1, keepdim=True)), 'b 1 -> b t', t=num_radial_ticks),
+                'b t -> (b t)')
             if torch.isnan(float_loss).any():
                 print('bad huber loss')
             losses.float_loss = torch.mean(float_loss)
@@ -122,8 +128,11 @@ def compute_loss(model: TransformerNestedHiddenLatentModel, pred, Y, X_orig: Opt
         losses.duplicate_last_cat_loss = torch.mean(duplicated_last_cat_loss)
         losses_to_cat.append(duplicated_last_cat_loss)
         if X_orig is not None:
-            duplicated_last_float_loss = huber_loss_fn(valid_X_rollout_cur_pos_per_players[valid_duplicated_one_time_step],
-                                                       valid_X_orig_cur_pos_per_players[~valid_duplicated_one_time_step]) / 5.
+            duplicated_last_float_loss = mse_loss_fn(valid_X_rollout_cur_pos_per_players[valid_duplicated_one_time_step],
+                                                     valid_X_orig_cur_pos_per_players[~valid_duplicated_one_time_step]) / 5.
+            duplicated_last_float_loss = rearrange(
+                repeat(torch.sqrt(torch.sum(duplicated_last_float_loss, axis=1)), 'b 1 -> b t', t=num_radial_ticks),
+                'b t -> (b t)')
             if torch.isnan(duplicated_last_float_loss).any():
                 print('bad float loss')
             losses.duplicated_last_float_loss = torch.mean(duplicated_last_float_loss)
@@ -135,7 +144,9 @@ def compute_loss(model: TransformerNestedHiddenLatentModel, pred, Y, X_orig: Opt
     if X_orig is None:
         losses.total_loss = torch.mean(pack(losses_to_cat, '*')[0])
     else:
-        losses.total_loss = torch.mean(pack(losses_to_cat, '*')[0]) + torch.mean(pack(losses_to_float, '*')[0])
+        cat_loss_packed = pack(losses_to_cat, '*')[0]
+        float_loss_packed = pack(losses_to_float, '*')[0]
+        losses.total_loss = torch.mean(cat_loss_packed * float_loss_packed)
 
     return losses
 
