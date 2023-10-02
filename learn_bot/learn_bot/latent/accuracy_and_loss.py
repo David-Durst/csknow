@@ -22,48 +22,48 @@ huber_loss_fn = nn.HuberLoss(reduction='none')
 class LatentLosses:
     cat_loss: torch.Tensor
     cat_accumulator: float
-    float_loss: torch.Tensor
-    float_accumulator: float
+    #float_loss: torch.Tensor
+    #float_accumulator: float
     duplicate_last_cat_loss: torch.Tensor
     duplicate_last_cat_accumulator: float
-    duplicate_last_float_loss: torch.Tensor
-    duplicate_last_float_accumulator: float
+    #duplicate_last_float_loss: torch.Tensor
+    #duplicate_last_float_accumulator: float
     total_loss: torch.Tensor
     total_accumulator: float
 
     def __init__(self):
         self.cat_loss = torch.zeros([1]).to(CUDA_DEVICE_STR)
         self.cat_accumulator = 0.
-        self.float_loss = torch.zeros([1]).to(CUDA_DEVICE_STR)
-        self.float_accumulator = 0.
+        #self.float_loss = torch.zeros([1]).to(CUDA_DEVICE_STR)
+        #self.float_accumulator = 0.
         self.duplicate_last_cat_loss = torch.zeros([1]).to(CUDA_DEVICE_STR)
         self.duplicate_last_cat_accumulator = 0.
-        self.duplicate_last_float_loss = torch.zeros([1]).to(CUDA_DEVICE_STR)
-        self.duplicate_last_float_accumulator = 0.
+        #self.duplicate_last_float_loss = torch.zeros([1]).to(CUDA_DEVICE_STR)
+        #self.duplicate_last_float_accumulator = 0.
         self.total_loss = torch.zeros([1]).to(CUDA_DEVICE_STR)
         self.total_accumulator = 0.
 
     def __iadd__(self, other):
         self.cat_accumulator += other.cat_loss.item()
-        self.float_accumulator += other.float_loss.item()
+        #self.float_accumulator += other.float_loss.item()
         self.duplicate_last_cat_accumulator += other.duplicate_last_cat_loss.item()
-        self.duplicate_last_float_accumulator += other.duplicate_last_float_loss.item()
+        #self.duplicate_last_float_accumulator += other.duplicate_last_float_loss.item()
         self.total_accumulator += other.total_loss.item()
         return self
 
     def __itruediv__(self, other):
         self.cat_accumulator /= other
-        self.float_accumulator /= other
+        #self.float_accumulator /= other
         self.duplicate_last_cat_accumulator /= other
-        self.duplicate_last_float_accumulator /= other
+        #self.duplicate_last_float_accumulator /= other
         self.total_accumulator /= other
         return self
 
     def add_scalars(self, writer: SummaryWriter, prefix: str, total_epoch_num: int):
         writer.add_scalar(prefix + '/loss/cat', self.cat_accumulator, total_epoch_num)
-        writer.add_scalar(prefix + '/loss/float', self.float_accumulator, total_epoch_num)
+        #writer.add_scalar(prefix + '/loss/float', self.float_accumulator, total_epoch_num)
         writer.add_scalar(prefix + '/loss/repeated cat', self.duplicate_last_cat_accumulator, total_epoch_num)
-        writer.add_scalar(prefix + '/loss/repeated float', self.duplicate_last_float_accumulator, total_epoch_num)
+        #writer.add_scalar(prefix + '/loss/repeated float', self.duplicate_last_float_accumulator, total_epoch_num)
         writer.add_scalar(prefix + '/loss/total', self.total_accumulator, total_epoch_num)
 
 

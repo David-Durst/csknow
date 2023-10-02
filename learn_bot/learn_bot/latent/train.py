@@ -105,7 +105,7 @@ class HyperparameterOptions:
 
 default_hyperparameter_options = HyperparameterOptions()
 hyperparameter_option_range = [HyperparameterOptions(num_input_time_steps=1),
-                               HyperparameterOptions(num_input_time_steps=3, full_rollout_epochs=10),
+                               HyperparameterOptions(num_input_time_steps=3, bc_epochs=0, probabilistic_rollout_epochs=0, full_rollout_epochs=10),
                                HyperparameterOptions(num_input_time_steps=5, bc_epochs=40),
                                HyperparameterOptions(num_input_time_steps=25, bc_epochs=40),
                                HyperparameterOptions(player_mask_type=PlayerMaskType.EveryoneTemporalOnlyMask),
@@ -299,8 +299,8 @@ def train(train_type: TrainType, multi_hdf5_wrapper: MultiHDF5Wrapper,
                         rollout_batch_result = \
                             rollout_simulate(X, Y, similarity, duplicated_last, indices, model,
                                              hyperparameter_options.percent_rollout_steps_predicted(total_epochs))
-                        X_flattened_orig = rollout_batch_result.X_flattened_orig
-                        X_flattened_rollout = rollout_batch_result.X_flattened_rollout
+                        #X_flattened_orig = rollout_batch_result.X_flattened_orig
+                        #X_flattened_rollout = rollout_batch_result.X_flattened_rollout
                         pred_flattened = rollout_batch_result.model_pred_flattened
                         Y_flattened = rollout_batch_result.Y_flattened
                         duplicated_last_flattened = rollout_batch_result.duplicated_last_flattened

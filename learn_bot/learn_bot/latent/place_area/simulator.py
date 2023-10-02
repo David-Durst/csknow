@@ -102,8 +102,8 @@ PlayerEnableMask = Optional[torch.Tensor]
 def step(rollout_tensor: torch.Tensor, all_similarity_tensor: torch.Tensor, pred_tensor: torch.Tensor,
          model: TransformerNestedHiddenLatentModel, round_lengths: RoundLengths, step_index: int, nav_data: NavData,
          player_enable_mask: PlayerEnableMask = None, fixed_pred: bool = False, convert_to_cpu: bool = True,
-         save_new_pos: bool = True, pred_transformed: Optional[torch.Tensor] = None,
-         pred_untransformed: Optional[torch.Tensor] = None):
+         save_new_pos: bool = True, rollout_tensor_grad: Optional[torch.Tensor] = None,
+         pred_transformed: Optional[torch.Tensor] = None, pred_untransformed: Optional[torch.Tensor] = None):
     # skip rounds that are over, I know we have space, but wasteful as just going to filter out extra rows later
     # and cause problems as don't have non-computed input features (like visibility) at those time steps
     # and will crash open loop as everyone is 0
@@ -157,6 +157,8 @@ def step(rollout_tensor: torch.Tensor, all_similarity_tensor: torch.Tensor, pred
             tmp_rollout[:, model.players_pos_columns] = new_player_pos
         # detach so that if using this in scheduled sampling rollout, don't propagate gradients between time steps
         rollout_tensor[rollout_tensor_output_indices] = tmp_rollout.detach()
+        if rollout_tensor_grad is not None:
+            rollout_tensor_grad[rollout_tensor_output_indices] = tmp_rollout
 
 
 # undo the fixed length across all rounds, just get right length for each round
