@@ -61,7 +61,7 @@ class LatentLosses:
 
     def add_scalars(self, writer: SummaryWriter, prefix: str, total_epoch_num: int):
         writer.add_scalar(prefix + '/loss/cat', self.cat_accumulator, total_epoch_num)
-        writer.add_scalar(prefix + '/loss/float', self.cat_accumulator, total_epoch_num)
+        writer.add_scalar(prefix + '/loss/float', self.float_accumulator, total_epoch_num)
         writer.add_scalar(prefix + '/loss/repeated cat', self.duplicate_last_cat_accumulator, total_epoch_num)
         writer.add_scalar(prefix + '/loss/repeated float', self.duplicate_last_float_accumulator, total_epoch_num)
         writer.add_scalar(prefix + '/loss/total', self.total_accumulator, total_epoch_num)
