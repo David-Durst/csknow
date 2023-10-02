@@ -8,6 +8,7 @@ from learn_bot.latent.dataset import *
 from learn_bot.latent.order.column_names import num_radial_ticks
 from learn_bot.latent.place_area.pos_abs_from_delta_grid_or_radial import get_delta_indices_from_grid, \
     get_delta_pos_from_radial
+from learn_bot.latent.transformer_nested_hidden_latent_model import TransformerNestedHiddenLatentModel
 from learn_bot.libs.io_transforms import IOColumnTransformers, ColumnTransformerType, CPU_DEVICE_STR, \
     get_untransformed_outputs, get_transformed_outputs, CUDA_DEVICE_STR
 from math import sqrt
@@ -16,43 +17,59 @@ from torch import nn
 # https://stackoverflow.com/questions/65192475/pytorch-logsoftmax-vs-softmax-for-crossentropyloss
 # no need to do softmax for classification output
 cross_entropy_loss_fn = nn.CrossEntropyLoss(reduction='none')
+huber_loss_fn = nn.HuberLoss(reduction='none')
 
 class LatentLosses:
     cat_loss: torch.Tensor
     cat_accumulator: float
+    float_loss: torch.Tensor
+    float_accumulator: float
     duplicate_last_cat_loss: torch.Tensor
     duplicate_last_cat_accumulator: float
+    duplicate_last_float_loss: torch.Tensor
+    duplicate_last_float_accumulator: float
     total_loss: torch.Tensor
     total_accumulator: float
 
     def __init__(self):
         self.cat_loss = torch.zeros([1]).to(CUDA_DEVICE_STR)
         self.cat_accumulator = 0.
+        self.float_loss = torch.zeros([1]).to(CUDA_DEVICE_STR)
+        self.float_accumulator = 0.
         self.duplicate_last_cat_loss = torch.zeros([1]).to(CUDA_DEVICE_STR)
         self.duplicate_last_cat_accumulator = 0.
+        self.duplicate_last_float_loss = torch.zeros([1]).to(CUDA_DEVICE_STR)
+        self.duplicate_last_float_accumulator = 0.
         self.total_loss = torch.zeros([1]).to(CUDA_DEVICE_STR)
         self.total_accumulator = 0.
 
     def __iadd__(self, other):
         self.cat_accumulator += other.cat_loss.item()
+        self.float_accumulator += other.float_loss.item()
         self.duplicate_last_cat_accumulator += other.duplicate_last_cat_loss.item()
+        self.duplicate_last_float_accumulator += other.duplicate_last_float_loss.item()
         self.total_accumulator += other.total_loss.item()
         return self
 
     def __itruediv__(self, other):
         self.cat_accumulator /= other
+        self.float_accumulator /= other
         self.duplicate_last_cat_accumulator /= other
+        self.duplicate_last_float_accumulator /= other
         self.total_accumulator /= other
         return self
 
     def add_scalars(self, writer: SummaryWriter, prefix: str, total_epoch_num: int):
         writer.add_scalar(prefix + '/loss/cat', self.cat_accumulator, total_epoch_num)
+        writer.add_scalar(prefix + '/loss/float', self.cat_accumulator, total_epoch_num)
         writer.add_scalar(prefix + '/loss/repeated cat', self.duplicate_last_cat_accumulator, total_epoch_num)
+        writer.add_scalar(prefix + '/loss/repeated float', self.duplicate_last_float_accumulator, total_epoch_num)
         writer.add_scalar(prefix + '/loss/total', self.total_accumulator, total_epoch_num)
 
 
 # https://discuss.pytorch.org/t/how-to-combine-multiple-criterions-to-a-loss-function/348/4
-def compute_loss(pred, Y, duplicated_last, num_players) -> LatentLosses:
+def compute_loss(model: TransformerNestedHiddenLatentModel, pred, Y, X_orig: Optional, X_rollout: Optional,
+                 duplicated_last, num_players) -> LatentLosses:
     pred_transformed = get_transformed_outputs(pred)
 
     losses = LatentLosses()
@@ -66,30 +83,59 @@ def compute_loss(pred, Y, duplicated_last, num_players) -> LatentLosses:
     valid_Y_transformed = Y_per_player_time_step[valid_rows]
     valid_pred_transformed = pred_transformed_per_player_time_step[valid_rows]
     valid_duplicated = duplicated_last_per_player_time_step[valid_rows]
+
+    if X_orig is not None:
+        # predictions for multiple time steps in future, but X is just cur time step
+        X_orig_cur_pos_per_players = rearrange(X_orig[:, model.players_cur_pos_columns], "b (p d) -> (b p) d",
+                                               p=num_players, d=model.num_dim)
+        X_rollout_cur_pos_per_players = rearrange(X_rollout[:, model.players_cur_pos_columns], "b (p d) -> (b p) d",
+                                                  p=num_players, d=model.num_dim)
+        valid_rows_one_time_step = rearrange(valid_rows, '(bp t) -> bp t', t=num_radial_ticks)[:, 0]
+        valid_duplicated_one_time_step = rearrange(valid_duplicated, '(bp t) -> bp t', t=num_radial_ticks)[:, 0]
+        valid_X_orig_cur_pos_per_players = X_orig_cur_pos_per_players[valid_rows_one_time_step]
+        valid_X_rollout_cur_pos_per_players = X_rollout_cur_pos_per_players[valid_rows_one_time_step]
     #cat_loss = cross_entropy_loss_fn(valid_pred_transformed, valid_Y_transformed)
     #if torch.isnan(cat_loss).any():
     #    print('bad loss')
     #losses.cat_loss += cat_loss
     losses_to_cat = []
+    losses_to_float = []
     if valid_Y_transformed[~valid_duplicated].shape[0] > 0:
         cat_loss = cross_entropy_loss_fn(valid_pred_transformed[~valid_duplicated],
                                          valid_Y_transformed[~valid_duplicated])
         if torch.isnan(cat_loss).any():
-            print('bad loss')
+            print('bad cat loss')
         losses.cat_loss = torch.mean(cat_loss)
         losses_to_cat.append(cat_loss)
+        if X_orig is not None:
+            float_loss = huber_loss_fn(valid_X_rollout_cur_pos_per_players[~valid_duplicated_one_time_step],
+                                       valid_X_orig_cur_pos_per_players[~valid_duplicated_one_time_step]) / 5.
+            if torch.isnan(float_loss).any():
+                print('bad huber loss')
+            losses.float_loss = torch.mean(float_loss)
+            losses_to_float.append(float_loss)
     if valid_Y_transformed[valid_duplicated].shape[0] > 0.:
         duplicated_last_cat_loss = cross_entropy_loss_fn(valid_pred_transformed[valid_duplicated],
                                                          valid_Y_transformed[valid_duplicated])
         if torch.isnan(duplicated_last_cat_loss).any():
-            print('bad loss')
+            print('bad cat loss')
         losses.duplicate_last_cat_loss = torch.mean(duplicated_last_cat_loss)
         losses_to_cat.append(duplicated_last_cat_loss)
+        if X_orig is not None:
+            duplicated_last_float_loss = huber_loss_fn(valid_X_rollout_cur_pos_per_players[valid_duplicated_one_time_step],
+                                                       valid_X_orig_cur_pos_per_players[~valid_duplicated_one_time_step]) / 5.
+            if torch.isnan(duplicated_last_float_loss).any():
+                print('bad float loss')
+            losses.duplicated_last_float_loss = torch.mean(duplicated_last_float_loss)
+            losses_to_float.append(duplicated_last_float_loss)
     #total_loss = cross_entropy_loss_fn(valid_pred_transformed, valid_Y_transformed)
     #if torch.isnan(total_loss).any():
     #    print('bad loss')
     #losses.total_loss = total_loss
-    losses.total_loss = torch.mean(pack(losses_to_cat, '*')[0])
+    if X_orig is None:
+        losses.total_loss = torch.mean(pack(losses_to_cat, '*')[0])
+    else:
+        losses.total_loss = torch.mean(pack(losses_to_cat, '*')[0]) + torch.mean(pack(losses_to_float, '*')[0])
 
     return losses
 

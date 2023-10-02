@@ -87,6 +87,8 @@ class TransformerNestedHiddenLatentModel(nn.Module):
         self.players_pos_columns = rearrange(nested_players_pos_columns_tensor[:, 0:num_input_time_steps, :],
                                              'p t d -> (p t d)',
                                              p=self.num_players, t=num_input_time_steps, d=self.num_dim).tolist()
+        self.players_cur_pos_columns = rearrange(nested_players_pos_columns_tensor[:, 0, :], 'p d -> (p d)',
+                                                 p=self.num_players, d=self.num_dim).tolist()
         all_players_nearest_crosshair_to_enemy_columns = \
             get_player_columns_by_str(cts, "player nearest crosshair distance to enemy")
         all_players_nearest_crosshair_to_enemy_columns_tensor = \

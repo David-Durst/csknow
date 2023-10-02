@@ -22,6 +22,8 @@ def get_rollout_round_lengths(indices: torch.Tensor) -> RoundLengths:
 
 @dataclass
 class RolloutBatchResult:
+    X_flattened_orig: torch.Tensor
+    X_flattened_rollout: torch.Tensor
     model_pred_flattened: Tuple[torch.Tensor, torch.Tensor]
     Y_flattened: torch.Tensor
     duplicated_last_flattened: torch.Tensor
@@ -39,6 +41,7 @@ def rollout_simulate(X: torch.Tensor, Y: torch.Tensor, similarity: torch.Tensor,
         round_start_index += round_lengths.max_length_per_round
 
     X_flattened = rearrange(X, 'b t d -> (b t) d')
+    X_flattened_orig = X_flattened.clone()
     Y_flattened = rearrange(Y, 'b t d -> (b t) d')
     # step assumes one similarity row per round, so just take first row per round
     similarity_flattened = similarity[:, 0, :]
@@ -69,9 +72,13 @@ def rollout_simulate(X: torch.Tensor, Y: torch.Tensor, similarity: torch.Tensor,
     predicted_and_valid_flattened_indices = \
         list(set(valid_flattened_indices).intersection(set(predicted_flattened_indices)))
 
-    return RolloutBatchResult((pred_transformed[predicted_and_valid_flattened_indices],
-                               pred_untransformed[predicted_and_valid_flattened_indices]),
-                              Y_flattened[predicted_and_valid_flattened_indices],
-                              duplicated_last_flattened[predicted_and_valid_flattened_indices])
+    return RolloutBatchResult(
+        X_flattened_orig[predicted_and_valid_flattened_indices],
+        X_flattened[predicted_and_valid_flattened_indices],
+        (pred_transformed[predicted_and_valid_flattened_indices],
+         pred_untransformed[predicted_and_valid_flattened_indices]),
+        Y_flattened[predicted_and_valid_flattened_indices],
+        duplicated_last_flattened[predicted_and_valid_flattened_indices]
+    )
 
 

@@ -18,7 +18,7 @@ PRIOR_TICKS_POS = -1 * PRIOR_TICKS
 FUTURE_TICKS = 13
 CUR_TICK = 1
 
-ModelOutput = Tuple[torch.Tensor, torch.Tensor]
+ModelOutput = Tuple[torch.Tensor, torch.Tensor, torch.Tensor]
 
 
 class ColumnTransformerType(Enum):

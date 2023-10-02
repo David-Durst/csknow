@@ -287,6 +287,8 @@ def train(train_type: TrainType, multi_hdf5_wrapper: MultiHDF5Wrapper,
                 if train:
                     model.noise_var = hyperparameter_options.noise_var
                     optimizer.zero_grad()
+                X_flattened_orig = None
+                X_flattened_rollout = None
                 with autocast(device, enabled=True):
                     if hyperparameter_options.get_rollout_steps(total_epochs) == 1:
                         pred = model(X, similarity, temperature_gpu)
@@ -297,9 +299,12 @@ def train(train_type: TrainType, multi_hdf5_wrapper: MultiHDF5Wrapper,
                         rollout_batch_result = \
                             rollout_simulate(X, Y, similarity, duplicated_last, indices, model,
                                              hyperparameter_options.percent_rollout_steps_predicted(total_epochs))
+                        X_flattened_orig = rollout_batch_result.X_flattened_orig
+                        X_flattened_rollout = rollout_batch_result.X_flattened_rollout
                         pred_flattened = rollout_batch_result.model_pred_flattened
                         Y_flattened = rollout_batch_result.Y_flattened
                         duplicated_last_flattened = rollout_batch_result.duplicated_last_flattened
+
                     model.noise_var = -1.
                     if torch.isnan(X).any():
                         print('bad X')
@@ -315,7 +320,8 @@ def train(train_type: TrainType, multi_hdf5_wrapper: MultiHDF5Wrapper,
                         #print(indices[bad_batch_row])
                         #print('bad pred')
                         sys.exit(0)
-                    batch_loss = compute_loss(pred_flattened, Y_flattened, duplicated_last_flattened, model.num_players)
+                    batch_loss = compute_loss(model, pred_flattened, Y_flattened, X_flattened_orig, X_flattened_rollout,
+                                              duplicated_last_flattened, model.num_players)
                     # uncomment here and below causes memory issues
                     cumulative_loss += batch_loss
                     #losses.append(batch_loss.total_loss.tolist()[0])
