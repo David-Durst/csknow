@@ -23,11 +23,12 @@ from learn_bot.libs.multi_hdf5_wrapper import train_test_split_folder_path, make
 
 
 class HumannessDataOptions(Enum):
-    ROLLOUT = 1
-    ALL_TRAIN = 2
-    HEURISTIC = 3
-    DEFAULT = 4
-    CUSTOM = 5
+    ALL_TRAIN = 1
+    LEARNED_HISTORY = 2
+    LEARNED_NO_HISTORY = 3
+    HEURISTIC = 4
+    DEFAULT = 5
+    CUSTOM = 6
 
 
 class HumannessMetrics:
@@ -122,7 +123,9 @@ class HumannessMetrics:
                  custom_hdf5_path: Optional[Path] = None) -> np.ndarray:
         # get data as numpy arrays and column names
         hdf5_paths: List[Path]
-        if data_option == HumannessDataOptions.ROLLOUT:
+        if data_option == HumannessDataOptions.LEARNED_HISTORY:
+            hdf5_paths = [rollout_humanness_hdf5_data_path]
+        if data_option == HumannessDataOptions.LEARNED_NO_HISTORY:
             hdf5_paths = [rollout_humanness_hdf5_data_path]
         elif data_option == HumannessDataOptions.ALL_TRAIN:
             hdf5_paths = all_train_humanness_hdf5_data_paths

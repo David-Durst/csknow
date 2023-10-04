@@ -158,6 +158,21 @@ rollout_learned_vs_all_human_config = ComparisonConfig(
     "Rollout Learned vs All Human Distribution"
 )
 
+rollout_no_history_learned_load_data_option = dataclasses.replace(rollout_load_data_option,
+                                                       custom_rollout_extension="_9_20_23_learned_3s_300_rounds")
+rollout_no_history_learned_vs_all_human_similarity_hdf5_data_path = \
+    rollout_learned_vs_all_human_similarity_hdf5_data_path.parent / \
+    str(rollout_learned_vs_all_human_similarity_hdf5_data_path.name).replace("learned", rollout_no_history_learned_load_data_option.custom_rollout_extension[1:])
+rollout_no_history_learned_vs_all_human_config = ComparisonConfig(
+    rollout_no_history_learned_vs_all_human_similarity_hdf5_data_path,
+    rollout_no_history_learned_load_data_option,
+    all_human_load_data_option,
+    False,
+    False,
+    "rollout_no_history_learned_vs_all_human_distribution",
+    "Rollout No History Learned vs All Human Distribution"
+)
+
 rollout_handcrafted_load_data_option = dataclasses.replace(rollout_load_data_option,
                                                        custom_rollout_extension= "_9_13_23_handcrafted_300_rounds")
 rollout_handcrafted_vs_all_human_config = ComparisonConfig(
@@ -249,6 +264,8 @@ def compare_trajectories(config_case: int) -> Optional[TrajectoryPlots]:
         config = rollout_all_human_vs_handcrafted_config
     elif config_case == 12:
         config = rollout_all_human_vs_default_config
+    elif config_case == 13:
+        config = rollout_no_history_learned_vs_all_human_config
 
     cur_run_similarity_plots_path = similarity_plots_path / rollout_learned_load_data_option.custom_rollout_extension
 
@@ -312,7 +329,7 @@ def compare_trajectories(config_case: int) -> Optional[TrajectoryPlots]:
         start_heatmaps_plot_time = time.perf_counter()
         trajectory_plots = plot_trajectory_comparisons(similarity_df, predicted_model, ground_truth_model,
                                                        config, cur_run_similarity_plots_path,
-                                                       debug_caching_override=config_case >= 10)
+                                                       debug_caching_override=config_case >= 10 and config_case <= 12)
         end_heatmaps_plot_time = time.perf_counter()
         print(f"heatmaps plot time {end_heatmaps_plot_time - start_heatmaps_plot_time: 0.4f}")
 
