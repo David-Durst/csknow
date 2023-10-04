@@ -10,6 +10,7 @@ from torch import nn
 
 from learn_bot.latent.dataset import LatentDataset
 from learn_bot.latent.engagement.column_names import max_enemies
+from learn_bot.latent.hyperparameter_options import HyperparameterOptions
 from learn_bot.latent.latent_hdf5_dataset import MultipleLatentHDF5Dataset
 from learn_bot.latent.order.column_names import num_radial_ticks
 from learn_bot.latent.place_area.filter import filter_region
@@ -85,9 +86,11 @@ def load_model_file(loaded_data: LoadDataResult, use_test_data_only: bool = Fals
     column_transformers = IOColumnTransformers(place_area_input_column_types, radial_vel_output_column_types,
                                                hdf5_wrappers[0].sample_df)
 
+    hyperparameter_options: HyperparameterOptions = model_file['hyperparameter_options']
     model = TransformerNestedHiddenLatentModel(model_file['column_transformers'], 2 * max_enemies,
+                                               hyperparameter_options.num_input_time_steps,
                                                num_radial_ticks, num_radial_bins, 2, 4,
-                                               PlayerMaskType.NoMask)#model_file['hyperparamter_options'].player_mask_type)
+                                               hyperparameter_options.player_mask_type)
     model.load_state_dict(model_file['model_state_dict'])
     model.to(CUDA_DEVICE_STR)
 

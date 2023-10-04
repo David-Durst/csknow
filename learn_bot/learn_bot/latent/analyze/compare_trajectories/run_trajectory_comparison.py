@@ -146,7 +146,8 @@ rollout_vs_all_human_config = ComparisonConfig(
 )
 
 rollout_learned_load_data_option = dataclasses.replace(rollout_load_data_option,
-                                                       custom_rollout_extension= "_9_20_23_learned_3s_300_rounds")
+                                                       custom_rollout_extension= "_10_03_23_learned_250ms_scheduled_sampling_300_rounds")
+#custom_rollout_extension = "_9_20_23_learned_3s_300_rounds")
 rollout_learned_vs_all_human_config = ComparisonConfig(
     rollout_learned_vs_all_human_similarity_hdf5_data_path,
     rollout_learned_load_data_option,
