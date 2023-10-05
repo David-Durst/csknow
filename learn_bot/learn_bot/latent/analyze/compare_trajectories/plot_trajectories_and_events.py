@@ -68,52 +68,52 @@ def plot_trajectory_dfs_and_event(trajectory_dfs: List[pd.DataFrame], config: Co
                                    title_appendix)
 
 
-def plot_speeds(trajectory_dfs: List[pd.DataFrame], valid_players_dfs: List[pd.DataFrame],
-               config: ComparisonConfig, predicted: bool, include_ct: bool, include_t: bool,
-               filter_event_type: Optional[FilterEventType] = None,
-               title_appendix: str = "") -> Image.Image:
-    trajectory_df = pd.concat(trajectory_dfs)
-    valid_players_df = pd.concat(valid_players_dfs)
-
-    speeds: List[pd.Series] = []
-    for player_place_area_columns in specific_player_place_area_columns:
-        ct_team = team_strs[0] in player_place_area_columns.player_id
-        if ct_team and not include_ct:
-            continue
-        elif not ct_team and not include_t:
-            continue
-
-        # make sure player is alive if don't have another condition
-        if len(valid_players_df) == 0:
-            cur_player_trajectory_df = trajectory_df[trajectory_df[player_place_area_columns.alive] == 1]
-            if cur_player_trajectory_df.empty:
-                continue
-        else:
-            cur_player_trajectory_df = trajectory_df[valid_players_df[player_place_area_columns.player_id]]
-
-        speeds.append((cur_player_trajectory_df[player_place_area_columns.vel[0]] ** 2 +
-                       cur_player_trajectory_df[player_place_area_columns.vel[1]] ** 2 +
-                       cur_player_trajectory_df[player_place_area_columns.vel[2]] ** 2) ** (1. / 2.))
-
-    speed = pd.concat(speeds)
-    bins = generate_bins(0, 300, 300 // 20)
-
-    title_text = get_title(config, filter_event_type, include_ct, include_t, predicted, title_appendix)
-    fig = plt.figure(figsize=(10, 10), constrained_layout=True)
-    fig.suptitle(title_text, fontsize=16)
-    ax = fig.subplots(1, 1)
-
-    plot_hist(ax, speed, bins)
-    ax.text(150, 0.4, speed.describe().to_string(), family='monospace')
-    ax.set_ylim(0., 1.)
-
-    tmp_dir = tempfile.gettempdir()
-    tmp_file = Path(tmp_dir) / 'tmp_heatmap.png'
-    plt.savefig(tmp_file)
-    img = Image.open(tmp_file)
-    img.load()
-    tmp_file.unlink()
-    return img
+#def plot_speeds(trajectory_dfs: List[pd.DataFrame], valid_players_dfs: List[pd.DataFrame],
+#               config: ComparisonConfig, predicted: bool, include_ct: bool, include_t: bool,
+#               filter_event_type: Optional[FilterEventType] = None,
+#               title_appendix: str = "") -> Image.Image:
+#    trajectory_df = pd.concat(trajectory_dfs)
+#    valid_players_df = pd.concat(valid_players_dfs)
+#
+#    speeds: List[pd.Series] = []
+#    for player_place_area_columns in specific_player_place_area_columns:
+#        ct_team = team_strs[0] in player_place_area_columns.player_id
+#        if ct_team and not include_ct:
+#            continue
+#        elif not ct_team and not include_t:
+#            continue
+#
+#        # make sure player is alive if don't have another condition
+#        if len(valid_players_df) == 0:
+#            cur_player_trajectory_df = trajectory_df[trajectory_df[player_place_area_columns.alive] == 1]
+#            if cur_player_trajectory_df.empty:
+#                continue
+#        else:
+#            cur_player_trajectory_df = trajectory_df[valid_players_df[player_place_area_columns.player_id]]
+#
+#        speeds.append((cur_player_trajectory_df[player_place_area_columns.vel[0]] ** 2 +
+#                       cur_player_trajectory_df[player_place_area_columns.vel[1]] ** 2 +
+#                       cur_player_trajectory_df[player_place_area_columns.vel[2]] ** 2) ** (1. / 2.))
+#
+#    speed = pd.concat(speeds)
+#    bins = generate_bins(0, 300, 300 // 20)
+#
+#    title_text = get_title(config, filter_event_type, include_ct, include_t, predicted, title_appendix)
+#    fig = plt.figure(figsize=(10, 10), constrained_layout=True)
+#    fig.suptitle(title_text, fontsize=16)
+#    ax = fig.subplots(1, 1)
+#
+#    plot_hist(ax, speed, bins)
+#    ax.text(150, 0.4, speed.describe().to_string(), family='monospace')
+#    ax.set_ylim(0., 1.)
+#
+#    tmp_dir = tempfile.gettempdir()
+#    tmp_file = Path(tmp_dir) / 'tmp_heatmap.png'
+#    plt.savefig(tmp_file)
+#    img = Image.open(tmp_file)
+#    img.load()
+#    tmp_file.unlink()
+#    return img
 
 
 def plot_events(filtered_trajectory_dfs: List[pd.DataFrame], valid_players_dfs: List[pd.DataFrame],
