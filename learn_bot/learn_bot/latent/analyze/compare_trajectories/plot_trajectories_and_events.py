@@ -1,16 +1,20 @@
+import tempfile
 from enum import Enum
-from math import log
+from math import log, ceil
+from pathlib import Path
 from typing import List, Optional, Set
 
 import pandas as pd
 from PIL import Image, ImageDraw, ImageFont
+from matplotlib import pyplot as plt
 from tqdm import tqdm
 
 from learn_bot.latent.analyze.compare_trajectories.filter_trajectory_key_events import FilterEventType, KeyAreas, \
     KeyAreaTeam, filter_trajectory_by_key_events
 from learn_bot.latent.analyze.compare_trajectories.plot_distance_to_other_player import extra_data_from_metric_title, \
     plot_occupancy_heatmap
-from learn_bot.latent.analyze.compare_trajectories.process_trajectory_comparison import ComparisonConfig
+from learn_bot.latent.analyze.compare_trajectories.process_trajectory_comparison import ComparisonConfig, generate_bins, \
+    plot_hist
 from learn_bot.latent.analyze.test_traces.run_trace_visualization import d2_img, bot_ct_color_list, bot_t_color_list, \
     convert_to_canvas_coordinates
 from learn_bot.latent.order.column_names import team_strs
@@ -64,19 +68,72 @@ def plot_trajectory_dfs_and_event(trajectory_dfs: List[pd.DataFrame], config: Co
                                    title_appendix)
 
 
+def plot_speeds(trajectory_dfs: List[pd.DataFrame], valid_players_dfs: List[pd.DataFrame],
+               config: ComparisonConfig, predicted: bool, include_ct: bool, include_t: bool,
+               filter_event_type: Optional[FilterEventType] = None,
+               title_appendix: str = "") -> Image.Image:
+    trajectory_df = pd.concat(trajectory_dfs)
+    valid_players_df = pd.concat(valid_players_dfs)
+
+    speeds: List[pd.Series] = []
+    for player_place_area_columns in specific_player_place_area_columns:
+        ct_team = team_strs[0] in player_place_area_columns.player_id
+        if ct_team and not include_ct:
+            continue
+        elif not ct_team and not include_t:
+            continue
+
+        # make sure player is alive if don't have another condition
+        if len(valid_players_df) == 0:
+            cur_player_trajectory_df = trajectory_df[trajectory_df[player_place_area_columns.alive] == 1]
+            if cur_player_trajectory_df.empty:
+                continue
+        else:
+            cur_player_trajectory_df = trajectory_df[valid_players_df[player_place_area_columns.player_id]]
+
+        speeds.append((cur_player_trajectory_df[player_place_area_columns.vel[0]] ** 2 +
+                       cur_player_trajectory_df[player_place_area_columns.vel[1]] ** 2 +
+                       cur_player_trajectory_df[player_place_area_columns.vel[2]] ** 2) ** (1. / 2.))
+
+    speed = pd.concat(speeds)
+    bins = generate_bins(0, 300, 300 // 20)
+
+    title_text = get_title(config, filter_event_type, include_ct, include_t, predicted, title_appendix)
+    fig = plt.figure(figsize=(10, 10), constrained_layout=True)
+    fig.suptitle(title_text, fontsize=16)
+    ax = fig.subplots(1, 1)
+
+    plot_hist(ax, speed, bins)
+    ax.text(150, 0.4, speed.describe().to_string(), family='monospace')
+    ax.set_ylim(0., 1.)
+
+    tmp_dir = tempfile.gettempdir()
+    tmp_file = Path(tmp_dir) / 'tmp_heatmap.png'
+    plt.savefig(tmp_file)
+    img = Image.open(tmp_file)
+    img.load()
+    tmp_file.unlink()
+    return img
+
+
 def plot_events(filtered_trajectory_dfs: List[pd.DataFrame], valid_players_dfs: List[pd.DataFrame],
                 config: ComparisonConfig, predicted: bool, include_ct: bool, include_t: bool,
                 filter_players: Optional[FilterPlayerType] = FilterPlayerType.IncludeAll,
                 filter_event_type: Optional[FilterEventType] = None,
                 title_appendix: str = "") -> Image.Image:
     assert filter_players == FilterPlayerType.IncludeOnlyInEvent
+    title_text = get_title(config, filter_event_type, include_ct, include_t, predicted, title_appendix)
+    return plot_occupancy_heatmap(filtered_trajectory_dfs, config, False, False, None, valid_players_dfs,
+                                  include_ct=include_ct, include_t=include_t,
+                                  title_text=title_text)
+
+
+def get_title(config, filter_event_type, include_ct, include_t, predicted, title_appendix):
     team_text = f" CT: {include_ct}, T: {include_t}"
     event_text = "" if filter_event_type is None else (" " + str(filter_event_type))
     title_text = extra_data_from_metric_title(config.metric_cost_title, predicted) + \
                  event_text + team_text + title_appendix
-    return plot_occupancy_heatmap(filtered_trajectory_dfs, config, False, False, None, valid_players_dfs,
-                                  include_ct=include_ct, include_t=include_t,
-                                  title_text=title_text)
+    return title_text
 
 
 def plot_trajectory_dfs(filtered_trajectory_dfs: List[pd.DataFrame], valid_players_dfs: List[pd.DataFrame],

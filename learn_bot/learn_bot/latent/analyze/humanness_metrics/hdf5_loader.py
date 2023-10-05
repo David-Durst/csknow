@@ -124,9 +124,9 @@ class HumannessMetrics:
         # get data as numpy arrays and column names
         hdf5_paths: List[Path]
         if data_option == HumannessDataOptions.LEARNED_HISTORY:
-            hdf5_paths = [rollout_humanness_hdf5_data_path]
+            hdf5_paths = [learned_history_humanness_hdf5_data_path]
         if data_option == HumannessDataOptions.LEARNED_NO_HISTORY:
-            hdf5_paths = [rollout_humanness_hdf5_data_path]
+            hdf5_paths = [learned_no_history_humanness_hdf5_data_path]
         elif data_option == HumannessDataOptions.ALL_TRAIN:
             hdf5_paths = all_train_humanness_hdf5_data_paths
         elif data_option == HumannessDataOptions.HEURISTIC:
