@@ -10,6 +10,7 @@ from pathlib import Path
 
 import pandas as pd
 
+from learn_bot.latent.analyze.compare_trajectories.process_trajectory_comparison import get_hdf5_to_round_ids
 from learn_bot.latent.analyze.create_test_plant_states import load_data_options
 from learn_bot.latent.analyze.humanness_metrics.column_names import *
 from learn_bot.latent.engagement.column_names import round_id_column
@@ -125,7 +126,7 @@ class HumannessMetrics:
         hdf5_paths: List[Path]
         if data_option == HumannessDataOptions.LEARNED_HISTORY:
             hdf5_paths = [learned_history_humanness_hdf5_data_path]
-        if data_option == HumannessDataOptions.LEARNED_NO_HISTORY:
+        elif data_option == HumannessDataOptions.LEARNED_NO_HISTORY:
             hdf5_paths = [learned_no_history_humanness_hdf5_data_path]
         elif data_option == HumannessDataOptions.ALL_TRAIN:
             hdf5_paths = all_train_humanness_hdf5_data_paths
@@ -140,11 +141,7 @@ class HumannessMetrics:
         hdf5_to_test_round_ids: Dict[Path, List[int]] = {}
         if limit_to_test:
             load_data_result = LoadDataResult(load_data_options)
-            for hdf5_wrapper in load_data_result.multi_hdf5_wrapper.hdf5_wrappers:
-                round_df = hdf5_wrapper.id_df.groupby(round_id_column, as_index=False).first()
-                push_round_df = round_df[round_df[get_similarity_column(0)]]
-                hdf5_to_test_round_ids[absolute_to_relative_train_test_key(hdf5_wrapper.hdf5_path)] = \
-                    list(push_round_df[round_id_column])
+            _, hdf5_to_test_round_ids = get_hdf5_to_round_ids(load_data_result)
 
         first_file: bool = True
         for hdf5_path in hdf5_paths:
@@ -351,7 +348,7 @@ class HumannessMetrics:
                     round_id_per_nearest_teammate_firing = \
                         round_id_per_nearest_teammate_firing[test_round_id_per_nearest_teammate_firing]
                     round_id_per_nearest_teammate_shot = \
-                        round_id_per_nearest_teammate_shot[test_round_id_per_nearest_teammate_firing]
+                        round_id_per_nearest_teammate_shot[test_round_id_per_nearest_teammate_shot]
                     round_id_per_enemy_visible_no_fov_pat = \
                         round_id_per_enemy_visible_no_fov_pat[test_round_id_per_enemy_visible_no_fov_pat]
                     round_id_per_enemy_visible_fov_pat = \
@@ -368,7 +365,7 @@ class HumannessMetrics:
                     is_ct_per_nearest_teammate_firing = \
                         is_ct_per_nearest_teammate_firing[test_round_id_per_nearest_teammate_firing]
                     is_ct_per_nearest_teammate_shot = \
-                        is_ct_per_nearest_teammate_shot[test_round_id_per_nearest_teammate_firing]
+                        is_ct_per_nearest_teammate_shot[test_round_id_per_nearest_teammate_shot]
                     is_ct_per_enemy_visible_no_fov_pat = \
                         is_ct_per_enemy_visible_no_fov_pat[test_round_id_per_enemy_visible_no_fov_pat]
                     is_ct_per_enemy_visible_fov_pat = \
@@ -385,7 +382,7 @@ class HumannessMetrics:
                     player_id_per_nearest_teammate_firing = \
                         player_id_per_nearest_teammate_firing[test_round_id_per_nearest_teammate_firing]
                     player_id_per_nearest_teammate_shot = \
-                        player_id_per_nearest_teammate_shot[test_round_id_per_nearest_teammate_firing]
+                        player_id_per_nearest_teammate_shot[test_round_id_per_nearest_teammate_shot]
                     player_id_per_enemy_visible_no_fov_pat = \
                         player_id_per_enemy_visible_no_fov_pat[test_round_id_per_enemy_visible_no_fov_pat]
                     player_id_per_enemy_visible_fov_pat = \

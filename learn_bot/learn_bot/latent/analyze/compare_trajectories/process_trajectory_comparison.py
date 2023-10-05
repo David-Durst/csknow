@@ -1,4 +1,4 @@
-from typing import List, Dict, Optional
+from typing import List, Dict, Optional, Tuple
 
 import pandas as pd
 from learn_bot.latent.analyze.comparison_column_names import *
@@ -56,19 +56,7 @@ def set_pd_print_options():
 
 def filter_similarity_for_first_n_test_rounds(loaded_data_result: LoadDataResult, similarity_df: pd.DataFrame,
                                               top_n: int = 300) -> pd.DataFrame:
-    test_plant_states_path = \
-        loaded_data_result.multi_hdf5_wrapper.train_test_split_path.parent / push_only_test_plant_states_file_name
-    test_start_pd = load_hdf5_to_pd(test_plant_states_path)#.iloc[:top_n]
-
-    # convert keys to partial keys used in similarity_df, get round ids for each hdf5
-    hdf5_partial_key_to_round_ids: Dict[str, List[int]] = {}
-    hdf5_keys_series = test_start_pd[hdf5_key_column].str.decode('utf-8')
-    total_round_ids = 0
-    for hdf5_key in hdf5_keys_series.unique():
-        hdf5_partial_key = str(Path(hdf5_key).name)
-        hdf5_partial_key_to_round_ids[hdf5_partial_key] = \
-            list(test_start_pd[hdf5_keys_series == hdf5_key][round_id_column].unique())
-        total_round_ids += len(hdf5_partial_key_to_round_ids[hdf5_partial_key])
+    hdf5_partial_key_to_round_ids, _ = get_hdf5_to_round_ids(loaded_data_result)
 
     # build condition on similarity df
     # start false so can build up ors
@@ -84,6 +72,24 @@ def filter_similarity_for_first_n_test_rounds(loaded_data_result: LoadDataResult
         #        print('test round without match in similarity df')
 
     return similarity_df[valid_hdf5_and_round_id_condition]
+
+
+def get_hdf5_to_round_ids(loaded_data_result) -> Tuple[Dict[str, List[int]], Dict[Path, List[int]]]:
+    test_plant_states_path = \
+        loaded_data_result.multi_hdf5_wrapper.train_test_split_path.parent / push_only_test_plant_states_file_name
+    test_start_pd = load_hdf5_to_pd(test_plant_states_path)  # .iloc[:top_n]
+    # convert keys to partial keys used in similarity_df, get round ids for each hdf5
+    hdf5_partial_key_to_round_ids: Dict[str, List[int]] = {}
+    hdf5_key_to_round_ids: Dict[Path, List[int]] = {}
+    hdf5_keys_series = test_start_pd[hdf5_key_column].str.decode('utf-8')
+    total_round_ids = 0
+    for hdf5_key in hdf5_keys_series.unique():
+        hdf5_partial_key = str(Path(hdf5_key).name)
+        round_ids = list(test_start_pd[hdf5_keys_series == hdf5_key][round_id_column].unique())
+        hdf5_partial_key_to_round_ids[hdf5_partial_key] = round_ids
+        hdf5_key_to_round_ids[Path(hdf5_key)] = round_ids
+        total_round_ids += len(round_ids)
+    return hdf5_partial_key_to_round_ids, hdf5_key_to_round_ids
 
 
 def plot_trajectory_comparison_histograms(similarity_df: pd.DataFrame, config: ComparisonConfig,
