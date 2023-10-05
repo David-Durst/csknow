@@ -16,7 +16,7 @@ class HyperparameterOptions:
     bc_epochs: int = 8
     probabilistic_rollout_epochs: int = 3
     full_rollout_epochs: int = 3
-    batch_size: int = 400
+    batch_size: int = 1024
     num_input_time_steps: int = 1
     learning_rate: float = 4e-5
     weight_decay: float = 0.

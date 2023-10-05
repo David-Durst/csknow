@@ -54,7 +54,7 @@ class TrainType(Enum):
 
 default_hyperparameter_options = HyperparameterOptions()
 hyperparameter_option_range = [HyperparameterOptions(num_input_time_steps=1),
-                               HyperparameterOptions(num_input_time_steps=3, full_rollout_epochs=10),
+                               HyperparameterOptions(num_input_time_steps=3, bc_epochs=0, probabilistic_rollout_epochs=0, full_rollout_epochs=10),
                                HyperparameterOptions(num_input_time_steps=5, bc_epochs=40),
                                HyperparameterOptions(num_input_time_steps=25, bc_epochs=40),
                                HyperparameterOptions(player_mask_type=PlayerMaskType.EveryoneTemporalOnlyMask),
@@ -180,6 +180,8 @@ def train(train_type: TrainType, multi_hdf5_wrapper: MultiHDF5Wrapper,
     # define losses
     optimizer = torch.optim.Adam(model.parameters(), lr=hyperparameter_options.learning_rate,
                                  weight_decay=hyperparameter_options.weight_decay)
+    if load_model_path is not None:
+        optimizer.load_state_dict(model_file['optimizer_state_dict'])
     scaler = torch.cuda.amp.GradScaler()
     #optimizer = torch.optim.SGD(model.parameters(), lr=0.001)
 

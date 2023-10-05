@@ -67,7 +67,8 @@ class MultipleLatentHDF5Dataset(Dataset):
         if self.rollout_steps == 1:
             return self.inner_getitem(idx)
         else:
-            inner_items = [self.inner_getitem(min(i+1, len(self) - 1)) for i in range(idx, idx + self.rollout_steps)]
+            # add 1 as need to go one further during rollout to get last position
+            inner_items = [self.inner_getitem(min(i+1, len(self) - 1)) for i in range(idx, idx + self.rollout_steps + 1)]
             return torch.stack([item[0] for item in inner_items]), \
                 torch.stack([item[1] for item in inner_items]), \
                 torch.stack([item[2] for item in inner_items]), \

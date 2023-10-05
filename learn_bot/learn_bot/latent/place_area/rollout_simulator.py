@@ -29,22 +29,26 @@ class RolloutBatchResult:
     duplicated_last_flattened: torch.Tensor
 
 
+compute_loss_on_all_steps = False
+
 def rollout_simulate(X: torch.Tensor, Y: torch.Tensor, similarity: torch.Tensor, duplicated_last: torch.Tensor,
                      indices: torch.Tensor, model: TransformerNestedHiddenLatentModel,
                      percent_steps_predicted: float) -> RolloutBatchResult:
     round_lengths = get_rollout_round_lengths(indices)
     valid_flattened_indices = []
+    first_valid_per_round_flattened_indices = []
+    last_valid_per_round_flattened_indices = []
     round_start_index = 0
     for round_id in round_lengths.round_ids:
         valid_flattened_indices += list(range(round_start_index,
                                               round_start_index + round_lengths.round_to_length[round_id]))
+        first_valid_per_round_flattened_indices.append(round_start_index)
+        last_valid_per_round_flattened_indices.append(round_start_index + round_lengths.round_to_length[round_id] - 1)
         round_start_index += round_lengths.max_length_per_round
 
     X_flattened = rearrange(X, 'b t d -> (b t) d')
-    # a copy of X_flattened where can accumulate outputs with gradients
-    # want each step to have separate gradients, which X_flattened will be starting point for
-    # this is end for each step with gradients
-    X_flattened_grad = X_flattened.clone()
+    # a copy of X_flattened where can accumulate outputs
+    X_flattened_rollout = X_flattened.clone()
     X_flattened_orig = X_flattened.clone()
     Y_flattened = rearrange(Y, 'b t d -> (b t) d')
     # step assumes one similarity row per round, so just take first row per round
@@ -67,23 +71,35 @@ def rollout_simulate(X: torch.Tensor, Y: torch.Tensor, similarity: torch.Tensor,
         if random() <= percent_steps_predicted or (not had_random and i == round_lengths.max_length_per_round - 1):
             step(X_flattened, similarity_flattened, pred_flattened, model, round_lengths, i, model.nav_data_cuda,
                  convert_to_cpu=False, save_new_pos=i < (round_lengths.max_length_per_round - 1),
-                 rollout_tensor_grad=X_flattened_grad,
-                 pred_untransformed=pred_untransformed, pred_transformed=pred_transformed)
+                 rollout_tensor_grad=X_flattened_rollout,
+                 pred_untransformed=pred_untransformed, pred_transformed=pred_transformed,
+                 compute_loss_on_step=i == 0 or compute_loss_on_all_steps)
             had_random = True
             predicted_flattened_indices += step_flattened_indices
         else:
             pred_flattened[step_flattened_indices] = Y[:, i, :]
 
+    # reenable when want all values rather than just last
     predicted_and_valid_flattened_indices = \
         list(set(valid_flattened_indices).intersection(set(predicted_flattened_indices)))
 
-    return RolloutBatchResult(
-        X_flattened_orig[predicted_and_valid_flattened_indices],
-        X_flattened_grad[predicted_and_valid_flattened_indices],
-        (pred_transformed[predicted_and_valid_flattened_indices],
-         pred_untransformed[predicted_and_valid_flattened_indices]),
-        Y_flattened[predicted_and_valid_flattened_indices],
-        duplicated_last_flattened[predicted_and_valid_flattened_indices]
-    )
+    if compute_loss_on_all_steps:
+        return RolloutBatchResult(
+            X_flattened_orig[predicted_and_valid_flattened_indices],
+            X_flattened_rollout[predicted_and_valid_flattened_indices],
+            (pred_transformed[predicted_and_valid_flattened_indices],
+             pred_untransformed[predicted_and_valid_flattened_indices]),
+            Y_flattened[predicted_and_valid_flattened_indices],
+            duplicated_last_flattened[predicted_and_valid_flattened_indices]
+        )
+    else:
+        return RolloutBatchResult(
+            X_flattened_orig[last_valid_per_round_flattened_indices],
+            X_flattened_rollout[last_valid_per_round_flattened_indices],
+            (pred_transformed[first_valid_per_round_flattened_indices],
+             pred_untransformed[first_valid_per_round_flattened_indices]),
+            Y_flattened[first_valid_per_round_flattened_indices],
+            duplicated_last_flattened[first_valid_per_round_flattened_indices]
+        )
 
 

@@ -103,7 +103,8 @@ def step(rollout_tensor: torch.Tensor, all_similarity_tensor: torch.Tensor, pred
          model: TransformerNestedHiddenLatentModel, round_lengths: RoundLengths, step_index: int, nav_data: NavData,
          player_enable_mask: PlayerEnableMask = None, fixed_pred: bool = False, convert_to_cpu: bool = True,
          save_new_pos: bool = True, rollout_tensor_grad: Optional[torch.Tensor] = None,
-         pred_transformed: Optional[torch.Tensor] = None, pred_untransformed: Optional[torch.Tensor] = None):
+         pred_transformed: Optional[torch.Tensor] = None, pred_untransformed: Optional[torch.Tensor] = None,
+         compute_loss_on_step: bool = True):
     # skip rounds that are over, I know we have space, but wasteful as just going to filter out extra rows later
     # and cause problems as don't have non-computed input features (like visibility) at those time steps
     # and will crash open loop as everyone is 0
@@ -124,6 +125,8 @@ def step(rollout_tensor: torch.Tensor, all_similarity_tensor: torch.Tensor, pred
         temperature = torch.Tensor([1.]).to(CUDA_DEVICE_STR)
         pred = model(input_tensor, similarity_tensor, temperature)
         pred_prob = get_untransformed_outputs(pred)
+        if not compute_loss_on_step:
+            pred_prob = pred_prob.detach()
         new_pred_tensor = rearrange(pred_prob, 'b p t d -> b (p t d)')
         if convert_to_cpu:
             pred_tensor[rollout_tensor_input_indices] = new_pred_tensor.to(CPU_DEVICE_STR)
@@ -131,7 +134,8 @@ def step(rollout_tensor: torch.Tensor, all_similarity_tensor: torch.Tensor, pred
             pred_tensor[rollout_tensor_input_indices] = new_pred_tensor
             # when want to save model outputs exactly
             if pred_transformed is not None:
-                pred_transformed[rollout_tensor_input_indices] = get_transformed_outputs(pred)
+                pred_transformed[rollout_tensor_input_indices] = \
+                    get_transformed_outputs(pred) if compute_loss_on_step else get_transformed_outputs(pred).detach()
             if pred_untransformed is not None:
                 pred_untransformed[rollout_tensor_input_indices] = pred_prob
         nested_pred_labels = get_label_outputs(pred)
