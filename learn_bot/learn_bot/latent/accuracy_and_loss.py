@@ -16,7 +16,7 @@ from torch import nn
 
 # https://stackoverflow.com/questions/65192475/pytorch-logsoftmax-vs-softmax-for-crossentropyloss
 # no need to do softmax for classification output
-cross_entropy_loss_fn = nn.CrossEntropyLoss(reduction='none')
+cross_entropy_loss_fn: Optional[nn.CrossEntropyLoss] = None
 #huber_loss_fn = nn.HuberLoss(reduction='none')
 mse_loss_fn = nn.MSELoss(reduction='none')
 
@@ -70,7 +70,8 @@ class LatentLosses:
 
 # https://discuss.pytorch.org/t/how-to-combine-multiple-criterions-to-a-loss-function/348/4
 def compute_loss(model: TransformerNestedHiddenLatentModel, pred, Y, X_orig: Optional, X_rollout: Optional,
-                 duplicated_last, num_players) -> LatentLosses:
+                 duplicated_last, num_players, weight_loss: bool) -> LatentLosses:
+    global cross_entropy_loss_fn
     pred_transformed = get_transformed_outputs(pred)
 
     losses = LatentLosses()
@@ -101,9 +102,26 @@ def compute_loss(model: TransformerNestedHiddenLatentModel, pred, Y, X_orig: Opt
     #losses.cat_loss += cat_loss
     losses_to_cat = []
     losses_to_float = []
+
+    # weight stopping the most
+    weights = torch.tensor([50. if i == 0 else 1. for i in range(valid_pred_transformed.shape[1])],
+                           device=valid_Y_transformed.device)
+    if weight_loss:
+        weight_sum = torch.sum(weights)
+    else:
+        weight_sum = 1.
+    if cross_entropy_loss_fn is None:
+        if weight_loss:
+            cross_entropy_loss_fn = nn.CrossEntropyLoss(reduction='none', weight=weights)
+            #unweighted_cross_entropy_loss_fn = nn.CrossEntropyLoss(reduction='none')
+        else:
+            cross_entropy_loss_fn = nn.CrossEntropyLoss(reduction='none')
+
     if valid_Y_transformed[~valid_duplicated].shape[0] > 0:
         cat_loss = cross_entropy_loss_fn(valid_pred_transformed[~valid_duplicated],
-                                         valid_Y_transformed[~valid_duplicated])
+                                         valid_Y_transformed[~valid_duplicated])# / weight_sum
+        #unweighted_cat_loss = unweighted_cross_entropy_loss_fn(valid_pred_transformed[~valid_duplicated],
+        #                                 valid_Y_transformed[~valid_duplicated])
         if torch.isnan(cat_loss).any():
             print('bad cat loss')
         losses.cat_loss = torch.mean(cat_loss)
@@ -122,7 +140,7 @@ def compute_loss(model: TransformerNestedHiddenLatentModel, pred, Y, X_orig: Opt
             losses_to_float.append(float_loss)
     if valid_Y_transformed[valid_duplicated].shape[0] > 0.:
         duplicated_last_cat_loss = cross_entropy_loss_fn(valid_pred_transformed[valid_duplicated],
-                                                         valid_Y_transformed[valid_duplicated])
+                                                         valid_Y_transformed[valid_duplicated]) / weight_sum
         if torch.isnan(duplicated_last_cat_loss).any():
             print('bad cat loss')
         losses.duplicate_last_cat_loss = torch.mean(duplicated_last_cat_loss)
