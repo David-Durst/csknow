@@ -54,7 +54,7 @@ class TrainType(Enum):
 
 default_hyperparameter_options = HyperparameterOptions()
 hyperparameter_option_range = [HyperparameterOptions(num_input_time_steps=1),
-                               HyperparameterOptions(num_input_time_steps=3, weight_loss=True),
+                               HyperparameterOptions(num_input_time_steps=3, weight_not_move_loss=5.),
                                HyperparameterOptions(num_input_time_steps=3, full_rollout_epochs=10),
                                HyperparameterOptions(num_input_time_steps=5, bc_epochs=40),
                                HyperparameterOptions(num_input_time_steps=25, bc_epochs=40),
@@ -274,7 +274,7 @@ def train(train_type: TrainType, multi_hdf5_wrapper: MultiHDF5Wrapper,
                         sys.exit(0)
                     batch_loss = compute_loss(model, pred_flattened, Y_flattened, X_flattened_orig, X_flattened_rollout,
                                               duplicated_last_flattened, model.num_players,
-                                              hyperparameter_options.weight_loss)
+                                              hyperparameter_options.weight_not_move_loss)
                     # uncomment here and below causes memory issues
                     cumulative_loss += batch_loss
                     #losses.append(batch_loss.total_loss.tolist()[0])
