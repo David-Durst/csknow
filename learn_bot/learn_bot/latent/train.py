@@ -1,5 +1,6 @@
 # https://pytorch.org/tutorials/beginner/basics/quickstart_tutorial.html
 import os
+import random
 import time
 from enum import Enum
 from typing import Dict
@@ -54,7 +55,8 @@ class TrainType(Enum):
 
 default_hyperparameter_options = HyperparameterOptions()
 hyperparameter_option_range = [HyperparameterOptions(num_input_time_steps=1),
-                               HyperparameterOptions(num_input_time_steps=3, weight_not_move_loss=5.),
+                               HyperparameterOptions(num_input_time_steps=3,  #weight_not_move_loss=5.,
+                                                     drop_history_probability=0.4),
                                HyperparameterOptions(num_input_time_steps=3, full_rollout_epochs=10),
                                HyperparameterOptions(num_input_time_steps=5, bc_epochs=40),
                                HyperparameterOptions(num_input_time_steps=25, bc_epochs=40),
@@ -242,6 +244,10 @@ def train(train_type: TrainType, multi_hdf5_wrapper: MultiHDF5Wrapper,
                 X_flattened_orig = None
                 X_flattened_rollout = None
                 with autocast(device, enabled=True):
+                    if hyperparameter_options.drop_history_probability is not None and \
+                            random.random() < hyperparameter_options.drop_history_probability:
+                        model.drop_history = True
+
                     if hyperparameter_options.get_rollout_steps(total_epochs) == 1:
                         pred = model(X, similarity, temperature_gpu)
                         pred_flattened = pred
@@ -258,6 +264,7 @@ def train(train_type: TrainType, multi_hdf5_wrapper: MultiHDF5Wrapper,
                         duplicated_last_flattened = rollout_batch_result.duplicated_last_flattened
 
                     model.noise_var = -1.
+                    model.drop_history = False
                     if torch.isnan(X).any():
                         print('bad X')
                         sys.exit(0)

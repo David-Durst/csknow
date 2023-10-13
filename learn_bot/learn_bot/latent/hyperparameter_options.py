@@ -26,6 +26,7 @@ class HyperparameterOptions:
     rollout_seconds: Optional[float] = 2.
     player_mask_type: PlayerMaskType = PlayerMaskType.NoMask
     weight_not_move_loss: Optional[float] = None
+    drop_history_probability: Optional[float] = None
     comment: str = ""
 
     def __str__(self):
@@ -33,7 +34,8 @@ class HyperparameterOptions:
                f"b_{self.batch_size}_it_{self.num_input_time_steps}_" \
                f"lr_{self.learning_rate}_wd_{self.weight_decay}_" \
                f"l_{self.layers}_h_{self.heads}_n_{self.noise_var}_" \
-               f"ros_{self.rollout_seconds}_m_{str(self.player_mask_type)}_w_{self.weight_not_move_loss}_c_{self.comment}"
+               f"ros_{self.rollout_seconds}_m_{str(self.player_mask_type)}_" \
+               f"w_{self.weight_not_move_loss}_dh_{self.drop_history_probability}_c_{self.comment}"
 
     def get_checkpoints_path(self) -> Path:
         return checkpoints_path / str(self)

@@ -135,8 +135,11 @@ class TransformerNestedHiddenLatentModel(nn.Module):
         num_input_temporal_tokens = self.num_players * self.num_input_time_steps
         self.input_per_player_mask_cpu = torch.zeros([num_input_temporal_tokens, num_input_temporal_tokens],
                                                      dtype=torch.bool)
+        self.input_per_player_no_history_mask_cpu = torch.zeros([self.num_players, self.num_players],
+                                                                dtype=torch.bool)
         if player_mask_type != PlayerMaskType.NoMask:
             build_per_player_mask(self.input_per_player_mask_cpu, num_input_temporal_tokens, self.num_input_time_steps)
+            build_per_player_mask(self.input_per_player_no_history_mask_cpu, self.num_players, 1)
 
         num_output_temporal_tokens = self.num_players * self.num_output_time_steps
         self.output_per_player_mask_cpu = torch.zeros([num_output_temporal_tokens, num_output_temporal_tokens],
@@ -152,6 +155,7 @@ class TransformerNestedHiddenLatentModel(nn.Module):
         )
 
         self.noise_var = -1.
+        self.drop_history = False
 
         self.d2_min_cpu = torch.tensor(d2_min)
         self.d2_max_cpu = torch.tensor(d2_max)
@@ -310,22 +314,29 @@ class TransformerNestedHiddenLatentModel(nn.Module):
         batch_temporal_positional_encoding = self.temporal_positional_encoding.repeat([x.shape[0], 1, 1]) \
             .to(x.device.type)
         x_temporal_encoded_batch_player_flattened = x_batch_player_flattened + batch_temporal_positional_encoding
-        # next flatten all tokens into on sequence per batch. using temporal_mask to ensure only comparing tokens
-        # from same players
-        x_temporal_encoded_player_time_flattened = rearrange(x_temporal_encoded_batch_player_flattened,
-                                                             "(b p) t d -> b (p t) d", p=self.num_players,
-                                                             t=self.num_input_time_steps)
-        x_temporal_embedded_player_time_flattened = \
-            self.temporal_transformer_encoder(x_temporal_encoded_player_time_flattened,
-                                              mask=self.input_per_player_mask_cpu.to(x.device.type))
+        if self.drop_history:
+            x_temporal_encoded_player_time_flattened = rearrange(x_temporal_encoded_batch_player_flattened[:, 0, :],
+                                                                 "(b p) d -> b p d", p=self.num_players)
+            x_temporal_embedded_player_time_flattened = \
+                self.temporal_transformer_encoder(x_temporal_encoded_player_time_flattened,
+                                                  mask=self.input_per_player_no_history_mask_cpu.to(x.device.type))
+        else:
+            # next flatten all tokens into on sequence per batch. using temporal_mask to ensure only comparing tokens
+            # from same players
+            x_temporal_encoded_player_time_flattened = rearrange(x_temporal_encoded_batch_player_flattened,
+                                                                 "(b p) t d -> b (p t) d", p=self.num_players,
+                                                                 t=self.num_input_time_steps)
+            x_temporal_embedded_player_time_flattened = \
+                self.temporal_transformer_encoder(x_temporal_encoded_player_time_flattened,
+                                                  mask=self.input_per_player_mask_cpu.to(x.device.type))
         # take last token per player
         x_temporal_embedded = rearrange(x_temporal_embedded_player_time_flattened, "b (p t) d -> b p t d",
-                                        p=self.num_players, t=self.num_input_time_steps)
-        if self.num_output_time_steps <= self.num_input_time_steps:
+                                        p=self.num_players, t=1 if self.drop_history else self.num_input_time_steps)
+        if self.num_output_time_steps <= self.num_input_time_steps and not self.drop_history:
             x_temporal_embedded_flattened = rearrange(x_temporal_embedded[:, :, 0:self.num_output_time_steps, :],
                                                       "b p t d -> b (p t) d")
         else:
-            x_temporal_embedded_repeated = repeat(x_temporal_embedded[:, :, 0:self.num_output_time_steps, :],
+            x_temporal_embedded_repeated = repeat(x_temporal_embedded[:, :, [0], :],
                                                   "b p t d -> b p (t repeat) d", repeat=self.num_output_time_steps)
             x_temporal_embedded_flattened = rearrange(x_temporal_embedded_repeated, "b p t d -> b (p t) d")
 
@@ -337,12 +348,12 @@ class TransformerNestedHiddenLatentModel(nn.Module):
         tgt_mask = self.generate_tgt_mask(x.device.type)
 
         x_pos_encoded_no_noise = self.encode_pos(x_pos, enable_noise=False)
-        if self.num_output_time_steps <= self.num_input_time_steps:
+        if self.num_output_time_steps <= self.num_input_time_steps and not self.drop_history:
             x_gathered_no_noise = rearrange(
                 torch.cat([x_pos_encoded_no_noise, x_crosshair, x_non_pos], -1)[:, :, 0:self.num_output_time_steps, :],
                 "b p t d -> b (p t) d")
         else:
-            x_gathered_no_noise_repeated = repeat(torch.cat([x_pos_encoded_no_noise, x_crosshair, x_non_pos], -1),
+            x_gathered_no_noise_repeated = repeat(torch.cat([x_pos_encoded_no_noise, x_crosshair, x_non_pos], -1)[:, :, [0], :],
                                                   "b p t d -> b p (t repeat) d", repeat=self.num_output_time_steps)
             x_gathered_no_noise = rearrange(x_gathered_no_noise_repeated, "b p t d -> b (p t) d")
         x_embedded_no_noise = self.embedding_model(x_gathered_no_noise)
