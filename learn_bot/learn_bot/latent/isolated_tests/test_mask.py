@@ -1,0 +1,48 @@
+from torch import nn
+import torch
+
+width = 10
+num_heads = 2
+num_layers = 4
+transformer_encoder_layer = nn.TransformerEncoderLayer(d_model=width, nhead=num_heads, batch_first=True)
+transformer_encoder = nn.TransformerEncoder(transformer_encoder_layer, num_layers=num_layers,
+                                            enable_nested_tensor=False)
+transformer_model = nn.Transformer(d_model=width, nhead=num_heads, num_encoder_layers=num_layers,
+                                   num_decoder_layers=num_layers, custom_encoder=transformer_encoder, batch_first=True)
+
+transformer_model.eval()
+num_tokens = 4
+in0 = torch.zeros(1, num_tokens, width)
+in1 = in0.clone()
+in1[0, 0, 0] = 1.
+
+src_tgt_mask = torch.zeros(num_tokens, num_tokens, dtype=torch.bool)
+for i in range(num_tokens):
+    for j in range(num_tokens):
+        src_tgt_mask[i, j] = i != j
+
+enc_out0 = transformer_encoder(in0, mask=src_tgt_mask)
+enc_out0_duplicate = transformer_encoder(in0, mask=src_tgt_mask)
+enc_out1 = transformer_encoder(in1, mask=src_tgt_mask)
+print("enc_out0 equals enc_out0_duplicate")
+print(torch.equal(enc_out0, enc_out0_duplicate))
+print("enc_out0")
+print(enc_out0)
+print("enc_out1")
+print(enc_out1)
+print("enc_out0 == enc_out1")
+print(enc_out0 == enc_out1)
+print(torch.sum(enc_out0 == enc_out1))
+
+enc_dec_out0 = transformer_model(in0, in0, src_mask=src_tgt_mask, tgt_mask=src_tgt_mask)
+enc_dec_out0_duplicate = transformer_model(in0, in0, src_mask=src_tgt_mask, tgt_mask=src_tgt_mask)
+enc_dec_out1 = transformer_model(in1, in0, src_mask=src_tgt_mask, tgt_mask=src_tgt_mask)
+print("enc_dec_out0 equals enc_dec_out0_duplicate")
+print(torch.equal(enc_dec_out0, enc_dec_out0_duplicate))
+print("enc_dec_out0")
+print(enc_dec_out0)
+print("enc_dec_out1")
+print(enc_dec_out1)
+print("enc_dec_out0 == enc_dec_out1")
+print(enc_dec_out0 == enc_dec_out1)
+print(torch.sum(enc_dec_out0 == enc_dec_out1))
