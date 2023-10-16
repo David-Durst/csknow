@@ -336,6 +336,12 @@ class TransformerNestedHiddenLatentModel(nn.Module):
             combined_input_mask = combine_padding_sequence_masks(self.input_per_player_mask_cpu.to(x.device.type),
                                                                  dead_gathered_input, self.num_heads)
             print(f"input to temporal transformer {torch.sum(x_temporal_encoded_player_time_flattened[0], axis=1)}")
+            tmp_temp_input = x_temporal_encoded_player_time_flattened[[0]]
+            tmp_temp_input_mod = tmp_temp_input.clone()
+            tmp_temp_input_mod[0, 0, 0] += 100.
+            tmp_temp_output = self.temporal_transformer_encoder(tmp_temp_input, mask=combined_input_mask[0:self.num_heads])
+            tmp_temp_output_mod = self.temporal_transformer_encoder(tmp_temp_input_mod, mask=combined_input_mask[0:self.num_heads])
+
             x_temporal_embedded_player_time_flattened = \
                 self.temporal_transformer_encoder(x_temporal_encoded_player_time_flattened, mask=combined_input_mask)
             print(f"output of temporal transformer {torch.sum(x_temporal_embedded_player_time_flattened[0], axis=1)}")

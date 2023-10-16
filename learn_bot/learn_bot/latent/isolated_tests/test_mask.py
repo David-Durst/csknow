@@ -41,6 +41,13 @@ for i in range(num_tokens):
         src_tgt_enemy_mask[i, j] = (i // 2) != (j // 2)
 # isolate players 0 and 1, combine 2 and 3 as 0 is dead, 1 is only one alive on team, 2 and 3 alive on same team
 combined_enemy_mask = combine_padding_sequence_masks(src_tgt_enemy_mask, key_mask, num_heads)
+# disables players 2 for 3, 3 for 2, 0 for 1, and 1 for 0
+src_tgt_teammate_mask = torch.zeros(num_tokens, num_tokens, dtype=torch.bool)
+for i in range(num_tokens):
+    for j in range(num_tokens):
+        src_tgt_teammate_mask[i, j] = (i // 2) == (j // 2) and i != j
+# isolate players 0 and 1, combine 2 and 3 as 0 is dead, 1 is only one alive on team, 2 and 3 alive on same team
+combined_teammate_mask = combine_padding_sequence_masks(src_tgt_teammate_mask, key_mask, num_heads)
 
 print_matrix_values = False
 
@@ -73,6 +80,22 @@ if print_matrix_values:
 print("enc_enemy_out0 == enc_enemy_out3")
 print(enc_enemy_out0 == enc_enemy_out3)
 print(torch.sum(enc_enemy_out0 == enc_enemy_out3))
+
+print("")
+
+enc_teammate_out0 = transformer_encoder(in0, mask=combined_teammate_mask)
+enc_teammate_out0_duplicate = transformer_encoder(in0, mask=combined_teammate_mask)
+enc_teammate_out3 = transformer_encoder(in3, mask=combined_teammate_mask)
+print("enc_teammate_out0 equals enc_teammate_out0_duplicate")
+print(torch.equal(enc_teammate_out0, enc_teammate_out0_duplicate))
+if print_matrix_values:
+    print("enc_teammate_out0")
+    print(enc_teammate_out0)
+    print("enc_teammate_out3")
+    print(enc_teammate_out3)
+print("enc_teammate_out0 == enc_teammate_out3")
+print(enc_teammate_out0 == enc_teammate_out3)
+print(torch.sum(enc_teammate_out0 == enc_teammate_out3))
 
 print("")
 
@@ -151,3 +174,7 @@ print("src_tgt_enemy_mask")
 print(src_tgt_enemy_mask)
 print("combined enemy mask")
 print(combined_enemy_mask)
+print("src_tgt_teammate_mask")
+print(src_tgt_teammate_mask)
+print("combined teammate mask")
+print(combined_teammate_mask)
