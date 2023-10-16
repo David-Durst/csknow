@@ -2,6 +2,7 @@ import torch
 from einops import rearrange
 from torch.utils.data import DataLoader
 
+from learn_bot.latent.engagement.column_names import max_enemies
 from learn_bot.latent.load_model import load_model_file
 from learn_bot.latent.place_area.load_data import LoadDataResult
 from learn_bot.latent.place_area.simulator import limit_to_every_nth_row
@@ -26,7 +27,14 @@ def test_model_mask(load_data_result: LoadDataResult, model_name: str):
         for batch, (X, Y, similarity) in enumerate(dataloader):
             X_orig = X[[0]]
             X_mod = X_orig.clone()
-            X_mod[0, loaded_model.model.players_pos_columns[0]] += 100.
+            alive_players = (X_orig[0, loaded_model.model.alive_columns] == 1.).nonzero()[:, 0].tolist()
+            alive_ct = [i for i in alive_players if i < max_enemies]
+            alive_t = [i for i in alive_players if i >= max_enemies]
+            # make sure 2 players alive on ct teams so can measure masking on ct teammate
+            if len(alive_ct) < 2:
+                continue
+            pos_column_index = alive_ct[0] * loaded_model.model.num_dim
+            X_mod[0, loaded_model.model.players_pos_columns[pos_column_index]] += 100.
             similarity_one = similarity[[0]]
             pred_orig = get_transformed_outputs(loaded_model.model(X_orig, similarity_one, temperature))
             pred_mod = get_transformed_outputs(loaded_model.model(X_mod, similarity_one, temperature))
@@ -35,12 +43,14 @@ def test_model_mask(load_data_result: LoadDataResult, model_name: str):
             tokens_per_player = pred_orig.shape[2] * pred_orig.shape[3]
             equal_players = equal_tokens // tokens_per_player
             masked_all_players = equal_players == num_players - 1
+            # if masking out teammates, so teammates of changed ct player should be same
             masked_teammates = (equal_players == num_players // 2) and \
-                               torch.equal(pred_orig[0, num_players // 2, 0], pred_mod[0, num_players // 2, 0])
+                               torch.equal(pred_orig[0, alive_ct[1], 0], pred_mod[0, alive_ct[1], 0])
+            # if maksing out enemies, so enemies of changed ct player should be same
             masked_enemies = (equal_players == num_players // 2) and \
-                               torch.equal(pred_orig[0, 0, 0], pred_mod[0, 0, 0])
-            print(f'masked all players {masked_all_players}, masked teammates {masked_teammates}, '
-                  f'masked enemies {masked_enemies}')
+                               torch.equal(pred_orig[0, alive_t[0], 0], pred_mod[0, alive_t[0], 0])
+            print(f'equal players {equal_players}, masked all players {masked_all_players}, '
+                  f'masked teammates {masked_teammates}, masked enemies {masked_enemies}')
             break
 
 
