@@ -13,6 +13,7 @@ now_str = now.strftime("%m_%d_%Y__%H_%M_%S")
 
 @dataclass
 class HyperparameterOptions:
+    internal_width: int = 128
     bc_epochs: int = 25
     probabilistic_rollout_epochs: int = 0
     full_rollout_epochs: int = 0
@@ -30,7 +31,8 @@ class HyperparameterOptions:
     comment: str = ""
 
     def __str__(self):
-        return f"{now_str}_bc_{self.bc_epochs}_pr_{self.probabilistic_rollout_epochs}_fr_{self.full_rollout_epochs}_" \
+        return f"{now_str}_iw_{self.internal_width}_" \
+               f"bc_{self.bc_epochs}_pr_{self.probabilistic_rollout_epochs}_fr_{self.full_rollout_epochs}_" \
                f"b_{self.batch_size}_it_{self.num_input_time_steps}_" \
                f"lr_{self.learning_rate}_wd_{self.weight_decay}_" \
                f"l_{self.layers}_h_{self.heads}_n_{self.noise_var}_" \

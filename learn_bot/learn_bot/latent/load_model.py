@@ -87,8 +87,8 @@ def load_model_file(loaded_data: LoadDataResult, use_test_data_only: bool = Fals
                                                hdf5_wrappers[0].sample_df)
 
     hyperparameter_options: HyperparameterOptions = model_file['hyperparameter_options']
-    model = TransformerNestedHiddenLatentModel(model_file['column_transformers'], 2 * max_enemies,
-                                               hyperparameter_options.num_input_time_steps,
+    model = TransformerNestedHiddenLatentModel(model_file['column_transformers'], hyperparameter_options.internal_width,
+                                               2 * max_enemies, hyperparameter_options.num_input_time_steps,
                                                num_radial_ticks, num_radial_bins, 2, 4,
                                                hyperparameter_options.player_mask_type)
     model.load_state_dict(model_file['model_state_dict'])

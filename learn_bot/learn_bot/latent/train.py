@@ -157,8 +157,8 @@ def train(train_type: TrainType, multi_hdf5_wrapper: MultiHDF5Wrapper,
         column_transformers = IOColumnTransformers(place_area_input_column_types, radial_vel_output_column_types,
                                                    multi_hdf5_wrapper.train_hdf5_wrappers[0].sample_df)
         # plus 1 on future ticks to include present tick
-        model = TransformerNestedHiddenLatentModel(column_transformers, 2 * max_enemies,
-                                                   hyperparameter_options.num_input_time_steps,
+        model = TransformerNestedHiddenLatentModel(column_transformers, hyperparameter_options.internal_width,
+                                                   2 * max_enemies, hyperparameter_options.num_input_time_steps,
                                                    num_radial_ticks, num_radial_bins,
                                                    hyperparameter_options.layers, hyperparameter_options.heads,
                                                    hyperparameter_options.player_mask_type)

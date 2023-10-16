@@ -60,17 +60,18 @@ class PlayerMaskType(Enum):
 
 
 class TransformerNestedHiddenLatentModel(nn.Module):
-    internal_width = 128
+    internal_width: int
     cts: IOColumnTransformers
     output_layers: List[nn.Module]
     latent_to_distributions: Callable
     noise_var: float
 
-    def __init__(self, cts: IOColumnTransformers, num_players: int, num_input_time_steps: int,
+    def __init__(self, cts: IOColumnTransformers, internal_width: int, num_players: int, num_input_time_steps: int,
                  num_output_time_steps: int, num_radial_bins: int,
                  num_layers: int, num_heads: int, player_mask_type: PlayerMaskType):
         super(TransformerNestedHiddenLatentModel, self).__init__()
         self.cts = cts
+        self.internal_width = internal_width
         # transformed/transformed doesn't matter since no angles and all categorical variables are
         # "distirbution" type meaning pre one hot encoded
         all_c4_columns_ranges = range_list_to_index_list(cts.get_name_ranges(True, True, contained_str="c4"))
