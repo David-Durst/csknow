@@ -382,7 +382,7 @@ class TransformerNestedHiddenLatentModel(nn.Module):
         if self.player_mask_type == PlayerMaskType.EveryoneFullMask or \
                 self.player_mask_type == PlayerMaskType.TeammateFullMask:
             combined_output_mask = combine_padding_sequence_masks(
-                self.output_per_player_mask_cpu.to(x.device.type), dead_gathered_input, self.num_heads)
+                self.output_per_player_mask_cpu.to(x.device.type), dead_gathered_output, self.num_heads)
             transformed = self.spatial_transformer_encoder(x_temporal_embedded_flattened, mask=combined_output_mask)
         else:
             transformed = self.spatial_transformer_encoder(x_temporal_embedded_flattened,

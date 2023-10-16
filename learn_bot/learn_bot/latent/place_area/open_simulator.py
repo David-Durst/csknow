@@ -1,4 +1,5 @@
 import os
+import sys
 from dataclasses import field, dataclass
 from enum import IntEnum
 from math import floor
@@ -369,6 +370,9 @@ perform_analysis = True
 vis_player_mask_config = PlayerMaskConfig.ALL
 
 if __name__ == "__main__":
+    if len(sys.argv) > 2:
+        perform_analysis = sys.argv[2] == "True"
+
     nav_data = NavData(CUDA_DEVICE_STR)
 
     load_data_options.custom_limit_fn = limit_to_every_nth_row
