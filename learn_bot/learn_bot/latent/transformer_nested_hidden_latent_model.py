@@ -85,6 +85,7 @@ class TransformerNestedHiddenLatentModel(nn.Module):
         #                         for team_str in team_strs for player_index in range(max_enemies)]
         self.num_players = len(players_columns)
         self.num_dim = 3
+        self.num_heads = num_heads
 
         all_players_pos_columns = get_player_columns_by_str(cts, "player pos")
         all_players_pos_columns_tensor = torch.IntTensor(all_players_pos_columns)
@@ -326,10 +327,12 @@ class TransformerNestedHiddenLatentModel(nn.Module):
 
         # figure out alive and dead for masking out dead ploayers
         alive_gathered = x[:, self.alive_columns]
-        alive_gathered_input_temporal = repeat(alive_gathered, 'b p -> b (p repeat)', repeat=self.num_output_time_steps)
-        alive_gathered_output_temporal = repeat(alive_gathered, 'b p -> b (p repeat)', repeat=self.num_output_time_steps)
-        #'b p i -> b (p i)')
-        dead_gathered = alive_gathered_temporal < 0.1
+        alive_gathered_input_temporal = repeat(alive_gathered, 'b p -> b (p repeat)',
+                                               repeat=self.num_input_time_steps)
+        dead_gathered_input = alive_gathered_input_temporal < 0.1
+        alive_gathered_output_temporal = repeat(alive_gathered, 'b p -> b (p repeat)',
+                                                repeat=self.num_output_time_steps)
+        dead_gathered_output = alive_gathered_output_temporal < 0.1
 
         # apply temporal encoder to get one token per player
         # need to flatten first across batch/player to do temporal positional encoding per player
@@ -340,18 +343,20 @@ class TransformerNestedHiddenLatentModel(nn.Module):
         if self.drop_history:
             x_temporal_encoded_player_time_flattened = rearrange(x_temporal_encoded_batch_player_flattened[:, 0, :],
                                                                  "(b p) d -> b p d", p=self.num_players)
+            combined_input_mask = combine_padding_sequence_masks(
+                self.input_per_player_no_history_mask_cpu.to(x.device.type), dead_gathered_input, self.num_heads)
             x_temporal_embedded_player_time_flattened = \
-                self.temporal_transformer_encoder(x_temporal_encoded_player_time_flattened,
-                                                  mask=self.input_per_player_no_history_mask_cpu.to(x.device.type))
+                self.temporal_transformer_encoder(x_temporal_encoded_player_time_flattened, mask=combined_input_mask)
         else:
             # next flatten all tokens into on sequence per batch. using temporal_mask to ensure only comparing tokens
             # from same players
             x_temporal_encoded_player_time_flattened = rearrange(x_temporal_encoded_batch_player_flattened,
                                                                  "(b p) t d -> b (p t) d", p=self.num_players,
                                                                  t=self.num_input_time_steps)
+            combined_input_mask = combine_padding_sequence_masks(self.input_per_player_mask_cpu.to(x.device.type),
+                                                                 dead_gathered_input, self.num_heads)
             x_temporal_embedded_player_time_flattened = \
-                self.temporal_transformer_encoder(x_temporal_encoded_player_time_flattened,
-                                                  mask=self.input_per_player_mask_cpu.to(x.device.type))
+                self.temporal_transformer_encoder(x_temporal_encoded_player_time_flattened, mask=combined_input_mask)
         # take last token per player
         x_temporal_embedded = rearrange(x_temporal_embedded_player_time_flattened, "b (p t) d -> b p t d",
                                         p=self.num_players, t=1 if self.drop_history else self.num_input_time_steps)
@@ -363,29 +368,25 @@ class TransformerNestedHiddenLatentModel(nn.Module):
                                                   "b p t d -> b p (t repeat) d", repeat=self.num_output_time_steps)
             x_temporal_embedded_flattened = rearrange(x_temporal_embedded_repeated, "b p t d -> b (p t) d")
 
-        tgt_mask = self.generate_tgt_mask(x.device.type)
-
-        x_pos_encoded_no_noise = self.encode_pos(x_pos, enable_noise=False)
-        if self.num_output_time_steps <= self.num_input_time_steps and not self.drop_history:
-            x_gathered_no_noise = rearrange(
-                torch.cat([x_pos_encoded_no_noise, x_crosshair, x_non_pos], -1)[:, :, 0:self.num_output_time_steps, :],
-                "b p t d -> b (p t) d")
-        else:
-            x_gathered_no_noise_repeated = repeat(torch.cat([x_pos_encoded_no_noise, x_crosshair, x_non_pos], -1)[:, :, [0], :],
-                                                  "b p t d -> b p (t repeat) d", repeat=self.num_output_time_steps)
-            x_gathered_no_noise = rearrange(x_gathered_no_noise_repeated, "b p t d -> b (p t) d")
-        x_embedded_no_noise = self.embedding_model(x_gathered_no_noise)
+        #x_pos_encoded_no_noise = self.encode_pos(x_pos, enable_noise=False)
+        #if self.num_output_time_steps <= self.num_input_time_steps and not self.drop_history:
+        #    x_gathered_no_noise = rearrange(
+        #        torch.cat([x_pos_encoded_no_noise, x_crosshair, x_non_pos], -1)[:, :, 0:self.num_output_time_steps, :],
+        #        "b p t d -> b (p t) d")
+        #else:
+        #    x_gathered_no_noise_repeated = repeat(torch.cat([x_pos_encoded_no_noise, x_crosshair, x_non_pos], -1)[:, :, [0], :],
+        #                                          "b p t d -> b p (t repeat) d", repeat=self.num_output_time_steps)
+        #    x_gathered_no_noise = rearrange(x_gathered_no_noise_repeated, "b p t d -> b (p t) d")
+        #x_embedded_no_noise = self.embedding_model(x_gathered_no_noise)
 
         if self.player_mask_type == PlayerMaskType.EveryoneFullMask or \
                 self.player_mask_type == PlayerMaskType.TeammateFullMask:
-            output_per_player_mask = self.output_per_player_mask_cpu.to(x.device.type)
-            tgt_mask = tgt_mask + (torch.where(output_per_player_mask, -1. * math.inf, 0.))
-            transformed = self.spatial_transformer_encoder(x_temporal_embedded_flattened, x_embedded_no_noise,
-                                                           tgt_mask=tgt_mask,
-                                                           src_mask=output_per_player_mask, memory_mask=output_per_player_mask)
+            combined_output_mask = combine_padding_sequence_masks(
+                self.output_per_player_mask_cpu.to(x.device.type), dead_gathered_input, self.num_heads)
+            transformed = self.spatial_transformer_encoder(x_temporal_embedded_flattened, mask=combined_output_mask)
         else:
-            transformed = self.spatial_transformer_encoder(x_temporal_embedded_flattened, x_embedded_no_noise,
-                                                           key_padding_mask=dead_gathered)
+            transformed = self.spatial_transformer_encoder(x_temporal_embedded_flattened,
+                                                           src_key_padding_mask=dead_gathered_output)
         transformed_nested = rearrange(transformed, "b (p t) d -> b p t d",
                                        p=self.num_players, t=self.num_output_time_steps)
         latent = self.decoder(transformed_nested)
