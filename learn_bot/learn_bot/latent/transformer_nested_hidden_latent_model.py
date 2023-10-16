@@ -212,10 +212,10 @@ class TransformerNestedHiddenLatentModel(nn.Module):
         temporal_transformer_encoder_layer = nn.TransformerEncoderLayer(d_model=self.internal_width, nhead=num_heads, batch_first=True)
         self.temporal_transformer_encoder = nn.TransformerEncoder(temporal_transformer_encoder_layer, num_layers=num_layers, enable_nested_tensor=False)
         transformer_encoder_layer = nn.TransformerEncoderLayer(d_model=self.internal_width, nhead=num_heads, batch_first=True)
-        transformer_encoder = nn.TransformerEncoder(transformer_encoder_layer, num_layers=num_layers, enable_nested_tensor=False)
-        self.transformer_model = nn.Transformer(d_model=self.internal_width, nhead=num_heads,
-                                                num_encoder_layers=num_layers, num_decoder_layers=num_layers,
-                                                custom_encoder=transformer_encoder, batch_first=True)
+        self.spatial_transformer_encoder = nn.TransformerEncoder(transformer_encoder_layer, num_layers=num_layers, enable_nested_tensor=False)
+        #self.transformer_model = nn.Transformer(d_model=self.internal_width, nhead=num_heads,
+        #                                        num_encoder_layers=num_layers, num_decoder_layers=num_layers,
+        #                                        custom_encoder=transformer_encoder, batch_first=True)
 
         self.decoder = nn.Sequential(
             nn.Linear(self.internal_width, num_radial_bins),
@@ -324,6 +324,13 @@ class TransformerNestedHiddenLatentModel(nn.Module):
         #x_gathered = torch.cat([x_pos_encoded, x_vel_scaled, x_non_pos], -1)
         x_embedded = self.embedding_model(x_gathered)
 
+        # figure out alive and dead for masking out dead ploayers
+        alive_gathered = x[:, self.alive_columns]
+        alive_gathered_input_temporal = repeat(alive_gathered, 'b p -> b (p repeat)', repeat=self.num_output_time_steps)
+        alive_gathered_output_temporal = repeat(alive_gathered, 'b p -> b (p repeat)', repeat=self.num_output_time_steps)
+        #'b p i -> b (p i)')
+        dead_gathered = alive_gathered_temporal < 0.1
+
         # apply temporal encoder to get one token per player
         # need to flatten first across batch/player to do temporal positional encoding per player
         x_batch_player_flattened = rearrange(x_embedded, "b p t d -> (b p) t d")
@@ -356,11 +363,6 @@ class TransformerNestedHiddenLatentModel(nn.Module):
                                                   "b p t d -> b p (t repeat) d", repeat=self.num_output_time_steps)
             x_temporal_embedded_flattened = rearrange(x_temporal_embedded_repeated, "b p t d -> b (p t) d")
 
-        alive_gathered = x[:, self.alive_columns]
-        alive_gathered_temporal = repeat(alive_gathered, 'b p -> b (p repeat)', repeat=self.num_output_time_steps)
-            #'b p i -> b (p i)')
-        dead_gathered = alive_gathered_temporal < 0.1
-
         tgt_mask = self.generate_tgt_mask(x.device.type)
 
         x_pos_encoded_no_noise = self.encode_pos(x_pos, enable_noise=False)
@@ -378,11 +380,12 @@ class TransformerNestedHiddenLatentModel(nn.Module):
                 self.player_mask_type == PlayerMaskType.TeammateFullMask:
             output_per_player_mask = self.output_per_player_mask_cpu.to(x.device.type)
             tgt_mask = tgt_mask + (torch.where(output_per_player_mask, -1. * math.inf, 0.))
-            transformed = self.transformer_model(x_temporal_embedded_flattened, x_embedded_no_noise, tgt_mask=tgt_mask,
-                                                 src_mask=output_per_player_mask)
+            transformed = self.spatial_transformer_encoder(x_temporal_embedded_flattened, x_embedded_no_noise,
+                                                           tgt_mask=tgt_mask,
+                                                           src_mask=output_per_player_mask, memory_mask=output_per_player_mask)
         else:
-            transformed = self.transformer_model(x_temporal_embedded_flattened, x_embedded_no_noise, tgt_mask=tgt_mask,
-                                                 src_key_padding_mask=dead_gathered)
+            transformed = self.spatial_transformer_encoder(x_temporal_embedded_flattened, x_embedded_no_noise,
+                                                           key_padding_mask=dead_gathered)
         transformed_nested = rearrange(transformed, "b (p t) d -> b p t d",
                                        p=self.num_players, t=self.num_output_time_steps)
         latent = self.decoder(transformed_nested)
@@ -409,3 +412,18 @@ class TransformerNestedHiddenLatentModel(nn.Module):
         #        y_nested[:, i] = prob_output_nested[:, i]
         #        y_nested[:, i + self.num_players_per_team] = prob_output_nested[:, i + self.num_players_per_team]
         #    return self.logits_output(latent), self.prob_output(latent), one_hot_prob_to_index(y)
+
+
+def combine_padding_sequence_masks(sequence_mask: torch.Tensor, padding_mask: torch.Tensor, num_heads: int):
+    # sequence mask: q,k - query is row, key is column, true if can't read from key to value
+    # padding mask: b,k - batch is row, key is col, true if can't read from key for any query
+    # need to replicate for each head
+    sequence_for_each_batch_head_mask = repeat(sequence_mask, 'q k -> bn q k', bn=num_heads * padding_mask.shape[0])
+    padding_in_sequence_format_mask = repeat(padding_mask, 'b k -> (b num_heads) q k', num_heads=num_heads,
+                                             q=sequence_mask.shape[1])
+    result = (sequence_for_each_batch_head_mask | padding_in_sequence_format_mask)
+    # must disable mask on diagonal. Otherwise, can get NaN. If sequence_mask is only diagonal and padding_mask
+    # removes a row, that row can't read from anywhere and becomes NaN
+    for i in range(sequence_mask.shape[1]):
+        result[:, i, i] = False
+    return result

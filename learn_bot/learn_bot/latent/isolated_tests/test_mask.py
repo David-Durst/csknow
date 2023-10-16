@@ -1,6 +1,8 @@
 from torch import nn
 import torch
 
+from learn_bot.latent.transformer_nested_hidden_latent_model import combine_padding_sequence_masks
+
 width = 10
 num_heads = 2
 num_layers = 4
@@ -18,12 +20,15 @@ num_tokens = 4
 in0 = torch.zeros(1, num_tokens, width)
 in1 = in0.clone()
 in1[0, 0, 0] = 1.
+in2 = in1.clone()
+in2[0, 1, 0] = 1.
 
 src_tgt_mask = torch.zeros(num_tokens, num_tokens, dtype=torch.bool)
 for i in range(num_tokens):
     for j in range(num_tokens):
         src_tgt_mask[i, j] = i != j
 key_mask = torch.BoolTensor([[i == 0 for i in range(num_tokens)]])
+combined_mask = combine_padding_sequence_masks(src_tgt_mask, key_mask, num_heads)
 
 enc_out0 = transformer_encoder(in0, mask=src_tgt_mask)
 enc_out0_duplicate = transformer_encoder(in0, mask=src_tgt_mask)
@@ -85,3 +90,25 @@ print(key_enc_dec_out1)
 print("key_enc_dec_out0 == key_enc_dec_out1")
 print(key_enc_dec_out0 == key_enc_dec_out1)
 print(torch.sum(key_enc_dec_out0 == key_enc_dec_out1))
+
+#combined_mask = combined_mask & False
+#combined_mask[:, :, 0] = True
+combined_enc_out0 = transformer_encoder(in0, mask=combined_mask & False)
+combined_enc_out0_duplicate = transformer_encoder(in0, mask=combined_mask)
+combined_enc_out2 = transformer_encoder(in2, mask=combined_mask)
+print("combined_enc_out0 equals combined_enc_out0_duplicate")
+print(torch.equal(combined_enc_out0, combined_enc_out0_duplicate))
+print("combined_enc_out0")
+print(combined_enc_out0)
+print("combined_enc_out2")
+print(combined_enc_out2)
+print("combined_enc_out0 == combined_enc_out1")
+print(combined_enc_out0 == combined_enc_out2)
+print(torch.sum(combined_enc_out0 == combined_enc_out2))
+
+print("src_tgt_mask")
+print(src_tgt_mask)
+print("key_mask")
+print(key_mask)
+print("combined mask")
+print(combined_mask)
