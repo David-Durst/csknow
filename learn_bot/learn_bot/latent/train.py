@@ -58,7 +58,7 @@ hyperparameter_option_range = [HyperparameterOptions(num_input_time_steps=1),
                                # pointless to have temporal mask with only one input time step
                                HyperparameterOptions(num_input_time_steps=1,
                                                      player_mask_type=PlayerMaskType.TeammateTemporalOnlyMask),
-                               HyperparameterOptions(num_input_time_steps=1, layers=1,
+                               HyperparameterOptions(num_input_time_steps=1,
                                                      player_mask_type=PlayerMaskType.TeammateFullMask),
                                HyperparameterOptions(num_input_time_steps=1,
                                                      player_mask_type=PlayerMaskType.EveryoneTemporalOnlyMask),

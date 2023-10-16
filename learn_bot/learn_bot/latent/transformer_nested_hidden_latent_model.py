@@ -45,6 +45,8 @@ class PlayerMaskType(Enum):
     EveryoneFullMask = 3
     TeammateTemporalOnlyMask = 4
     TeammateFullMask = 5
+    EnemyTemporalOnlyMask = 6
+    EnemyFullMask = 7
 
     def __str__(self) -> str:
         if self == PlayerMaskType.NoMask:
@@ -55,8 +57,12 @@ class PlayerMaskType(Enum):
             return "EveryoneFullMask"
         elif self == PlayerMaskType.TeammateTemporalOnlyMask:
             return "TeammateTemporalOnlyMask"
-        else:
+        elif self == PlayerMaskType.TeammateFullMask:
             return "TeammateFullMask"
+        elif self == PlayerMaskType.EnemyTemporalOnlyMask:
+            return "EnemyTemporalOnlyMask"
+        else:
+            return "EnemyFullMask"
 
 
 class TransformerNestedHiddenLatentModel(nn.Module):
@@ -136,12 +142,16 @@ class TransformerNestedHiddenLatentModel(nn.Module):
 
         # only different players in same time step to talk to each other
         def build_per_player_mask(per_player_mask: torch.Tensor, num_temporal_tokens: int, num_time_steps: int,
-                                  teammate_only_mask: bool):
+                                  teammate_only_mask: bool, enemy_only_mask):
             for i in range(num_temporal_tokens):
                 for j in range(num_temporal_tokens):
                     if teammate_only_mask:
                         per_player_mask[i, j] = (i // num_time_steps) != (j // num_time_steps) and \
                                                 (i // num_time_steps // self.num_players_per_team) == \
+                                                (j // num_time_steps // self.num_players_per_team)
+                    elif enemy_only_mask:
+                        per_player_mask[i, j] = (i // num_time_steps) != (j // num_time_steps) and \
+                                                (i // num_time_steps // self.num_players_per_team) != \
                                                 (j // num_time_steps // self.num_players_per_team)
                     else:
                         per_player_mask[i, j] = (i // num_time_steps) != (j // num_time_steps)
@@ -153,17 +163,20 @@ class TransformerNestedHiddenLatentModel(nn.Module):
                                                                 dtype=torch.bool)
         teammate_only_mask = (player_mask_type == PlayerMaskType.TeammateTemporalOnlyMask) or \
                              (player_mask_type == PlayerMaskType.TeammateFullMask)
+        enemy_only_mask = (player_mask_type == PlayerMaskType.EnemyTemporalOnlyMask) or \
+                          (player_mask_type == PlayerMaskType.EnemyFullMask)
         if player_mask_type != PlayerMaskType.NoMask:
             build_per_player_mask(self.input_per_player_mask_cpu, num_input_temporal_tokens, self.num_input_time_steps,
-                                  teammate_only_mask)
-            build_per_player_mask(self.input_per_player_no_history_mask_cpu, self.num_players, 1, teammate_only_mask)
+                                  teammate_only_mask, enemy_only_mask)
+            build_per_player_mask(self.input_per_player_no_history_mask_cpu, self.num_players, 1, teammate_only_mask,
+                                  enemy_only_mask)
 
         num_output_temporal_tokens = self.num_players * self.num_output_time_steps
         self.output_per_player_mask_cpu = torch.zeros([num_output_temporal_tokens, num_output_temporal_tokens],
                                                       dtype=torch.bool)
         if player_mask_type != PlayerMaskType.NoMask:
             build_per_player_mask(self.output_per_player_mask_cpu, num_output_temporal_tokens, self.num_output_time_steps,
-                                  teammate_only_mask)
+                                  teammate_only_mask, enemy_only_mask)
 
         self.player_mask_type = player_mask_type
 
@@ -369,7 +382,8 @@ class TransformerNestedHiddenLatentModel(nn.Module):
         #x_embedded_no_noise = self.embedding_model(x_gathered_no_noise)
 
         if self.player_mask_type == PlayerMaskType.EveryoneFullMask or \
-                self.player_mask_type == PlayerMaskType.TeammateFullMask:
+                self.player_mask_type == PlayerMaskType.TeammateFullMask or \
+                self.player_mask_type == PlayerMaskType.EnemyFullMask:
             combined_output_mask = combine_padding_sequence_masks(
                 self.output_per_player_mask_cpu.to(x.device.type), dead_gathered_output, self.num_heads)
             transformed = self.spatial_transformer_encoder(x_temporal_embedded_flattened, mask=combined_output_mask)
