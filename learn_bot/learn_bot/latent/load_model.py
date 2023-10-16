@@ -71,12 +71,15 @@ class LoadedModel:
         return str(self.dataset.data_hdf5s[self.cur_hdf5_index].hdf5_path.name)
 
 
-def load_model_file(loaded_data: LoadDataResult, use_test_data_only: bool = False) -> LoadedModel:
-    if len(sys.argv) < 2:
+def load_model_file(loaded_data: LoadDataResult, use_test_data_only: bool = False,
+                    model_name_override: Optional[str] = None) -> LoadedModel:
+    if len(sys.argv) < 2 and model_name_override is None:
         raise Exception("must pass checkpoint folder name as argument, like "
                         "07_02_2023__14_32_51_e_60_b_512_lr_4e-05_wd_0.0_l_2_h_4_n_20.0_t_5_c_human_with_added_bot_nav")
     cur_checkpoints_path = checkpoints_path
-    if len(sys.argv) > 1:
+    if model_name_override is not None:
+        cur_checkpoints_path = cur_checkpoints_path / model_name_override
+    elif len(sys.argv) > 1:
         cur_checkpoints_path = cur_checkpoints_path / sys.argv[1]
     model_file = torch.load(cur_checkpoints_path / "delta_pos_checkpoint.pt")
 
