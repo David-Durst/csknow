@@ -392,27 +392,6 @@ class TransformerNestedHiddenLatentModel(nn.Module):
         latent = self.decoder(transformed_nested)
         prob_output = self.prob_output(latent / temperature)
         return latent, prob_output, one_hot_prob_to_index(prob_output)
-        #if y is not None:
-        #    y_encoded = self.encode_y(x_pos, x_non_pos, y, True)
-        #    transformed = self.transformer_model(x_temporal_embedded_flattened, y_encoded, tgt_mask=tgt_mask,
-        #                                         src_key_padding_mask=dead_gathered)#,
-        #                                         #tgt_key_padding_mask=dead_gathered)
-        #    #transformed = transformed.masked_fill(torch.isnan(transformed), 0)
-        #    latent = self.decoder(transformed)
-        #    return self.logits_output(latent), self.prob_output(latent)
-        #else:
-        #    y_nested = torch.zeros([x.shape[0], self.num_players, num_radial_bins], device=x.device.type)
-        #    y_nested[:, :, 0] = 1.
-        #    y = rearrange(y_nested, "b p d -> b (p d)")
-        #    memory = self.transformer_model.encoder(x_temporal_embedded_flattened, src_key_padding_mask=dead_gathered)
-        #    for i in range(self.num_players_per_team):
-        #        y_encoded = self.encode_y(x_pos, x_non_pos, y, False)
-        #        transformed = self.transformer_model.decoder(y_encoded, memory, tgt_mask=tgt_mask)
-        #        latent = self.decoder(transformed)
-        #        prob_output_nested = rearrange(self.prob_output(latent), "b (p d) -> b p d", p=self.num_players)
-        #        y_nested[:, i] = prob_output_nested[:, i]
-        #        y_nested[:, i + self.num_players_per_team] = prob_output_nested[:, i + self.num_players_per_team]
-        #    return self.logits_output(latent), self.prob_output(latent), one_hot_prob_to_index(y)
 
 
 def combine_padding_sequence_masks(sequence_mask: torch.Tensor, padding_mask: torch.Tensor, num_heads: int):
