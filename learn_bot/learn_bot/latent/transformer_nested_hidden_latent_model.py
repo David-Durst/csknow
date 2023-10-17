@@ -142,14 +142,16 @@ class TransformerNestedHiddenLatentModel(nn.Module):
 
         # only different players in same time step to talk to each other
         def build_per_player_mask(per_player_mask: torch.Tensor, num_temporal_tokens: int, num_time_steps: int,
-                                  teammate_only_mask: bool, enemy_only_mask):
+                                  teammate_only_mask: bool, enemy_only_mask: bool):
             for i in range(num_temporal_tokens):
                 for j in range(num_temporal_tokens):
                     if teammate_only_mask:
                         per_player_mask[i, j] = (i // num_time_steps // self.num_players_per_team) == \
                                                 (j // num_time_steps // self.num_players_per_team)
                     elif enemy_only_mask:
-                        per_player_mask[i, j] = (i // num_time_steps // self.num_players_per_team) != \
+                        # include self in enemy mask
+                        per_player_mask[i, j] = (i // num_time_steps) != (j // num_time_steps) and \
+                                                (i // num_time_steps // self.num_players_per_team) != \
                                                 (j // num_time_steps // self.num_players_per_team)
                     else:
                         per_player_mask[i, j] = (i // num_time_steps) != (j // num_time_steps)
@@ -399,16 +401,19 @@ class TransformerNestedHiddenLatentModel(nn.Module):
                 self.player_mask_type == PlayerMaskType.EnemyFullMask:
             spatial_combined_output_mask = combine_padding_sequence_masks(
                 self.output_per_player_mask_cpu.to(x.device.type), dead_gathered_output, self.num_heads)
-            print(f"input to spatial transformer {torch.sum(x_temporal_embedded_flattened[0], axis=1)}")
+            #print(f"input to spatial transformer {torch.sum(x_temporal_embedded_flattened[0], axis=1)}")
             spatial_transformed = \
                 self.spatial_transformer_encoder(x_temporal_embedded_flattened, mask=spatial_combined_output_mask)
-            print(f"output of spatial transformer {torch.sum(spatial_transformed[0], axis=1)}")
+            #print(f"output of spatial transformer {torch.sum(spatial_transformed[0], axis=1)}")
             teammate_combined_output_mask = combine_padding_sequence_masks(
                 self.output_teammate_per_player_mask_cpu.to(x.device.type), dead_gathered_output, self.num_heads)
+            print(f"input 0 to teammate transformer {torch.sum(x_temporal_encoded_flattened[0], axis=1)}")
+            print(f"input 1 to teammate transformer {torch.sum(spatial_transformed[0], axis=1)}")
             transformed = \
                 self.teammate_mask_transformer_decoder(x_temporal_encoded_flattened, spatial_transformed,
                                                        tgt_mask=teammate_combined_output_mask,
                                                        memory_mask=teammate_combined_output_mask)
+            print(f"output of spatial transformer {torch.sum(transformed[0], axis=1)}")
         else:
             spatial_transformed = self.spatial_transformer_encoder(x_temporal_embedded_flattened,
                                                            src_key_padding_mask=dead_gathered_output)
