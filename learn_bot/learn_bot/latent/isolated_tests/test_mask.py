@@ -56,6 +56,11 @@ for i in range(num_tokens):
         src_tgt_teammate_mask[i, j] = (i // 2) == (j // 2) and i != j
 # 2 and 3 draw from themselves and 1 (not each other), 0 is dead, 1 draws from 2 and 3
 combined_teammate_mask = combine_padding_sequence_masks(src_tgt_teammate_mask, key_mask, num_heads)
+# disables self and players 2 for 3, 3 for 2, 0 for 1, and 1 for 0
+src_tgt_self_teammate_mask = torch.zeros(num_tokens, num_tokens, dtype=torch.bool)
+for i in range(num_tokens):
+    for j in range(num_tokens):
+        src_tgt_self_teammate_mask[i, j] = (i // 2) == (j // 2)
 
 print_matrix_values = False
 
@@ -107,19 +112,35 @@ print(torch.sum(enc_teammate_out0 == enc_teammate_out3))
 
 print("")
 
-enc_dec_teammate_out0 = one_layer_transformer_decoder(in0, enc_enemy_out0, tgt_mask=combined_teammate_mask, memory_mask=combined_enemy_mask)
-enc_dec_teammate_out0_duplicate = one_layer_transformer_decoder(in0, enc_enemy_out0, tgt_mask=combined_teammate_mask, memory_mask=combined_enemy_mask)
-enc_dec_teammate_out3 = one_layer_transformer_decoder(in0, enc_enemy_out3, tgt_mask=combined_teammate_mask, memory_mask=combined_enemy_mask)
+enc_enemy_include_dead_out0 = transformer_encoder(in0, mask=src_tgt_enemy_mask)
+enc_enemy_include_dead_out0_duplicate = transformer_encoder(in0, mask=src_tgt_enemy_mask)
+enc_enemy_include_dead_out1 = transformer_encoder(in1, mask=src_tgt_enemy_mask)
+print("enc_enemy_include_dead_out0 equals enc_enemy_include_dead_out0_duplicate")
+print(torch.equal(enc_enemy_include_dead_out0, enc_enemy_include_dead_out0_duplicate))
+if print_matrix_values:
+    print("enc_enemy_include_dead_out0")
+    print(enc_enemy_include_dead_out0)
+    print("enc_enemy_include_dead_out1")
+    print(enc_enemy_include_dead_out1)
+print("enc_enemy_include_dead_out0 == enc_enemy_include_dead_out1")
+print(enc_enemy_include_dead_out0 == enc_enemy_include_dead_out1)
+print(torch.sum(enc_enemy_include_dead_out0 == enc_enemy_include_dead_out1))
+
+print("")
+
+enc_dec_teammate_out0 = one_layer_transformer_decoder(in0, enc_enemy_include_dead_out0, tgt_mask=src_tgt_teammate_mask, memory_mask=src_tgt_self_teammate_mask)
+enc_dec_teammate_out0_duplicate = one_layer_transformer_decoder(in0, enc_enemy_include_dead_out0, tgt_mask=src_tgt_teammate_mask, memory_mask=src_tgt_self_teammate_mask)
+enc_dec_teammate_out1 = one_layer_transformer_decoder(in1, enc_enemy_include_dead_out1, tgt_mask=src_tgt_teammate_mask, memory_mask=src_tgt_self_teammate_mask)
 print("enc_dec_teammate_out0 equals enc_dec_teammate_out0_duplicate")
 print(torch.equal(enc_dec_teammate_out0, enc_dec_teammate_out0_duplicate))
 if print_matrix_values:
     print("enc_dec_teammate_out0")
     print(enc_dec_teammate_out0)
-    print("enc_dec_teammate_out3")
-    print(enc_dec_teammate_out3)
-print("enc_dec_teammate_out0 == enc_dec_teammate_out3")
-print(enc_dec_teammate_out0 == enc_dec_teammate_out3)
-print(torch.sum(enc_dec_teammate_out0 == enc_dec_teammate_out3))
+    print("enc_dec_teammate_out1")
+    print(enc_dec_teammate_out1)
+print("enc_dec_teammate_out0 == enc_dec_teammate_out1")
+print(enc_dec_teammate_out0 == enc_dec_teammate_out1)
+print(torch.sum(enc_dec_teammate_out0 == enc_dec_teammate_out1))
 
 print("")
 
