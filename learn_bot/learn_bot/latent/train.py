@@ -56,12 +56,14 @@ class TrainType(Enum):
 default_hyperparameter_options = HyperparameterOptions()
 hyperparameter_option_range = [HyperparameterOptions(num_input_time_steps=1),
                                # pointless to have temporal mask with only one input time step
-                               HyperparameterOptions(num_input_time_steps=1,
-                                                     player_mask_type=PlayerMaskType.TeammateTemporalOnlyMask),
+                               #HyperparameterOptions(num_input_time_steps=1,
+                               #                      player_mask_type=PlayerMaskType.TeammateTemporalOnlyMask),
                                HyperparameterOptions(num_input_time_steps=1,
                                                      player_mask_type=PlayerMaskType.TeammateFullMask),
                                HyperparameterOptions(num_input_time_steps=1,
-                                                     player_mask_type=PlayerMaskType.EveryoneTemporalOnlyMask),
+                                                     player_mask_type=PlayerMaskType.EnemyFullMask),
+                               #HyperparameterOptions(num_input_time_steps=1,
+                               #                      player_mask_type=PlayerMaskType.EveryoneTemporalOnlyMask),
                                HyperparameterOptions(num_input_time_steps=1,
                                                      player_mask_type=PlayerMaskType.EveryoneFullMask),
                                HyperparameterOptions(num_input_time_steps=3, weight_not_move_loss=20.,

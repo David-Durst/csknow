@@ -167,16 +167,20 @@ class TransformerNestedHiddenLatentModel(nn.Module):
                           (player_mask_type == PlayerMaskType.EnemyFullMask)
         if player_mask_type != PlayerMaskType.NoMask:
             build_per_player_mask(self.input_per_player_mask_cpu, num_input_temporal_tokens, self.num_input_time_steps,
-                                  teammate_only_mask, enemy_only_mask)
-            build_per_player_mask(self.input_per_player_no_history_mask_cpu, self.num_players, 1, teammate_only_mask,
-                                  enemy_only_mask)
+                                  False, teammate_only_mask or enemy_only_mask)
+            build_per_player_mask(self.input_per_player_no_history_mask_cpu, self.num_players, 1, False,
+                                  teammate_only_mask or enemy_only_mask)
 
         num_output_temporal_tokens = self.num_players * self.num_output_time_steps
         self.output_per_player_mask_cpu = torch.zeros([num_output_temporal_tokens, num_output_temporal_tokens],
                                                       dtype=torch.bool)
+        self.output_teammate_per_player_mask_cpu = torch.zeros([num_output_temporal_tokens, num_output_temporal_tokens],
+                                                               dtype=torch.bool)
         if player_mask_type != PlayerMaskType.NoMask:
-            build_per_player_mask(self.output_per_player_mask_cpu, num_output_temporal_tokens, self.num_output_time_steps,
-                                  teammate_only_mask, enemy_only_mask)
+            build_per_player_mask(self.output_per_player_mask_cpu, num_output_temporal_tokens,
+                                  self.num_output_time_steps, False, teammate_only_mask or enemy_only_mask)
+            build_per_player_mask(self.output_teammate_per_player_mask_cpu, num_output_temporal_tokens,
+                                  self.num_output_time_steps, teammate_only_mask, enemy_only_mask)
 
         self.player_mask_type = player_mask_type
 
@@ -226,8 +230,10 @@ class TransformerNestedHiddenLatentModel(nn.Module):
 
         temporal_transformer_encoder_layer = nn.TransformerEncoderLayer(d_model=self.internal_width, nhead=num_heads, batch_first=True)
         self.temporal_transformer_encoder = nn.TransformerEncoder(temporal_transformer_encoder_layer, num_layers=num_layers, enable_nested_tensor=False)
-        transformer_encoder_layer = nn.TransformerEncoderLayer(d_model=self.internal_width, nhead=num_heads, batch_first=True)
-        self.spatial_transformer_encoder = nn.TransformerEncoder(transformer_encoder_layer, num_layers=num_layers, enable_nested_tensor=False)
+        spatial_transformer_encoder_layer = nn.TransformerEncoderLayer(d_model=self.internal_width, nhead=num_heads, batch_first=True)
+        self.spatial_transformer_encoder = nn.TransformerEncoder(spatial_transformer_encoder_layer, num_layers=num_layers, enable_nested_tensor=False)
+        teammate_mask_transformer_encoder_layer = nn.TransformerEncoderLayer(d_model=self.internal_width, nhead=num_heads, batch_first=True)
+        self.teammate_mask_transformer_encoder = nn.TransformerEncoder(teammate_mask_transformer_encoder_layer, num_layers=1, enable_nested_tensor=False)
         #self.transformer_model = nn.Transformer(d_model=self.internal_width, nhead=num_heads,
         #                                        num_encoder_layers=num_layers, num_decoder_layers=num_layers,
         #                                        custom_encoder=transformer_encoder, batch_first=True)
@@ -384,12 +390,19 @@ class TransformerNestedHiddenLatentModel(nn.Module):
         if self.player_mask_type == PlayerMaskType.EveryoneFullMask or \
                 self.player_mask_type == PlayerMaskType.TeammateFullMask or \
                 self.player_mask_type == PlayerMaskType.EnemyFullMask:
-            combined_output_mask = combine_padding_sequence_masks(
+            spatial_combined_output_mask = combine_padding_sequence_masks(
                 self.output_per_player_mask_cpu.to(x.device.type), dead_gathered_output, self.num_heads)
-            transformed = self.spatial_transformer_encoder(x_temporal_embedded_flattened, mask=combined_output_mask)
+            spatial_transformed = \
+                self.spatial_transformer_encoder(x_temporal_embedded_flattened, mask=spatial_combined_output_mask)
+            teammate_combined_output_mask = combine_padding_sequence_masks(
+                self.output_teammate_per_player_mask_cpu.to(x.device.type), dead_gathered_output, self.num_heads)
+            transformed = \
+                self.teammate_mask_transformer_encoder(spatial_transformed, mask=teammate_combined_output_mask)
         else:
-            transformed = self.spatial_transformer_encoder(x_temporal_embedded_flattened,
+            spatial_transformed = self.spatial_transformer_encoder(x_temporal_embedded_flattened,
                                                            src_key_padding_mask=dead_gathered_output)
+            transformed = self.teammate_mask_transformer_encoder(spatial_transformed,
+                                                                 src_key_padding_mask=dead_gathered_output)
         transformed_nested = rearrange(transformed, "b (p t) d -> b p t d",
                                        p=self.num_players, t=self.num_output_time_steps)
         latent = self.decoder(transformed_nested)

@@ -11,9 +11,13 @@ from learn_bot.libs.io_transforms import CPU_DEVICE_STR, get_transformed_outputs
 
 temperature = torch.Tensor([1.])
 model_names = [
-    "10_15_2023__21_33_23_iw_128_bc_25_pr_0_fr_0_b_1024_it_1_lr_4e-05_wd_0.0_l_2_h_4_n_20.0_ros_2.0_m_TeammateFullMask_w_None_dh_None_c_just_human_all",
-    "10_15_2023__21_33_23_iw_128_bc_25_pr_0_fr_0_b_1024_it_1_lr_4e-05_wd_0.0_l_2_h_4_n_20.0_ros_2.0_m_NoMask_w_None_dh_None_c_just_human_all",
-    "10_15_2023__21_33_23_iw_128_bc_25_pr_0_fr_0_b_1024_it_1_lr_4e-05_wd_0.0_l_2_h_4_n_20.0_ros_2.0_m_EveryoneFullMask_w_None_dh_None_c_just_human_all"
+    #"10_15_2023__21_33_23_iw_128_bc_25_pr_0_fr_0_b_1024_it_1_lr_4e-05_wd_0.0_l_2_h_4_n_20.0_ros_2.0_m_TeammateFullMask_w_None_dh_None_c_just_human_all",
+    #"10_15_2023__21_33_23_iw_128_bc_25_pr_0_fr_0_b_1024_it_1_lr_4e-05_wd_0.0_l_2_h_4_n_20.0_ros_2.0_m_NoMask_w_None_dh_None_c_just_human_all",
+    #"10_15_2023__21_33_23_iw_128_bc_25_pr_0_fr_0_b_1024_it_1_lr_4e-05_wd_0.0_l_2_h_4_n_20.0_ros_2.0_m_EveryoneFullMask_w_None_dh_None_c_just_human_all"
+    "10_16_2023__16_22_21_iw_128_bc_2_pr_0_fr_0_b_1024_it_1_lr_4e-05_wd_0.0_l_2_h_4_n_20.0_ros_2.0_m_NoMask_w_None_dh_None_c_just_human_all",
+    "10_16_2023__16_22_21_iw_128_bc_2_pr_0_fr_0_b_1024_it_1_lr_4e-05_wd_0.0_l_2_h_4_n_20.0_ros_2.0_m_TeammateFullMask_w_None_dh_None_c_just_human_all",
+    "10_16_2023__16_22_21_iw_128_bc_2_pr_0_fr_0_b_1024_it_1_lr_4e-05_wd_0.0_l_2_h_4_n_20.0_ros_2.0_m_EnemyFullMask_w_None_dh_None_c_just_human_all",
+    "10_16_2023__16_22_21_iw_128_bc_2_pr_0_fr_0_b_1024_it_1_lr_4e-05_wd_0.0_l_2_h_4_n_20.0_ros_2.0_m_EveryoneFullMask_w_None_dh_None_c_just_human_all"
 ]
 
 
@@ -60,4 +64,3 @@ if __name__ == "__main__":
 
     for model_name in model_names:
         test_model_mask(load_data_result, model_name)
-        quit(0)
