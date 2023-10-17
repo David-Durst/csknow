@@ -15,7 +15,8 @@ model_names = [
     #"10_15_2023__21_33_23_iw_128_bc_25_pr_0_fr_0_b_1024_it_1_lr_4e-05_wd_0.0_l_2_h_4_n_20.0_ros_2.0_m_NoMask_w_None_dh_None_c_just_human_all",
     #"10_15_2023__21_33_23_iw_128_bc_25_pr_0_fr_0_b_1024_it_1_lr_4e-05_wd_0.0_l_2_h_4_n_20.0_ros_2.0_m_EveryoneFullMask_w_None_dh_None_c_just_human_all"
     #"10_16_2023__18_42_15_iw_128_bc_2_pr_0_fr_0_b_1024_it_1_lr_4e-05_wd_0.0_l_2_h_4_n_20.0_ros_2.0_m_NoMask_w_None_dh_None_c_just_human_all",
-    "10_16_2023__18_42_15_iw_128_bc_2_pr_0_fr_0_b_1024_it_1_lr_4e-05_wd_0.0_l_2_h_4_n_20.0_ros_2.0_m_TeammateFullMask_w_None_dh_None_c_just_human_all",
+    #"10_16_2023__18_42_15_iw_128_bc_2_pr_0_fr_0_b_1024_it_1_lr_4e-05_wd_0.0_l_2_h_4_n_20.0_ros_2.0_m_TeammateFullMask_w_None_dh_None_c_just_human_all",
+    "10_17_2023__13_03_40_iw_128_bc_2_pr_0_fr_0_b_1024_it_1_lr_4e-05_wd_0.0_l_2_h_4_n_20.0_ros_2.0_m_TeammateFullMask_w_None_dh_None_c_just_human_all"
     #"10_16_2023__18_42_15_iw_128_bc_2_pr_0_fr_0_b_1024_it_1_lr_4e-05_wd_0.0_l_2_h_4_n_20.0_ros_2.0_m_EnemyFullMask_w_None_dh_None_c_just_human_all",
     #"10_16_2023__18_42_15_iw_128_bc_2_pr_0_fr_0_b_1024_it_1_lr_4e-05_wd_0.0_l_2_h_4_n_20.0_ros_2.0_m_EveryoneFullMask_w_None_dh_None_c_just_human_all"
 ]
@@ -34,8 +35,8 @@ def test_model_mask(load_data_result: LoadDataResult, model_name: str):
             alive_players = (X_orig[0, loaded_model.model.alive_columns] == 1.).nonzero()[:, 0].tolist()
             alive_ct = [i for i in alive_players if i < max_enemies]
             alive_t = [i for i in alive_players if i >= max_enemies]
-            # make sure 2 players alive on ct teams so can measure masking on ct teammate
-            if len(alive_ct) < 2:
+            # make sure 2 players alive on ct and t teams so can measure masking
+            if len(alive_ct) < 2 or len(alive_t) < 2:
                 continue
             pos_column_index = alive_ct[0] * loaded_model.model.num_dim
             X_mod[0, loaded_model.model.players_pos_columns[pos_column_index]] += 100.
@@ -48,7 +49,7 @@ def test_model_mask(load_data_result: LoadDataResult, model_name: str):
             equal_players = equal_tokens // tokens_per_player
             masked_all_players = equal_players == num_players - 1
             # if masking out teammates, so teammates of changed ct player should be same
-            masked_teammates = (equal_players == num_players // 2) and \
+            masked_teammates = (equal_players == num_players // 2 - 1) and \
                                torch.equal(pred_orig[0, alive_ct[1], 0], pred_mod[0, alive_ct[1], 0])
             # if maksing out enemies, so enemies of changed ct player should be same
             masked_enemies = (equal_players == num_players // 2) and \
