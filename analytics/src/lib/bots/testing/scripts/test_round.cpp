@@ -5,7 +5,7 @@
 #include "bots/testing/scripts/learned/log_nodes.h"
 
 RoundScript::RoundScript(const csknow::plant_states::PlantStatesResult & plantStatesResult, size_t plantStateIndex,
-                         size_t numRounds) :
+                         size_t numRounds, std::mt19937 gen, std::uniform_real_distribution<> dis) :
     Script("RoundScript", {}, {ObserveType::FirstPerson, 0}),
     plantStateIndex(plantStateIndex), numRounds(numRounds) {
     name += std::to_string(plantStateIndex);
@@ -15,7 +15,7 @@ RoundScript::RoundScript(const csknow::plant_states::PlantStatesResult & plantSt
     for (size_t i = 0; i < csknow::plant_states::max_players_per_team; i++) {
         if (plantStatesResult.ctPlayerStates[i].alive[plantStateIndex] && numCT < maxCT) {
             numCT++;
-            neededBots.push_back({0, ENGINE_TEAM_CT});
+            neededBots.push_back({0, ENGINE_TEAM_CT, dis(gen) < 0.5 ? AggressiveType::Push : AggressiveType::Bait});
             playerPos.push_back(plantStatesResult.ctPlayerStates[i].pos[plantStateIndex]);
             playerViewAngle.push_back(plantStatesResult.ctPlayerStates[i].viewAngle[plantStateIndex]);
             // need to flip view angle between recording and game
@@ -25,7 +25,7 @@ RoundScript::RoundScript(const csknow::plant_states::PlantStatesResult & plantSt
         }
         if (plantStatesResult.tPlayerStates[i].alive[plantStateIndex] && numT < maxT) {
             numT++;
-            neededBots.push_back({0, ENGINE_TEAM_T});
+            neededBots.push_back({0, ENGINE_TEAM_T, dis(gen) < 0.5 ? AggressiveType::Push : AggressiveType::Bait});
             playerPos.push_back(plantStatesResult.tPlayerStates[i].pos[plantStateIndex]);
             playerViewAngle.push_back(plantStatesResult.tPlayerStates[i].viewAngle[plantStateIndex]);
             // need to flip view angle between recording and game
@@ -94,9 +94,13 @@ vector<Script::Ptr> createRoundScripts(const csknow::plant_states::PlantStatesRe
                                        bool quitAtEnd) {
     vector<Script::Ptr> result;
 
+    std::random_device rd;
+    std::mt19937 gen;
+    std::uniform_real_distribution<> dis;
+
     size_t numRounds = 300;//static_cast<size_t>(plantStatesResult.size);
     for (size_t i = 0; i < numRounds; i++) {
-        result.push_back(make_unique<RoundScript>(plantStatesResult, i/*1*//*8*//*12*//*205*/, numRounds));
+        result.push_back(make_unique<RoundScript>(plantStatesResult, i/*1*//*8*//*12*//*205*/, numRounds, gen, dis));
     }
     if (quitAtEnd) {
         result.push_back(make_unique<QuitScript>());

@@ -23,7 +23,7 @@ class RoundScript : public Script {
 
 public:
     explicit RoundScript(const csknow::plant_states::PlantStatesResult & plantStatesResult, size_t plantStateIndex,
-                         size_t numRounds);
+                         size_t numRounds, std::mt19937 gen, std::uniform_real_distribution<> dis);
 
     void initialize(Tree & tree, ServerState & state) override;
 };
