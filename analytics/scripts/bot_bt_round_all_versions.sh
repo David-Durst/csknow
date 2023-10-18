@@ -25,13 +25,51 @@ if make -j 18; then
     /home/steam/csgo-ds/csgo/addons/sourcemod/scripting/bot-link/end_game.sh
     sleep 40
     date
-    # learned
-    echo 'most recent demo file before learned run'
+
+    # learned no mask
+    cd ${script_dir}/../../learn_bot/
+    ./scripts/deploy_latent_models_specific.sh 10_17_2023__15_07_01_iw_128_bc_25_pr_0_fr_0_b_1024_it_1_lr_4e-05_wd_0.0_l_2_h_4_n_20.0_ros_2.0_m_NoMask_w_None_dh_None_c_just_human_all
+    cd ${script_dir}/../build
+    echo 'most recent demo file before learned no mask run'
     learned_demo=$(ls -tp /home/steam/csgo-ds/csgo/*.dem | grep -v /$ | head -1)
     echo $learned_demo
     ./csknow_test_bt_bot ${script_dir}/../nav /home/steam/csgo-ds/csgo/addons/sourcemod/bot-link-data ${script_dir}/../ ${script_dir}/../../learn_bot/models ${script_dir}/../../learn_bot/learn_bot/libs/saved_train_test_splits r 1 n
     sleep 40
     date
+
+    # learned teammate mask
+    cd ${script_dir}/../../learn_bot/
+    ./scripts/deploy_latent_models_specific.sh 10_17_2023__15_07_01_iw_128_bc_25_pr_0_fr_0_b_1024_it_1_lr_4e-05_wd_0.0_l_2_h_4_n_20.0_ros_2.0_m_TeammateFullMask_w_None_dh_None_c_just_human_all
+    cd ${script_dir}/../build
+    echo 'most recent demo file before learned teammate mask run'
+    learned_demo=$(ls -tp /home/steam/csgo-ds/csgo/*.dem | grep -v /$ | head -1)
+    echo $learned_demo
+    ./csknow_test_bt_bot ${script_dir}/../nav /home/steam/csgo-ds/csgo/addons/sourcemod/bot-link-data ${script_dir}/../ ${script_dir}/../../learn_bot/models ${script_dir}/../../learn_bot/learn_bot/libs/saved_train_test_splits r 1 n
+    sleep 40
+    date
+
+    # learned enemy mask
+    cd ${script_dir}/../../learn_bot/
+    ./scripts/deploy_latent_models_specific.sh 10_17_2023__15_07_01_iw_128_bc_25_pr_0_fr_0_b_1024_it_1_lr_4e-05_wd_0.0_l_2_h_4_n_20.0_ros_2.0_m_EnemyFullMask_w_None_dh_None_c_just_human_all
+    cd ${script_dir}/../build
+    echo 'most recent demo file before learned enemy mask run'
+    learned_demo=$(ls -tp /home/steam/csgo-ds/csgo/*.dem | grep -v /$ | head -1)
+    echo $learned_demo
+    ./csknow_test_bt_bot ${script_dir}/../nav /home/steam/csgo-ds/csgo/addons/sourcemod/bot-link-data ${script_dir}/../ ${script_dir}/../../learn_bot/models ${script_dir}/../../learn_bot/learn_bot/libs/saved_train_test_splits r 1 n
+    sleep 40
+    date
+
+    # learned everyone mask
+    cd ${script_dir}/../../learn_bot/
+    ./scripts/deploy_latent_models_specific.sh 10_17_2023__15_07_01_iw_128_bc_25_pr_0_fr_0_b_1024_it_1_lr_4e-05_wd_0.0_l_2_h_4_n_20.0_ros_2.0_m_EveryoneFullMask_w_None_dh_None_c_just_human_all
+    cd ${script_dir}/../build
+    echo 'most recent demo file before learned everyone mask run'
+    learned_demo=$(ls -tp /home/steam/csgo-ds/csgo/*.dem | grep -v /$ | head -1)
+    echo $learned_demo
+    ./csknow_test_bt_bot ${script_dir}/../nav /home/steam/csgo-ds/csgo/addons/sourcemod/bot-link-data ${script_dir}/../ ${script_dir}/../../learn_bot/models ${script_dir}/../../learn_bot/learn_bot/libs/saved_train_test_splits r 1 n
+    sleep 40
+    date
+
     # hand crafted
     echo 'most recent demo file before hand-crafted run'
     handcrafted_demo=$(ls -tp /home/steam/csgo-ds/csgo/*.dem | grep -v /$ | head -1)
@@ -39,12 +77,14 @@ if make -j 18; then
     ./csknow_test_bt_bot ${script_dir}/../nav /home/steam/csgo-ds/csgo/addons/sourcemod/bot-link-data ${script_dir}/../ ${script_dir}/../../learn_bot/models ${script_dir}/../../learn_bot/learn_bot/libs/saved_train_test_splits rh 1 n
     sleep 40
     date
+
     # default
     echo 'most recent demo file before default run'
     default_demo=$(ls -tp /home/steam/csgo-ds/csgo/*.dem | grep -v /$ | head -1)
     echo $default_demo
     ./csknow_test_bt_bot ${script_dir}/../nav /home/steam/csgo-ds/csgo/addons/sourcemod/bot-link-data ${script_dir}/../ ${script_dir}/../../learn_bot/models ${script_dir}/../../learn_bot/learn_bot/libs/saved_train_test_splits rh 0 n
     date
+
     echo 'most recent demo file before learned run'
     echo $learned_demo
     echo 'most recent demo file before hand-crafted run'
