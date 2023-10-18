@@ -32,7 +32,7 @@ from learn_bot.libs.io_transforms import CUDA_DEVICE_STR
 # this is a open loop version of the simulator for computing metrics based on short time horizons
 
 num_seconds_per_loop = 5
-num_time_steps = data_ticks_per_second / data_ticks_per_sim_tick * num_seconds_per_loop
+num_time_steps = data_ticks_per_second // data_ticks_per_sim_tick * num_seconds_per_loop
 
 
 class PlayerMaskConfig(IntEnum):
@@ -282,8 +282,9 @@ def run_analysis_per_mask(loaded_model: LoadedModel, player_mask_config: PlayerM
         Tuple[pd.Series, pd.Series]:
     displacement_errors = DisplacementErrors()
     for i, hdf5_wrapper in enumerate(loaded_model.dataset.data_hdf5s):
-        if i > 1:
-            break
+        #if i > 1:
+        #    break
+
         print(f"Processing hdf5 {i} / {len(loaded_model.dataset.data_hdf5s)}: {hdf5_wrapper.hdf5_path}")
         per_iteration_displacement_errors: List[DisplacementErrors] = []
 
@@ -339,8 +340,7 @@ def run_analysis(loaded_model: LoadedModel):
     player_mask_configs = [PlayerMaskConfig.ALL,
                            PlayerMaskConfig.CT, PlayerMaskConfig.T,
                            PlayerMaskConfig.LAST_ALIVE,
-                           PlayerMaskConfig.CONSTANT_VELOCITY,
-                           PlayerMaskConfig.NONE]
+                           PlayerMaskConfig.CONSTANT_VELOCITY]
     ades_per_mask_config: List[pd.Series] = []
     fdes_per_mask_config: List[pd.Series] = []
     for i, player_mask_config in enumerate(player_mask_configs):
