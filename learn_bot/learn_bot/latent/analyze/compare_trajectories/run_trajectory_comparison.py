@@ -145,36 +145,86 @@ rollout_vs_all_human_config = ComparisonConfig(
     "Rollout vs All Human Distribution"
 )
 
-rollout_learned_load_data_option = dataclasses.replace(rollout_load_data_option,
-                                                       custom_rollout_extension= "_10_03_23_learned_250ms_scheduled_sampling_300_rounds")
+#rollout_learned_load_data_option = dataclasses.replace(rollout_load_data_option,
+#                                                       custom_rollout_extension= "_10_03_23_learned_250ms_scheduled_sampling_300_rounds")
 #custom_rollout_extension = "_9_20_23_learned_3s_300_rounds")
-rollout_learned_vs_all_human_config = ComparisonConfig(
-    rollout_learned_vs_all_human_similarity_hdf5_data_path,
-    rollout_learned_load_data_option,
+rollout_learned_no_mask_load_data_option = dataclasses.replace(rollout_load_data_option,
+                                                       custom_rollout_extension= "_learned_no_mask_10_19_23_300_rounds")
+rollout_learned_no_mask_vs_all_human_similarity_hdf5_data_path = \
+    rollout_learned_vs_all_human_similarity_hdf5_data_path.parent / \
+    str(rollout_learned_vs_all_human_similarity_hdf5_data_path.name).replace("learned", rollout_learned_no_mask_load_data_option.custom_rollout_extension[1:])
+rollout_learned_no_mask_vs_all_human_config = ComparisonConfig(
+    rollout_learned_no_mask_vs_all_human_similarity_hdf5_data_path,
+    rollout_learned_no_mask_load_data_option,
     all_human_load_data_option,
     False,
     False,
-    "rollout_learned_vs_all_human_distribution",
-    "Rollout Learned vs All Human Distribution"
+    "rollout_learned_no_mask_vs_all_human_distribution",
+    "Rollout Learned No Mask vs All Human Distribution"
 )
 
-rollout_no_history_learned_load_data_option = dataclasses.replace(rollout_load_data_option,
-                                                       custom_rollout_extension="_9_20_23_learned_3s_300_rounds")
-rollout_no_history_learned_vs_all_human_similarity_hdf5_data_path = \
+rollout_learned_teammate_mask_load_data_option = dataclasses.replace(rollout_load_data_option,
+                                                       custom_rollout_extension= "_learned_teammate_mask_10_19_23_300_rounds")
+rollout_learned_teammate_mask_vs_all_human_similarity_hdf5_data_path = \
     rollout_learned_vs_all_human_similarity_hdf5_data_path.parent / \
-    str(rollout_learned_vs_all_human_similarity_hdf5_data_path.name).replace("learned", rollout_no_history_learned_load_data_option.custom_rollout_extension[1:])
-rollout_no_history_learned_vs_all_human_config = ComparisonConfig(
-    rollout_no_history_learned_vs_all_human_similarity_hdf5_data_path,
-    rollout_no_history_learned_load_data_option,
+    str(rollout_learned_vs_all_human_similarity_hdf5_data_path.name).replace("learned", rollout_learned_teammate_mask_load_data_option.custom_rollout_extension[1:])
+rollout_learned_teammate_mask_vs_all_human_config = ComparisonConfig(
+    rollout_learned_teammate_mask_vs_all_human_similarity_hdf5_data_path,
+    rollout_learned_teammate_mask_load_data_option,
     all_human_load_data_option,
     False,
     False,
-    "rollout_no_history_learned_vs_all_human_distribution",
-    "Rollout No History Learned vs All Human Distribution"
+    "rollout_learned_teammate_mask_vs_all_human_distribution",
+    "Rollout Teammate Mask Learned vs All Human Distribution"
 )
+
+rollout_learned_enemy_mask_load_data_option = dataclasses.replace(rollout_load_data_option,
+                                                                     custom_rollout_extension= "_learned_enemy_mask_10_19_23_300_rounds")
+rollout_learned_enemy_mask_vs_all_human_similarity_hdf5_data_path = \
+    rollout_learned_vs_all_human_similarity_hdf5_data_path.parent / \
+    str(rollout_learned_vs_all_human_similarity_hdf5_data_path.name).replace("learned", rollout_learned_enemy_mask_load_data_option.custom_rollout_extension[1:])
+rollout_learned_enemy_mask_vs_all_human_config = ComparisonConfig(
+    rollout_learned_enemy_mask_vs_all_human_similarity_hdf5_data_path,
+    rollout_learned_enemy_mask_load_data_option,
+    all_human_load_data_option,
+    False,
+    False,
+    "rollout_learned_enemy_mask_vs_all_human_distribution",
+    "Rollout Learned Enemy Mask vs All Human Distribution"
+)
+
+rollout_learned_everyone_mask_load_data_option = dataclasses.replace(rollout_load_data_option,
+                                                                  custom_rollout_extension= "_learned_everyone_mask_10_19_23_300_rounds")
+rollout_learned_everyone_mask_vs_all_human_similarity_hdf5_data_path = \
+    rollout_learned_vs_all_human_similarity_hdf5_data_path.parent / \
+    str(rollout_learned_vs_all_human_similarity_hdf5_data_path.name).replace("learned", rollout_learned_everyone_mask_load_data_option.custom_rollout_extension[1:])
+rollout_learned_everyone_mask_vs_all_human_config = ComparisonConfig(
+    rollout_learned_everyone_mask_vs_all_human_similarity_hdf5_data_path,
+    rollout_learned_everyone_mask_load_data_option,
+    all_human_load_data_option,
+    False,
+    False,
+    "rollout_learned_everyone_mask_vs_all_human_distribution",
+    "Rollout Learned Everyone Mask vs All Human Distribution"
+)
+
+#rollout_no_history_learned_load_data_option = dataclasses.replace(rollout_load_data_option,
+#                                                       custom_rollout_extension="_9_20_23_learned_3s_300_rounds")
+#rollout_no_history_learned_vs_all_human_similarity_hdf5_data_path = \
+#    rollout_learned_vs_all_human_similarity_hdf5_data_path.parent / \
+#    str(rollout_learned_vs_all_human_similarity_hdf5_data_path.name).replace("learned", rollout_no_history_learned_load_data_option.custom_rollout_extension[1:])
+#rollout_no_history_learned_vs_all_human_config = ComparisonConfig(
+#    rollout_no_history_learned_vs_all_human_similarity_hdf5_data_path,
+#    rollout_no_history_learned_load_data_option,
+#    all_human_load_data_option,
+#    False,
+#    False,
+#    "rollout_no_history_learned_vs_all_human_distribution",
+#    "Rollout No History Learned vs All Human Distribution"
+#)
 
 rollout_handcrafted_load_data_option = dataclasses.replace(rollout_load_data_option,
-                                                       custom_rollout_extension= "_9_13_23_handcrafted_300_rounds")
+                                                       custom_rollout_extension= "_handcrafted_10_19_23_300_rounds")
 rollout_handcrafted_vs_all_human_config = ComparisonConfig(
     rollout_handcrafted_vs_all_human_similarity_hdf5_data_path,
     rollout_handcrafted_load_data_option,
@@ -186,7 +236,7 @@ rollout_handcrafted_vs_all_human_config = ComparisonConfig(
 )
 
 rollout_default_load_data_option = dataclasses.replace(rollout_load_data_option,
-                                                           custom_rollout_extension= "_9_13_23_default_300_rounds")
+                                                           custom_rollout_extension= "_default_10_19_23_300_rounds")
 rollout_default_vs_all_human_config = ComparisonConfig(
     rollout_default_vs_all_human_similarity_hdf5_data_path,
     rollout_default_load_data_option,
@@ -200,10 +250,13 @@ rollout_default_vs_all_human_config = ComparisonConfig(
 test_all_human_load_data_option = dataclasses.replace(all_human_load_data_option,
                                                       train_test_split_file_name=train_test_split_file_name)
 
+rollout_all_human_vs_learned_no_mask_similarity_hdf5_data_path = \
+    rollout_all_human_vs_learned_similarity_hdf5_data_path.parent / \
+    'human_to_learned_no_mask_10_19_23_300_rounds_trajectorySimilarity.hdf5'
 rollout_all_human_vs_learned_config = ComparisonConfig(
-    rollout_all_human_vs_learned_similarity_hdf5_data_path,
+    rollout_all_human_vs_learned_no_mask_similarity_hdf5_data_path,
     test_all_human_load_data_option,
-    rollout_learned_load_data_option,
+    rollout_learned_no_mask_load_data_option,
     False,
     False,
     "rollout_all_human_vs_learned_distribution",
@@ -253,21 +306,28 @@ def compare_trajectories(config_case: int) -> Optional[TrajectoryPlots]:
     elif config_case == 6:
         config = rollout_vs_all_human_config
     elif config_case == 7:
-        config = rollout_learned_vs_all_human_config
+        config = rollout_learned_no_mask_vs_all_human_config
     elif config_case == 8:
-        config = rollout_handcrafted_vs_all_human_config
+        config = rollout_learned_teammate_mask_vs_all_human_config
     elif config_case == 9:
-        config = rollout_default_vs_all_human_config
+        config = rollout_learned_enemy_mask_vs_all_human_config
     elif config_case == 10:
-        config = rollout_all_human_vs_learned_config
+        config = rollout_learned_everyone_mask_vs_all_human_config
     elif config_case == 11:
-        config = rollout_all_human_vs_handcrafted_config
+        config = rollout_handcrafted_vs_all_human_config
     elif config_case == 12:
-        config = rollout_all_human_vs_default_config
+        config = rollout_default_vs_all_human_config
     elif config_case == 13:
-        config = rollout_no_history_learned_vs_all_human_config
+        config = rollout_all_human_vs_learned_config
+    elif config_case == 14:
+        config = rollout_all_human_vs_handcrafted_config
+    elif config_case == 15:
+        config = rollout_all_human_vs_default_config
+    #elif config_case == 13:
+    #    config = rollout_no_history_learned_vs_all_human_config
 
-    cur_run_similarity_plots_path = similarity_plots_path / rollout_learned_load_data_option.custom_rollout_extension
+    cur_run_similarity_plots_path = \
+        similarity_plots_path / rollout_learned_no_mask_load_data_option.custom_rollout_extension
 
     os.makedirs(cur_run_similarity_plots_path, exist_ok=True)
     similarity_df = load_hdf5_to_pd(config.similarity_data_path)
@@ -329,7 +389,7 @@ def compare_trajectories(config_case: int) -> Optional[TrajectoryPlots]:
         start_heatmaps_plot_time = time.perf_counter()
         trajectory_plots = plot_trajectory_comparisons(similarity_df, predicted_model, ground_truth_model,
                                                        config, cur_run_similarity_plots_path,
-                                                       debug_caching_override=config_case >= 10 and config_case <= 12)
+                                                       debug_caching_override=config_case >= 13)
         end_heatmaps_plot_time = time.perf_counter()
         print(f"heatmaps plot time {end_heatmaps_plot_time - start_heatmaps_plot_time: 0.4f}")
 
@@ -347,4 +407,4 @@ if __name__ == "__main__":
     if len(trajectory_plots_by_player_type) > 1 and trajectory_plots_by_player_type[0] is not None:
         concat_trajectory_plots_across_player_type(
             trajectory_plots_by_player_type,
-            similarity_plots_path / rollout_learned_load_data_option.custom_rollout_extension)
+            similarity_plots_path / rollout_learned_no_mask_load_data_option.custom_rollout_extension)
