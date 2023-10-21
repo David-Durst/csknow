@@ -21,5 +21,5 @@ cmake .. -DCMAKE_BUILD_TYPE=Release
 if make -j4; then
     chmod a+x csknow_bt_bot
     mkdir -p ${script_dir}/../csv_outputs
-    ${script_dir}/../build/csknow ${script_dir}/../../local_data ${script_dir}/../nav y ${script_dir}/../csv_outputs ${script_dir}/../../learn_bot/models
+    ${script_dir}/../build/csknow ${script_dir}/../../demo_parser/hdf5/all_train_data/52.hdf5 ${script_dir}/../nav y 
 fi
