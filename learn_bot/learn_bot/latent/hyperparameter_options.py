@@ -26,6 +26,7 @@ class HyperparameterOptions:
     noise_var: float = 20.
     rollout_seconds: Optional[float] = 2.
     player_mask_type: PlayerMaskType = PlayerMaskType.NoMask
+    non_pos_mask: bool = False
     weight_not_move_loss: Optional[float] = None
     drop_history_probability: Optional[float] = None
     comment: str = ""

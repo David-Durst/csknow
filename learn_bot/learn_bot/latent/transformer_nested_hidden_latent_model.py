@@ -74,10 +74,11 @@ class TransformerNestedHiddenLatentModel(nn.Module):
 
     def __init__(self, cts: IOColumnTransformers, internal_width: int, num_players: int, num_input_time_steps: int,
                  num_output_time_steps: int, num_radial_bins: int,
-                 num_layers: int, num_heads: int, player_mask_type: PlayerMaskType):
+                 num_layers: int, num_heads: int, player_mask_type: PlayerMaskType, mask_non_pos: bool):
         super(TransformerNestedHiddenLatentModel, self).__init__()
         self.cts = cts
         self.internal_width = internal_width
+        self.mask_non_pos = mask_non_pos
         # transformed/transformed doesn't matter since no angles and all categorical variables are
         # "distirbution" type meaning pre one hot encoded
         all_c4_columns_ranges = range_list_to_index_list(cts.get_name_ranges(True, True, contained_str="c4"))
@@ -328,7 +329,10 @@ class TransformerNestedHiddenLatentModel(nn.Module):
         similarity_expanded = rearrange(similarity, '(b p t) d -> b p t d', p=1, t=1) \
             .repeat([1, self.num_players, self.num_input_time_steps, 1])
         x_non_pos = torch.concat([x_non_pos_without_similarity, similarity_expanded], dim=-1)
-        x_gathered = torch.cat([x_pos_encoded, x_crosshair, x_non_pos], -1)
+        if self.mask_non_pos:
+            x_gathered = torch.cat([x_pos_encoded, torch.zeros_like(x_crosshair), torch.zeros_like(x_non_pos)], -1)
+        else:
+            x_gathered = torch.cat([x_pos_encoded, x_crosshair, x_non_pos], -1)
         #x_gathered = torch.cat([x_pos_encoded, x_vel_scaled, x_non_pos], -1)
         x_embedded = self.embedding_model(x_gathered)
 

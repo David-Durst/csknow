@@ -164,7 +164,8 @@ def train(train_type: TrainType, multi_hdf5_wrapper: MultiHDF5Wrapper,
                                                    2 * max_enemies, hyperparameter_options.num_input_time_steps,
                                                    num_radial_ticks, num_radial_bins,
                                                    hyperparameter_options.layers, hyperparameter_options.heads,
-                                                   hyperparameter_options.player_mask_type)
+                                                   hyperparameter_options.player_mask_type,
+                                                   hyperparameter_options.non_pos_mask)
         if load_model_path:
             model_file = torch.load(load_model_path)
             model.load_state_dict(model_file['model_state_dict'])
