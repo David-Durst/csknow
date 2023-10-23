@@ -1,4 +1,4 @@
-//
+
 // Created by durst on 4/6/23.
 //
 
@@ -90,6 +90,10 @@ namespace csknow::feature_store {
             columnCTData[i].hurtInLast5s.resize(size, 1.);
             columnTData[i].fireInLast5s.resize(size, 1.);
             columnCTData[i].fireInLast5s.resize(size, 1.);
+            columnTData[i].secondsUntilNextHitEnemy.resize(size, INVALID_ID);
+            columnCTData[i].secondsUntilNextHitEnemy.resize(size, INVALID_ID);
+            columnTData[i].secondsAfterPriorHitEnemy.resize(size, INVALID_ID);
+            columnCTData[i].secondsAfterPriorHitEnemy.resize(size, INVALID_ID);
             columnTData[i].noFOVEnemyVisibleInLast5s.resize(size, 1.);
             columnTData[i].fovEnemyVisibleInLast5s.resize(size, 1.);
             columnCTData[i].noFOVEnemyVisibleInLast5s.resize(size, 1.);
@@ -332,6 +336,10 @@ namespace csknow::feature_store {
                 columnCTData[i].hurtInLast5s[rowIndex] = 1.;;
                 columnTData[i].fireInLast5s[rowIndex] = 1.;
                 columnCTData[i].fireInLast5s[rowIndex] = 1.;;
+                columnTData[i].secondsUntilNextHitEnemy[rowIndex] = INVALID_ID;
+                columnCTData[i].secondsUntilNextHitEnemy[rowIndex] = INVALID_ID;
+                columnTData[i].secondsAfterPriorHitEnemy[rowIndex] = INVALID_ID;
+                columnCTData[i].secondsAfterPriorHitEnemy[rowIndex] = INVALID_ID;
                 columnTData[i].noFOVEnemyVisibleInLast5s[rowIndex] = 1.;
                 columnTData[i].fovEnemyVisibleInLast5s[rowIndex] = 1.;
                 columnCTData[i].noFOVEnemyVisibleInLast5s[rowIndex] = 1.;
@@ -460,6 +468,9 @@ namespace csknow::feature_store {
                     buffer.playerTickCounters[btTeamPlayerData.playerId].ticksSinceNoFOVEnemyVisible == 0;
             nonDecimatedData[columnIndex].fovEnemyVisible[tickIndex] =
                     buffer.playerTickCounters[btTeamPlayerData.playerId].ticksSinceFOVEnemyVisible == 0;
+            if (buffer.playerTickCounters[btTeamPlayerData.playerId].ticksSinceHitEnemy == 0) {
+                nonDecimatedData[columnIndex].tickIdsWhenHitEnemy.push_back(tickIndex);
+            }
         }
         nonDecimatedC4AreaIndex[tickIndex] = buffer.c4MapData.c4AreaIndex;
 
@@ -902,6 +913,42 @@ namespace csknow::feature_store {
         }
     }
 
+    void TeamFeatureStoreResult::computeSecondsUntilAfterHitEnemy(int64_t curTick, int64_t unmodifiedTickIndex,
+                                                                  array<ColumnPlayerData, max_enemies> & columnData,
+                                                                  const array<NonDecimatedPlayerData, max_enemies> & nonDecimatedData,
+                                                                  const Ticks & ticks, const TickRates & tickRates) {
+        for (size_t playerColumn = 0; playerColumn < max_enemies; playerColumn++) {
+            if (columnData[playerColumn].playerId[curTick] == INVALID_ID || true) {
+                continue;
+            }
+            int64_t minGreaterHitEnemyTick = std::numeric_limits<int64_t>::max(), maxEarlierHitEnemyTick = INVALID_ID;
+
+            for (const auto & tickIdWhenHitEnemy : nonDecimatedData[playerColumn].tickIdsWhenHitEnemy) {
+                if (tickIdWhenHitEnemy <= unmodifiedTickIndex && tickIdWhenHitEnemy > maxEarlierHitEnemyTick) {
+                    maxEarlierHitEnemyTick = tickIdWhenHitEnemy;
+                }
+                if (tickIdWhenHitEnemy >= unmodifiedTickIndex && tickIdWhenHitEnemy < minGreaterHitEnemyTick) {
+                    minGreaterHitEnemyTick = tickIdWhenHitEnemy;
+                }
+            }
+
+            if (minGreaterHitEnemyTick == std::numeric_limits<int64_t>::max()) {
+                columnData[playerColumn].secondsUntilNextHitEnemy[curTick] = INVALID_ID;
+            }
+            else {
+                columnData[playerColumn].secondsUntilNextHitEnemy[curTick] =
+                        static_cast<float>(secondsBetweenTicks(ticks, tickRates, unmodifiedTickIndex, minGreaterHitEnemyTick));
+            }
+            if (maxEarlierHitEnemyTick == INVALID_ID) {
+                columnData[playerColumn].secondsAfterPriorHitEnemy[curTick] = INVALID_ID;
+            }
+            else {
+                columnData[playerColumn].secondsAfterPriorHitEnemy[curTick] =
+                        static_cast<float>(secondsBetweenTicks(ticks, tickRates, maxEarlierHitEnemyTick, unmodifiedTickIndex));
+            }
+        }
+    }
+
     void TeamFeatureStoreResult::convertTraceNonReplayNamesToIndices(const Players & players, int64_t roundIndex,
                                                                      int64_t tickIndex) {
         // don't repeat multiple times per round, and don't do it on rounds without non-replay players
@@ -1055,6 +1102,10 @@ namespace csknow::feature_store {
                 computeDecreaseDistanceToC4(tickIndex, bothSidesTicks20sFutureTracker, columnTData,
                                             DecreaseTimingOption::s20, reachableResult, distanceToPlacesResult,
                                             tAClosePlaces, tBClosePlaces);
+                computeSecondsUntilAfterHitEnemy(tickIndex, unmodifiedTickIndex, columnTData, nonDecimatedTData,
+                                                 ticks, tickRates);
+                computeSecondsUntilAfterHitEnemy(tickIndex, unmodifiedTickIndex, columnCTData, nonDecimatedCTData,
+                                                 ticks, tickRates);
                 //computePlaceAreaACausalLabels(ticks, tickRates, tickIndex, ticks15sFutureTracker, columnCTData);
                 //computePlaceAreaACausalLabels(ticks, tickRates, tickIndex, ticks15sFutureTracker, columnTData);
                 /*
@@ -1200,6 +1251,10 @@ namespace csknow::feature_store {
                 }
                 file.createDataSet("/data/player hurt in last 5s " + columnTeam + " " + iStr,
                                    columnData[columnPlayer].hurtInLast5s, hdf5FlatCreateProps);
+                file.createDataSet("/data/player seconds after prior hit enemy " + columnTeam + " " + iStr,
+                                   columnData[columnPlayer].secondsAfterPriorHitEnemy, hdf5FlatCreateProps);
+                file.createDataSet("/data/player seconds unit next hit enemy " + columnTeam + " " + iStr,
+                                   columnData[columnPlayer].secondsUntilNextHitEnemy, hdf5FlatCreateProps);
                 file.createDataSet("/data/player fire in last 5s " + columnTeam + " " + iStr,
                                    columnData[columnPlayer].fireInLast5s, hdf5FlatCreateProps);
                 file.createDataSet("/data/player enemy visible in last 5s no fov " + columnTeam + " " + iStr,

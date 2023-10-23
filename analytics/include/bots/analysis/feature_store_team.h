@@ -60,6 +60,8 @@ namespace csknow::feature_store {
             vector<int64_t> areaId;
             vector<bool> noFOVEnemyVisible;
             vector<bool> fovEnemyVisible;
+            // above are set every tick, below is only for key ticks
+            vector<int64_t> tickIdsWhenHitEnemy;
         };
         array<NonDecimatedPlayerData, max_enemies> nonDecimatedCTData, nonDecimatedTData;
         vector<int64_t> nonDecimatedC4AreaIndex;
@@ -120,6 +122,7 @@ namespace csknow::feature_store {
             array<vector<float>, num_prior_ticks> priorNearestWorldDistanceToTeammate;
             // 0 means not shot or visible, 1 means shot cur frame or enemy currently visible
             vector<float> hurtInLast5s, fireInLast5s, noFOVEnemyVisibleInLast5s, fovEnemyVisibleInLast5s;
+            vector<float> secondsUntilNextHitEnemy, secondsAfterPriorHitEnemy;
             vector<float> health, armor;
             // control inputs
             vector<int64_t> areaIndex;
@@ -196,6 +199,10 @@ namespace csknow::feature_store {
                                           const ReachableResult & reachableResult,
                                           const DistanceToPlacesResult & distanceToPlacesResult,
                                           const set<PlaceIndex> & aClosePlaces, const set<PlaceIndex> & bClosePlaces);
+        void computeSecondsUntilAfterHitEnemy(int64_t curTick, int64_t unmodifiedTickIndex,
+                                              array<ColumnPlayerData,max_enemies> & columnData,
+                                              const array<NonDecimatedPlayerData, max_enemies> & nonDecimatedData,
+                                              const Ticks & ticks, const TickRates & tickRates);
         void convertTraceNonReplayNamesToIndices(const Players & players, int64_t roundIndex, int64_t tickIndex);
         void computeAcausalLabels(const Games & games, const Rounds & rounds, const Ticks & ticks,
                                   const Players & players, const DistanceToPlacesResult & distanceToPlacesResult,

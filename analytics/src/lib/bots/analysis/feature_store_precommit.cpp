@@ -90,11 +90,13 @@ namespace csknow::feature_store {
     void FeatureStorePreCommitBuffer::updatePlayerTickCounters(const ServerState & state) {
         // collect state for counter updates
         set<CSGOId> victimsThisTick;
+        set<CSGOId> attackersWhoHitEnemiesThisTick;
         for (const auto & hurtEvent : state.hurtEvents) {
             // filter out non-line of sight hurt events
             if (sourcemodNonGunWeaponNames.count(hurtEvent.weapon) == 0 &&
                 demoNonGunWeaponNames.count(hurtEvent.weapon) == 0) {
                 victimsThisTick.insert(hurtEvent.victimId);
+                attackersWhoHitEnemiesThisTick.insert(hurtEvent.attackerId);
             }
         }
 
@@ -152,6 +154,13 @@ namespace csknow::feature_store {
             }
             else {
                 playerCounter.ticksSinceHurt = std::min(playerCounter.ticksSinceHurt + 1, default_many_ticks);
+            }
+
+            if (attackersWhoHitEnemiesThisTick.count(playerId) > 0) {
+                playerCounter.ticksSinceHitEnemy = 0;
+            }
+            else {
+                playerCounter.ticksSinceHitEnemy = std::min(playerCounter.ticksSinceHitEnemy + 1, default_many_ticks);
             }
 
             if (attackersThisTick.count(playerId) > 0) {
