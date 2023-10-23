@@ -6,3 +6,4 @@ simulation_plots/
 humanness_plots/
 saved_models/
 trace_plots/
+*.log
