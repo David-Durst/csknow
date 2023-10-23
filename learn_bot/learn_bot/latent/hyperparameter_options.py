@@ -4,7 +4,7 @@ from typing import Optional
 
 from learn_bot.latent.place_area.pos_abs_from_delta_grid_or_radial import data_ticks_per_second, data_ticks_per_sim_tick
 from learn_bot.latent.train_paths import checkpoints_path
-from learn_bot.latent.transformer_nested_hidden_latent_model import PlayerMaskType
+from learn_bot.latent.transformer_nested_hidden_latent_model import PlayerMaskType, OutputMaskType
 
 from datetime import datetime
 
@@ -27,6 +27,7 @@ class HyperparameterOptions:
     rollout_seconds: Optional[float] = 2.
     player_mask_type: PlayerMaskType = PlayerMaskType.NoMask
     non_pos_mask: bool = False
+    output_mask: OutputMaskType = OutputMaskType.NoMask
     weight_not_move_loss: Optional[float] = None
     drop_history_probability: Optional[float] = None
     comment: str = ""
@@ -37,7 +38,8 @@ class HyperparameterOptions:
                f"b_{self.batch_size}_it_{self.num_input_time_steps}_" \
                f"lr_{self.learning_rate}_wd_{self.weight_decay}_" \
                f"l_{self.layers}_h_{self.heads}_n_{self.noise_var}_" \
-               f"ros_{self.rollout_seconds}_m_{str(self.player_mask_type)}_" \
+               f"ros_{self.rollout_seconds}_pm_{str(self.player_mask_type)}_" \
+               f"nm_{self.non_pos_mask}_om_{str(self.output_mask)}_" \
                f"w_{self.weight_not_move_loss}_dh_{self.drop_history_probability}_c_{self.comment}"
 
     def get_checkpoints_path(self) -> Path:

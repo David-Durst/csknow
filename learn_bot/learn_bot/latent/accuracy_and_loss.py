@@ -8,7 +8,7 @@ from learn_bot.latent.dataset import *
 from learn_bot.latent.order.column_names import num_radial_ticks
 from learn_bot.latent.place_area.pos_abs_from_delta_grid_or_radial import get_delta_indices_from_grid, \
     get_delta_pos_from_radial
-from learn_bot.latent.transformer_nested_hidden_latent_model import TransformerNestedHiddenLatentModel
+from learn_bot.latent.transformer_nested_hidden_latent_model import TransformerNestedHiddenLatentModel, OutputMaskType
 from learn_bot.libs.io_transforms import IOColumnTransformers, ColumnTransformerType, CPU_DEVICE_STR, \
     get_untransformed_outputs, get_transformed_outputs, CUDA_DEVICE_STR
 from math import sqrt
@@ -68,9 +68,41 @@ class LatentLosses:
         writer.add_scalar(prefix + '/loss/total', self.total_accumulator, total_epoch_num)
 
 
+def compute_output_mask(model: TransformerNestedHiddenLatentModel, X: torch.Tensor,
+                        output_mask_type: OutputMaskType) -> torch.Tensor:
+    no_time_seconds_to_hit_enemy_per_player = \
+        rearrange(X[:, model.players_seconds_to_hit_enemy], "b (p d) -> b p d", p=model.num_players)
+    seconds_to_hit_enemy_per_player = rearrange(
+        repeat(no_time_seconds_to_hit_enemy_per_player, 'b p d -> b (p repeat) d', repeat=num_radial_ticks),
+        'b pt d -> (b pt) d'
+    )
+    if output_mask_type == OutputMaskType.NoMask:
+        return torch.ones_like(seconds_to_hit_enemy_per_player[:, 0], dtype=torch.bool)
+    elif output_mask_type == OutputMaskType.EngagementMask or output_mask_type == OutputMaskType.NoEngagementMask:
+        in_engagement = ((seconds_to_hit_enemy_per_player[:, 0] < 5.) & (seconds_to_hit_enemy_per_player[:, 0] >= 0.)) | \
+                        ((seconds_to_hit_enemy_per_player[:, 1] < 5.) & (seconds_to_hit_enemy_per_player[:, 1] >= 0.))
+        if output_mask_type == OutputMaskType.EngagementMask:
+            return in_engagement
+        else:
+            return ~in_engagement
+
+
+@dataclass
+class TotalMaskStatistics:
+    num_player_points: int = 0
+    num_player_points_included_by_mask: int = 0
+
+
+def compute_total_mask_statistics(Y, num_players, output_mask, total_mask_statistics: TotalMaskStatistics):
+    Y_per_player_time_step = rearrange(Y, "b (p t d) -> (b p t) d", p=num_players, t=num_radial_ticks)
+    total_mask_statistics.num_player_points_included_by_mask += \
+        int(torch.sum((Y_per_player_time_step.sum(axis=1) > 0.1) & output_mask))
+    total_mask_statistics.num_player_points += output_mask.shape[0]
+
+
 # https://discuss.pytorch.org/t/how-to-combine-multiple-criterions-to-a-loss-function/348/4
 def compute_loss(model: TransformerNestedHiddenLatentModel, pred, Y, X_orig: Optional, X_rollout: Optional,
-                 duplicated_last, num_players, weight_not_move_loss: Optional[float]) -> LatentLosses:
+                 duplicated_last, num_players, output_mask, weight_not_move_loss: Optional[float]) -> LatentLosses:
     global cross_entropy_loss_fn
     pred_transformed = get_transformed_outputs(pred)
 
@@ -81,7 +113,7 @@ def compute_loss(model: TransformerNestedHiddenLatentModel, pred, Y, X_orig: Opt
     pred_transformed_per_player_time_step = rearrange(pred_transformed, "b p t d -> (b p t) d",
                                                       p=num_players, t=num_radial_ticks)
     duplicated_last_per_player_time_step = repeat(duplicated_last, "b -> (b repeat)", repeat=num_players * num_radial_ticks)
-    valid_rows = Y_per_player_time_step.sum(axis=1) > 0.1
+    valid_rows = (Y_per_player_time_step.sum(axis=1) > 0.1) & output_mask
     valid_Y_transformed = Y_per_player_time_step[valid_rows]
     valid_pred_transformed = pred_transformed_per_player_time_step[valid_rows]
     valid_duplicated = duplicated_last_per_player_time_step[valid_rows]
@@ -172,7 +204,7 @@ duplicated_name_str = 'duplicated'
 
 def compute_accuracy_and_delta_diff(pred, Y, duplicated_last, accuracy, delta_diff_xy, delta_diff_xyz,
                                     valids_per_accuracy_column, num_players, column_transformers: IOColumnTransformers,
-                                    stature_to_speed):
+                                    stature_to_speed, output_mask):
     pred_untransformed = get_untransformed_outputs(pred)
 
     name = column_transformers.output_types.categorical_distribution_first_sub_cols[0]
@@ -184,7 +216,9 @@ def compute_accuracy_and_delta_diff(pred, Y, duplicated_last, accuracy, delta_di
                                               p=num_players, t=num_radial_ticks)
     pred_untransformed_label_per_player = torch.argmax(pred_untransformed_per_player, -1)
     accuracy_per_player = (Y_label_per_player == pred_untransformed_label_per_player).type(torch.float)
-    Y_valid_per_player_row = Y_per_player.sum(axis=2)
+    Y_valid_per_player_row = Y_per_player.sum(axis=2) * rearrange(torch.where(output_mask, 1., 0.),
+                                                                  '(b p t) -> b (p t)',
+                                                                  p=num_players, t=num_radial_ticks)
     masked_accuracy_per_player = accuracy_per_player * Y_valid_per_player_row
 
     # compute delta diffs

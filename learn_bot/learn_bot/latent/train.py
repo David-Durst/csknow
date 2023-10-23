@@ -26,12 +26,14 @@ from learn_bot.latent.place_area.rollout_simulator import rollout_simulate
 from learn_bot.latent.profiling import profile_latent_model
 from learn_bot.latent.train_paths import checkpoints_path, runs_path, train_test_split_file_name, \
     default_selected_retake_rounds_path
-from learn_bot.latent.transformer_nested_hidden_latent_model import TransformerNestedHiddenLatentModel, PlayerMaskType
+from learn_bot.latent.transformer_nested_hidden_latent_model import TransformerNestedHiddenLatentModel, PlayerMaskType, \
+    OutputMaskType
 from learn_bot.libs.hdf5_wrapper import HDF5Wrapper
 from learn_bot.libs.io_transforms import CUDA_DEVICE_STR
 from learn_bot.latent.accuracy_and_loss import compute_loss, compute_accuracy_and_delta_diff, \
     finish_accuracy_and_delta_diff, \
-    CPU_DEVICE_STR, LatentLosses, duplicated_name_str
+    CPU_DEVICE_STR, LatentLosses, duplicated_name_str, compute_output_mask, TotalMaskStatistics, \
+    compute_total_mask_statistics
 from learn_bot.libs.multi_hdf5_wrapper import MultiHDF5Wrapper
 from tqdm import tqdm
 from dataclasses import dataclass
@@ -54,7 +56,10 @@ class TrainType(Enum):
 
 
 default_hyperparameter_options = HyperparameterOptions()
-hyperparameter_option_range = [HyperparameterOptions(num_input_time_steps=1),
+hyperparameter_option_range = [HyperparameterOptions(num_input_time_steps=1,
+                                                     output_mask=OutputMaskType.EngagementMask),
+                               HyperparameterOptions(num_input_time_steps=1,
+                                                     output_mask=OutputMaskType.NoEngagementMask),
                                # pointless to have temporal mask with only one input time step
                                #HyperparameterOptions(num_input_time_steps=1,
                                #                      player_mask_type=PlayerMaskType.TeammateTemporalOnlyMask),
@@ -223,6 +228,7 @@ def train(train_type: TrainType, multi_hdf5_wrapper: MultiHDF5Wrapper,
         batch_num = 0
         start_epoch_time = time.perf_counter()
         dataloader.dataset.rollout_steps = hyperparameter_options.get_rollout_steps(total_epochs)
+        total_mask_statistics = TotalMaskStatistics()
         with tqdm(total=len(dataloader), disable=False) as pbar:
             for batch, (X, Y, similarity, duplicated_last, indices) in enumerate(dataloader):
                 batch_num += 1
@@ -263,6 +269,7 @@ def train(train_type: TrainType, multi_hdf5_wrapper: MultiHDF5Wrapper,
                         pred_flattened = pred
                         Y_flattened = Y
                         duplicated_last_flattened = duplicated_last
+                        output_mask = compute_output_mask(model, X, hyperparameter_options.output_mask)
                     else:
                         rollout_batch_result = \
                             rollout_simulate(X, Y, similarity, duplicated_last, indices, model,
@@ -272,6 +279,7 @@ def train(train_type: TrainType, multi_hdf5_wrapper: MultiHDF5Wrapper,
                         pred_flattened = rollout_batch_result.model_pred_flattened
                         Y_flattened = rollout_batch_result.Y_flattened
                         duplicated_last_flattened = rollout_batch_result.duplicated_last_flattened
+                        output_mask = compute_output_mask(model, X_flattened_orig, hyperparameter_options.output_mask)
 
                     model.noise_var = -1.
                     model.drop_history = False
@@ -289,8 +297,10 @@ def train(train_type: TrainType, multi_hdf5_wrapper: MultiHDF5Wrapper,
                         #print(indices[bad_batch_row])
                         #print('bad pred')
                         sys.exit(0)
+                    compute_total_mask_statistics(Y, model.num_players, output_mask, total_mask_statistics)
                     batch_loss = compute_loss(model, pred_flattened, Y_flattened, X_flattened_orig, X_flattened_rollout,
                                               duplicated_last_flattened, model.num_players,
+                                              output_mask,
                                               hyperparameter_options.weight_not_move_loss)
                     # uncomment here and below causes memory issues
                     cumulative_loss += batch_loss
@@ -305,7 +315,7 @@ def train(train_type: TrainType, multi_hdf5_wrapper: MultiHDF5Wrapper,
                 compute_accuracy_and_delta_diff(pred_flattened, Y_flattened, duplicated_last_flattened,
                                                 accuracy, delta_diff_xy, delta_diff_xyz,
                                                 valids_per_accuracy_column, model.num_players, column_transformers,
-                                                model.stature_to_speed_gpu)
+                                                model.stature_to_speed_gpu, output_mask)
                 pbar.update(1)
                 if profiler is not None:
                     profiler.step()
@@ -335,6 +345,7 @@ def train(train_type: TrainType, multi_hdf5_wrapper: MultiHDF5Wrapper,
                                                          valids_per_accuracy_column, column_transformers)
         train_test_str = "Train" if train else "Test"
         print(f"Epoch {train_test_str} Accuracy: {accuracy_string}, Transformed Avg Loss: {cumulative_loss.total_accumulator:>8f}")
+        print(f"Percent Included By Mask: {total_mask_statistics.num_player_points_included_by_mask / float(total_mask_statistics.num_player_points):.4f}")
         print(f"Batch Time {(end_epoch_time - start_epoch_time) / batch_num: 0.4f} s")
         return cumulative_loss, accuracy, delta_diff_xy, delta_diff_xyz
 

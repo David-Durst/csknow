@@ -65,6 +65,20 @@ class PlayerMaskType(Enum):
             return "EnemyFullMask"
 
 
+class OutputMaskType(Enum):
+    NoMask = 1
+    EngagementMask = 2
+    NoEngagementMask = 3
+
+    def __str__(self) -> str:
+        if self == OutputMaskType.NoMask:
+            return "NoMask"
+        elif self == OutputMaskType.EngagementMask:
+            return "EngagementMask"
+        else:
+            return "NoEngagementMask"
+
+
 class TransformerNestedHiddenLatentModel(nn.Module):
     internal_width: int
     cts: IOColumnTransformers
@@ -114,6 +128,7 @@ class TransformerNestedHiddenLatentModel(nn.Module):
         self.players_nearest_crosshair_to_enemy_columns = \
             rearrange(nested_players_nearest_crosshair_to_enemy_columns_tensor[:, 0:num_input_time_steps],
                       'p t -> (p t)', p=self.num_players, t=num_input_time_steps).tolist()
+        self.players_seconds_to_hit_enemy = range_list_to_index_list(cts.get_name_ranges(True, True, contained_str="player seconds"))
 
         #self.players_hurt_in_last_5s_columns = get_player_columns_by_str(cts, "player hurt in last 5s")
         #self.players_fire_in_last_5s_columns = get_player_columns_by_str(cts, "player fire in last 5s")
@@ -126,7 +141,8 @@ class TransformerNestedHiddenLatentModel(nn.Module):
         #)
         self.player_all_temporal_columns = all_players_pos_columns + all_players_nearest_crosshair_to_enemy_columns
         self.players_non_temporal_columns = flatten_list([
-            [player_column for player_column in player_columns if player_column not in self.player_all_temporal_columns]
+            [player_column for player_column in player_columns
+             if player_column not in (self.player_all_temporal_columns + self.players_seconds_to_hit_enemy)]
             for player_columns in players_columns
         ])
         self.num_similarity_columns = 2
