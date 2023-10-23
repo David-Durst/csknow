@@ -89,6 +89,8 @@ class PlayerPlaceAreaColumns:
             get_player_nearest_crosshair_distance_to_enemy_columns(player_index, team_str)
         self.prior_nearest_crosshair_distance_to_enemy = []
         self.player_hurt_in_last_5s = get_player_hurt_in_last_5s_columns(player_index, team_str)
+        self.seconds_after_prior_hit_enemy = get_player_seconds_after_prior_hit_enemy(player_index, team_str)
+        self.seconds_until_next_hit_enemy = get_player_seconds_until_next_hit_enemy(player_index, team_str)
         self.player_fire_in_last_5s = get_player_fire_in_last_5s_columns(player_index, team_str)
         self.player_no_fov_enemy_visible_in_last_5s = get_player_no_fov_enemy_visible_in_last_5s_columns(player_index, team_str)
         self.player_fov_enemy_visible_in_last_5s = get_player_fov_enemy_visible_in_last_5s_columns(player_index, team_str)

@@ -82,6 +82,12 @@ def get_player_hurt_in_last_5s_columns(player_index: int, team_str: str, history
     return "player hurt in last 5s " + team_str + " " + str(player_index) + \
         ("" if history_index == 0 else " t-" + str(history_index))
 
+def get_player_seconds_after_prior_hit_enemy(player_index: int, team_str: str) -> str:
+    return "player seconds after prior hit enemy " + team_str + " " + str(player_index)
+
+def get_player_seconds_until_next_hit_enemy(player_index: int, team_str: str) -> str:
+    return "player seconds until next hit enemy " + team_str + " " + str(player_index)
+
 def get_player_fire_in_last_5s_columns(player_index: int, team_str: str, history_index: int = 0) -> str:
     return "player fire in last 5s " + team_str + " " + str(player_index) + \
         ("" if history_index == 0 else " t-" + str(history_index))

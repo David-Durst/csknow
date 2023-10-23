@@ -61,7 +61,7 @@ namespace csknow::feature_store {
             vector<bool> noFOVEnemyVisible;
             vector<bool> fovEnemyVisible;
             // above are set every tick, below is only for key ticks
-            vector<int64_t> tickIdsWhenHitEnemy;
+            map<int64_t, vector<int64_t>> roundIdToTickIdsWhenHitEnemy;
         };
         array<NonDecimatedPlayerData, max_enemies> nonDecimatedCTData, nonDecimatedTData;
         vector<int64_t> nonDecimatedC4AreaIndex;
@@ -199,7 +199,7 @@ namespace csknow::feature_store {
                                           const ReachableResult & reachableResult,
                                           const DistanceToPlacesResult & distanceToPlacesResult,
                                           const set<PlaceIndex> & aClosePlaces, const set<PlaceIndex> & bClosePlaces);
-        void computeSecondsUntilAfterHitEnemy(int64_t curTick, int64_t unmodifiedTickIndex,
+        void computeSecondsUntilAfterHitEnemy(int64_t curTick, int64_t unmodifiedTickIndex, int64_t roundIndex,
                                               array<ColumnPlayerData,max_enemies> & columnData,
                                               const array<NonDecimatedPlayerData, max_enemies> & nonDecimatedData,
                                               const Ticks & ticks, const TickRates & tickRates);

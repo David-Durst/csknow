@@ -96,7 +96,9 @@ namespace csknow::feature_store {
             if (sourcemodNonGunWeaponNames.count(hurtEvent.weapon) == 0 &&
                 demoNonGunWeaponNames.count(hurtEvent.weapon) == 0) {
                 victimsThisTick.insert(hurtEvent.victimId);
-                attackersWhoHitEnemiesThisTick.insert(hurtEvent.attackerId);
+                if (state.getClient(hurtEvent.victimId).team != state.getClient(hurtEvent.attackerId).team) {
+                    attackersWhoHitEnemiesThisTick.insert(hurtEvent.attackerId);
+                }
             }
         }
 

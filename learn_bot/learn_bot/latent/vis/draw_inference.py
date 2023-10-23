@@ -185,6 +185,8 @@ def draw_all_players(data_series: pd.Series, pred_series: Optional[pd.Series], i
                                   data_series[player_place_area_columns.vel[2]])
 
             # temporal data that this function always receives
+            seconds_after_prior_hit_enemy = data_series[player_place_area_columns.seconds_after_prior_hit_enemy]
+            seconds_until_next_hit_enemy = data_series[player_place_area_columns.seconds_until_next_hit_enemy]
             decrease_distance_to_c4_5s = data_series[player_place_area_columns.decrease_distance_to_c4_5s]
             decrease_distance_to_c4_10s = data_series[player_place_area_columns.decrease_distance_to_c4_10s]
             decrease_distance_to_c4_20s = data_series[player_place_area_columns.decrease_distance_to_c4_20s]
@@ -199,7 +201,8 @@ def draw_all_players(data_series: pd.Series, pred_series: Optional[pd.Series], i
                            f"decrease distance to c4 5s {decrease_distance_to_c4_5s} 10s {decrease_distance_to_c4_10s} 20s {decrease_distance_to_c4_20s}, " \
                            f"nearest crosshair distance to enemy {nearest_crosshair_distance_to_enemy:3.2f}, " \
                            f"hurt last 5s {hurt_last_5s:3.2f}, fire last 5s {fire_last_5s:3.2f}, " \
-                           f"enemy visible last 5s (no fov) {no_fov_enemy_visible_last_5s:3.2f}, (fov) {fov_enemy_visible_last_5s:3.2f}"
+                           f"enemy visible last 5s (no fov) {no_fov_enemy_visible_last_5s:3.2f}, (fov) {fov_enemy_visible_last_5s:3.2f}, " \
+                           f"seconds after hit {seconds_after_prior_hit_enemy:5.2f} until next {seconds_until_next_hit_enemy:5.2f}"
             result.temporal += temporal_str + "\n"
 
             if draw_only_pos:
