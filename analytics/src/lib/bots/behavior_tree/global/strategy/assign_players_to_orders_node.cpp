@@ -151,6 +151,8 @@ namespace strategy {
     }
 
     bool AssignPlayersToOrders::assignPlayerToOrderProbabilistic(const ServerState::Client & client, bool plantedA) {
+        return false;
+        /*
         if (!blackboard.inferenceManager.haveValidData()) {
             return false;
         }
@@ -197,5 +199,6 @@ namespace strategy {
         //std::cout << "bad assigning to " << client.team << ", " << 2 << std::endl;
         blackboard.strategy.assignPlayerToOrder(client.csgoId, {client.team, 2});
         return true;
+         */
     }
 }

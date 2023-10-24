@@ -129,7 +129,7 @@ namespace csknow::inference_manager {
         //runEngagementInference(clients);
         //runAggressionInference(clients);
         if (overallModelToRun == 0) {
-            runDeltaPosInference(false);
+            runDeltaPosInference(true);
             ranDeltaPosInference = true;
         }
         if (overallModelToRun == 4) {

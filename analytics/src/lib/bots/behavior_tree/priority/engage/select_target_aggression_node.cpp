@@ -7,6 +7,9 @@
 
 namespace engage {
     NodeState SelectTargetAggressionNode::exec(const ServerState &state, TreeThinker &treeThinker) {
+        playerNodeState[treeThinker.csgoId] = NodeState::Failure;
+        return playerNodeState[treeThinker.csgoId];
+        /*
         Priority & curPriority = blackboard.playerToPriority[treeThinker.csgoId];
         const ServerState::Client & curClient = state.getClient(treeThinker.csgoId);
         //Path & curPath = blackboard.playerToPath[treeThinker.csgoId];
@@ -79,7 +82,6 @@ namespace engage {
             else {
                 // move to nearest area not visible to enemy
                 curPriority.moveOptions = {true, false, false};
-                /*
                 AreaBits targetVisBits =
                     blackboard.getVisibleAreasByPlayer(state.getClient(curPriority.targetPlayer.playerId));
                 const nav_mesh::nav_area & curArea = blackboard.getPlayerNavArea(state.getClient(treeThinker.csgoId));
@@ -96,12 +98,12 @@ namespace engage {
                     }
                 }
                 curPriority.targetPos = blackboard.visPoints.getCellVisPoints()[minAreaIndex].center;
-                 */
             }
         }
 
         playerNodeState[treeThinker.csgoId] = NodeState::Success;
         return playerNodeState[treeThinker.csgoId];
+        */
     }
 
 
