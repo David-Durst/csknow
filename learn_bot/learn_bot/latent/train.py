@@ -56,9 +56,9 @@ class TrainType(Enum):
 
 
 default_hyperparameter_options = HyperparameterOptions()
-hyperparameter_option_range = [HyperparameterOptions(num_input_time_steps=1,
+hyperparameter_option_range = [HyperparameterOptions(num_input_time_steps=5,
                                                      output_mask=OutputMaskType.EngagementMask),
-                               HyperparameterOptions(num_input_time_steps=1,
+                               HyperparameterOptions(num_input_time_steps=5,
                                                      output_mask=OutputMaskType.NoEngagementMask),
                                # pointless to have temporal mask with only one input time step
                                #HyperparameterOptions(num_input_time_steps=1,

@@ -14,7 +14,7 @@ now_str = now.strftime("%m_%d_%Y__%H_%M_%S")
 @dataclass
 class HyperparameterOptions:
     internal_width: int = 128
-    bc_epochs: int = 25
+    bc_epochs: int = 35
     probabilistic_rollout_epochs: int = 0
     full_rollout_epochs: int = 0
     batch_size: int = 1024

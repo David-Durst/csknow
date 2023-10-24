@@ -8,35 +8,17 @@ using namespace torch::indexing;
 namespace csknow::inference_manager {
 
     InferenceManager::InferenceManager(const std::string & modelsDir) : valid(true),
-        engagementModelPath(fs::path(modelsDir) / fs::path("latent_model") /
-                            fs::path("engagement_script_model.pt")),
-        aggressionModelPath(fs::path(modelsDir) / fs::path("latent_model") /
-                            fs::path("aggression_script_model.pt")),
-        orderModelPath(fs::path(modelsDir) / fs::path("latent_model") /
-                       fs::path("order_script_model.pt")),
-        placeModelPath(fs::path(modelsDir) / fs::path("latent_model") /
-                       fs::path("place_script_model.pt")),
-        areaModelPath(fs::path(modelsDir) / fs::path("latent_model") /
-                       fs::path("area_script_model.pt")),
         deltaPosModelPath(fs::path(modelsDir) / fs::path("latent_model") /
+                      fs::path("delta_pos_script_model.pt")),
+        combatDeltaPosModelPath(fs::path(modelsDir) / fs::path("combat_model") /
                       fs::path("delta_pos_script_model.pt")) {
         at::set_num_threads(1);
         at::set_num_interop_threads(1);
         torch::jit::getProfilingMode() = false;
-        /*
-        auto tmpEngagementModule = torch::jit::load(engagementModelPath);
-        engagementModule = torch::jit::optimize_for_inference(tmpEngagementModule);
-        auto tmpAggressionModule = torch::jit::load(aggressionModelPath);
-        aggressionModule = torch::jit::optimize_for_inference(tmpAggressionModule);
-        auto tmpOrderModule = torch::jit::load(orderModelPath);
-        orderModule = torch::jit::optimize_for_inference(tmpOrderModule);
-        auto tmpPlaceModule = torch::jit::load(placeModelPath);
-        placeModule = torch::jit::optimize_for_inference(tmpPlaceModule);
-        auto tmpAreaModule = torch::jit::load(areaModelPath);
-        areaModule = torch::jit::optimize_for_inference(tmpAreaModule);
-         */
         auto tmpDeltaPosModule = torch::jit::load(deltaPosModelPath);
         deltaPosModule = torch::jit::optimize_for_inference(tmpDeltaPosModule);
+        auto tmpCombatDeltaPosModule = torch::jit::load(combatDeltaPosModelPath);
+        combatDeltaPosModule = torch::jit::optimize_for_inference(tmpCombatDeltaPosModule);
     }
 
     void InferenceManager::setCurClients(const vector<ServerState::Client> & clients) {
@@ -64,7 +46,7 @@ namespace csknow::inference_manager {
         }
     }
 
-    void InferenceManager::recordTeamValues(csknow::feature_store::FeatureStoreResult & featureStoreResult) {
+    void InferenceManager::recordInputFeatureValues(csknow::feature_store::FeatureStoreResult & featureStoreResult) {
         /*
         orderValues = csknow::inference_latent_order::extractFeatureStoreOrderValues(featureStoreResult, 0);
         placeValues = csknow::inference_latent_place::extractFeatureStorePlaceValues(featureStoreResult, 0);
@@ -74,118 +56,7 @@ namespace csknow::inference_manager {
                                                                                         teamSaveControlParameters);
     }
 
-    void InferenceManager::recordPlayerValues(csknow::feature_store::FeatureStoreResult &featureStoreResult,
-                                              CSGOId playerId) {
-        playerToInferenceData[playerId].engagementValues =
-            csknow::inference_latent_engagement::extractFeatureStoreEngagementValues(featureStoreResult, 0);
-        playerToInferenceData[playerId].aggressionValues =
-            csknow::inference_latent_aggression::extractFeatureStoreAggressionValues(featureStoreResult, 0);
-    }
-
-    void InferenceManager::runEngagementInference(const vector<CSGOId> & clientsToInfer) {
-        if (clientsToInfer.empty()) {
-            return;
-        }
-        vector<csknow::inference_latent_engagement::InferenceEngagementTickValues> values;
-        size_t elementsPerClient = playerToInferenceData[clientsToInfer.front()].engagementValues.rowCPP.size();
-        std::vector<float> rowCPP;
-        for (const auto & csgoId : clientsToInfer) {
-            const vector<float> & playerRow = playerToInferenceData[csgoId].engagementValues.rowCPP;
-            rowCPP.insert(rowCPP.end(), playerRow.begin(), playerRow.end());
-        }
-        std::vector<torch::jit::IValue> inputs;
-
-        torch::Tensor rowPT =
-            torch::from_blob(rowCPP.data(),
-                             {static_cast<long>(clientsToInfer.size()), static_cast<long>(elementsPerClient)}, options);
-        inputs.push_back(rowPT);
-
-        at::Tensor output = engagementModule.forward(inputs).toTuple()->elements()[1].toTensor();
-
-        for (size_t i = 0; i < clientsToInfer.size(); i++) {
-            at::Tensor playerOutput = output.index({Slice(i, None, i+1), "..."});
-            playerToInferenceData[clientsToInfer[i]].engagementProbabilities =
-                csknow::inference_latent_engagement::extractFeatureStoreEngagementResults(
-                    playerOutput, playerToInferenceData[clientsToInfer[i]].engagementValues);
-        }
-    }
-
-    void InferenceManager::runAggressionInference(const vector<CSGOId> & clientsToInfer) {
-        if (clientsToInfer.empty()) {
-            return;
-        }
-        vector<csknow::inference_latent_aggression::InferenceAggressionTickValues> values;
-        size_t elementsPerClient = playerToInferenceData[clientsToInfer.front()].aggressionValues.rowCPP.size();
-        std::vector<float> rowCPP;
-        for (const auto & csgoId : clientsToInfer) {
-            const vector<float> & playerRow = playerToInferenceData[csgoId].aggressionValues.rowCPP;
-            rowCPP.insert(rowCPP.end(), playerRow.begin(), playerRow.end());
-        }
-        std::vector<torch::jit::IValue> inputs;
-
-        torch::Tensor rowPT =
-            torch::from_blob(rowCPP.data(),
-                             {static_cast<long>(clientsToInfer.size()), static_cast<long>(elementsPerClient)}, options);
-        inputs.push_back(rowPT);
-
-        at::Tensor output = aggressionModule.forward(inputs).toTuple()->elements()[1].toTensor();
-
-        for (size_t i = 0; i < clientsToInfer.size(); i++) {
-            at::Tensor playerOutput = output.index({Slice(i, None, i+1), "..."});
-            playerToInferenceData[clientsToInfer[i]].aggressionProbabilities =
-                csknow::inference_latent_aggression::extractFeatureStoreAggressionResults(playerOutput);
-        }
-    }
-
-    void InferenceManager::runOrderInference() {
-        std::vector<torch::jit::IValue> inputs;
-        torch::Tensor rowPT = torch::from_blob(orderValues.rowCPP.data(),
-                                               {1, static_cast<long>(orderValues.rowCPP.size())},
-                                               options);
-
-        inputs.push_back(rowPT);
-
-        at::Tensor output = orderModule.forward(inputs).toTuple()->elements()[1].toTensor();
-
-        for (auto & [csgoId, inferenceData] : playerToInferenceData) {
-            playerToInferenceData[csgoId].orderProbabilities =
-                extractFeatureStoreOrderResults(output, orderValues, csgoId, inferenceData.team);
-        }
-    }
-
-    void InferenceManager::runPlaceInference() {
-        std::vector<torch::jit::IValue> inputs;
-        torch::Tensor rowPT = torch::from_blob(placeValues.rowCPP.data(),
-                                               {1, static_cast<long>(placeValues.rowCPP.size())},
-                                               options);
-
-        inputs.push_back(rowPT);
-
-        at::Tensor output = placeModule.forward(inputs).toTuple()->elements()[1].toTensor();
-
-        for (auto & [csgoId, inferenceData] : playerToInferenceData) {
-            playerToInferenceData[csgoId].placeProbabilities =
-                    extractFeatureStorePlaceResults(output, placeValues, csgoId, inferenceData.team);
-        }
-    }
-
-    void InferenceManager::runAreaInference() {
-        std::vector<torch::jit::IValue> inputs;
-        torch::Tensor rowPT = torch::from_blob(areaValues.rowCPP.data(),
-                                               {1, static_cast<long>(areaValues.rowCPP.size())},
-                                               options);
-
-        inputs.push_back(rowPT);
-
-        at::Tensor output = areaModule.forward(inputs).toTuple()->elements()[1].toTensor();
-
-        for (auto & [csgoId, inferenceData] : playerToInferenceData) {
-            playerToInferenceData[csgoId].areaProbabilities =
-                    extractFeatureStoreAreaResults(output, areaValues, csgoId, inferenceData.team);
-        }
-    }
-
-    void InferenceManager::runDeltaPosInference() {
+    void InferenceManager::runDeltaPosInference(bool combatModule) {
         std::vector<torch::jit::IValue> inputs;
         torch::Tensor rowPT = torch::from_blob(deltaPosValues.rowCPP.data(),
                                                {1, static_cast<long>(deltaPosValues.rowCPP.size())},
@@ -201,11 +72,21 @@ namespace csknow::inference_manager {
         torch::Tensor temperaturePt = torch::from_blob(temperatureArr.data(), {1, 1}, options);
         inputs.push_back(temperaturePt);
 
-        at::Tensor output = deltaPosModule.forward(inputs).toTuple()->elements()[1].toTensor();
+        if (combatModule) {
+            at::Tensor output = combatDeltaPosModule.forward(inputs).toTuple()->elements()[1].toTensor();
 
-        for (auto & [csgoId, inferenceData] : playerToInferenceData) {
-            playerToInferenceData[csgoId].deltaPosProbabilities =
-                    extractFeatureStoreDeltaPosResults(output, deltaPosValues, csgoId, inferenceData.team);
+            for (auto & [csgoId, inferenceData] : playerToInferenceData) {
+                playerToInferenceData[csgoId].combatDeltaPosProbabilities =
+                        extractFeatureStoreDeltaPosResults(output, deltaPosValues, csgoId, inferenceData.team);
+            }
+        }
+        else {
+            at::Tensor output = deltaPosModule.forward(inputs).toTuple()->elements()[1].toTensor();
+
+            for (auto & [csgoId, inferenceData] : playerToInferenceData) {
+                playerToInferenceData[csgoId].deltaPosProbabilities =
+                        extractFeatureStoreDeltaPosResults(output, deltaPosValues, csgoId, inferenceData.team);
+            }
         }
     }
 
@@ -248,20 +129,12 @@ namespace csknow::inference_manager {
         //runEngagementInference(clients);
         //runAggressionInference(clients);
         if (overallModelToRun == 0) {
-            //runOrderInference();
-            ranOrderInference = true;
-        }
-        else if (overallModelToRun == 1) {
-            //runPlaceInference();
-            ranPlaceInference = true;
-        }
-        else if (overallModelToRun == 2) {
-            //runAreaInference();
-            ranAreaInference = true;
-        }
-        else if (overallModelToRun == 3) {
-            runDeltaPosInference();
+            runDeltaPosInference(false);
             ranDeltaPosInference = true;
+        }
+        if (overallModelToRun == 4) {
+            runDeltaPosInference(true);
+            ranCombatDeltaPosInference = true;
         }
         overallModelToRun = (overallModelToRun + 1) % 16;
         auto end = std::chrono::system_clock::now();
@@ -273,7 +146,7 @@ namespace csknow::inference_manager {
     }
 
     bool InferenceManager::haveValidData() const {
-        return ranDeltaPosInference;
+        return ranDeltaPosInference && ranCombatDeltaPosInference;
         /*
         if (!ranOrderInference || !ranPlaceInference || !ranAreaInference || !ranDeltaPosInference) {
             return false;

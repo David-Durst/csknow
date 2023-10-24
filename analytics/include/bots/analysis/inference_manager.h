@@ -26,47 +26,29 @@ namespace csknow::inference_manager {
         bool validData;
         TeamId team;
         size_t ticksSinceLastInference;
-        csknow::inference_latent_engagement::InferenceEngagementTickValues engagementValues;
-        csknow::inference_latent_engagement::InferenceEngagementTickProbabilities engagementProbabilities;
-        csknow::inference_latent_aggression::InferenceAggressionTickValues aggressionValues;
-        csknow::inference_latent_aggression::InferenceAggressionTickProbabilities aggressionProbabilities;
-        csknow::inference_latent_order::InferenceOrderPlayerAtTickProbabilities orderProbabilities;
-        csknow::inference_latent_place::InferencePlacePlayerAtTickProbabilities placeProbabilities;
-        csknow::inference_latent_area::InferenceAreaPlayerAtTickProbabilities areaProbabilities;
-        csknow::inference_delta_pos::InferenceDeltaPosPlayerAtTickProbabilities deltaPosProbabilities;
+        csknow::inference_delta_pos::InferenceDeltaPosPlayerAtTickProbabilities deltaPosProbabilities,
+            combatDeltaPosProbabilities;
     };
 
     class InferenceManager {
-        void runEngagementInference(const vector<CSGOId> & clientsToInfer);
-        void runAggressionInference(const vector<CSGOId> & clientsToInfer);
-        bool ranOrderInference = false;
-        void runOrderInference();
-        bool ranPlaceInference = false;
-        void runPlaceInference();
-        bool ranAreaInference = false;
-        void runAreaInference();
-        bool ranDeltaPosInference = false;
-        void runDeltaPosInference();
+        bool ranDeltaPosInference = false, ranCombatDeltaPosInference = false;
+        void runDeltaPosInference(bool combatModule);
         int overallModelToRun = 0;
     public:
         bool valid;
         double inferenceSeconds;
         torch::TensorOptions options = torch::TensorOptions().dtype(at::kFloat);
         map<CSGOId, ClientInferenceData> playerToInferenceData;
-        csknow::inference_latent_order::InferenceOrderTickValues orderValues;
-        csknow::inference_latent_place::InferencePlaceTickValues placeValues;
-        csknow::inference_latent_area::InferenceAreaTickValues areaValues;
-        csknow::inference_delta_pos::InferenceDeltaPosTickValues deltaPosValues;
+        csknow::inference_delta_pos::InferenceDeltaPosTickValues deltaPosValues, combatDeltaPosValues;
         TeamSaveControlParameters teamSaveControlParameters;
 
-        fs::path engagementModelPath, aggressionModelPath, orderModelPath, placeModelPath, areaModelPath, deltaPosModelPath;
-        torch::jit::script::Module engagementModule, aggressionModule, orderModule, placeModule, areaModule, deltaPosModule;
+        fs::path deltaPosModelPath, combatDeltaPosModelPath;
+        torch::jit::script::Module deltaPosModule, combatDeltaPosModule;
         InferenceManager(const std::string & modelsDir);
         InferenceManager() : valid(false) { };
 
         void setCurClients(const vector<ServerState::Client> & clients);
-        void recordTeamValues(csknow::feature_store::FeatureStoreResult & featureStoreResult);
-        void recordPlayerValues(csknow::feature_store::FeatureStoreResult & featureStoreResult, CSGOId playerId);
+        void recordInputFeatureValues(csknow::feature_store::FeatureStoreResult & featureStoreResult);
         void runInferences();
         bool haveValidData() const;
     };

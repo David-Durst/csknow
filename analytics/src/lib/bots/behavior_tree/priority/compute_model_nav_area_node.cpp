@@ -194,9 +194,12 @@ namespace csknow::compute_nav_area {
 
     void ComputeModelNavAreaNode::computeDeltaPosProbabilistic(const ServerState & state, Priority & curPriority,
                                                                CSGOId csgoId, ModelNavData & modelNavData) {
+        TargetPlayer & curTarget = curPriority.targetPlayer;
         // compute area probabilities
         const csknow::inference_delta_pos::InferenceDeltaPosPlayerAtTickProbabilities & deltaPosProbabilities =
-                blackboard.inferenceManager.playerToInferenceData.at(csgoId).deltaPosProbabilities;
+                curTarget.playerId == INVALID_ID ?
+                blackboard.inferenceManager.playerToInferenceData.at(csgoId).deltaPosProbabilities :
+                blackboard.inferenceManager.playerToInferenceData.at(csgoId).combatDeltaPosProbabilities;
         vector<float> probabilities = deltaPosProbabilities.radialVelProbabilities;
         const ServerState::Client & curClient = state.getClient(csgoId);
 

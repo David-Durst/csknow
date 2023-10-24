@@ -174,7 +174,7 @@ void Tree::tick(ServerState & state, const string & mapsPath) {
         printStates.push_back(blackboard->printStrategyState(state));
         printStates.push_back(blackboard->printCommunicateState(state));
 
-        inferenceManager.recordTeamValues(featureStoreResult);
+        inferenceManager.recordInputFeatureValues(featureStoreResult);
         featureStoreResult.teamFeatureStoreResult.reinit();
 
         for (auto & client : state.clients) {
