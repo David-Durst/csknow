@@ -281,13 +281,13 @@ class TransformerNestedHiddenLatentModel(nn.Module):
         # 5.1 - everything is normalized -1 to 1
         pos_scaled = torch.zeros_like(pos)
         if pos.device.type == CUDA_DEVICE_STR:
-            pos_scaled[:, :, 0] = (pos[:, :, 0] - self.d2_min_gpu) / (self.d2_max_gpu - self.d2_min_gpu)
+            pos_scaled = (pos - self.d2_min_gpu) / (self.d2_max_gpu - self.d2_min_gpu)
         else:
-            pos_scaled[:, :, 0] = (pos[:, :, 0] - self.d2_min_cpu) / (self.d2_max_cpu - self.d2_min_cpu)
-        if self.num_input_time_steps > 1:
-            # + rather than - here as speed is positive, d2 dimensions are negative
-            # multiply by 2 so be sure to capture outliers
-            pos_scaled[:, :, 1:] = (pos[:, :, 1:] + (2 * max_run_speed_per_sim_tick)) / (4 * max_run_speed_per_sim_tick)
+            pos_scaled = (pos - self.d2_min_cpu) / (self.d2_max_cpu - self.d2_min_cpu)
+        #if self.num_input_time_steps > 1:
+        #    # + rather than - here as speed is positive, d2 dimensions are negative
+        #    # multiply by 2 so be sure to capture outliers
+        #    pos_scaled[:, :, 1:] = (pos[:, :, 1:] + (2 * max_run_speed_per_sim_tick)) / (4 * max_run_speed_per_sim_tick)
         pos_scaled = torch.clamp(pos_scaled, 0, 1)
         pos_scaled = (pos_scaled * 2) - 1
 
@@ -329,9 +329,9 @@ class TransformerNestedHiddenLatentModel(nn.Module):
         #else:
         #    x_pos = x_pos_all_time_steps
         #    x_crosshair = x_crosshair_all_time_steps
-        if self.num_input_time_steps > 1:
-            x_pos_lagged = torch.roll(x_pos, 1, 2)
-            x_pos[:, :, 1:] = x_pos_lagged[:, :, 1:] - x_pos[:, :, 1:]
+        #if self.num_input_time_steps > 1:
+        #    x_pos_lagged = torch.roll(x_pos, 1, 2)
+        #    x_pos[:, :, 1:] = x_pos_lagged[:, :, 1:] - x_pos[:, :, 1:]
         x_pos_encoded = self.encode_pos(x_pos)
 
         #x_vel = rearrange(x[:, self.players_vel_columns], "b (p t d) -> b p t d", p=self.num_players,
