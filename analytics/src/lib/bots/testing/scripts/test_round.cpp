@@ -173,27 +173,71 @@ vector<Script::Ptr> createPrebakedRoundScripts(bool quitAtEnd) {
     std::mt19937 gen;
     std::uniform_real_distribution<> dis;
 
-    int numRepeats = 2;
+    int numRepeats = 9;
 
     vector<vector<bool>> playerFreeze;
     csknow::plant_states::PlantStatesResult plantStatesResult;
+    // attack a from spawn, t on site and in mid doors
+    addRow(plantStatesResult, {1241., 2586., 127.});
+    plantStatesResult.ctPlayerStates[0].alive.back() = true;
+    plantStatesResult.ctPlayerStates[0].pos.back() = {-1006.737915, 2148.301025, -31.970458};
+    plantStatesResult.ctPlayerStates[0].viewAngle.back() = {-3.328921, 0.309759};
+    plantStatesResult.tPlayerStates[0].alive.back() = true;
+    plantStatesResult.tPlayerStates[0].pos.back() = {1160.000976, 2573.304931, 96.338958};
+    plantStatesResult.tPlayerStates[0].viewAngle.back() = {-144., 1.084169};
+    plantStatesResult.tPlayerStates[1].alive.back() = true;
+    plantStatesResult.tPlayerStates[1].pos.back() = {-362.730529, 1595.130981, -126.807861};
+    plantStatesResult.tPlayerStates[1].viewAngle.back() = {94.862510, -2.129631};
+    playerFreeze.push_back({false, true, true, false, false,
+                            false, false, false, false, false});
+    repeatRow(plantStatesResult, playerFreeze, numRepeats);
+    // defend a against cat
     addRow(plantStatesResult, {1241., 2586., 127.});
     plantStatesResult.ctPlayerStates[0].alive.back() = true;
     plantStatesResult.ctPlayerStates[0].pos.back() = {402.177368, 1875.845092, 95.393173};
     plantStatesResult.ctPlayerStates[0].viewAngle.back() = {43.959850, 3.755849};
+    plantStatesResult.ctPlayerStates[1].alive.back() = true;
+    plantStatesResult.ctPlayerStates[1].pos.back() = {357.684234, 1650.239990, 27.671302};
+    plantStatesResult.ctPlayerStates[1].viewAngle.back() = {71.024917, -9.370210};
     plantStatesResult.tPlayerStates[0].alive.back() = true;
     plantStatesResult.tPlayerStates[0].pos.back() = {1160.000976, 2573.304931, 96.338958};
     plantStatesResult.tPlayerStates[0].viewAngle.back() = {-144., 1.084169};
+    playerFreeze.push_back({true, false, true, false, false,
+                            false, false, false, false, false});
+    repeatRow(plantStatesResult, playerFreeze, numRepeats);
+    // defend a against ramp
+    addRow(plantStatesResult, {1241., 2586., 127.});
+    plantStatesResult.ctPlayerStates[0].alive.back() = true;
+    plantStatesResult.ctPlayerStates[0].pos.back() = {1393.406738, 521.030822, -94.765136};
+    plantStatesResult.ctPlayerStates[0].viewAngle.back() = {91.973045, -5.304626};
+    plantStatesResult.ctPlayerStates[1].alive.back() = true;
+    plantStatesResult.ctPlayerStates[1].pos.back() = {1266.489990, 1308.994018, 0.008083};
+    plantStatesResult.ctPlayerStates[1].viewAngle.back() = {89.746215, -3.446030};
+    plantStatesResult.tPlayerStates[0].alive.back() = true;
+    plantStatesResult.tPlayerStates[0].pos.back() = {1160.000976, 2573.304931, 96.338958};
+    plantStatesResult.tPlayerStates[0].viewAngle.back() = {-144., 1.084169};
+    playerFreeze.push_back({true, false, true, false, false,
+                            false, false, false, false, false});
+    repeatRow(plantStatesResult, playerFreeze, numRepeats);
+    // defend b against site
+    addRow(plantStatesResult, {-1427.551391, 2500.479492, 2.367282});
+    plantStatesResult.ctPlayerStates[0].alive.back() = true;
+    plantStatesResult.ctPlayerStates[0].pos.back() = {-1445.885375, 2497.657958, 1.294036};
+    plantStatesResult.ctPlayerStates[0].viewAngle.back() = {4.949440, -126.222084};
+    plantStatesResult.tPlayerStates[0].alive.back() = true;
+    plantStatesResult.tPlayerStates[0].pos.back() = {-1977.860229, 1665.813110, 31.853256};
+    plantStatesResult.tPlayerStates[0].viewAngle.back() = {-19.819931, 3.903996};
     playerFreeze.push_back({true, false, false, false, false,
                             false, false, false, false, false});
     repeatRow(plantStatesResult, playerFreeze, numRepeats);
-    addRow(plantStatesResult, {1241., 2586., 127.});
+    // defend b against tuns
+    addRow(plantStatesResult, {-1427.551391, 2500.479492, 2.367282});
     plantStatesResult.ctPlayerStates[0].alive.back() = true;
-    plantStatesResult.ctPlayerStates[0].pos.back() = {1300.004882, 2342.974365, 25.552148};
-    plantStatesResult.ctPlayerStates[0].viewAngle.back() = {142.985671, -9.796160};
+    plantStatesResult.ctPlayerStates[0].pos.back() = {-1078.543823, 1232.906372, -87.452003};
+    plantStatesResult.ctPlayerStates[0].viewAngle.back() = {4.949440, -126.222084};
     plantStatesResult.tPlayerStates[0].alive.back() = true;
-    plantStatesResult.tPlayerStates[0].pos.back() = {1160.000976, 2573.304931, 96.338958};
-    plantStatesResult.tPlayerStates[0].viewAngle.back() = {-144., 1.084169};
+    plantStatesResult.tPlayerStates[0].pos.back() = {-1977.860229, 1665.813110, 31.853256};
+    plantStatesResult.tPlayerStates[0].viewAngle.back() = {-19.819931, 3.903996};
     playerFreeze.push_back({true, false, false, false, false,
                             false, false, false, false, false});
     repeatRow(plantStatesResult, playerFreeze, numRepeats);

@@ -96,7 +96,7 @@ namespace action {
             aimTarget = state.getC4Pos();
             curAction.aimTargetType = AimTargetType::C4;
         }
-        else if (curPriority.nonDangerAimArea && curPriority.nonDangerAimAreaType == NonDangerAimAreaType::Hold) {
+        else if (curPriority.nonDangerAimArea && curPriority.nonDangerAimAreaType == NonDangerAimAreaType::Hold && !curPriority.learnedTargetPos) {
             aimTarget = vec3tConv(blackboard.navFile.get_area_by_id_fast(curPriority.nonDangerAimArea.value()).get_center());
             aimTarget.z += EYE_HEIGHT;
             curAction.aimTargetType = AimTargetType::HoldNonDangerArea;
