@@ -177,17 +177,39 @@ vector<Script::Ptr> createPrebakedRoundScripts(bool quitAtEnd) {
 
     vector<vector<bool>> playerFreeze;
     csknow::plant_states::PlantStatesResult plantStatesResult;
-    // attack a from spawn, t on site and in mid doors
+    // attack a, need to eliminate t hiding long
     addRow(plantStatesResult, {1241., 2586., 127.});
     plantStatesResult.ctPlayerStates[0].alive.back() = true;
-    plantStatesResult.ctPlayerStates[0].pos.back() = {-1006.737915, 2148.301025, -31.970458};
-    plantStatesResult.ctPlayerStates[0].viewAngle.back() = {-3.328921, 0.309759};
+    plantStatesResult.ctPlayerStates[0].pos.back() = {1430.616699, 1916.052490, -10.300033};
+    plantStatesResult.ctPlayerStates[0].viewAngle.back() = {112.955604, -4.299486};
     plantStatesResult.tPlayerStates[0].alive.back() = true;
-    plantStatesResult.tPlayerStates[0].pos.back() = {1160.000976, 2573.304931, 96.338958};
-    plantStatesResult.tPlayerStates[0].viewAngle.back() = {-144., 1.084169};
-    plantStatesResult.tPlayerStates[1].alive.back() = true;
-    plantStatesResult.tPlayerStates[1].pos.back() = {-362.730529, 1595.130981, -126.807861};
-    plantStatesResult.tPlayerStates[1].viewAngle.back() = {94.862510, -2.129631};
+    plantStatesResult.tPlayerStates[0].pos.back() = {1704.018188, 1011.443786, 2.233371};
+    plantStatesResult.tPlayerStates[0].viewAngle.back() = {-1.860130, -178.045181};
+    playerFreeze.push_back({false, true, false, false, false,
+                            false, false, false, false, false});
+    repeatRow(plantStatesResult, playerFreeze, numRepeats);
+    // attack a, need to eliminate t hiding extendedA
+    addRow(plantStatesResult, {1241., 2586., 127.});
+    plantStatesResult.ctPlayerStates[0].alive.back() = true;
+    plantStatesResult.ctPlayerStates[0].pos.back() = {1430.616699, 1916.052490, -10.300033};
+    plantStatesResult.ctPlayerStates[0].viewAngle.back() = {112.955604, -4.299486};
+    plantStatesResult.tPlayerStates[0].alive.back() = true;
+    plantStatesResult.tPlayerStates[0].pos.back() = {563.968750, 2759.416259, 97.259826};
+    plantStatesResult.tPlayerStates[0].viewAngle.back() = {-45.278255, 1.510083};
+    playerFreeze.push_back({false, true, false, false, false,
+                            false, false, false, false, false});
+    repeatRow(plantStatesResult, playerFreeze, numRepeats);
+    // attack a, need to eliminate t hiding long while teammate on c4
+    addRow(plantStatesResult, {1241., 2586., 127.});
+    plantStatesResult.ctPlayerStates[0].alive.back() = true;
+    plantStatesResult.ctPlayerStates[0].pos.back() = {1430.616699, 1916.052490, -10.300033};
+    plantStatesResult.ctPlayerStates[0].viewAngle.back() = {112.955604, -4.299486};
+    plantStatesResult.ctPlayerStates[1].alive.back() = true;
+    plantStatesResult.ctPlayerStates[1].pos.back() = {1130.595458, 2591.494384, 96.199569};
+    plantStatesResult.ctPlayerStates[1].viewAngle.back() = {-75.166007, 2.089314};
+    plantStatesResult.tPlayerStates[0].alive.back() = true;
+    plantStatesResult.tPlayerStates[0].pos.back() = {1704.018188, 1011.443786, 2.233371};
+    plantStatesResult.tPlayerStates[0].viewAngle.back() = {-1.860130, -178.045181};
     playerFreeze.push_back({false, true, true, false, false,
                             false, false, false, false, false});
     repeatRow(plantStatesResult, playerFreeze, numRepeats);
