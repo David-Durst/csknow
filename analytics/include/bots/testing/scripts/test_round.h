@@ -25,7 +25,7 @@ class RoundScript : public Script {
 public:
     explicit RoundScript(const csknow::plant_states::PlantStatesResult & plantStatesResult, size_t plantStateIndex,
                          size_t numRounds, std::mt19937 gen, std::uniform_real_distribution<> dis,
-                         std::optional<vector<bool>> playerFreeze);
+                         std::optional<vector<bool>> playerFreeze, string baseName);
 
     void initialize(Tree & tree, ServerState & state) override;
 };
