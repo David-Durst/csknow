@@ -79,8 +79,8 @@ def compute_output_mask(model: TransformerNestedHiddenLatentModel, X: torch.Tens
     if output_mask_type == OutputMaskType.NoMask:
         return torch.ones_like(seconds_to_hit_enemy_per_player[:, 0], dtype=torch.bool)
     elif output_mask_type == OutputMaskType.EngagementMask or output_mask_type == OutputMaskType.NoEngagementMask:
-        in_engagement = ((seconds_to_hit_enemy_per_player[:, 0] < 5.) & (seconds_to_hit_enemy_per_player[:, 0] >= 0.)) | \
-                        ((seconds_to_hit_enemy_per_player[:, 1] < 5.) & (seconds_to_hit_enemy_per_player[:, 1] >= 0.))
+        in_engagement = ((seconds_to_hit_enemy_per_player[:, 0] < 0.8) & (seconds_to_hit_enemy_per_player[:, 0] >= 0.)) | \
+                        ((seconds_to_hit_enemy_per_player[:, 1] < 0.8) & (seconds_to_hit_enemy_per_player[:, 1] >= 0.))
         if output_mask_type == OutputMaskType.EngagementMask:
             return in_engagement
         else:
