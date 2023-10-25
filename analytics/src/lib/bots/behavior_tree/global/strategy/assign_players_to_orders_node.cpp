@@ -150,7 +150,7 @@ namespace strategy {
         return playerNodeState[treeThinker.csgoId];
     }
 
-    bool AssignPlayersToOrders::assignPlayerToOrderProbabilistic(const ServerState::Client & client, bool plantedA) {
+    bool AssignPlayersToOrders::assignPlayerToOrderProbabilistic(const ServerState::Client &, bool) {
         return false;
         /*
         if (!blackboard.inferenceManager.haveValidData()) {

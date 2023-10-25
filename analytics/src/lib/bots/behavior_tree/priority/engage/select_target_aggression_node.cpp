@@ -6,7 +6,7 @@
 #include "bots/analysis/learned_models.h"
 
 namespace engage {
-    NodeState SelectTargetAggressionNode::exec(const ServerState &state, TreeThinker &treeThinker) {
+    NodeState SelectTargetAggressionNode::exec(const ServerState &, TreeThinker &treeThinker) {
         playerNodeState[treeThinker.csgoId] = NodeState::Failure;
         return playerNodeState[treeThinker.csgoId];
         /*

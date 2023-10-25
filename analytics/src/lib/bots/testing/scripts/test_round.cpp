@@ -5,9 +5,10 @@
 #include "bots/testing/scripts/learned/log_nodes.h"
 
 RoundScript::RoundScript(const csknow::plant_states::PlantStatesResult & plantStatesResult, size_t plantStateIndex,
-                         size_t numRounds, std::mt19937 gen, std::uniform_real_distribution<> dis) :
+                         size_t numRounds, std::mt19937 gen, std::uniform_real_distribution<> dis,
+                         std::optional<vector<bool>> playerFreeze) :
     Script("RoundScript", {}, {ObserveType::FirstPerson, 0}),
-    plantStateIndex(plantStateIndex), numRounds(numRounds) {
+    plantStateIndex(plantStateIndex), numRounds(numRounds), playerFreeze(playerFreeze) {
     name += std::to_string(plantStateIndex);
     int numCT = 0, numT = 0;
     neededBots.clear();
@@ -66,11 +67,33 @@ void RoundScript::initialize(Tree &tree, ServerState &state) {
                 make_unique<RepeatDecorator>(blackboard, make_unique<RoundStart>(blackboard), true),
                 make_unique<csknow::tests::learned::FailIfTimeoutEndNode>(blackboard, name, plantStateIndex, numRounds, 60)));
 
-        commands = make_unique<SequenceNode>(blackboard, Node::makeList(
-                std::move(disableAllBothDuringSetup),
+        Node::Ptr roundLogic = make_unique<SequenceNode>(blackboard, Node::makeList(
                 make_unique<csknow::tests::learned::StartNode>(blackboard, name, plantStateIndex, numRounds),
                 std::move(finishCondition),
-                make_unique<csknow::tests::learned::SuccessEndNode>(blackboard, name, plantStateIndex, numRounds)),
+                make_unique<csknow::tests::learned::SuccessEndNode>(blackboard, name, plantStateIndex, numRounds))
+        );
+
+        Node::Ptr roundLogicWithFreeze;
+        if (playerFreeze) {
+            vector<CSGOId> freezeIds;
+            for (size_t i = 0; i < neededBotIds.size(); i++) {
+                if (playerFreeze.value()[i]) {
+                    freezeIds.push_back(neededBotIds[i]);
+                }
+            }
+
+            roundLogicWithFreeze = make_unique<ParallelFirstNode>(blackboard, Node::makeList(
+                std::move(roundLogic),
+                make_unique<DisableActionsNode>(blackboard, "DisableSetup", freezeIds, false)
+            ));
+        }
+        else {
+            roundLogicWithFreeze = std::move(roundLogic);
+        }
+
+        commands = make_unique<SequenceNode>(blackboard, Node::makeList(
+                std::move(disableAllBothDuringSetup),
+                std::move(roundLogicWithFreeze)),
         "RoundSequence");
     }
 }
@@ -100,7 +123,86 @@ vector<Script::Ptr> createRoundScripts(const csknow::plant_states::PlantStatesRe
 
     size_t numRounds = 300;//static_cast<size_t>(plantStatesResult.size);
     for (size_t i = 0; i < numRounds; i++) {
-        result.push_back(make_unique<RoundScript>(plantStatesResult, i/*1*//*8*//*12*//*205*/, numRounds, gen, dis));
+        result.push_back(make_unique<RoundScript>(plantStatesResult, i/*1*//*8*//*12*//*205*/, numRounds, gen, dis,
+                                                  std::nullopt));
+    }
+    if (quitAtEnd) {
+        result.push_back(make_unique<QuitScript>());
+    }
+    else {
+        result.push_back(make_unique<WaitUntilScoreScript>());
+    }
+
+    return result;
+}
+
+void addRow(csknow::plant_states::PlantStatesResult & plantStatesResult, Vec3 c4Pos) {
+    plantStatesResult.c4Pos.push_back(c4Pos);
+    for (size_t i = 0; i < csknow::plant_states::max_players_per_team; i++) {
+        plantStatesResult.ctPlayerStates[i].alive.push_back(false);
+        plantStatesResult.ctPlayerStates[i].pos.push_back({});
+        plantStatesResult.ctPlayerStates[i].viewAngle.push_back({});
+        plantStatesResult.tPlayerStates[i].alive.push_back(false);
+        plantStatesResult.tPlayerStates[i].pos.push_back({});
+        plantStatesResult.tPlayerStates[i].viewAngle.push_back({});
+    }
+}
+
+void repeatRow(csknow::plant_states::PlantStatesResult & plantStatesResult, vector<vector<bool>> & playerFreeze,
+               int numTimes) {
+    for (int i = 0; i < numTimes; i++) {
+        addRow(plantStatesResult, plantStatesResult.c4Pos.back());
+        size_t newIndex = plantStatesResult.ctPlayerStates[i].alive.size() - 1;
+        for (size_t i = 0; i < csknow::plant_states::max_players_per_team; i++) {
+            plantStatesResult.ctPlayerStates[i].alive[newIndex] = plantStatesResult.ctPlayerStates[i].alive[newIndex-1];
+            plantStatesResult.ctPlayerStates[i].pos[newIndex] = plantStatesResult.ctPlayerStates[i].pos[newIndex-1];
+            plantStatesResult.ctPlayerStates[i].viewAngle[newIndex] = plantStatesResult.ctPlayerStates[i].viewAngle[newIndex-1];
+            plantStatesResult.tPlayerStates[i].alive[newIndex] = plantStatesResult.tPlayerStates[i].alive[newIndex-1];
+            plantStatesResult.tPlayerStates[i].pos[newIndex] = plantStatesResult.tPlayerStates[i].pos[newIndex-1];
+            plantStatesResult.tPlayerStates[i].viewAngle[newIndex] = plantStatesResult.tPlayerStates[i].viewAngle[newIndex-1];
+        }
+        playerFreeze.push_back(playerFreeze.back());
+    }
+
+}
+
+vector<Script::Ptr> createPrebakedRoundScripts(bool quitAtEnd) {
+    vector<Script::Ptr> result;
+
+    std::random_device rd;
+    std::mt19937 gen;
+    std::uniform_real_distribution<> dis;
+
+    int numRepeats = 2;
+
+    vector<vector<bool>> playerFreeze;
+    csknow::plant_states::PlantStatesResult plantStatesResult;
+    addRow(plantStatesResult, {1241., 2586., 127.});
+    plantStatesResult.ctPlayerStates[0].alive.back() = true;
+    plantStatesResult.ctPlayerStates[0].pos.back() = {402.177368, 1875.845092, 95.393173};
+    plantStatesResult.ctPlayerStates[0].viewAngle.back() = {43.959850, 3.755849};
+    plantStatesResult.tPlayerStates[0].alive.back() = true;
+    plantStatesResult.tPlayerStates[0].pos.back() = {1160.000976, 2573.304931, 96.338958};
+    plantStatesResult.tPlayerStates[0].viewAngle.back() = {-144., 1.084169};
+    playerFreeze.push_back({true, false, false, false, false,
+                            false, false, false, false, false});
+    repeatRow(plantStatesResult, playerFreeze, numRepeats);
+    addRow(plantStatesResult, {1241., 2586., 127.});
+    plantStatesResult.ctPlayerStates[0].alive.back() = true;
+    plantStatesResult.ctPlayerStates[0].pos.back() = {1300.004882, 2342.974365, 25.552148};
+    plantStatesResult.ctPlayerStates[0].viewAngle.back() = {142.985671, -9.796160};
+    plantStatesResult.tPlayerStates[0].alive.back() = true;
+    plantStatesResult.tPlayerStates[0].pos.back() = {1160.000976, 2573.304931, 96.338958};
+    plantStatesResult.tPlayerStates[0].viewAngle.back() = {-144., 1.084169};
+    playerFreeze.push_back({true, false, false, false, false,
+                            false, false, false, false, false});
+    repeatRow(plantStatesResult, playerFreeze, numRepeats);
+    plantStatesResult.size = plantStatesResult.ctPlayerStates[0].alive.size();
+
+    size_t numRounds = static_cast<size_t>(plantStatesResult.size);
+    for (size_t i = 0; i < numRounds; i++) {
+        result.push_back(make_unique<RoundScript>(plantStatesResult, i/*1*//*8*//*12*//*205*/, numRounds, gen, dis,
+                                                  playerFreeze[i]));
     }
     if (quitAtEnd) {
         result.push_back(make_unique<QuitScript>());

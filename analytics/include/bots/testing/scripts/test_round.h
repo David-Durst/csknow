@@ -20,10 +20,12 @@ class RoundScript : public Script {
     vector<Vec3> playerPos;
     vector<Vec2> playerViewAngle;
     size_t plantStateIndex, numRounds;
+    std::optional<vector<bool>> playerFreeze;
 
 public:
     explicit RoundScript(const csknow::plant_states::PlantStatesResult & plantStatesResult, size_t plantStateIndex,
-                         size_t numRounds, std::mt19937 gen, std::uniform_real_distribution<> dis);
+                         size_t numRounds, std::mt19937 gen, std::uniform_real_distribution<> dis,
+                         std::optional<vector<bool>> playerFreeze);
 
     void initialize(Tree & tree, ServerState & state) override;
 };
@@ -36,5 +38,6 @@ public:
 
 vector<Script::Ptr> createRoundScripts(const csknow::plant_states::PlantStatesResult & plantStatesResult,
                                        bool quitAtEnd);
+vector<Script::Ptr> createPrebakedRoundScripts(bool quitAtEnd);
 
 #endif //CSKNOW_TEST_ROUND_H
