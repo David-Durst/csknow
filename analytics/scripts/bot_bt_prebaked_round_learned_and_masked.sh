@@ -18,7 +18,7 @@ get_script_dir
 mkdir -p ${script_dir}/../build
 cd ${script_dir}/../build
 cmake .. -DCMAKE_BUILD_TYPE=Release
-if make -j 18; then
+if make -j 8; then
     date
     echo 'most recent demo file before test run'
     ls -tp /home/steam/csgo-ds/csgo/*.dem | grep -v /$ | head -1
