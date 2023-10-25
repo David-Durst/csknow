@@ -133,7 +133,7 @@ namespace csknow::inference_manager {
             ranDeltaPosInference = true;
         }
         if (overallModelToRun == 4) {
-            runDeltaPosInference(true);
+            //runDeltaPosInference(true);
             ranCombatDeltaPosInference = true;
         }
         overallModelToRun = (overallModelToRun + 1) % 16;
