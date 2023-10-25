@@ -174,7 +174,7 @@ vector<Script::Ptr> createPrebakedRoundScripts(bool quitAtEnd) {
     std::mt19937 gen;
     std::uniform_real_distribution<> dis;
 
-    int numRepeats = 9;
+    int numRepeats = 29;
 
     vector<vector<bool>> playerFreeze;
     vector<string> names;
