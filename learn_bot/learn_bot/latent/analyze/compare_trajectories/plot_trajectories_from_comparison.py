@@ -23,14 +23,14 @@ plot_n_most_similar = 1
 
 
 @dataclass(frozen=True, eq=True)
-class RoundForComparisonHeatmap:
+class RoundsForTrajectorySelection:
     hdf5_file_name: str
     round_id: int
     round_number: int
 
 
 def select_trajectories_into_dfs(loaded_model: LoadedModel,
-                                 rounds_for_comparison: List[RoundForComparisonHeatmap]) -> List[pd.DataFrame]:
+                                 rounds_for_comparison: List[RoundsForTrajectorySelection]) -> List[pd.DataFrame]:
     selected_dfs: List[pd.DataFrame] = []
     hdf5s_for_selection: Set[str] = {r.hdf5_file_name for r in rounds_for_comparison}
 
@@ -212,18 +212,18 @@ def plot_trajectory_comparisons(similarity_df: pd.DataFrame, predicted_loaded_mo
                                            (similarity_df[best_match_id_col] < plot_n_most_similar)]
 
     # same predicted will have multiple matches, start with set and convert to list
-    predicted_rounds_for_comparison_heatmap: Set[RoundForComparisonHeatmap] = set()
-    best_fit_ground_truth_rounds_for_comparison_heatmap: Set[RoundForComparisonHeatmap] = set()
+    predicted_rounds_for_trajectory_selection: Set[RoundsForTrajectorySelection] = set()
+    best_fit_ground_truth_rounds_for_trajectory_selection: Set[RoundsForTrajectorySelection] = set()
     for _, similarity_row in relevant_similarity_df.iterrows():
-        predicted_rounds_for_comparison_heatmap.add(
-            RoundForComparisonHeatmap(similarity_row[predicted_trace_batch_col].decode('utf-8'),
-                                  similarity_row[predicted_round_id_col],
-                                  similarity_row[predicted_round_number_col])
+        predicted_rounds_for_trajectory_selection.add(
+            RoundsForTrajectorySelection(similarity_row[predicted_trace_batch_col].decode('utf-8'),
+                                         similarity_row[predicted_round_id_col],
+                                         similarity_row[predicted_round_number_col])
         )
-        best_fit_ground_truth_rounds_for_comparison_heatmap.add(
-            RoundForComparisonHeatmap(similarity_row[best_fit_ground_truth_trace_batch_col].decode('utf-8'),
-                                      similarity_row[best_fit_ground_truth_round_id_col],
-                                      similarity_row[best_fit_ground_truth_round_number_col])
+        best_fit_ground_truth_rounds_for_trajectory_selection.add(
+            RoundsForTrajectorySelection(similarity_row[best_fit_ground_truth_trace_batch_col].decode('utf-8'),
+                                         similarity_row[best_fit_ground_truth_round_id_col],
+                                         similarity_row[best_fit_ground_truth_round_number_col])
         )
 
     print('loading predicted df')
@@ -233,7 +233,7 @@ def plot_trajectory_comparisons(similarity_df: pd.DataFrame, predicted_loaded_mo
             predicted_trajectory_dfs = pickle.load(pickle_file)
     else:
         predicted_trajectory_dfs = select_trajectories_into_dfs(predicted_loaded_model,
-                                                                list(predicted_rounds_for_comparison_heatmap))
+                                                                list(predicted_rounds_for_trajectory_selection))
         if debug_caching and debug_caching_override:
             with open(debug_cache_path, "wb") as pickle_file:
                 pickle.dump(predicted_trajectory_dfs, pickle_file)
@@ -244,7 +244,7 @@ def plot_trajectory_comparisons(similarity_df: pd.DataFrame, predicted_loaded_mo
         print('loading best fit ground truth df')
         best_fit_ground_truth_trajectory_dfs = \
             select_trajectories_into_dfs(ground_truth_loaded_model,
-                                         list(best_fit_ground_truth_rounds_for_comparison_heatmap))
+                                         list(best_fit_ground_truth_rounds_for_trajectory_selection))
 
     both_teams_predicted_images = \
         plot_predicted_trajectory_per_team(predicted_trajectory_dfs, config, similarity_plots_path, True, True)

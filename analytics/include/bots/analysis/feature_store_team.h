@@ -74,6 +74,9 @@ namespace csknow::feature_store {
         // demo file names are only stored once per demo, not for all ticks, use gameId to lookup into them
         vector<string> demoFile;
         // trace data only stored once per round
+        vector<string> roundTestName;
+        vector<int> roundTestIndex;
+        vector<int> roundNumTests;
         key_retake_events::PerTraceData perTraceData;
 
         vector<int64_t> gameId;

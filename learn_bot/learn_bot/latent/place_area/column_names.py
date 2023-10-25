@@ -37,6 +37,7 @@ default_speed = 125
 float_c4_cols = c4_time_left_percent #c4_ticks_since_plant #[c4_distance_to_a_site_col, c4_distance_to_b_site_col] + c4_pos_cols + c4_ticks_since_plant
 
 test_success_col = 'test success'
+round_test_name_col = 'round test name'
 
 hdf5_id_columns = ['id', tick_id_column, round_id_column, game_id_column, test_success_col]
 

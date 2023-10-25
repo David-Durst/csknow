@@ -987,6 +987,9 @@ namespace csknow::feature_store {
                                                       const nav_mesh::nav_file &,
                                                       const csknow::key_retake_events::KeyRetakeEvents & keyRetakeEvents) {
         demoFile = games.demoFile;
+        roundTestName = keyRetakeEvents.roundTestName;
+        roundTestIndex = keyRetakeEvents.roundTestIndex;
+        roundNumTests = keyRetakeEvents.roundNumTests;
         perTraceData = keyRetakeEvents.perTraceData;
         std::atomic<int64_t> roundsProcessed = 0;
         /*
@@ -1165,6 +1168,9 @@ namespace csknow::feature_store {
         //hdf5FlatCreateProps.add(HighFive::Chunking(roundId.size()));
 
         file.createDataSet("/extra/demo file", demoFile, hdf5FlatCreateProps);
+        file.createDataSet("/extra/round test name", roundTestName, hdf5FlatCreateProps);
+        file.createDataSet("/extra/round test index", roundTestIndex, hdf5FlatCreateProps);
+        file.createDataSet("/extra/round num tests", roundNumTests, hdf5FlatCreateProps);
         file.createDataSet("/extra/trace demo file", perTraceData.demoFile, hdf5FlatCreateProps);
         file.createDataSet("/extra/trace index", perTraceData.traceIndex, hdf5FlatCreateProps);
         file.createDataSet("/extra/num traces", perTraceData.numTraces, hdf5FlatCreateProps);

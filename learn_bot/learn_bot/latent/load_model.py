@@ -64,6 +64,9 @@ class LoadedModel:
     def load_cur_hdf5_demo_names(self) -> np.ndarray:
         return load_hdf5_extra_column(self.dataset.data_hdf5s[self.cur_hdf5_index].hdf5_path, 'demo file').astype('U')
 
+    def get_round_test_names(self) -> np.ndarray:
+        return load_hdf5_extra_column(self.dataset.data_hdf5s[self.cur_hdf5_index].hdf5_path, 'round test name').astype('U')
+
     def get_cur_id_df(self):
         return self.dataset.data_hdf5s[self.cur_hdf5_index].id_df
 
