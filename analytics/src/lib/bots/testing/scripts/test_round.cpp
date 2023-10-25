@@ -149,10 +149,10 @@ void addRow(csknow::plant_states::PlantStatesResult & plantStatesResult, Vec3 c4
 }
 
 void repeatRow(csknow::plant_states::PlantStatesResult & plantStatesResult, vector<vector<bool>> & playerFreeze,
-               vector<string> & names, int numTimes) {
-    for (int i = 0; i < numTimes; i++) {
+               vector<string> & names, int numRepeats) {
+    for (int r = 0; r < numRepeats; r++) {
         addRow(plantStatesResult, plantStatesResult.c4Pos.back());
-        size_t newIndex = plantStatesResult.ctPlayerStates[i].alive.size() - 1;
+        size_t newIndex = plantStatesResult.ctPlayerStates[0].alive.size() - 1;
         for (size_t i = 0; i < csknow::plant_states::max_players_per_team; i++) {
             plantStatesResult.ctPlayerStates[i].alive[newIndex] = plantStatesResult.ctPlayerStates[i].alive[newIndex-1];
             plantStatesResult.ctPlayerStates[i].pos[newIndex] = plantStatesResult.ctPlayerStates[i].pos[newIndex-1];
