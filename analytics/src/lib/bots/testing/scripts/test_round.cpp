@@ -167,7 +167,36 @@ void repeatRow(csknow::plant_states::PlantStatesResult & plantStatesResult, vect
 
 }
 
-vector<Script::Ptr> createPrebakedRoundScripts(bool quitAtEnd) {
+void randomizePositions(csknow::plant_states::PlantStatesResult & plantStatesResult, const nav_mesh::nav_file & navFile,
+                        std::mt19937 gen, std::uniform_real_distribution<> dis) {
+    for (size_t row = 0; row < plantStatesResult.ctPlayerStates[0].alive.size(); row++) {
+        for (size_t i = 0; i < csknow::plant_states::max_players_per_team; i++) {
+            if (plantStatesResult.ctPlayerStates[i].alive[row]) {
+                plantStatesResult.ctPlayerStates[i].pos[row].x += (dis(gen) - 0.5) * WIDTH;
+                plantStatesResult.ctPlayerStates[i].pos[row].y += (dis(gen) - 0.5) * WIDTH;
+                Vec3 newPosPreFit = plantStatesResult.ctPlayerStates[i].pos[row];
+                AreaId newAreaId = navFile.get_nearest_area_by_position(vec3Conv(newPosPreFit)).get_id();
+                plantStatesResult.ctPlayerStates[i].pos[row] = vec3tConv(navFile.get_nearest_point_in_area(
+                        vec3Conv(newPosPreFit),
+                        navFile.get_area_by_id_fast(newAreaId))
+                );
+            }
+            if (plantStatesResult.tPlayerStates[i].alive[row]) {
+                plantStatesResult.tPlayerStates[i].pos[row].x += (dis(gen) - 0.5) * WIDTH;
+                plantStatesResult.tPlayerStates[i].pos[row].y += (dis(gen) - 0.5) * WIDTH;
+                Vec3 newPosPreFit = plantStatesResult.tPlayerStates[i].pos[row];
+                AreaId newAreaId = navFile.get_nearest_area_by_position(vec3Conv(newPosPreFit)).get_id();
+                plantStatesResult.tPlayerStates[i].pos[row] = vec3tConv(navFile.get_nearest_point_in_area(
+                        vec3Conv(newPosPreFit),
+                        navFile.get_area_by_id_fast(newAreaId))
+                );
+            }
+        }
+    }
+}
+
+vector<Script::Ptr> createPrebakedRoundScripts(const nav_mesh::nav_file & navFile, bool randomizePositions,
+                                               bool quitAtEnd) {
     vector<Script::Ptr> result;
 
     std::random_device rd;
@@ -182,7 +211,7 @@ vector<Script::Ptr> createPrebakedRoundScripts(bool quitAtEnd) {
     // attack a from spawn, need to eliminate t hiding long
     addRow(plantStatesResult, {1241., 2586., 127.});
     plantStatesResult.ctPlayerStates[0].alive.back() = true;
-    plantStatesResult.ctPlayerStates[0].pos.back() = {1430.616699, 1916.052490, -10.300033};
+    plantStatesResult.ctPlayerStates[0].pos.back() = {1430.616699, 1816.052490, -10.300033};
     plantStatesResult.ctPlayerStates[0].viewAngle.back() = {112.955604, -4.299486};
     plantStatesResult.tPlayerStates[0].alive.back() = true;
     plantStatesResult.tPlayerStates[0].pos.back() = {1704.018188, 1011.443786, 2.233371};
@@ -194,7 +223,7 @@ vector<Script::Ptr> createPrebakedRoundScripts(bool quitAtEnd) {
     // attack a from spawn, need to eliminate t hiding long, teammates covering that enemy
     addRow(plantStatesResult, {1241., 2586., 127.});
     plantStatesResult.ctPlayerStates[0].alive.back() = true;
-    plantStatesResult.ctPlayerStates[0].pos.back() = {1430.616699, 1916.052490, -10.300033};
+    plantStatesResult.ctPlayerStates[0].pos.back() = {1430.616699, 1816.052490, -10.300033};
     plantStatesResult.ctPlayerStates[0].viewAngle.back() = {112.955604, -4.299486};
     plantStatesResult.ctPlayerStates[1].alive.back() = true;
     plantStatesResult.ctPlayerStates[1].pos.back() = {1430.616699, 1516.052490, -10.300033};
@@ -212,7 +241,7 @@ vector<Script::Ptr> createPrebakedRoundScripts(bool quitAtEnd) {
     // attack a from spawn, need to eliminate t hiding extendedA
     addRow(plantStatesResult, {1241., 2586., 127.});
     plantStatesResult.ctPlayerStates[0].alive.back() = true;
-    plantStatesResult.ctPlayerStates[0].pos.back() = {1430.616699, 1916.052490, -10.300033};
+    plantStatesResult.ctPlayerStates[0].pos.back() = {1430.616699, 1816.052490, -10.300033};
     plantStatesResult.ctPlayerStates[0].viewAngle.back() = {112.955604, -4.299486};
     plantStatesResult.tPlayerStates[0].alive.back() = true;
     plantStatesResult.tPlayerStates[0].pos.back() = {563.968750, 2759.416259, 97.259826};
@@ -403,6 +432,8 @@ vector<Script::Ptr> createPrebakedRoundScripts(bool quitAtEnd) {
     names.emplace_back("DefendBCTHoleTwoTeammates");
     repeatRow(plantStatesResult, playerFreeze, names, numRepeats);
     plantStatesResult.size = plantStatesResult.ctPlayerStates[0].alive.size();
+
+    randomizePositions(plantStatesResult, navFile, gen, dis);
 
     size_t numRounds = static_cast<size_t>(plantStatesResult.size);
     for (size_t i = 0; i < numRounds; i++) {

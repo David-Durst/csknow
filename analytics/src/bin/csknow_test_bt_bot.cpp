@@ -44,7 +44,7 @@ int main(int argc, char * argv[]) {
             << "5. path/to/saved/data\n"
             << "6. t for tests, tl for tests with learned, r for rounds, rh for rounds with hueristics, rht for rounds with t hueristics, rhct for rounds with ct heuristics\n"
             << "7. 1 for all csknow bots, ct for ct only csknow bots, t for t only csknow bots, 0 for for no csknow bots\n"
-            << "8. y for traces, n for normal bots, b for prebaked rounds"
+            << "8. y for traces, n for normal bots, b for prebaked rounds, br for prebaked rounds with position randomization"
             << std::endl;
         return 1;
     }
@@ -53,7 +53,8 @@ int main(int argc, char * argv[]) {
 
     bool runTest = roundsTestStr == "t" || roundsTestStr == "tl";
     bool runTraces = tracesStr == "y";
-    bool runPrebakedRounds = tracesStr == "b";
+    bool runPrebakedRounds = tracesStr == "b" || tracesStr == "br";
+    bool prebakedPositionRandomization = tracesStr == "br";
     processModelArg(roundsTestStr);
 
     ServerState state;
@@ -67,7 +68,6 @@ int main(int argc, char * argv[]) {
     csknow::plant_states::PlantStatesResult plantStatesResult;
     plantStatesResult.loadFromPython(savedDatasetsDir + "/push_only_test_plant_states.hdf5");
     ScriptsRunner roundScriptsRunner(createRoundScripts(plantStatesResult, false), false);
-    ScriptsRunner prebakedRoundScriptsRunner(createPrebakedRoundScripts(false), false);
     csknow::tests::trace::TracesData traceData(savedDatasetsDir + "/traces.hdf5");
     ScriptsRunner traceScriptsRunner(csknow::tests::trace::createTracesScripts(traceData, botStop, true), false);
 
@@ -82,6 +82,7 @@ int main(int argc, char * argv[]) {
     MapMeshResult mapMeshResult(queryMapMesh(navFile, ""));
     csknow::formation_initializer::FormationInitializer formationInitializer(mapMeshResult, savedDatasetsDir);
     ScriptsRunner formationDataGenerator(formationInitializer.createFormationScripts(mapMeshResult, true), false);
+    ScriptsRunner prebakedRoundScriptsRunner(createPrebakedRoundScripts(navFile, prebakedPositionRandomization, false), false);
 
     ScriptsRunner scriptsRunner(Script::makeList(
             /*
