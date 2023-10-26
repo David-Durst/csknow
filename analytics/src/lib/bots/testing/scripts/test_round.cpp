@@ -298,7 +298,6 @@ vector<Script::Ptr> createPrebakedRoundScripts(bool quitAtEnd) {
                             false, false, false, false, false});
     names.emplace_back("AttackBDoorsTeammateHole");
     repeatRow(plantStatesResult, playerFreeze, names, numRepeats);
-     */
     // defend a against cat
     addRow(plantStatesResult, {1241., 2586., 127.});
     plantStatesResult.ctPlayerStates[0].alive.back() = true;
@@ -313,6 +312,28 @@ vector<Script::Ptr> createPrebakedRoundScripts(bool quitAtEnd) {
     playerFreeze.push_back({true, false, true, false, false,
                             false, false, false, false, false});
     names.emplace_back("DefendACTCat");
+    repeatRow(plantStatesResult, playerFreeze, names, numRepeats);
+     */
+    // defend a against cat teammates covering behind
+    addRow(plantStatesResult, {1241., 2586., 127.});
+    plantStatesResult.ctPlayerStates[0].alive.back() = true;
+    plantStatesResult.ctPlayerStates[0].pos.back() = {563.968750, 2763.999511, 97.379516};
+    plantStatesResult.ctPlayerStates[0].viewAngle.back() = {-89.047363, 1.806404};
+    plantStatesResult.ctPlayerStates[1].alive.back() = true;
+    plantStatesResult.ctPlayerStates[1].pos.back() = {357.684234, 1650.239990, 27.671302};
+    plantStatesResult.ctPlayerStates[1].viewAngle.back() = {71.024917, -9.370210};
+    plantStatesResult.tPlayerStates[0].alive.back() = true;
+    plantStatesResult.tPlayerStates[0].pos.back() = {1160.000976, 2573.304931, 96.338958};
+    plantStatesResult.tPlayerStates[0].viewAngle.back() = {-144., 1.084169};
+    plantStatesResult.tPlayerStates[1].alive.back() = true;
+    plantStatesResult.tPlayerStates[1].pos.back() = {1175.846923, 2944.958984, 128.266784};
+    plantStatesResult.tPlayerStates[1].viewAngle.back() = {-127.956420, 1.114561};
+    plantStatesResult.tPlayerStates[2].alive.back() = true;
+    plantStatesResult.tPlayerStates[2].pos.back() = {1427.594238, 2308.249023, 4.196350};
+    plantStatesResult.tPlayerStates[2].viewAngle.back() = {-165.436294, -4.732160};
+    playerFreeze.push_back({true, false, true, true, true,
+                            false, false, false, false, false});
+    names.emplace_back("DefendACTCatTwoTeammates");
     repeatRow(plantStatesResult, playerFreeze, names, numRepeats);
     // defend a against long
     addRow(plantStatesResult, {1241., 2586., 127.});
