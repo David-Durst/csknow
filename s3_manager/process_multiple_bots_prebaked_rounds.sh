@@ -1,0 +1,2 @@
+./process_rollout_specific_no_comparison.sh auto0-20231025-180449-1952617169-de_dust2-international_house_of_short_people_east_franchise.dem 10_25_23_prebaked_no_mask
+./process_rollout_specific_no_comparison.sh auto0-20231025-210430-474358487-de_dust2-international_house_of_short_people_east_franchise.dem 10_25_23_prebaked_everyone_mask
