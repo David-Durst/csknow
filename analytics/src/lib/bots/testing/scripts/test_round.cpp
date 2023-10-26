@@ -249,6 +249,7 @@ vector<Script::Ptr> createPrebakedRoundScripts(bool quitAtEnd) {
                             false, false, false, false, false});
     names.emplace_back("AttackACatOneTeammate");
     repeatRow(plantStatesResult, playerFreeze, names, numRepeats);
+     */
     // attack a from cat, two teammates cat covering
     addRow(plantStatesResult, {1241., 2586., 127.});
     plantStatesResult.ctPlayerStates[0].alive.back() = true;
@@ -258,7 +259,7 @@ vector<Script::Ptr> createPrebakedRoundScripts(bool quitAtEnd) {
     plantStatesResult.ctPlayerStates[1].pos.back() = {462.430969, 2006.059082, 133.031250};
     plantStatesResult.ctPlayerStates[1].viewAngle.back() = {42.536399, 2.168326};
     plantStatesResult.ctPlayerStates[2].alive.back() = true;
-    plantStatesResult.ctPlayerStates[2].pos.back() = {462.430969, 2056.059082, 133.031250};
+    plantStatesResult.ctPlayerStates[2].pos.back() = {563.968750, 2763.999511, 97.379516};
     plantStatesResult.ctPlayerStates[2].viewAngle.back() = {42.536399, 2.168326};
     plantStatesResult.tPlayerStates[0].alive.back() = true;
     plantStatesResult.tPlayerStates[0].pos.back() = {1051.031250, 2939.113281, 128.593978};
@@ -313,7 +314,6 @@ vector<Script::Ptr> createPrebakedRoundScripts(bool quitAtEnd) {
                             false, false, false, false, false});
     names.emplace_back("DefendACTCat");
     repeatRow(plantStatesResult, playerFreeze, names, numRepeats);
-     */
     // defend a against cat teammates covering behind
     addRow(plantStatesResult, {1241., 2586., 127.});
     plantStatesResult.ctPlayerStates[0].alive.back() = true;
