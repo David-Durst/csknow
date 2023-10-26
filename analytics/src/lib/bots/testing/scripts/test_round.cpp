@@ -179,7 +179,6 @@ vector<Script::Ptr> createPrebakedRoundScripts(bool quitAtEnd) {
     vector<vector<bool>> playerFreeze;
     vector<string> names;
     csknow::plant_states::PlantStatesResult plantStatesResult;
-    /*
     // attack a from spawn, need to eliminate t hiding long
     addRow(plantStatesResult, {1241., 2586., 127.});
     plantStatesResult.ctPlayerStates[0].alive.back() = true;
@@ -249,7 +248,6 @@ vector<Script::Ptr> createPrebakedRoundScripts(bool quitAtEnd) {
                             false, false, false, false, false});
     names.emplace_back("AttackACatOneTeammate");
     repeatRow(plantStatesResult, playerFreeze, names, numRepeats);
-     */
     // attack a from cat, two teammates cat covering
     addRow(plantStatesResult, {1241., 2586., 127.});
     plantStatesResult.ctPlayerStates[0].alive.back() = true;
