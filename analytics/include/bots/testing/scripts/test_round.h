@@ -38,7 +38,7 @@ public:
 
 vector<Script::Ptr> createRoundScripts(const csknow::plant_states::PlantStatesResult & plantStatesResult,
                                        bool quitAtEnd);
-vector<Script::Ptr> createPrebakedRoundScripts(const nav_mesh::nav_file & navFile, bool randomizePositions,
+vector<Script::Ptr> createPrebakedRoundScripts(const nav_mesh::nav_file & navFile, bool shouldRandomizePositions,
                                                bool quitAtEnd);
 
 #endif //CSKNOW_TEST_ROUND_H

@@ -195,7 +195,7 @@ void randomizePositions(csknow::plant_states::PlantStatesResult & plantStatesRes
     }
 }
 
-vector<Script::Ptr> createPrebakedRoundScripts(const nav_mesh::nav_file & navFile, bool randomizePositions,
+vector<Script::Ptr> createPrebakedRoundScripts(const nav_mesh::nav_file & navFile, bool shouldRandomizePositions,
                                                bool quitAtEnd) {
     vector<Script::Ptr> result;
 
@@ -433,7 +433,9 @@ vector<Script::Ptr> createPrebakedRoundScripts(const nav_mesh::nav_file & navFil
     repeatRow(plantStatesResult, playerFreeze, names, numRepeats);
     plantStatesResult.size = plantStatesResult.ctPlayerStates[0].alive.size();
 
-    randomizePositions(plantStatesResult, navFile, gen, dis);
+    if (shouldRandomizePositions) {
+        randomizePositions(plantStatesResult, navFile, gen, dis);
+    }
 
     size_t numRounds = static_cast<size_t>(plantStatesResult.size);
     for (size_t i = 0; i < numRounds; i++) {
