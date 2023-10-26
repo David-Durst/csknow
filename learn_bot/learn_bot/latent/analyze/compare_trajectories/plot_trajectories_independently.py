@@ -1,4 +1,5 @@
 import dataclasses
+import os
 import sys
 from pathlib import Path
 from typing import Set, List
@@ -24,17 +25,16 @@ rollout_no_mask_load_data_option = dataclasses.replace(rollout_load_data_option,
                                                        custom_rollout_extension= "_10_25_23_prebaked_no_mask")
 rollout_no_mask_config = dataclasses.replace(rollout_handcrafted_vs_all_human_config,
                                              predicted_load_data_options=rollout_no_mask_load_data_option,
-                                             metric_cost_title="Learned No Mask")
+                                             metric_cost_title="Rollout Learned No Mask vs")
 
 rollout_everyone_mask_load_data_option = dataclasses.replace(rollout_load_data_option,
-                                                       custom_rollout_extension= "_10_25_23_prebaked_everyone_mask_")
+                                                       custom_rollout_extension= "_10_25_23_prebaked_everyone_mask")
 rollout_everyone_mask_config = dataclasses.replace(rollout_handcrafted_vs_all_human_config,
                                                    predicted_load_data_options=rollout_everyone_mask_load_data_option,
-                                                   metric_cost_title="Learned Everyone Mask")
+                                                   metric_cost_title="Rollout Learned Everyone Mask vs")
 
 
-
-def plot_trajectories_for_one_config(load_data_options: LoadDataOptions, config: ComparisonConfig) -> List[Image]:
+def plot_trajectories_for_one_config(load_data_options: LoadDataOptions, config: ComparisonConfig) -> List[Image.Image]:
     print(f"handling {load_data_options.custom_rollout_extension}")
     set_pd_print_options()
     result: List[Image] = []
@@ -42,10 +42,12 @@ def plot_trajectories_for_one_config(load_data_options: LoadDataOptions, config:
     # load data
     load_data_result = LoadDataResult(load_data_options)
     loaded_model = load_model_file(load_data_result)
-    round_test_names = loaded_model.get_round_test_names().tolist()
+    per_round_df = loaded_model.cur_loaded_df[[round_id_column, round_number_column]] \
+        .groupby([round_id_column], as_index=False).min()
+    round_test_names_with_invalid = loaded_model.get_round_test_names().tolist()
+    round_test_names = [round_test_names_with_invalid[i] for i in per_round_df[round_id_column].to_list()]
     round_test_names_no_numbers = [''.join([i for i in n if not i.isdigit()]) for n in round_test_names]
-    per_round_df = loaded_model.cur_loaded_df.groupby([round_id_column]).min(round_number_column)
-    assert len(per_round_df) == len(round_test_names_no_numbers)
+    assert len([s for s in round_test_names_no_numbers if 'INVALID' in s]) == 0
     per_round_df[round_test_name_col] = round_test_names_no_numbers
     unique_round_test_names = per_round_df[round_test_name_col].unique()
 
@@ -80,6 +82,7 @@ def run_independent_trajectory_vis():
         trajectory_plots_by_config.append(plot_trajectories_for_one_config(data_option, config))
 
     plots_path = similarity_plots_path / rollout_no_mask_load_data_option.custom_rollout_extension
+    os.makedirs(plots_path, exist_ok=True)
     image_per_config = [concat_vertical(plots) for plots in trajectory_plots_by_config]
     final_image = concat_horizontal(image_per_config)
     final_image.save(plots_path / 'final_independent.png')
