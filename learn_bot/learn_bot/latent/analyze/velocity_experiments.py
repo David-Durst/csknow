@@ -38,7 +38,7 @@ for i, time_to_hit_constraint in enumerate(time_to_hit_constraints):
         vels.append((filtered_df[player_place_area_columns.vel[0]] ** 2. +
                      filtered_df[player_place_area_columns.vel[1]] ** 2.) ** 0.5)
 
-    axs[0, i].set_title(f'Constraint {time_to_hit_constraint}')
+    axs[0, i].set_title(f'{time_to_hit_constraint} To Hit (s)')
     bins: List
     bins = generate_bins(0, 300, 300 // 20)
     plot_hist(axs[0, i], pd.concat(vels), bins)
