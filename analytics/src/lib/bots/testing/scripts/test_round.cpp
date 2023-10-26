@@ -179,6 +179,7 @@ vector<Script::Ptr> createPrebakedRoundScripts(bool quitAtEnd) {
     vector<vector<bool>> playerFreeze;
     vector<string> names;
     csknow::plant_states::PlantStatesResult plantStatesResult;
+    /*
     // attack a from spawn, need to eliminate t hiding long
     addRow(plantStatesResult, {1241., 2586., 127.});
     plantStatesResult.ctPlayerStates[0].alive.back() = true;
@@ -190,6 +191,24 @@ vector<Script::Ptr> createPrebakedRoundScripts(bool quitAtEnd) {
     playerFreeze.push_back({false, true, false, false, false,
                             false, false, false, false, false});
     names.emplace_back("AttackASpawnTLong");
+    repeatRow(plantStatesResult, playerFreeze, names, numRepeats);
+    // attack a from spawn, need to eliminate t hiding long, teammates covering that enemy
+    addRow(plantStatesResult, {1241., 2586., 127.});
+    plantStatesResult.ctPlayerStates[0].alive.back() = true;
+    plantStatesResult.ctPlayerStates[0].pos.back() = {1430.616699, 1916.052490, -10.300033};
+    plantStatesResult.ctPlayerStates[0].viewAngle.back() = {112.955604, -4.299486};
+    plantStatesResult.ctPlayerStates[1].alive.back() = true;
+    plantStatesResult.ctPlayerStates[1].pos.back() = {1430.616699, 1516.052490, -10.300033};
+    plantStatesResult.ctPlayerStates[1].viewAngle.back() = {112.955604, -4.299486};
+    plantStatesResult.ctPlayerStates[2].alive.back() = true;
+    plantStatesResult.ctPlayerStates[2].pos.back() = {1430.616699, 1316.052490, -10.300033};
+    plantStatesResult.ctPlayerStates[2].viewAngle.back() = {112.955604, -4.299486};
+    plantStatesResult.tPlayerStates[0].alive.back() = true;
+    plantStatesResult.tPlayerStates[0].pos.back() = {1704.018188, 1011.443786, 2.233371};
+    plantStatesResult.tPlayerStates[0].viewAngle.back() = {-1.860130, -178.045181};
+    playerFreeze.push_back({false, true, true, true, false,
+                            false, false, false, false, false});
+    names.emplace_back("AttackASpawnTLongTwoTeammates");
     repeatRow(plantStatesResult, playerFreeze, names, numRepeats);
     // attack a from spawn, need to eliminate t hiding extendedA
     addRow(plantStatesResult, {1241., 2586., 127.});
@@ -230,7 +249,7 @@ vector<Script::Ptr> createPrebakedRoundScripts(bool quitAtEnd) {
                             false, false, false, false, false});
     names.emplace_back("AttackACatOneTeammate");
     repeatRow(plantStatesResult, playerFreeze, names, numRepeats);
-    // attack a from, two teammates cat covering
+    // attack a from cat, two teammates cat covering
     addRow(plantStatesResult, {1241., 2586., 127.});
     plantStatesResult.ctPlayerStates[0].alive.back() = true;
     plantStatesResult.ctPlayerStates[0].pos.back() = {308.136962, 1628.022460, 12.358312};
@@ -279,11 +298,12 @@ vector<Script::Ptr> createPrebakedRoundScripts(bool quitAtEnd) {
                             false, false, false, false, false});
     names.emplace_back("AttackBDoorsTeammateHole");
     repeatRow(plantStatesResult, playerFreeze, names, numRepeats);
+     */
     // defend a against cat
     addRow(plantStatesResult, {1241., 2586., 127.});
     plantStatesResult.ctPlayerStates[0].alive.back() = true;
-    plantStatesResult.ctPlayerStates[0].pos.back() = {402.177368, 1875.845092, 95.393173};
-    plantStatesResult.ctPlayerStates[0].viewAngle.back() = {43.959850, 3.755849};
+    plantStatesResult.ctPlayerStates[0].pos.back() = {563.968750, 2763.999511, 97.379516};
+    plantStatesResult.ctPlayerStates[0].viewAngle.back() = {-89.047363, 1.806404};
     plantStatesResult.ctPlayerStates[1].alive.back() = true;
     plantStatesResult.ctPlayerStates[1].pos.back() = {357.684234, 1650.239990, 27.671302};
     plantStatesResult.ctPlayerStates[1].viewAngle.back() = {71.024917, -9.370210};
@@ -332,6 +352,36 @@ vector<Script::Ptr> createPrebakedRoundScripts(bool quitAtEnd) {
     playerFreeze.push_back({true, false, false, false, false,
                             false, false, false, false, false});
     names.emplace_back("DefendBCTTuns");
+    repeatRow(plantStatesResult, playerFreeze, names, numRepeats);
+    // defend b against hole
+    addRow(plantStatesResult, {-1427.551391, 2500.479492, 2.367282});
+    plantStatesResult.ctPlayerStates[0].alive.back() = true;
+    plantStatesResult.ctPlayerStates[0].pos.back() = {-1179.737426, 2664.458007, 79.098220};
+    plantStatesResult.ctPlayerStates[0].viewAngle.back() = {176.255645, -1.181761};
+    plantStatesResult.tPlayerStates[0].alive.back() = true;
+    plantStatesResult.tPlayerStates[0].pos.back() = {-1430.002441, 2676.153564, 16.374132};
+    plantStatesResult.tPlayerStates[0].viewAngle.back() = {-4.951731, -15.823047};
+    playerFreeze.push_back({true, false, false, false, false,
+                            false, false, false, false, false});
+    names.emplace_back("DefendBCTHole");
+    repeatRow(plantStatesResult, playerFreeze, names, numRepeats);
+    // defend b against hole, two teammates to keep in place
+    addRow(plantStatesResult, {-1427.551391, 2500.479492, 2.367282});
+    plantStatesResult.ctPlayerStates[0].alive.back() = true;
+    plantStatesResult.ctPlayerStates[0].pos.back() = {-1179.737426, 2664.458007, 79.098220};
+    plantStatesResult.ctPlayerStates[0].viewAngle.back() = {176.255645, -1.181761};
+    plantStatesResult.tPlayerStates[0].alive.back() = true;
+    plantStatesResult.tPlayerStates[0].pos.back() = {-1430.002441, 2676.153564, 16.374132};
+    plantStatesResult.tPlayerStates[0].viewAngle.back() = {-4.951731, -15.823047};
+    plantStatesResult.tPlayerStates[1].alive.back() = true;
+    plantStatesResult.tPlayerStates[1].pos.back() = {-1925.693725, 2991.133300, 36.464263};
+    plantStatesResult.tPlayerStates[1].viewAngle.back() = {-56.154346, -2.903999};
+    plantStatesResult.tPlayerStates[2].alive.back() = true;
+    plantStatesResult.tPlayerStates[2].pos.back() = {-1898.840698, 2345.118164, 3.255815};
+    plantStatesResult.tPlayerStates[2].viewAngle.back() = {23.841018, -5.536960};
+    playerFreeze.push_back({true, false, true, true, false,
+                            false, false, false, false, false});
+    names.emplace_back("DefendBCTHoleTwoTeammates");
     repeatRow(plantStatesResult, playerFreeze, names, numRepeats);
     plantStatesResult.size = plantStatesResult.ctPlayerStates[0].alive.size();
 
