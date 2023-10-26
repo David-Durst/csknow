@@ -251,7 +251,7 @@ vector<Script::Ptr> createPrebakedRoundScripts(bool quitAtEnd) {
     // attack b hole, teammate b doors
     addRow(plantStatesResult, {-1427.551391, 2500.479492, 2.367282});
     plantStatesResult.ctPlayerStates[0].alive.back() = true;
-    plantStatesResult.ctPlayerStates[0].pos.back() = {-583.364318, 2389.586425, -100.925903};
+    plantStatesResult.ctPlayerStates[0].pos.back() = {-550.731201, 2076.939208, -118.991142};
     plantStatesResult.ctPlayerStates[0].viewAngle.back() = {178.822967, -11.732166};
     plantStatesResult.ctPlayerStates[1].alive.back() = true;
     plantStatesResult.ctPlayerStates[1].pos.back() = {-1396.848022, 2144.354980, 1.107921};
