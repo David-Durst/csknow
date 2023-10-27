@@ -16,7 +16,7 @@ from learn_bot.latent.analyze.compare_trajectories.plot_distance_to_other_player
 from learn_bot.latent.analyze.compare_trajectories.process_trajectory_comparison import ComparisonConfig, generate_bins, \
     plot_hist
 from learn_bot.latent.analyze.test_traces.run_trace_visualization import d2_img, bot_ct_color_list, bot_t_color_list, \
-    convert_to_canvas_coordinates
+    convert_to_canvas_coordinates, replay_ct_color_list, replay_t_color_list
 from learn_bot.latent.order.column_names import team_strs
 from learn_bot.latent.place_area.column_names import specific_player_place_area_columns, delta_pos_grid_cell_dim
 from learn_bot.latent.vis.draw_inference import VisMapCoordinate
@@ -34,7 +34,8 @@ def plot_trajectory_dfs_and_event(trajectory_dfs: List[pd.DataFrame], config: Co
                                   filter_players: Optional[FilterPlayerType] = FilterPlayerType.IncludeAll,
                                   filter_event_type: Optional[FilterEventType] = None,
                                   key_areas: Optional[KeyAreas] = None, key_area_team: KeyAreaTeam = KeyAreaTeam.Both,
-                                  title_appendix: str = "") -> Image.Image:
+                                  title_appendix: str = "",
+                                  plot_starts: bool = False) -> Image.Image:
     filtered_trajectory_dfs: List[pd.DataFrame] = []
     valid_players_dfs: List[pd.DataFrame] = []
     num_points = 0
@@ -65,7 +66,8 @@ def plot_trajectory_dfs_and_event(trajectory_dfs: List[pd.DataFrame], config: Co
                                    config, predicted, include_ct, include_t,
                                    filter_players,
                                    filter_event_type,
-                                   title_appendix)
+                                   title_appendix,
+                                   plot_starts=plot_starts)
 
 
 #def plot_speeds(trajectory_dfs: List[pd.DataFrame], valid_players_dfs: List[pd.DataFrame],
@@ -141,11 +143,14 @@ def plot_trajectory_dfs(filtered_trajectory_dfs: List[pd.DataFrame], valid_playe
                         predicted: bool, include_ct: bool, include_t: bool,
                         filter_players: Optional[FilterPlayerType] = FilterPlayerType.IncludeAll,
                         filter_event_type: Optional[FilterEventType] = None,
-                        title_appendix: str = "") -> Image.Image:
+                        title_appendix: str = "",
+                        plot_starts: bool = False) -> Image.Image:
     all_player_d2_img_copy = d2_img.copy().convert("RGBA")
     color_alpha = int(25. / log(2.2 + num_points / 1300, 10))
     ct_color = (bot_ct_color_list[0], bot_ct_color_list[1], bot_ct_color_list[2], color_alpha)
+    start_ct_color = (replay_ct_color_list[0], replay_ct_color_list[1], replay_ct_color_list[2], color_alpha)
     t_color = (bot_t_color_list[0], bot_t_color_list[1], bot_t_color_list[2], color_alpha)
+    start_t_color = (replay_t_color_list[0], replay_t_color_list[1], replay_t_color_list[2], color_alpha)
 
     first_title = True
     team_text = f" CT: {include_ct}, T: {include_t}"
@@ -177,10 +182,12 @@ def plot_trajectory_dfs(filtered_trajectory_dfs: List[pd.DataFrame], valid_playe
                     if not include_ct:
                         continue
                     fill_color = ct_color
+                    start_fill_color = start_ct_color
                 else:
                     if not include_t:
                         continue
                     fill_color = t_color
+                    start_fill_color = start_t_color
 
                 cur_player_trajectory_df = trajectory_df[trajectory_df[player_place_area_columns.alive] == 1]
                 if cur_player_trajectory_df.empty:
@@ -203,6 +210,11 @@ def plot_trajectory_dfs(filtered_trajectory_dfs: List[pd.DataFrame], valid_playe
                     first_title = False
 
                 cur_player_d2_drw.line(xy=player_xy_coords, fill=fill_color, width=5)
+                if plot_starts:
+                    cur_player_d2_drw.rectangle(
+                        (player_xy_coords[0][0] - 5, player_xy_coords[0][1] - 5,
+                         player_xy_coords[0][0] + 5, player_xy_coords[0][1] + 5),
+                        fill=start_fill_color)
                 all_player_d2_img_copy.alpha_composite(cur_player_d2_overlay_im)
             pbar.update(1)
 
