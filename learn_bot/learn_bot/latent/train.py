@@ -167,8 +167,7 @@ def train(train_type: TrainType, multi_hdf5_wrapper: MultiHDF5Wrapper,
                                                    multi_hdf5_wrapper.train_hdf5_wrappers[0].sample_df)
         # plus 1 on future ticks to include present tick
         model = TransformerNestedHiddenLatentModel(column_transformers, hyperparameter_options.internal_width,
-                                                   2 * max_enemies, hyperparameter_options.num_input_time_steps,
-                                                   num_radial_ticks, num_radial_bins,
+                                                   2 * max_enemies,
                                                    hyperparameter_options.layers, hyperparameter_options.heads,
                                                    hyperparameter_options.player_mask_type,
                                                    hyperparameter_options.non_pos_mask)
