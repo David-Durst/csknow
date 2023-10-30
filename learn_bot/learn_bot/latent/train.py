@@ -30,7 +30,7 @@ from learn_bot.latent.profiling import profile_latent_model
 from learn_bot.latent.train_paths import checkpoints_path, runs_path, train_test_split_file_name, \
     default_selected_retake_rounds_path
 from learn_bot.latent.transformer_nested_hidden_latent_model import TransformerNestedHiddenLatentModel, PlayerMaskType, \
-    OutputMaskType
+    OutputMaskType, ControlType
 from learn_bot.libs.hdf5_to_pd import load_hdf5_to_pd
 from learn_bot.libs.hdf5_wrapper import HDF5Wrapper
 from learn_bot.libs.io_transforms import CUDA_DEVICE_STR
@@ -60,7 +60,8 @@ class TrainType(Enum):
 
 
 default_hyperparameter_options = HyperparameterOptions()
-hyperparameter_option_range = [HyperparameterOptions(num_input_time_steps=1),
+hyperparameter_option_range = [HyperparameterOptions(num_input_time_steps=1, control_type=ControlType.TimeControl),
+                               HyperparameterOptions(num_input_time_steps=1, control_type=ControlType.SimilarityControl),
                                HyperparameterOptions(num_input_time_steps=1,
                                                      player_mask_type=PlayerMaskType.EnemyFullMask),
                                HyperparameterOptions(num_input_time_steps=5,
@@ -173,6 +174,7 @@ def train(train_type: TrainType, multi_hdf5_wrapper: MultiHDF5Wrapper,
         model = TransformerNestedHiddenLatentModel(column_transformers, hyperparameter_options.internal_width,
                                                    2 * max_enemies, hyperparameter_options.num_input_time_steps,
                                                    hyperparameter_options.layers, hyperparameter_options.heads,
+                                                   hyperparameter_options.control_type,
                                                    hyperparameter_options.player_mask_type,
                                                    hyperparameter_options.non_pos_mask)
         if load_model_path:
