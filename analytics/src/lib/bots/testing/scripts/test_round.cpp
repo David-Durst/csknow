@@ -219,7 +219,6 @@ void randomizePositions(csknow::plant_states::PlantStatesResult & plantStatesRes
                 plantStatesResult.tPlayerStates[i].pos[row].y += (dis(gen) - 0.5) * WIDTH;
                 plantStatesResult.tPlayerStates[i].pos[row] =
                         getPosInNavMesh(origPos, plantStatesResult.tPlayerStates[i].pos[row], navFile);
-
             }
         }
     }
