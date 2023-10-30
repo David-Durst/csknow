@@ -13,15 +13,15 @@ now_str = now.strftime("%m_%d_%Y__%H_%M_%S")
 
 @dataclass
 class HyperparameterOptions:
-    internal_width: int = 128
-    bc_epochs: int = 20
+    internal_width: int = 256
+    bc_epochs: int = 35
     probabilistic_rollout_epochs: int = 0
     full_rollout_epochs: int = 0
     batch_size: int = 1024
     num_input_time_steps: int = 1
     learning_rate: float = 4e-5
     weight_decay: float = 0.
-    layers: int = 2
+    layers: int = 4
     heads: int = 4
     noise_var: float = 20.
     rollout_seconds: Optional[float] = 2.

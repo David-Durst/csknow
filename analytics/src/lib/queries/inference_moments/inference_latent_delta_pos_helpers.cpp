@@ -56,10 +56,8 @@ namespace csknow::inference_delta_pos {
                 result.rowCPP.push_back(columnPlayerData.fovEnemyVisibleInLast5s[rowIndex]);
                 result.rowCPP.push_back(columnPlayerData.health[rowIndex]);
                 result.rowCPP.push_back(columnPlayerData.armor[rowIndex]);
-                /*
                 result.rowCPP.push_back(columnPlayerData.secondsAfterPriorHitEnemy[rowIndex]);
                 result.rowCPP.push_back(columnPlayerData.secondsUntilNextHitEnemy[rowIndex]);
-                 */
                 /*
                 result.rowCPP.push_back(static_cast<float>(columnPlayerData.velocity[rowIndex].x));
                 result.rowCPP.push_back(static_cast<float>(columnPlayerData.velocity[rowIndex].y));
