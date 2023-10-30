@@ -203,11 +203,12 @@ vector<Script::Ptr> createPrebakedRoundScripts(const nav_mesh::nav_file & navFil
     std::mt19937 gen;
     std::uniform_real_distribution<> dis;
 
-    int numRepeats = 29;
+    int numRepeats = 1;
 
     vector<vector<bool>> playerFreeze;
     vector<string> names;
     csknow::plant_states::PlantStatesResult plantStatesResult;
+    /*
     // attack a from spawn, need to eliminate t hiding long
     addRow(plantStatesResult, {1241., 2586., 127.});
     plantStatesResult.ctPlayerStates[0].alive.back() = true;
@@ -341,6 +342,7 @@ vector<Script::Ptr> createPrebakedRoundScripts(const nav_mesh::nav_file & navFil
                             false, false, false, false, false});
     names.emplace_back("DefendACTCat");
     repeatRow(plantStatesResult, playerFreeze, names, numRepeats);
+     */
     // defend a against cat teammates covering behind
     addRow(plantStatesResult, {1241., 2586., 127.});
     plantStatesResult.ctPlayerStates[0].alive.back() = true;

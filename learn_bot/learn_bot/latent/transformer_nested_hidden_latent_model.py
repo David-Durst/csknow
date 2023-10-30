@@ -79,6 +79,20 @@ class OutputMaskType(Enum):
             return "NoEngagementMask"
 
 
+class ControlType(Enum):
+    NoControl = 1
+    TimeControl = 2
+    SimilarityControl = 3
+
+    def __str__(self) -> str:
+        if self == ControlType.NoControl:
+            return "NoControl"
+        elif self == ControlType.TimeControl:
+            return "TimeControl"
+        else:
+            return "SimilarityControl"
+
+
 class TransformerNestedHiddenLatentModel(nn.Module):
     internal_width: int
     cts: IOColumnTransformers
@@ -87,7 +101,8 @@ class TransformerNestedHiddenLatentModel(nn.Module):
     noise_var: float
 
     def __init__(self, cts: IOColumnTransformers, internal_width: int, num_players: int, num_input_time_steps: int,
-                 num_layers: int, num_heads: int, player_mask_type: PlayerMaskType, mask_non_pos: bool):
+                 num_layers: int, num_heads: int, control_type: ControlType, player_mask_type: PlayerMaskType,
+                 mask_non_pos: bool):
         super(TransformerNestedHiddenLatentModel, self).__init__()
         self.cts = cts
         self.internal_width = internal_width
@@ -136,6 +151,8 @@ class TransformerNestedHiddenLatentModel(nn.Module):
         ])
         self.num_similarity_columns = 2
         self.num_input_time_steps = num_input_time_steps
+        self.control_type = control_type
+        self.time_control_columns = get_player_columns_by_str(cts, "player decrease distance to c4")
 
         # ensure player counts right
         assert self.num_players == num_players
@@ -222,7 +239,13 @@ class TransformerNestedHiddenLatentModel(nn.Module):
 
         return self.spatial_positional_encoder(pos_scaled)
 
-    def forward(self, x, similarity, temperature):
+    def forward(self, x_in, similarity_in, temperature):
+        x = x_in.clone()
+        if self.control_type != ControlType.TimeControl:
+            x[:, self.time_control_columns] = 0.
+        similarity = similarity_in.clone()
+        if self.control_type != ControlType.SimilarityControl:
+            similarity[:, :] = 0.
         x_pos = rearrange(x[:, self.players_pos_columns], "b (p t d) -> b p t d", p=self.num_players,
                           t=self.num_input_time_steps, d=self.num_dim)
         x_pos_encoded = self.encode_pos(x_pos)
