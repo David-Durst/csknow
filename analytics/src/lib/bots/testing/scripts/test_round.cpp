@@ -190,6 +190,8 @@ void randomizePositions(csknow::plant_states::PlantStatesResult & plantStatesRes
                         vec3Conv(newPosPreFit),
                         navFile.get_area_by_id_fast(newAreaId))
                 );
+                // make sure don't spawn in ground
+                plantStatesResult.tPlayerStates[i].pos[row].z += 20.;
             }
         }
     }
