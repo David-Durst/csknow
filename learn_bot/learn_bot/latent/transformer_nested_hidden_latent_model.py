@@ -33,6 +33,10 @@ def get_player_columns_by_str(cts: IOColumnTransformers, contained_str: str) -> 
     )
 
 
+def get_columns_by_str(cts: IOColumnTransformers, contained_str: str) -> List[int]:
+    return range_list_to_index_list(cts.get_name_ranges(True, False, contained_str=contained_str))
+
+
 d2_min = [-2257., -1207., -204.128]
 d2_max = [1832., 3157., 236.]
 stature_to_speed_list = [max_speed_per_second, max_speed_per_second * walking_modifier,
@@ -41,28 +45,13 @@ stature_to_speed_list = [max_speed_per_second, max_speed_per_second * walking_mo
 
 class PlayerMaskType(Enum):
     NoMask = 1
-    EveryoneTemporalOnlyMask = 2
-    EveryoneFullMask = 3
-    TeammateTemporalOnlyMask = 4
-    TeammateFullMask = 5
-    EnemyTemporalOnlyMask = 6
-    EnemyFullMask = 7
+    EveryoneMask = 3
 
     def __str__(self) -> str:
         if self == PlayerMaskType.NoMask:
             return "NoMask"
-        elif self == PlayerMaskType.EveryoneTemporalOnlyMask:
-            return "EveryoneTemporalOnlyMask"
-        elif self == PlayerMaskType.EveryoneFullMask:
-            return "EveryoneFullMask"
-        elif self == PlayerMaskType.TeammateTemporalOnlyMask:
-            return "TeammateTemporalOnlyMask"
-        elif self == PlayerMaskType.TeammateFullMask:
-            return "TeammateFullMask"
-        elif self == PlayerMaskType.EnemyTemporalOnlyMask:
-            return "EnemyTemporalOnlyMask"
         else:
-            return "EnemyFullMask"
+            return "EveryoneMask"
 
 
 class OutputMaskType(Enum):
@@ -152,18 +141,18 @@ class TransformerNestedHiddenLatentModel(nn.Module):
         self.num_similarity_columns = 2
         self.num_input_time_steps = num_input_time_steps
         self.control_type = control_type
-        self.time_control_columns = get_player_columns_by_str(cts, "player decrease distance to c4")
+        self.time_control_columns = get_columns_by_str(cts, "player decrease distance to c4")
 
         # ensure player counts right
         assert self.num_players == num_players
         self.num_players_per_team = self.num_players // 2
 
         # compute mask to isolate everyone
-        self.input_per_player_mask_cpu = torch.zeros([self.num_players, self.num_players],
-                                                                dtype=torch.bool)
-        for i in range(self.num_players):
-            for j in range(self.num_players):
-                self.input_per_player_mask_cpu[i, j] = i != j
+        self.input_per_player_mask_cpu = torch.zeros([self.num_players, self.num_players], dtype=torch.bool)
+        if player_mask_type == PlayerMaskType.EveryoneMask:
+            for i in range(self.num_players):
+                for j in range(self.num_players):
+                    self.input_per_player_mask_cpu[i, j] = i != j
 
         self.player_mask_type = player_mask_type
 
