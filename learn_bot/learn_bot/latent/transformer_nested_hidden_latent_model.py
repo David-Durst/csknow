@@ -221,23 +221,6 @@ class TransformerNestedHiddenLatentModel(nn.Module):
 
         return self.spatial_positional_encoder(pos_scaled)
 
-    def generate_tgt_mask(self, device: str) -> torch.Tensor:
-        num_player_time_steps = self.num_players * self.num_output_time_steps
-        # base tgt mask that is diagonal to ensure only look at future teammates
-        tgt_mask = self.transformer_model.generate_square_subsequent_mask(num_player_time_steps, device)
-
-        # team-based mask
-        negs = torch.full((num_player_time_steps, num_player_time_steps), float('-inf'), device=device)
-        team_mask = torch.zeros((num_player_time_steps, num_player_time_steps), device=device)
-        num_player_time_steps_per_team = self.num_players_per_team * self.num_output_time_steps
-        team_mask[:num_player_time_steps_per_team, num_player_time_steps_per_team:] = \
-            negs[:num_player_time_steps_per_team, num_player_time_steps_per_team:]
-        team_mask[num_player_time_steps_per_team:, :num_player_time_steps_per_team] = \
-            negs[num_player_time_steps_per_team:, :num_player_time_steps_per_team]
-        team_mask = tgt_mask + team_mask
-
-        return team_mask
-
     def forward(self, x, similarity, temperature):
         x_pos = rearrange(x[:, self.players_pos_columns], "b (p d) -> b p d", p=self.num_players, d=self.num_dim)
         x_crosshair = rearrange(x[:, self.players_nearest_crosshair_to_enemy_columns], "b p -> b p 1",
