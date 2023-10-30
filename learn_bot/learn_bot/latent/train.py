@@ -13,6 +13,9 @@ from torch.utils.data import DataLoader
 
 from torch.utils.tensorboard import SummaryWriter
 
+from learn_bot.latent.analyze.comparison_column_names import small_human_good_rounds, \
+    all_human_28_second_filter_good_rounds, all_human_vs_small_human_similarity_hdf5_data_path, \
+    all_human_vs_human_28_similarity_hdf5_data_path
 from learn_bot.latent.dataset import *
 from learn_bot.latent.engagement.column_names import round_id_column
 from learn_bot.latent.hyperparameter_options import HyperparameterOptions
@@ -28,6 +31,7 @@ from learn_bot.latent.train_paths import checkpoints_path, runs_path, train_test
     default_selected_retake_rounds_path
 from learn_bot.latent.transformer_nested_hidden_latent_model import TransformerNestedHiddenLatentModel, PlayerMaskType, \
     OutputMaskType
+from learn_bot.libs.hdf5_to_pd import load_hdf5_to_pd
 from learn_bot.libs.hdf5_wrapper import HDF5Wrapper
 from learn_bot.libs.io_transforms import CUDA_DEVICE_STR
 from learn_bot.latent.accuracy_and_loss import compute_loss, compute_accuracy_and_delta_diff, \
@@ -56,7 +60,7 @@ class TrainType(Enum):
 
 
 default_hyperparameter_options = HyperparameterOptions()
-hyperparameter_option_range = [HyperparameterOptions(num_input_time_steps=5),
+hyperparameter_option_range = [HyperparameterOptions(num_input_time_steps=1),
                                HyperparameterOptions(num_input_time_steps=1,
                                                      player_mask_type=PlayerMaskType.EnemyFullMask),
                                HyperparameterOptions(num_input_time_steps=5,
@@ -480,9 +484,9 @@ load_data_options = LoadDataOptions(
     limit_manual_data_to_only_enemies_no_nav=False,
     #small_good_rounds=[small_human_good_rounds],
     #similarity_dfs=[load_hdf5_to_pd(all_human_vs_small_human_similarity_hdf5_data_path)],
-    #small_good_rounds=[small_human_good_rounds, all_human_28_second_filter_good_rounds],
-    #similarity_dfs=[load_hdf5_to_pd(all_human_vs_small_human_similarity_hdf5_data_path),
-    #                load_hdf5_to_pd(all_human_vs_human_28_similarity_hdf5_data_path)],
+    small_good_rounds=[small_human_good_rounds, all_human_28_second_filter_good_rounds],
+    similarity_dfs=[load_hdf5_to_pd(all_human_vs_small_human_similarity_hdf5_data_path),
+                    load_hdf5_to_pd(all_human_vs_human_28_similarity_hdf5_data_path)],
     limit_by_similarity=False,
     train_test_split_file_name=train_test_split_file_name
 )
