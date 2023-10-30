@@ -168,9 +168,9 @@ class PlayerPlaceAreaColumns:
         #return [self.cur_place, self.area_grid_cell_in_place, [self.alive]]#, self.index_on_team, [self.ct_team]]
         #return [self.cur_place, self.area_grid_cell_in_place, [self.alive], [self.ct_team]]#, self.index_on_team, [self.ct_team]]
         return [[self.alive], #self.index_on_team,
-                [self.ct_team],
-                [self.decrease_distance_to_c4_5s], [self.decrease_distance_to_c4_10s],
-                [self.decrease_distance_to_c4_20s]]
+                [self.ct_team]]#,
+                #[self.decrease_distance_to_c4_5s], [self.decrease_distance_to_c4_10s],
+                #[self.decrease_distance_to_c4_20s]]
 
     def to_output_cat_list(self, place: bool, area: bool, delta: bool, radial: bool) -> list[list[str]]:
         result = []
