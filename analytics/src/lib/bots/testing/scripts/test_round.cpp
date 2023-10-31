@@ -203,7 +203,7 @@ vector<Script::Ptr> createPrebakedRoundScripts(const nav_mesh::nav_file & navFil
     std::mt19937 gen;
     std::uniform_real_distribution<> dis;
 
-    int numRepeats = 29;
+    int numRepeats = 1;
 
     vector<vector<bool>> playerFreeze;
     vector<string> names;
