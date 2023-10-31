@@ -7,7 +7,7 @@
 RoundScript::RoundScript(const csknow::plant_states::PlantStatesResult & plantStatesResult, size_t plantStateIndex,
                          size_t numRounds, std::mt19937 gen, std::uniform_real_distribution<> dis,
                          std::optional<vector<bool>> playerFreeze, string baseName) :
-    Script(baseName, {}, {ObserveType::FirstPerson, 0}),
+    Script(baseName, {}, {ObserveType::Absolute, 0, {915.997803, 2360.631836, 473.08105}, {42.235687,  39.595413}}),
     plantStateIndex(plantStateIndex), numRounds(numRounds), playerFreeze(playerFreeze) {
     name += std::to_string(plantStateIndex);
     int numCT = 0, numT = 0;
@@ -167,28 +167,28 @@ void repeatRow(csknow::plant_states::PlantStatesResult & plantStatesResult, vect
 
 }
 
-Vec3 getPosInNavMesh(Vec3 targetPos, const nav_mesh::nav_file & navFile) {
-    const nav_mesh::nav_area & targetArea = navFile.get_nearest_area_by_position(vec3Conv(targetPos));
-    AABB targetAreaAABB{vec3tConv(targetArea.get_min_corner()), vec3tConv(targetArea.get_max_corner())};
+Vec3 getPosInNavMesh(Vec3 origPos, Vec3 targetPos, const nav_mesh::nav_file & navFile) {
+    const nav_mesh::nav_area & origArea = navFile.get_nearest_area_by_position(vec3Conv(origPos));
+    AABB origAreaAABB{vec3tConv(origArea.get_min_corner()), vec3tConv(origArea.get_max_corner())};
     Vec3 endPos = vec3tConv(navFile.get_nearest_point_in_area(
             vec3Conv(targetPos),
-            targetArea)
+            origArea)
     );
-    if (targetAreaAABB.max.x - targetAreaAABB.min.x < WIDTH) {
-        endPos.x = getCenter(targetAreaAABB).x;
+    if (origAreaAABB.max.x - origAreaAABB.min.x < WIDTH) {
+        endPos.x = getCenter(origAreaAABB).x;
     }
     else {
-        endPos.x = std::min(targetAreaAABB.max.x - WIDTH * 0.5, endPos.x);
-        endPos.x = std::max(targetAreaAABB.min.x + WIDTH * 0.5, endPos.x);
+        endPos.x = std::min(origAreaAABB.max.x - WIDTH * 0.5, endPos.x);
+        endPos.x = std::max(origAreaAABB.min.x + WIDTH * 0.5, endPos.x);
     }
-    if (targetAreaAABB.max.y - targetAreaAABB.min.y < WIDTH) {
-        endPos.y = getCenter(targetAreaAABB).y;
+    if (origAreaAABB.max.y - origAreaAABB.min.y < WIDTH) {
+        endPos.y = getCenter(origAreaAABB).y;
     }
     else {
-        endPos.y = std::min(targetAreaAABB.max.y - WIDTH * 0.5, endPos.y);
-        endPos.y = std::max(targetAreaAABB.min.y + WIDTH * 0.5, endPos.y);
+        endPos.y = std::min(origAreaAABB.max.y - WIDTH * 0.5, endPos.y);
+        endPos.y = std::max(origAreaAABB.min.y + WIDTH * 0.5, endPos.y);
     }
-    endPos.z += 10.;
+    endPos.z += 50.;
     return endPos;
 }
 
@@ -197,16 +197,18 @@ void randomizePositions(csknow::plant_states::PlantStatesResult & plantStatesRes
     for (size_t row = 0; row < plantStatesResult.ctPlayerStates[0].alive.size(); row++) {
         for (size_t i = 0; i < csknow::plant_states::max_players_per_team; i++) {
             if (plantStatesResult.ctPlayerStates[i].alive[row]) {
+                Vec3 origPos = plantStatesResult.ctPlayerStates[i].pos[row];
                 plantStatesResult.ctPlayerStates[i].pos[row].x += (dis(gen) - 0.5) * WIDTH;
                 plantStatesResult.ctPlayerStates[i].pos[row].y += (dis(gen) - 0.5) * WIDTH;
                 plantStatesResult.ctPlayerStates[i].pos[row] =
-                        getPosInNavMesh(plantStatesResult.ctPlayerStates[i].pos[row], navFile);
+                        getPosInNavMesh(origPos, plantStatesResult.ctPlayerStates[i].pos[row], navFile);
             }
             if (plantStatesResult.tPlayerStates[i].alive[row]) {
+                Vec3 origPos = plantStatesResult.tPlayerStates[i].pos[row];
                 plantStatesResult.tPlayerStates[i].pos[row].x += (dis(gen) - 0.5) * WIDTH;
                 plantStatesResult.tPlayerStates[i].pos[row].y += (dis(gen) - 0.5) * WIDTH;
                 plantStatesResult.tPlayerStates[i].pos[row] =
-                        getPosInNavMesh(plantStatesResult.tPlayerStates[i].pos[row], navFile);
+                        getPosInNavMesh(origPos, plantStatesResult.tPlayerStates[i].pos[row], navFile);
 
             }
         }
@@ -221,7 +223,7 @@ vector<Script::Ptr> createPrebakedRoundScripts(const nav_mesh::nav_file & navFil
     std::mt19937 gen;
     std::uniform_real_distribution<> dis;
 
-    int numRepeats = 29;
+    int numRepeats = 3;
 
     vector<vector<bool>> playerFreeze;
     vector<string> names;
@@ -363,7 +365,28 @@ vector<Script::Ptr> createPrebakedRoundScripts(const nav_mesh::nav_file & navFil
     names.emplace_back("DefendACTCat");
     repeatRow(plantStatesResult, playerFreeze, names, numRepeats);
     */
-    // defend a against cat teammates covering behind
+    // defend a against cat teammates covering behind, moving player is forward
+    addRow(plantStatesResult, {1241., 2586., 127.});
+    plantStatesResult.ctPlayerStates[0].alive.back() = true;
+    plantStatesResult.ctPlayerStates[0].pos.back() = {563.968750, 2763.999511, 97.379516};
+    plantStatesResult.ctPlayerStates[0].viewAngle.back() = {-89.047363, 1.806404};
+    plantStatesResult.ctPlayerStates[1].alive.back() = true;
+    plantStatesResult.ctPlayerStates[1].pos.back() = {357.684234, 1650.239990, 27.671302};
+    plantStatesResult.ctPlayerStates[1].viewAngle.back() = {71.024917, -9.370210};
+    plantStatesResult.tPlayerStates[0].alive.back() = true;
+    plantStatesResult.tPlayerStates[0].pos.back() = {1088.025269, 2461.473389, 160.197662};
+    plantStatesResult.tPlayerStates[0].viewAngle.back() = {-144., 1.084169};
+    plantStatesResult.tPlayerStates[1].alive.back() = true;
+    plantStatesResult.tPlayerStates[1].pos.back() = {1175.846923, 2944.958984, 128.266784};
+    plantStatesResult.tPlayerStates[1].viewAngle.back() = {-127.956420, 1.114561};
+    plantStatesResult.tPlayerStates[2].alive.back() = true;
+    plantStatesResult.tPlayerStates[2].pos.back() = {1427.594238, 2308.249023, 4.196350};
+    plantStatesResult.tPlayerStates[2].viewAngle.back() = {-165.436294, -4.732160};
+    playerFreeze.push_back({true, false, true, true, true,
+                            false, false, false, false, false});
+    names.emplace_back("DefendACTCatForwardTwoTeammates");
+    repeatRow(plantStatesResult, playerFreeze, names, numRepeats);
+    // defend a against cat teammates covering behind, moving player is center
     addRow(plantStatesResult, {1241., 2586., 127.});
     plantStatesResult.ctPlayerStates[0].alive.back() = true;
     plantStatesResult.ctPlayerStates[0].pos.back() = {563.968750, 2763.999511, 97.379516};
@@ -384,7 +407,27 @@ vector<Script::Ptr> createPrebakedRoundScripts(const nav_mesh::nav_file & navFil
                             false, false, false, false, false});
     names.emplace_back("DefendACTCatTwoTeammates");
     repeatRow(plantStatesResult, playerFreeze, names, numRepeats);
-    /*
+    // defend a against cat teammates covering behind, moving player is backward
+    addRow(plantStatesResult, {1241., 2586., 127.});
+    plantStatesResult.ctPlayerStates[0].alive.back() = true;
+    plantStatesResult.ctPlayerStates[0].pos.back() = {563.968750, 2763.999511, 97.379516};
+    plantStatesResult.ctPlayerStates[0].viewAngle.back() = {-89.047363, 1.806404};
+    plantStatesResult.ctPlayerStates[1].alive.back() = true;
+    plantStatesResult.ctPlayerStates[1].pos.back() = {357.684234, 1650.239990, 27.671302};
+    plantStatesResult.ctPlayerStates[1].viewAngle.back() = {71.024917, -9.370210};
+    plantStatesResult.tPlayerStates[0].alive.back() = true;
+    plantStatesResult.tPlayerStates[0].pos.back() = {1268.225952, 2699.348877, 191.093811};
+    plantStatesResult.tPlayerStates[0].viewAngle.back() = {-144., 1.084169};
+    plantStatesResult.tPlayerStates[1].alive.back() = true;
+    plantStatesResult.tPlayerStates[1].pos.back() = {1175.846923, 2944.958984, 128.266784};
+    plantStatesResult.tPlayerStates[1].viewAngle.back() = {-127.956420, 1.114561};
+    plantStatesResult.tPlayerStates[2].alive.back() = true;
+    plantStatesResult.tPlayerStates[2].pos.back() = {1427.594238, 2308.249023, 4.196350};
+    plantStatesResult.tPlayerStates[2].viewAngle.back() = {-165.436294, -4.732160};
+    playerFreeze.push_back({true, false, true, true, true,
+                            false, false, false, false, false});
+    names.emplace_back("DefendACTCatBackwardTwoTeammates");
+    repeatRow(plantStatesResult, playerFreeze, names, numRepeats);
     // defend a against long
     addRow(plantStatesResult, {1241., 2586., 127.});
     plantStatesResult.ctPlayerStates[0].alive.back() = true;
@@ -399,7 +442,8 @@ vector<Script::Ptr> createPrebakedRoundScripts(const nav_mesh::nav_file & navFil
     playerFreeze.push_back({true, false, true, false, false,
                             false, false, false, false, false});
     names.emplace_back("DefendACTLong");
-    repeatRow(plantStatesResult, playerFreeze, names, numRepeats);
+    repeatRow(plantStatesResult, playerFreeze, names, 30/*numRepeats*/);
+    /*
     // defend b against site
     addRow(plantStatesResult, {-1427.551391, 2500.479492, 2.367282});
     plantStatesResult.ctPlayerStates[0].alive.back() = true;
