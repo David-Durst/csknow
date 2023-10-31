@@ -62,12 +62,10 @@ namespace csknow::inference_manager {
                                                {1, static_cast<long>(deltaPosValues.rowCPP.size())},
                                                options);
         inputs.push_back(rowPT);
-        /*
         float overallPush =
                 teamSaveControlParameters.getPushModelValue(true, feature_store::DecreaseTimingOption::s5, 0);
         vector<float> similarityArr{overallPush, overallPush};
-         */
-        vector<float> similarityArr{0.f, 0.f};
+        //vector<float> similarityArr{0.f, 0.f};
         torch::Tensor similarityPt = torch::from_blob(similarityArr.data(), {1, 2}, options);
         inputs.push_back(similarityPt);
         vector<float> temperatureArr{teamSaveControlParameters.temperature};
