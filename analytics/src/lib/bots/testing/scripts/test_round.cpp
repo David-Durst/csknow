@@ -167,6 +167,31 @@ void repeatRow(csknow::plant_states::PlantStatesResult & plantStatesResult, vect
 
 }
 
+Vec3 getPosInNavMesh(Vec3 targetPos, const nav_mesh::nav_file & navFile) {
+    const nav_mesh::nav_area & targetArea = navFile.get_nearest_area_by_position(vec3Conv(targetPos));
+    AABB targetAreaAABB{vec3tConv(targetArea.get_min_corner()), vec3tConv(targetArea.get_max_corner())};
+    Vec3 endPos = vec3tConv(navFile.get_nearest_point_in_area(
+            vec3Conv(targetPos),
+            targetArea)
+    );
+    if (targetAreaAABB.max.x - targetAreaAABB.min.x < WIDTH) {
+        endPos.x = getCenter(targetAreaAABB).x;
+    }
+    else {
+        endPos.x = std::min(targetAreaAABB.max.x - WIDTH * 0.5, endPos.x);
+        endPos.x = std::max(targetAreaAABB.min.x + WIDTH * 0.5, endPos.x);
+    }
+    if (targetAreaAABB.max.y - targetAreaAABB.min.y < WIDTH) {
+        endPos.y = getCenter(targetAreaAABB).y;
+    }
+    else {
+        endPos.y = std::min(targetAreaAABB.max.y - WIDTH * 0.5, endPos.y);
+        endPos.y = std::max(targetAreaAABB.min.y + WIDTH * 0.5, endPos.y);
+    }
+    endPos.z += 10.;
+    return endPos;
+}
+
 void randomizePositions(csknow::plant_states::PlantStatesResult & plantStatesResult, const nav_mesh::nav_file & navFile,
                         std::mt19937 gen, std::uniform_real_distribution<> dis) {
     for (size_t row = 0; row < plantStatesResult.ctPlayerStates[0].alive.size(); row++) {
@@ -174,22 +199,15 @@ void randomizePositions(csknow::plant_states::PlantStatesResult & plantStatesRes
             if (plantStatesResult.ctPlayerStates[i].alive[row]) {
                 plantStatesResult.ctPlayerStates[i].pos[row].x += (dis(gen) - 0.5) * WIDTH;
                 plantStatesResult.ctPlayerStates[i].pos[row].y += (dis(gen) - 0.5) * WIDTH;
-                Vec3 newPosPreFit = plantStatesResult.ctPlayerStates[i].pos[row];
-                AreaId newAreaId = navFile.get_nearest_area_by_position(vec3Conv(newPosPreFit)).get_id();
-                plantStatesResult.ctPlayerStates[i].pos[row] = vec3tConv(navFile.get_nearest_point_in_area(
-                        vec3Conv(newPosPreFit),
-                        navFile.get_area_by_id_fast(newAreaId))
-                );
+                plantStatesResult.ctPlayerStates[i].pos[row] =
+                        getPosInNavMesh(plantStatesResult.ctPlayerStates[i].pos[row], navFile);
             }
             if (plantStatesResult.tPlayerStates[i].alive[row]) {
                 plantStatesResult.tPlayerStates[i].pos[row].x += (dis(gen) - 0.5) * WIDTH;
                 plantStatesResult.tPlayerStates[i].pos[row].y += (dis(gen) - 0.5) * WIDTH;
-                Vec3 newPosPreFit = plantStatesResult.tPlayerStates[i].pos[row];
-                AreaId newAreaId = navFile.get_nearest_area_by_position(vec3Conv(newPosPreFit)).get_id();
-                plantStatesResult.tPlayerStates[i].pos[row] = vec3tConv(navFile.get_nearest_point_in_area(
-                        vec3Conv(newPosPreFit),
-                        navFile.get_area_by_id_fast(newAreaId))
-                );
+                plantStatesResult.tPlayerStates[i].pos[row] =
+                        getPosInNavMesh(plantStatesResult.tPlayerStates[i].pos[row], navFile);
+
             }
         }
     }
