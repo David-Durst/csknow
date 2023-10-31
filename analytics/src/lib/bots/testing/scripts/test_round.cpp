@@ -203,11 +203,12 @@ vector<Script::Ptr> createPrebakedRoundScripts(const nav_mesh::nav_file & navFil
     std::mt19937 gen;
     std::uniform_real_distribution<> dis;
 
-    int numRepeats = 1;
+    int numRepeats = 29;
 
     vector<vector<bool>> playerFreeze;
     vector<string> names;
     csknow::plant_states::PlantStatesResult plantStatesResult;
+    /*
     // attack a from spawn, need to eliminate t hiding long
     addRow(plantStatesResult, {1241., 2586., 127.});
     plantStatesResult.ctPlayerStates[0].alive.back() = true;
@@ -260,6 +261,8 @@ vector<Script::Ptr> createPrebakedRoundScripts(const nav_mesh::nav_file & navFil
     plantStatesResult.tPlayerStates[0].viewAngle.back() = {53.029331, -3.833290};
     playerFreeze.push_back({false, true, false, false, false,
                             false, false, false, false, false});
+                            */
+    /*
     names.emplace_back("AttackACatNoTeammate");
     repeatRow(plantStatesResult, playerFreeze, names, numRepeats);
     // attack a from cat, teammate cat covering
@@ -341,6 +344,7 @@ vector<Script::Ptr> createPrebakedRoundScripts(const nav_mesh::nav_file & navFil
                             false, false, false, false, false});
     names.emplace_back("DefendACTCat");
     repeatRow(plantStatesResult, playerFreeze, names, numRepeats);
+    */
     // defend a against cat teammates covering behind
     addRow(plantStatesResult, {1241., 2586., 127.});
     plantStatesResult.ctPlayerStates[0].alive.back() = true;
@@ -362,6 +366,7 @@ vector<Script::Ptr> createPrebakedRoundScripts(const nav_mesh::nav_file & navFil
                             false, false, false, false, false});
     names.emplace_back("DefendACTCatTwoTeammates");
     repeatRow(plantStatesResult, playerFreeze, names, numRepeats);
+    /*
     // defend a against long
     addRow(plantStatesResult, {1241., 2586., 127.});
     plantStatesResult.ctPlayerStates[0].alive.back() = true;
@@ -432,6 +437,7 @@ vector<Script::Ptr> createPrebakedRoundScripts(const nav_mesh::nav_file & navFil
     names.emplace_back("DefendBCTHoleTwoTeammates");
     repeatRow(plantStatesResult, playerFreeze, names, numRepeats);
     plantStatesResult.size = plantStatesResult.ctPlayerStates[0].alive.size();
+     */
 
     if (shouldRandomizePositions) {
         randomizePositions(plantStatesResult, navFile, gen, dis);
