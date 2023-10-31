@@ -436,8 +436,8 @@ vector<Script::Ptr> createPrebakedRoundScripts(const nav_mesh::nav_file & navFil
                             false, false, false, false, false});
     names.emplace_back("DefendBCTHoleTwoTeammates");
     repeatRow(plantStatesResult, playerFreeze, names, numRepeats);
-    plantStatesResult.size = plantStatesResult.ctPlayerStates[0].alive.size();
      */
+    plantStatesResult.size = plantStatesResult.ctPlayerStates[0].alive.size();
 
     if (shouldRandomizePositions) {
         randomizePositions(plantStatesResult, navFile, gen, dis);
