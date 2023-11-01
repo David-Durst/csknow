@@ -226,6 +226,7 @@ void randomizePositions(csknow::plant_states::PlantStatesResult & plantStatesRes
 }
 
 vector<Script::Ptr> createPrebakedRoundScripts(const nav_mesh::nav_file & navFile, bool shouldRandomizePositions,
+                                               bool includeOffense, bool includeDefenseA, bool includeDefenseB,
                                                bool quitAtEnd) {
     vector<Script::Ptr> result;
 
@@ -248,250 +249,255 @@ vector<Script::Ptr> createPrebakedRoundScripts(const nav_mesh::nav_file & navFil
     Vec3 bUpperTunsToSiteLowerTunsCameraPos = {-2050.380371, 1108.248901, 136.914352};
     Vec2 bUpperTunsToSiteLowerTunsCameraAngle = {10.611423, 43.495888};
 
-    // attack a from spawn, need to eliminate t hiding long
-    addRow(plantStatesResult, {1241., 2586., 127.});
-    plantStatesResult.ctPlayerStates[0].alive.back() = true;
-    plantStatesResult.ctPlayerStates[0].pos.back() = {1430.616699, 1816.052490, -10.300033};
-    plantStatesResult.ctPlayerStates[0].viewAngle.back() = {112.955604, -4.299486};
-    plantStatesResult.tPlayerStates[0].alive.back() = true;
-    plantStatesResult.tPlayerStates[0].pos.back() = {1704.018188, 1011.443786, 2.233371};
-    plantStatesResult.tPlayerStates[0].viewAngle.back() = {-1.860130, -178.045181};
-    playerFreeze.push_back({false, true, false, false, false,
-                            false, false, false, false, false});
-    names.emplace_back("AttackASpawnTLong");
-    cameraPoses.push_back(aSiteToLongCatCameraPos);
-    cameraAngles.push_back(aSiteToLongCatCameraAngle);
-    repeatRow(plantStatesResult, playerFreeze, names, cameraPoses, cameraAngles, numRepeats);
-    // attack a from spawn, need to eliminate t hiding long, teammates covering that enemy
-    addRow(plantStatesResult, {1241., 2586., 127.});
-    plantStatesResult.ctPlayerStates[0].alive.back() = true;
-    plantStatesResult.ctPlayerStates[0].pos.back() = {1430.616699, 1816.052490, -10.300033};
-    plantStatesResult.ctPlayerStates[0].viewAngle.back() = {112.955604, -4.299486};
-    plantStatesResult.ctPlayerStates[1].alive.back() = true;
-    plantStatesResult.ctPlayerStates[1].pos.back() = {1430.616699, 1516.052490, -10.300033};
-    plantStatesResult.ctPlayerStates[1].viewAngle.back() = {112.955604, -4.299486};
-    plantStatesResult.ctPlayerStates[2].alive.back() = true;
-    plantStatesResult.ctPlayerStates[2].pos.back() = {1430.616699, 1316.052490, -10.300033};
-    plantStatesResult.ctPlayerStates[2].viewAngle.back() = {112.955604, -4.299486};
-    plantStatesResult.tPlayerStates[0].alive.back() = true;
-    plantStatesResult.tPlayerStates[0].pos.back() = {1704.018188, 1011.443786, 2.233371};
-    plantStatesResult.tPlayerStates[0].viewAngle.back() = {-1.860130, -178.045181};
-    playerFreeze.push_back({false, true, true, true, false,
-                            false, false, false, false, false});
-    names.emplace_back("AttackASpawnTLongTwoTeammates");
-    cameraPoses.push_back(aSiteToLongCatCameraPos);
-    cameraAngles.push_back(aSiteToLongCatCameraAngle);
-    repeatRow(plantStatesResult, playerFreeze, names, cameraPoses, cameraAngles, numRepeats);
-    // attack a from spawn, need to eliminate t hiding extendedA
-    addRow(plantStatesResult, {1241., 2586., 127.});
-    plantStatesResult.ctPlayerStates[0].alive.back() = true;
-    plantStatesResult.ctPlayerStates[0].pos.back() = {1430.616699, 1816.052490, -10.300033};
-    plantStatesResult.ctPlayerStates[0].viewAngle.back() = {112.955604, -4.299486};
-    plantStatesResult.tPlayerStates[0].alive.back() = true;
-    plantStatesResult.tPlayerStates[0].pos.back() = {563.968750, 2759.416259, 97.259826};
-    plantStatesResult.tPlayerStates[0].viewAngle.back() = {-45.278255, 1.510083};
-    playerFreeze.push_back({false, true, false, false, false,
-                            false, false, false, false, false});
-    names.emplace_back("AttackASpawnTExtendedA");
-    cameraPoses.push_back(aSiteToLongCatCameraPos);
-    cameraAngles.push_back(aSiteToLongCatCameraAngle);
-    repeatRow(plantStatesResult, playerFreeze, names, cameraPoses, cameraAngles, numRepeats);
-    // attack b hole, teammate b doors
-    addRow(plantStatesResult, {-1427.551391, 2500.479492, 2.367282});
-    plantStatesResult.ctPlayerStates[0].alive.back() = true;
-    plantStatesResult.ctPlayerStates[0].pos.back() = {-550.731201, 2076.939208, -118.991142};
-    plantStatesResult.ctPlayerStates[0].viewAngle.back() = {178.822967, -11.732166};
-    plantStatesResult.ctPlayerStates[1].alive.back() = true;
-    plantStatesResult.ctPlayerStates[1].pos.back() = {-1396.848022, 2144.354980, 1.107921};
-    plantStatesResult.ctPlayerStates[1].viewAngle.back() = {-165.303222, -0.464639};
-    plantStatesResult.tPlayerStates[0].alive.back() = true;
-    plantStatesResult.tPlayerStates[0].pos.back() = {-1879.674072, 2378.484130, 8.714675};
-    plantStatesResult.tPlayerStates[0].viewAngle.back() = {89.175971, 0.380478};
-    playerFreeze.push_back({false, true, true, false, false,
-                            false, false, false, false, false});
-    names.emplace_back("AttackBHoleTeammateBDoors");
-    cameraPoses.push_back(bSiteToSpawnCameraPos);
-    cameraAngles.push_back(bSiteToSpawnCameraAngle);
-    repeatRow(plantStatesResult, playerFreeze, names, cameraPoses, cameraAngles, numRepeats);
-    // attack b doors, teammate hole
-    addRow(plantStatesResult, {-1427.551391, 2500.479492, 2.367282});
-    plantStatesResult.ctPlayerStates[0].alive.back() = true;
-    plantStatesResult.ctPlayerStates[0].pos.back() = {-550.731201, 2076.939208, -118.991142};
-    plantStatesResult.ctPlayerStates[0].viewAngle.back() = {178.822967, -11.732166};
-    plantStatesResult.ctPlayerStates[1].alive.back() = true;
-    plantStatesResult.ctPlayerStates[1].pos.back() = {-1395.869873, 2652.096679, 125.027893};
-    plantStatesResult.ctPlayerStates[1].viewAngle.back() = {-157.395126, 16.920925};
-    plantStatesResult.tPlayerStates[0].alive.back() = true;
-    plantStatesResult.tPlayerStates[0].pos.back() = {-1879.674072, 2378.484130, 8.714675};
-    plantStatesResult.tPlayerStates[0].viewAngle.back() = {89.175971, 0.380478};
-    playerFreeze.push_back({false, true, true, false, false,
-                            false, false, false, false, false});
-    names.emplace_back("AttackBDoorsTeammateHole");
-    cameraPoses.push_back(bSiteToSpawnCameraPos);
-    cameraAngles.push_back(bSiteToSpawnCameraAngle);
-    repeatRow(plantStatesResult, playerFreeze, names, cameraPoses, cameraAngles, numRepeats);
-    // defend a against cat
-    addRow(plantStatesResult, {1241., 2586., 127.});
-    plantStatesResult.ctPlayerStates[0].alive.back() = true;
-    plantStatesResult.ctPlayerStates[0].pos.back() = {563.968750, 2763.999511, 97.379516};
-    plantStatesResult.ctPlayerStates[0].viewAngle.back() = {-89.047363, 1.806404};
-    plantStatesResult.ctPlayerStates[1].alive.back() = true;
-    plantStatesResult.ctPlayerStates[1].pos.back() = {357.684234, 1650.239990, 27.671302};
-    plantStatesResult.ctPlayerStates[1].viewAngle.back() = {71.024917, -9.370210};
-    plantStatesResult.tPlayerStates[0].alive.back() = true;
-    plantStatesResult.tPlayerStates[0].pos.back() = {1160.000976, 2573.304931, 96.338958};
-    plantStatesResult.tPlayerStates[0].viewAngle.back() = {-0.735680, -142.272674};
-    playerFreeze.push_back({true, false, true, false, false,
-                            false, false, false, false, false});
-    names.emplace_back("DefendACTCat");
-    cameraPoses.push_back(aSiteToLongCatCameraPos);
-    cameraAngles.push_back(aSiteToLongCatCameraAngle);
-    repeatRow(plantStatesResult, playerFreeze, names, cameraPoses, cameraAngles, numRepeats);
-    // defend a against cat teammates covering behind
-    addRow(plantStatesResult, {1241., 2586., 127.});
-    plantStatesResult.ctPlayerStates[0].alive.back() = true;
-    plantStatesResult.ctPlayerStates[0].pos.back() = {563.968750, 2763.999511, 97.379516};
-    plantStatesResult.ctPlayerStates[0].viewAngle.back() = {-89.047363, 1.806404};
-    plantStatesResult.ctPlayerStates[1].alive.back() = true;
-    plantStatesResult.ctPlayerStates[1].pos.back() = {357.684234, 1650.239990, 27.671302};
-    plantStatesResult.ctPlayerStates[1].viewAngle.back() = {71.024917, -9.370210};
-    plantStatesResult.tPlayerStates[0].alive.back() = true;
-    plantStatesResult.tPlayerStates[0].pos.back() = {1160.000976, 2573.304931, 96.338958};
-    plantStatesResult.tPlayerStates[0].viewAngle.back() = {-144., 1.084169};
-    plantStatesResult.tPlayerStates[1].alive.back() = true;
-    plantStatesResult.tPlayerStates[1].pos.back() = {1175.846923, 2944.958984, 128.266784};
-    plantStatesResult.tPlayerStates[1].viewAngle.back() = {-127.956420, 1.114561};
-    plantStatesResult.tPlayerStates[2].alive.back() = true;
-    plantStatesResult.tPlayerStates[2].pos.back() = {1427.594238, 2308.249023, 4.196350};
-    plantStatesResult.tPlayerStates[2].viewAngle.back() = {-165.436294, -4.732160};
-    playerFreeze.push_back({true, false, true, true, true,
-                            false, false, false, false, false});
-    names.emplace_back("DefendACTCatTwoTeammates");
-    cameraPoses.push_back(aSiteToLongCatCameraPos);
-    cameraAngles.push_back(aSiteToLongCatCameraAngle);
-    repeatRow(plantStatesResult, playerFreeze, names, cameraPoses, cameraAngles, numRepeats);
-    // defend a against long
-    addRow(plantStatesResult, {1241., 2586., 127.});
-    plantStatesResult.ctPlayerStates[0].alive.back() = true;
-    plantStatesResult.ctPlayerStates[0].pos.back() = {1393.406738, 521.030822, -94.765136};
-    plantStatesResult.ctPlayerStates[0].viewAngle.back() = {91.973045, -5.304626};
-    plantStatesResult.ctPlayerStates[1].alive.back() = true;
-    plantStatesResult.ctPlayerStates[1].pos.back() = {1266.489990, 1308.994018, 0.008083};
-    plantStatesResult.ctPlayerStates[1].viewAngle.back() = {89.746215, -3.446030};
-    plantStatesResult.tPlayerStates[0].alive.back() = true;
-    plantStatesResult.tPlayerStates[0].pos.back() = {1160.000976, 2573.304931, 96.338958};
-    plantStatesResult.tPlayerStates[0].viewAngle.back() = {-144., 1.084169};
-    playerFreeze.push_back({true, false, true, false, false,
-                            false, false, false, false, false});
-    names.emplace_back("DefendACTLong");
-    cameraPoses.push_back(aSiteToLongCatCameraPos);
-    cameraAngles.push_back(aSiteToLongCatCameraAngle);
-    repeatRow(plantStatesResult, playerFreeze, names, cameraPoses, cameraAngles, numRepeats);
-    // defend a against long with teammate support
-    addRow(plantStatesResult, {1241., 2586., 127.});
-    plantStatesResult.ctPlayerStates[0].alive.back() = true;
-    plantStatesResult.ctPlayerStates[0].pos.back() = {1393.406738, 521.030822, -94.765136};
-    plantStatesResult.ctPlayerStates[0].viewAngle.back() = {91.973045, -5.304626};
-    plantStatesResult.ctPlayerStates[1].alive.back() = true;
-    plantStatesResult.ctPlayerStates[1].pos.back() = {1266.489990, 1308.994018, 0.008083};
-    plantStatesResult.ctPlayerStates[1].viewAngle.back() = {89.746215, -3.446030};
-    plantStatesResult.tPlayerStates[0].alive.back() = true;
-    plantStatesResult.tPlayerStates[0].pos.back() = {1160.000976, 2573.304931, 96.338958};
-    plantStatesResult.tPlayerStates[0].viewAngle.back() = {-144., 1.084169};
-    plantStatesResult.tPlayerStates[1].alive.back() = true;
-    plantStatesResult.tPlayerStates[1].pos.back() = {563.968750, 2763.999511, 97.379516};
-    plantStatesResult.tPlayerStates[1].viewAngle.back() = {71.024917, -9.370210};
-    playerFreeze.push_back({true, false, true, true, false,
-                            false, false, false, false, false});
-    names.emplace_back("DefendACTLongWithTeammate");
-    cameraPoses.push_back(aSiteToLongCatCameraPos);
-    cameraAngles.push_back(aSiteToLongCatCameraAngle);
-    repeatRow(plantStatesResult, playerFreeze, names, cameraPoses, cameraAngles, numRepeats);
-    // defend a against long with two teammate support
-    addRow(plantStatesResult, {1241., 2586., 127.});
-    plantStatesResult.ctPlayerStates[0].alive.back() = true;
-    plantStatesResult.ctPlayerStates[0].pos.back() = {1393.406738, 521.030822, -94.765136};
-    plantStatesResult.ctPlayerStates[0].viewAngle.back() = {91.973045, -5.304626};
-    plantStatesResult.ctPlayerStates[1].alive.back() = true;
-    plantStatesResult.ctPlayerStates[1].pos.back() = {1266.489990, 1308.994018, 0.008083};
-    plantStatesResult.ctPlayerStates[1].viewAngle.back() = {89.746215, -3.446030};
-    plantStatesResult.tPlayerStates[0].alive.back() = true;
-    plantStatesResult.tPlayerStates[0].pos.back() = {1160.000976, 2573.304931, 96.338958};
-    plantStatesResult.tPlayerStates[0].viewAngle.back() = {-144., 1.084169};
-    plantStatesResult.tPlayerStates[1].alive.back() = true;
-    plantStatesResult.tPlayerStates[1].pos.back() = {563.968750, 2763.999511, 97.379516};
-    plantStatesResult.tPlayerStates[1].viewAngle.back() = {71.024917, -9.370210};
-    plantStatesResult.tPlayerStates[2].alive.back() = true;
-    plantStatesResult.tPlayerStates[2].pos.back() = {462.430969, 2006.059082, 133.031250};
-    plantStatesResult.tPlayerStates[2].viewAngle.back() = {42.536399, 2.168326};
-    playerFreeze.push_back({true, false, true, true, true,
-                            false, false, false, false, false});
-    names.emplace_back("DefendACTLongWithTwoTeammates");
-    cameraPoses.push_back(aSiteToLongCatCameraPos);
-    cameraAngles.push_back(aSiteToLongCatCameraAngle);
-    repeatRow(plantStatesResult, playerFreeze, names, cameraPoses, cameraAngles, numRepeats);
-    // defend b against site
-    addRow(plantStatesResult, {-1427.551391, 2500.479492, 2.367282});
-    plantStatesResult.ctPlayerStates[0].alive.back() = true;
-    plantStatesResult.ctPlayerStates[0].pos.back() = {-1445.885375, 2497.657958, 1.294036};
-    plantStatesResult.ctPlayerStates[0].viewAngle.back() = {4.949440, -126.222084};
-    plantStatesResult.tPlayerStates[0].alive.back() = true;
-    plantStatesResult.tPlayerStates[0].pos.back() = {-1977.860229, 1665.813110, 31.853256};
-    plantStatesResult.tPlayerStates[0].viewAngle.back() = {-19.819931, 3.903996};
-    playerFreeze.push_back({true, false, false, false, false,
-                            false, false, false, false, false});
-    names.emplace_back("DefendBCTSite");
-    cameraPoses.push_back(bUpperTunsToSiteLowerTunsCameraPos);
-    cameraAngles.push_back(bUpperTunsToSiteLowerTunsCameraAngle);
-    repeatRow(plantStatesResult, playerFreeze, names, cameraPoses, cameraAngles, numRepeats);
-    // defend b against tuns
-    addRow(plantStatesResult, {-1427.551391, 2500.479492, 2.367282});
-    plantStatesResult.ctPlayerStates[0].alive.back() = true;
-    plantStatesResult.ctPlayerStates[0].pos.back() = {-1078.543823, 1232.906372, -87.452003};
-    plantStatesResult.ctPlayerStates[0].viewAngle.back() = {4.949440, -126.222084};
-    plantStatesResult.tPlayerStates[0].alive.back() = true;
-    plantStatesResult.tPlayerStates[0].pos.back() = {-1977.860229, 1665.813110, 31.853256};
-    plantStatesResult.tPlayerStates[0].viewAngle.back() = {-19.819931, 3.903996};
-    playerFreeze.push_back({true, false, false, false, false,
-                            false, false, false, false, false});
-    names.emplace_back("DefendBCTTuns");
-    cameraPoses.push_back(bUpperTunsToSiteLowerTunsCameraPos);
-    cameraAngles.push_back(bUpperTunsToSiteLowerTunsCameraAngle);
-    repeatRow(plantStatesResult, playerFreeze, names, cameraPoses, cameraAngles, numRepeats);
-    // defend b against hole
-    addRow(plantStatesResult, {-1427.551391, 2500.479492, 2.367282});
-    plantStatesResult.ctPlayerStates[0].alive.back() = true;
-    plantStatesResult.ctPlayerStates[0].pos.back() = {-1179.737426, 2664.458007, 79.098220};
-    plantStatesResult.ctPlayerStates[0].viewAngle.back() = {176.255645, -1.181761};
-    plantStatesResult.tPlayerStates[0].alive.back() = true;
-    plantStatesResult.tPlayerStates[0].pos.back() = {-1430.002441, 2676.153564, 16.374132};
-    plantStatesResult.tPlayerStates[0].viewAngle.back() = {-4.951731, -15.823047};
-    playerFreeze.push_back({true, false, false, false, false,
-                            false, false, false, false, false});
-    names.emplace_back("DefendBCTHole");
-    cameraPoses.push_back(bSiteToSpawnCameraPos);
-    cameraAngles.push_back(bSiteToSpawnCameraAngle);
-    repeatRow(plantStatesResult, playerFreeze, names, cameraPoses, cameraAngles, numRepeats);
-    // defend b against hole, two teammates to keep in place
-    addRow(plantStatesResult, {-1427.551391, 2500.479492, 2.367282});
-    plantStatesResult.ctPlayerStates[0].alive.back() = true;
-    plantStatesResult.ctPlayerStates[0].pos.back() = {-1179.737426, 2664.458007, 79.098220};
-    plantStatesResult.ctPlayerStates[0].viewAngle.back() = {176.255645, -1.181761};
-    plantStatesResult.tPlayerStates[0].alive.back() = true;
-    plantStatesResult.tPlayerStates[0].pos.back() = {-1430.002441, 2676.153564, 16.374132};
-    plantStatesResult.tPlayerStates[0].viewAngle.back() = {-4.951731, -15.823047};
-    plantStatesResult.tPlayerStates[1].alive.back() = true;
-    plantStatesResult.tPlayerStates[1].pos.back() = {-1925.693725, 2991.133300, 36.464263};
-    plantStatesResult.tPlayerStates[1].viewAngle.back() = {-56.154346, -2.903999};
-    plantStatesResult.tPlayerStates[2].alive.back() = true;
-    plantStatesResult.tPlayerStates[2].pos.back() = {-1898.840698, 2345.118164, 3.255815};
-    plantStatesResult.tPlayerStates[2].viewAngle.back() = {23.841018, -5.536960};
-    playerFreeze.push_back({true, false, true, true, false,
-                            false, false, false, false, false});
-    names.emplace_back("DefendBCTHoleTwoTeammates");
-    cameraPoses.push_back(bSiteToSpawnCameraPos);
-    cameraAngles.push_back(bSiteToSpawnCameraAngle);
-    repeatRow(plantStatesResult, playerFreeze, names, cameraPoses, cameraAngles, numRepeats);
+    if (includeOffense) {
+        // attack a from spawn, need to eliminate t hiding long
+        addRow(plantStatesResult, {1241., 2586., 127.});
+        plantStatesResult.ctPlayerStates[0].alive.back() = true;
+        plantStatesResult.ctPlayerStates[0].pos.back() = {1430.616699, 1816.052490, -10.300033};
+        plantStatesResult.ctPlayerStates[0].viewAngle.back() = {112.955604, -4.299486};
+        plantStatesResult.tPlayerStates[0].alive.back() = true;
+        plantStatesResult.tPlayerStates[0].pos.back() = {1704.018188, 1011.443786, 2.233371};
+        plantStatesResult.tPlayerStates[0].viewAngle.back() = {-1.860130, -178.045181};
+        playerFreeze.push_back({false, true, false, false, false,
+                                false, false, false, false, false});
+        names.emplace_back("AttackASpawnTLong");
+        cameraPoses.push_back(aSiteToLongCatCameraPos);
+        cameraAngles.push_back(aSiteToLongCatCameraAngle);
+        repeatRow(plantStatesResult, playerFreeze, names, cameraPoses, cameraAngles, numRepeats);
+        // attack a from spawn, need to eliminate t hiding long, teammates covering that enemy
+        addRow(plantStatesResult, {1241., 2586., 127.});
+        plantStatesResult.ctPlayerStates[0].alive.back() = true;
+        plantStatesResult.ctPlayerStates[0].pos.back() = {1430.616699, 1816.052490, -10.300033};
+        plantStatesResult.ctPlayerStates[0].viewAngle.back() = {112.955604, -4.299486};
+        plantStatesResult.ctPlayerStates[1].alive.back() = true;
+        plantStatesResult.ctPlayerStates[1].pos.back() = {1430.616699, 1516.052490, -10.300033};
+        plantStatesResult.ctPlayerStates[1].viewAngle.back() = {112.955604, -4.299486};
+        plantStatesResult.ctPlayerStates[2].alive.back() = true;
+        plantStatesResult.ctPlayerStates[2].pos.back() = {1430.616699, 1316.052490, -10.300033};
+        plantStatesResult.ctPlayerStates[2].viewAngle.back() = {112.955604, -4.299486};
+        plantStatesResult.tPlayerStates[0].alive.back() = true;
+        plantStatesResult.tPlayerStates[0].pos.back() = {1704.018188, 1011.443786, 2.233371};
+        plantStatesResult.tPlayerStates[0].viewAngle.back() = {-1.860130, -178.045181};
+        playerFreeze.push_back({false, true, true, true, false,
+                                false, false, false, false, false});
+        names.emplace_back("AttackASpawnTLongTwoTeammates");
+        cameraPoses.push_back(aSiteToLongCatCameraPos);
+        cameraAngles.push_back(aSiteToLongCatCameraAngle);
+        repeatRow(plantStatesResult, playerFreeze, names, cameraPoses, cameraAngles, numRepeats);
+        // attack a from spawn, need to eliminate t hiding extendedA
+        addRow(plantStatesResult, {1241., 2586., 127.});
+        plantStatesResult.ctPlayerStates[0].alive.back() = true;
+        plantStatesResult.ctPlayerStates[0].pos.back() = {1430.616699, 1816.052490, -10.300033};
+        plantStatesResult.ctPlayerStates[0].viewAngle.back() = {112.955604, -4.299486};
+        plantStatesResult.tPlayerStates[0].alive.back() = true;
+        plantStatesResult.tPlayerStates[0].pos.back() = {563.968750, 2759.416259, 97.259826};
+        plantStatesResult.tPlayerStates[0].viewAngle.back() = {-45.278255, 1.510083};
+        playerFreeze.push_back({false, true, false, false, false,
+                                false, false, false, false, false});
+        names.emplace_back("AttackASpawnTExtendedA");
+        cameraPoses.push_back(aSiteToLongCatCameraPos);
+        cameraAngles.push_back(aSiteToLongCatCameraAngle);
+        repeatRow(plantStatesResult, playerFreeze, names, cameraPoses, cameraAngles, numRepeats);
+        // attack b hole, teammate b doors
+        addRow(plantStatesResult, {-1427.551391, 2500.479492, 2.367282});
+        plantStatesResult.ctPlayerStates[0].alive.back() = true;
+        plantStatesResult.ctPlayerStates[0].pos.back() = {-550.731201, 2076.939208, -118.991142};
+        plantStatesResult.ctPlayerStates[0].viewAngle.back() = {178.822967, -11.732166};
+        plantStatesResult.ctPlayerStates[1].alive.back() = true;
+        plantStatesResult.ctPlayerStates[1].pos.back() = {-1396.848022, 2144.354980, 1.107921};
+        plantStatesResult.ctPlayerStates[1].viewAngle.back() = {-165.303222, -0.464639};
+        plantStatesResult.tPlayerStates[0].alive.back() = true;
+        plantStatesResult.tPlayerStates[0].pos.back() = {-1879.674072, 2378.484130, 8.714675};
+        plantStatesResult.tPlayerStates[0].viewAngle.back() = {89.175971, 0.380478};
+        playerFreeze.push_back({false, true, true, false, false,
+                                false, false, false, false, false});
+        names.emplace_back("AttackBHoleTeammateBDoors");
+        cameraPoses.push_back(bSiteToSpawnCameraPos);
+        cameraAngles.push_back(bSiteToSpawnCameraAngle);
+        repeatRow(plantStatesResult, playerFreeze, names, cameraPoses, cameraAngles, numRepeats);
+        // attack b doors, teammate hole
+        addRow(plantStatesResult, {-1427.551391, 2500.479492, 2.367282});
+        plantStatesResult.ctPlayerStates[0].alive.back() = true;
+        plantStatesResult.ctPlayerStates[0].pos.back() = {-550.731201, 2076.939208, -118.991142};
+        plantStatesResult.ctPlayerStates[0].viewAngle.back() = {178.822967, -11.732166};
+        plantStatesResult.ctPlayerStates[1].alive.back() = true;
+        plantStatesResult.ctPlayerStates[1].pos.back() = {-1395.869873, 2652.096679, 125.027893};
+        plantStatesResult.ctPlayerStates[1].viewAngle.back() = {-157.395126, 16.920925};
+        plantStatesResult.tPlayerStates[0].alive.back() = true;
+        plantStatesResult.tPlayerStates[0].pos.back() = {-1879.674072, 2378.484130, 8.714675};
+        plantStatesResult.tPlayerStates[0].viewAngle.back() = {89.175971, 0.380478};
+        playerFreeze.push_back({false, true, true, false, false,
+                                false, false, false, false, false});
+        names.emplace_back("AttackBDoorsTeammateHole");
+        cameraPoses.push_back(bSiteToSpawnCameraPos);
+        cameraAngles.push_back(bSiteToSpawnCameraAngle);
+    }
+
+    if (includeDefense) {
+        repeatRow(plantStatesResult, playerFreeze, names, cameraPoses, cameraAngles, numRepeats);
+        // defend a against cat
+        addRow(plantStatesResult, {1241., 2586., 127.});
+        plantStatesResult.ctPlayerStates[0].alive.back() = true;
+        plantStatesResult.ctPlayerStates[0].pos.back() = {563.968750, 2763.999511, 97.379516};
+        plantStatesResult.ctPlayerStates[0].viewAngle.back() = {-89.047363, 1.806404};
+        plantStatesResult.ctPlayerStates[1].alive.back() = true;
+        plantStatesResult.ctPlayerStates[1].pos.back() = {357.684234, 1650.239990, 27.671302};
+        plantStatesResult.ctPlayerStates[1].viewAngle.back() = {71.024917, -9.370210};
+        plantStatesResult.tPlayerStates[0].alive.back() = true;
+        plantStatesResult.tPlayerStates[0].pos.back() = {1160.000976, 2573.304931, 96.338958};
+        plantStatesResult.tPlayerStates[0].viewAngle.back() = {-0.735680, -142.272674};
+        playerFreeze.push_back({true, false, true, false, false,
+                                false, false, false, false, false});
+        names.emplace_back("DefendACTCat");
+        cameraPoses.push_back(aSiteToLongCatCameraPos);
+        cameraAngles.push_back(aSiteToLongCatCameraAngle);
+        repeatRow(plantStatesResult, playerFreeze, names, cameraPoses, cameraAngles, numRepeats);
+        // defend a against cat teammates covering behind
+        addRow(plantStatesResult, {1241., 2586., 127.});
+        plantStatesResult.ctPlayerStates[0].alive.back() = true;
+        plantStatesResult.ctPlayerStates[0].pos.back() = {563.968750, 2763.999511, 97.379516};
+        plantStatesResult.ctPlayerStates[0].viewAngle.back() = {-89.047363, 1.806404};
+        plantStatesResult.ctPlayerStates[1].alive.back() = true;
+        plantStatesResult.ctPlayerStates[1].pos.back() = {357.684234, 1650.239990, 27.671302};
+        plantStatesResult.ctPlayerStates[1].viewAngle.back() = {71.024917, -9.370210};
+        plantStatesResult.tPlayerStates[0].alive.back() = true;
+        plantStatesResult.tPlayerStates[0].pos.back() = {1160.000976, 2573.304931, 96.338958};
+        plantStatesResult.tPlayerStates[0].viewAngle.back() = {-144., 1.084169};
+        plantStatesResult.tPlayerStates[1].alive.back() = true;
+        plantStatesResult.tPlayerStates[1].pos.back() = {1175.846923, 2944.958984, 128.266784};
+        plantStatesResult.tPlayerStates[1].viewAngle.back() = {-127.956420, 1.114561};
+        plantStatesResult.tPlayerStates[2].alive.back() = true;
+        plantStatesResult.tPlayerStates[2].pos.back() = {1427.594238, 2308.249023, 4.196350};
+        plantStatesResult.tPlayerStates[2].viewAngle.back() = {-165.436294, -4.732160};
+        playerFreeze.push_back({true, false, true, true, true,
+                                false, false, false, false, false});
+        names.emplace_back("DefendACTCatTwoTeammates");
+        cameraPoses.push_back(aSiteToLongCatCameraPos);
+        cameraAngles.push_back(aSiteToLongCatCameraAngle);
+        repeatRow(plantStatesResult, playerFreeze, names, cameraPoses, cameraAngles, numRepeats);
+        // defend a against long
+        addRow(plantStatesResult, {1241., 2586., 127.});
+        plantStatesResult.ctPlayerStates[0].alive.back() = true;
+        plantStatesResult.ctPlayerStates[0].pos.back() = {1393.406738, 521.030822, -94.765136};
+        plantStatesResult.ctPlayerStates[0].viewAngle.back() = {91.973045, -5.304626};
+        plantStatesResult.ctPlayerStates[1].alive.back() = true;
+        plantStatesResult.ctPlayerStates[1].pos.back() = {1266.489990, 1308.994018, 0.008083};
+        plantStatesResult.ctPlayerStates[1].viewAngle.back() = {89.746215, -3.446030};
+        plantStatesResult.tPlayerStates[0].alive.back() = true;
+        plantStatesResult.tPlayerStates[0].pos.back() = {1160.000976, 2573.304931, 96.338958};
+        plantStatesResult.tPlayerStates[0].viewAngle.back() = {-144., 1.084169};
+        playerFreeze.push_back({true, false, true, false, false,
+                                false, false, false, false, false});
+        names.emplace_back("DefendACTLong");
+        cameraPoses.push_back(aSiteToLongCatCameraPos);
+        cameraAngles.push_back(aSiteToLongCatCameraAngle);
+        repeatRow(plantStatesResult, playerFreeze, names, cameraPoses, cameraAngles, numRepeats);
+        // defend a against long with teammate support
+        addRow(plantStatesResult, {1241., 2586., 127.});
+        plantStatesResult.ctPlayerStates[0].alive.back() = true;
+        plantStatesResult.ctPlayerStates[0].pos.back() = {1393.406738, 521.030822, -94.765136};
+        plantStatesResult.ctPlayerStates[0].viewAngle.back() = {91.973045, -5.304626};
+        plantStatesResult.ctPlayerStates[1].alive.back() = true;
+        plantStatesResult.ctPlayerStates[1].pos.back() = {1266.489990, 1308.994018, 0.008083};
+        plantStatesResult.ctPlayerStates[1].viewAngle.back() = {89.746215, -3.446030};
+        plantStatesResult.tPlayerStates[0].alive.back() = true;
+        plantStatesResult.tPlayerStates[0].pos.back() = {1160.000976, 2573.304931, 96.338958};
+        plantStatesResult.tPlayerStates[0].viewAngle.back() = {-144., 1.084169};
+        plantStatesResult.tPlayerStates[1].alive.back() = true;
+        plantStatesResult.tPlayerStates[1].pos.back() = {563.968750, 2763.999511, 97.379516};
+        plantStatesResult.tPlayerStates[1].viewAngle.back() = {71.024917, -9.370210};
+        playerFreeze.push_back({true, false, true, true, false,
+                                false, false, false, false, false});
+        names.emplace_back("DefendACTLongWithTeammate");
+        cameraPoses.push_back(aSiteToLongCatCameraPos);
+        cameraAngles.push_back(aSiteToLongCatCameraAngle);
+        repeatRow(plantStatesResult, playerFreeze, names, cameraPoses, cameraAngles, numRepeats);
+        // defend a against long with two teammate support
+        addRow(plantStatesResult, {1241., 2586., 127.});
+        plantStatesResult.ctPlayerStates[0].alive.back() = true;
+        plantStatesResult.ctPlayerStates[0].pos.back() = {1393.406738, 521.030822, -94.765136};
+        plantStatesResult.ctPlayerStates[0].viewAngle.back() = {91.973045, -5.304626};
+        plantStatesResult.ctPlayerStates[1].alive.back() = true;
+        plantStatesResult.ctPlayerStates[1].pos.back() = {1266.489990, 1308.994018, 0.008083};
+        plantStatesResult.ctPlayerStates[1].viewAngle.back() = {89.746215, -3.446030};
+        plantStatesResult.tPlayerStates[0].alive.back() = true;
+        plantStatesResult.tPlayerStates[0].pos.back() = {1160.000976, 2573.304931, 96.338958};
+        plantStatesResult.tPlayerStates[0].viewAngle.back() = {-144., 1.084169};
+        plantStatesResult.tPlayerStates[1].alive.back() = true;
+        plantStatesResult.tPlayerStates[1].pos.back() = {563.968750, 2763.999511, 97.379516};
+        plantStatesResult.tPlayerStates[1].viewAngle.back() = {71.024917, -9.370210};
+        plantStatesResult.tPlayerStates[2].alive.back() = true;
+        plantStatesResult.tPlayerStates[2].pos.back() = {462.430969, 2006.059082, 133.031250};
+        plantStatesResult.tPlayerStates[2].viewAngle.back() = {42.536399, 2.168326};
+        playerFreeze.push_back({true, false, true, true, true,
+                                false, false, false, false, false});
+        names.emplace_back("DefendACTLongWithTwoTeammates");
+        cameraPoses.push_back(aSiteToLongCatCameraPos);
+        cameraAngles.push_back(aSiteToLongCatCameraAngle);
+        repeatRow(plantStatesResult, playerFreeze, names, cameraPoses, cameraAngles, numRepeats);
+        // defend b against site
+        addRow(plantStatesResult, {-1427.551391, 2500.479492, 2.367282});
+        plantStatesResult.ctPlayerStates[0].alive.back() = true;
+        plantStatesResult.ctPlayerStates[0].pos.back() = {-1445.885375, 2497.657958, 1.294036};
+        plantStatesResult.ctPlayerStates[0].viewAngle.back() = {4.949440, -126.222084};
+        plantStatesResult.tPlayerStates[0].alive.back() = true;
+        plantStatesResult.tPlayerStates[0].pos.back() = {-1977.860229, 1665.813110, 31.853256};
+        plantStatesResult.tPlayerStates[0].viewAngle.back() = {-19.819931, 3.903996};
+        playerFreeze.push_back({true, false, false, false, false,
+                                false, false, false, false, false});
+        names.emplace_back("DefendBCTSite");
+        cameraPoses.push_back(bUpperTunsToSiteLowerTunsCameraPos);
+        cameraAngles.push_back(bUpperTunsToSiteLowerTunsCameraAngle);
+        repeatRow(plantStatesResult, playerFreeze, names, cameraPoses, cameraAngles, numRepeats);
+        // defend b against tuns
+        addRow(plantStatesResult, {-1427.551391, 2500.479492, 2.367282});
+        plantStatesResult.ctPlayerStates[0].alive.back() = true;
+        plantStatesResult.ctPlayerStates[0].pos.back() = {-1078.543823, 1232.906372, -87.452003};
+        plantStatesResult.ctPlayerStates[0].viewAngle.back() = {4.949440, -126.222084};
+        plantStatesResult.tPlayerStates[0].alive.back() = true;
+        plantStatesResult.tPlayerStates[0].pos.back() = {-1977.860229, 1665.813110, 31.853256};
+        plantStatesResult.tPlayerStates[0].viewAngle.back() = {-19.819931, 3.903996};
+        playerFreeze.push_back({true, false, false, false, false,
+                                false, false, false, false, false});
+        names.emplace_back("DefendBCTTuns");
+        cameraPoses.push_back(bUpperTunsToSiteLowerTunsCameraPos);
+        cameraAngles.push_back(bUpperTunsToSiteLowerTunsCameraAngle);
+        repeatRow(plantStatesResult, playerFreeze, names, cameraPoses, cameraAngles, numRepeats);
+        // defend b against hole
+        addRow(plantStatesResult, {-1427.551391, 2500.479492, 2.367282});
+        plantStatesResult.ctPlayerStates[0].alive.back() = true;
+        plantStatesResult.ctPlayerStates[0].pos.back() = {-1179.737426, 2664.458007, 79.098220};
+        plantStatesResult.ctPlayerStates[0].viewAngle.back() = {176.255645, -1.181761};
+        plantStatesResult.tPlayerStates[0].alive.back() = true;
+        plantStatesResult.tPlayerStates[0].pos.back() = {-1430.002441, 2676.153564, 16.374132};
+        plantStatesResult.tPlayerStates[0].viewAngle.back() = {-4.951731, -15.823047};
+        playerFreeze.push_back({true, false, false, false, false,
+                                false, false, false, false, false});
+        names.emplace_back("DefendBCTHole");
+        cameraPoses.push_back(bSiteToSpawnCameraPos);
+        cameraAngles.push_back(bSiteToSpawnCameraAngle);
+        repeatRow(plantStatesResult, playerFreeze, names, cameraPoses, cameraAngles, numRepeats);
+        // defend b against hole, two teammates to keep in place
+        addRow(plantStatesResult, {-1427.551391, 2500.479492, 2.367282});
+        plantStatesResult.ctPlayerStates[0].alive.back() = true;
+        plantStatesResult.ctPlayerStates[0].pos.back() = {-1179.737426, 2664.458007, 79.098220};
+        plantStatesResult.ctPlayerStates[0].viewAngle.back() = {176.255645, -1.181761};
+        plantStatesResult.tPlayerStates[0].alive.back() = true;
+        plantStatesResult.tPlayerStates[0].pos.back() = {-1430.002441, 2676.153564, 16.374132};
+        plantStatesResult.tPlayerStates[0].viewAngle.back() = {-4.951731, -15.823047};
+        plantStatesResult.tPlayerStates[1].alive.back() = true;
+        plantStatesResult.tPlayerStates[1].pos.back() = {-1925.693725, 2991.133300, 36.464263};
+        plantStatesResult.tPlayerStates[1].viewAngle.back() = {-56.154346, -2.903999};
+        plantStatesResult.tPlayerStates[2].alive.back() = true;
+        plantStatesResult.tPlayerStates[2].pos.back() = {-1898.840698, 2345.118164, 3.255815};
+        plantStatesResult.tPlayerStates[2].viewAngle.back() = {23.841018, -5.536960};
+        playerFreeze.push_back({true, false, true, true, false,
+                                false, false, false, false, false});
+        names.emplace_back("DefendBCTHoleTwoTeammates");
+        cameraPoses.push_back(bSiteToSpawnCameraPos);
+        cameraAngles.push_back(bSiteToSpawnCameraAngle);
+        repeatRow(plantStatesResult, playerFreeze, names, cameraPoses, cameraAngles, numRepeats);
+    }
     plantStatesResult.size = plantStatesResult.ctPlayerStates[0].alive.size();
 
     if (shouldRandomizePositions) {
