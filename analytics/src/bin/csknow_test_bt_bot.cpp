@@ -53,12 +53,13 @@ int main(int argc, char * argv[]) {
 
     bool runTest = roundsTestStr == "t" || roundsTestStr == "tl";
     bool runTraces = tracesStr == "y";
-    bool runPrebakedRounds = tracesStr == "b" || tracesStr == "br";
-    bool prebakedPositionRandomization = (tracesStr == "br") || (tracesStr == "bro") || (tracesStr == "brda") ||
-            (tracesStr == "brdb");
-    bool prebakedIncludeOffense = (tracesStr != "brda") && (tracesStr != "brdb");
-    bool prebakedIncludeDefenseA = (tracesStr != "bro") && (tracesStr != "brdb");
-    bool prebakedIncludeDefenseB = (tracesStr != "bro") && (tracesStr != "brda");
+    bool runPrebakedRounds = tracesStr == "b" || tracesStr == "br" || tracesStr == "bro" || tracesStr == "brda" ||
+            tracesStr == "brdb";
+    bool prebakedPositionRandomization = tracesStr == "br" || tracesStr == "bro" || tracesStr == "brda" ||
+            tracesStr == "brdb";
+    bool prebakedIncludeOffense = tracesStr != "brda" && tracesStr != "brdb";
+    bool prebakedIncludeDefenseA = tracesStr != "bro" && tracesStr != "brdb";
+    bool prebakedIncludeDefenseB = tracesStr != "bro" && tracesStr != "brda";
     processModelArg(roundsTestStr);
 
     ServerState state;

@@ -446,7 +446,7 @@ vector<Script::Ptr> createPrebakedRoundScripts(const nav_mesh::nav_file & navFil
         playerFreeze.push_back({true, false, false, false, false,
                                 false, false, false, false, false});
     }
-    
+
     if (includeDefenseB) {
         names.emplace_back("DefendBCTSite");
         cameraPoses.push_back(bUpperTunsToSiteLowerTunsCameraPos);
