@@ -333,7 +333,7 @@ vector<Script::Ptr> createPrebakedRoundScripts(const nav_mesh::nav_file & navFil
         cameraAngles.push_back(bSiteToSpawnCameraAngle);
     }
 
-    if (includeDefense) {
+    if (includeDefenseA) {
         repeatRow(plantStatesResult, playerFreeze, names, cameraPoses, cameraAngles, numRepeats);
         // defend a against cat
         addRow(plantStatesResult, {1241., 2586., 127.});
@@ -445,6 +445,9 @@ vector<Script::Ptr> createPrebakedRoundScripts(const nav_mesh::nav_file & navFil
         plantStatesResult.tPlayerStates[0].viewAngle.back() = {-19.819931, 3.903996};
         playerFreeze.push_back({true, false, false, false, false,
                                 false, false, false, false, false});
+    }
+    
+    if (includeDefenseB) {
         names.emplace_back("DefendBCTSite");
         cameraPoses.push_back(bUpperTunsToSiteLowerTunsCameraPos);
         cameraAngles.push_back(bUpperTunsToSiteLowerTunsCameraAngle);
