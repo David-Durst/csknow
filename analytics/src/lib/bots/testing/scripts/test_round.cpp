@@ -7,7 +7,7 @@
 RoundScript::RoundScript(const csknow::plant_states::PlantStatesResult & plantStatesResult, size_t plantStateIndex,
                          size_t numRounds, std::mt19937 gen, std::uniform_real_distribution<> dis,
                          std::optional<vector<bool>> playerFreeze, string baseName) :
-    Script(baseName, {}, {ObserveType::Absolute, 0, {915.997803, 2360.631836, 473.08105}, {42.235687,  39.595413}}),
+    Script(baseName, {}, {ObserveType::Absolute, 0, {1440.141968, 3211.887939, 646.560974}, {40.415985, -93.755646}}),
     plantStateIndex(plantStateIndex), numRounds(numRounds), playerFreeze(playerFreeze) {
     name += std::to_string(plantStateIndex);
     int numCT = 0, numT = 0;
@@ -225,7 +225,7 @@ vector<Script::Ptr> createPrebakedRoundScripts(const nav_mesh::nav_file & navFil
     std::mt19937 gen;
     std::uniform_real_distribution<> dis;
 
-    int numRepeats = 29;
+    int numRepeats = 1;
 
     vector<vector<bool>> playerFreeze;
     vector<string> names;
@@ -273,53 +273,6 @@ vector<Script::Ptr> createPrebakedRoundScripts(const nav_mesh::nav_file & navFil
                             false, false, false, false, false});
     names.emplace_back("AttackASpawnTExtendedA");
     repeatRow(plantStatesResult, playerFreeze, names, numRepeats);
-    // attack a from cat, no teammate
-    addRow(plantStatesResult, {1241., 2586., 127.});
-    plantStatesResult.ctPlayerStates[0].alive.back() = true;
-    plantStatesResult.ctPlayerStates[0].pos.back() = {308.136962, 1628.022460, 12.358312};
-    plantStatesResult.ctPlayerStates[0].viewAngle.back() = {66.387672, -17.423997};
-    plantStatesResult.tPlayerStates[0].alive.back() = true;
-    plantStatesResult.tPlayerStates[0].pos.back() = {1051.031250, 2939.113281, 128.593978};
-    plantStatesResult.tPlayerStates[0].viewAngle.back() = {53.029331, -3.833290};
-    playerFreeze.push_back({false, true, false, false, false,
-                            false, false, false, false, false});
-                            */
-    /*
-    names.emplace_back("AttackACatNoTeammate");
-    repeatRow(plantStatesResult, playerFreeze, names, numRepeats);
-    // attack a from cat, teammate cat covering
-    addRow(plantStatesResult, {1241., 2586., 127.});
-    plantStatesResult.ctPlayerStates[0].alive.back() = true;
-    plantStatesResult.ctPlayerStates[0].pos.back() = {308.136962, 1628.022460, 12.358312};
-    plantStatesResult.ctPlayerStates[0].viewAngle.back() = {66.387672, -17.423997};
-    plantStatesResult.ctPlayerStates[1].alive.back() = true;
-    plantStatesResult.ctPlayerStates[1].pos.back() = {462.430969, 2006.059082, 133.031250};
-    plantStatesResult.ctPlayerStates[1].viewAngle.back() = {42.536399, 2.168326};
-    plantStatesResult.tPlayerStates[0].alive.back() = true;
-    plantStatesResult.tPlayerStates[0].pos.back() = {1051.031250, 2939.113281, 128.593978};
-    plantStatesResult.tPlayerStates[0].viewAngle.back() = {53.029331, -3.833290};
-    playerFreeze.push_back({false, true, true, false, false,
-                            false, false, false, false, false});
-    names.emplace_back("AttackACatOneTeammate");
-    repeatRow(plantStatesResult, playerFreeze, names, numRepeats);
-    // attack a from cat, two teammates cat covering
-    addRow(plantStatesResult, {1241., 2586., 127.});
-    plantStatesResult.ctPlayerStates[0].alive.back() = true;
-    plantStatesResult.ctPlayerStates[0].pos.back() = {308.136962, 1628.022460, 12.358312};
-    plantStatesResult.ctPlayerStates[0].viewAngle.back() = {66.387672, -17.423997};
-    plantStatesResult.ctPlayerStates[1].alive.back() = true;
-    plantStatesResult.ctPlayerStates[1].pos.back() = {462.430969, 2006.059082, 133.031250};
-    plantStatesResult.ctPlayerStates[1].viewAngle.back() = {42.536399, 2.168326};
-    plantStatesResult.ctPlayerStates[2].alive.back() = true;
-    plantStatesResult.ctPlayerStates[2].pos.back() = {563.968750, 2763.999511, 97.379516};
-    plantStatesResult.ctPlayerStates[2].viewAngle.back() = {42.536399, 2.168326};
-    plantStatesResult.tPlayerStates[0].alive.back() = true;
-    plantStatesResult.tPlayerStates[0].pos.back() = {1051.031250, 2939.113281, 128.593978};
-    plantStatesResult.tPlayerStates[0].viewAngle.back() = {53.029331, -3.833290};
-    playerFreeze.push_back({false, true, true, true, false,
-                            false, false, false, false, false});
-    names.emplace_back("AttackACatTwoTeammates");
-    repeatRow(plantStatesResult, playerFreeze, names, numRepeats);
     // attack b hole, teammate b doors
     addRow(plantStatesResult, {-1427.551391, 2500.479492, 2.367282});
     plantStatesResult.ctPlayerStates[0].alive.back() = true;
@@ -351,7 +304,6 @@ vector<Script::Ptr> createPrebakedRoundScripts(const nav_mesh::nav_file & navFil
                             false, false, false, false, false});
     names.emplace_back("AttackBDoorsTeammateHole");
     repeatRow(plantStatesResult, playerFreeze, names, numRepeats);
-    */
     // defend a against cat
     addRow(plantStatesResult, {1241., 2586., 127.});
     plantStatesResult.ctPlayerStates[0].alive.back() = true;
@@ -361,8 +313,8 @@ vector<Script::Ptr> createPrebakedRoundScripts(const nav_mesh::nav_file & navFil
     plantStatesResult.ctPlayerStates[1].pos.back() = {357.684234, 1650.239990, 27.671302};
     plantStatesResult.ctPlayerStates[1].viewAngle.back() = {71.024917, -9.370210};
     plantStatesResult.tPlayerStates[0].alive.back() = true;
-    plantStatesResult.tPlayerStates[0].pos.back() = {1160.000976, 2573.304931, 96.338958};
-    plantStatesResult.tPlayerStates[0].viewAngle.back() = {-144., 1.084169};
+    plantStatesResult.tPlayerStates[0].pos.back() = {1394.040405, 1324.100585, -11.050704};
+    plantStatesResult.tPlayerStates[0].viewAngle.back() = {-0.735680, -142.272674};
     playerFreeze.push_back({true, false, true, false, false,
                             false, false, false, false, false});
     names.emplace_back("DefendACTCat");
@@ -402,6 +354,46 @@ vector<Script::Ptr> createPrebakedRoundScripts(const nav_mesh::nav_file & navFil
     playerFreeze.push_back({true, false, true, false, false,
                             false, false, false, false, false});
     names.emplace_back("DefendACTLong");
+    repeatRow(plantStatesResult, playerFreeze, names, numRepeats);
+    // defend a against long with teammate support
+    addRow(plantStatesResult, {1241., 2586., 127.});
+    plantStatesResult.ctPlayerStates[0].alive.back() = true;
+    plantStatesResult.ctPlayerStates[0].pos.back() = {1393.406738, 521.030822, -94.765136};
+    plantStatesResult.ctPlayerStates[0].viewAngle.back() = {91.973045, -5.304626};
+    plantStatesResult.ctPlayerStates[1].alive.back() = true;
+    plantStatesResult.ctPlayerStates[1].pos.back() = {1266.489990, 1308.994018, 0.008083};
+    plantStatesResult.ctPlayerStates[1].viewAngle.back() = {89.746215, -3.446030};
+    plantStatesResult.tPlayerStates[0].alive.back() = true;
+    plantStatesResult.tPlayerStates[0].pos.back() = {1160.000976, 2573.304931, 96.338958};
+    plantStatesResult.tPlayerStates[0].viewAngle.back() = {-144., 1.084169};
+    plantStatesResult.tPlayerStates[1].alive.back() = true;
+    plantStatesResult.tPlayerStates[1].pos.back() = {563.968750, 2763.999511, 97.379516};
+    plantStatesResult.tPlayerStates[1].viewAngle.back() = {71.024917, -9.370210};
+    playerFreeze.push_back({true, false, true, true, false,
+                            false, false, false, false, false});
+    names.emplace_back("DefendACTLongWithTeammate");
+    repeatRow(plantStatesResult, playerFreeze, names, numRepeats);
+    */
+    // defend a against long with two teammate support
+    addRow(plantStatesResult, {1241., 2586., 127.});
+    plantStatesResult.ctPlayerStates[0].alive.back() = true;
+    plantStatesResult.ctPlayerStates[0].pos.back() = {1393.406738, 521.030822, -94.765136};
+    plantStatesResult.ctPlayerStates[0].viewAngle.back() = {91.973045, -5.304626};
+    plantStatesResult.ctPlayerStates[1].alive.back() = true;
+    plantStatesResult.ctPlayerStates[1].pos.back() = {1266.489990, 1308.994018, 0.008083};
+    plantStatesResult.ctPlayerStates[1].viewAngle.back() = {89.746215, -3.446030};
+    plantStatesResult.tPlayerStates[0].alive.back() = true;
+    plantStatesResult.tPlayerStates[0].pos.back() = {1160.000976, 2573.304931, 96.338958};
+    plantStatesResult.tPlayerStates[0].viewAngle.back() = {-144., 1.084169};
+    plantStatesResult.tPlayerStates[1].alive.back() = true;
+    plantStatesResult.tPlayerStates[1].pos.back() = {563.968750, 2763.999511, 97.379516};
+    plantStatesResult.tPlayerStates[1].viewAngle.back() = {71.024917, -9.370210};
+    plantStatesResult.tPlayerStates[2].alive.back() = true;
+    plantStatesResult.tPlayerStates[2].pos.back() = {462.430969, 2006.059082, 133.031250};
+    plantStatesResult.tPlayerStates[2].viewAngle.back() = {42.536399, 2.168326};
+    playerFreeze.push_back({true, false, true, true, true,
+                            false, false, false, false, false});
+    names.emplace_back("DefendACTLongWithTwoTeammates");
     repeatRow(plantStatesResult, playerFreeze, names, numRepeats);
     /*
     // defend b against site
