@@ -72,6 +72,9 @@ class HDF5Wrapper:
     def get_input_data(self, index: int) -> np.ndarray:
         return HDF5Wrapper.input_data[self.hdf5_path][index]
 
+    def get_all_input_data(self) -> np.ndarray:
+        return HDF5Wrapper.input_data[self.hdf5_path]
+
     def get_output_data(self, index: int) -> np.ndarray:
         return HDF5Wrapper.output_data[self.hdf5_path][index]
 
