@@ -28,15 +28,16 @@ if make -j 8; then
 
     # learned no mask with position randomization
     learned_demos=()
-    for i in {4..5}
+    for i in {6..13}
     do
         cd ${script_dir}/../../learn_bot/
         ./scripts/deploy_latent_models_specific.sh 10_17_2023__15_07_01_iw_128_bc_25_pr_0_fr_0_b_1024_it_1_lr_4e-05_wd_0.0_l_2_h_4_n_20.0_ros_2.0_m_NoMask_w_None_dh_None_c_just_human_all
         cd ${script_dir}/../build
         echo "most recent demo file before learned $i no mask run with position randomization"
         learned_demo=$(ls -tp /home/steam/csgo-ds/csgo/*.dem | grep -v /$ | head -1)
+        learned_demo_no_path=$(basename $learned_demo)
         echo $learned_demo
-        learned_demos+=($learned_demo)
+        learned_demos+=($learned_demo_no_path)
         ./csknow_test_bt_bot ${script_dir}/../nav /home/steam/csgo-ds/csgo/addons/sourcemod/bot-link-data ${script_dir}/../ ${script_dir}/../../learn_bot/models ${script_dir}/../../learn_bot/learn_bot/libs/saved_train_test_splits r 1 br $i
         sleep 40
         date
