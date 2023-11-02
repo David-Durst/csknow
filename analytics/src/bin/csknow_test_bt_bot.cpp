@@ -35,8 +35,8 @@
 //#define LOG_STATE
 
 int main(int argc, char * argv[]) {
-    if (argc != 9) {
-        std::cout << "please call this code with 8 arguments: \n"
+    if (argc != 9 && argc != 10) {
+        std::cout << "please call this code with 8 or 9 arguments: \n"
             << "1. path/to/maps\n"
             << "2. path/to/data\n"
             << "3. path/to/log\n"
@@ -44,22 +44,23 @@ int main(int argc, char * argv[]) {
             << "5. path/to/saved/data\n"
             << "6. t for tests, tl for tests with learned, r for rounds, rh for rounds with hueristics, rht for rounds with t hueristics, rhct for rounds with ct heuristics\n"
             << "7. 1 for all csknow bots, ct for ct only csknow bots, t for t only csknow bots, 0 for for no csknow bots\n"
-            << "8. y for traces, n for normal bots, b for prebaked rounds, br for prebaked rounds with position randomization, bro for offense only, brd for defense only"
+            << "8. y for traces, n for normal bots, b for prebaked rounds, br for prebaked rounds with position randomization"
+            << "(optional) 9. prebaked situation to run (if none provided, then run all)"
             << std::endl;
         return 1;
     }
     string mapsPath = argv[1], dataPath = argv[2], logPath = argv[3], modelsDir = argv[4], savedDatasetsDir = argv[5],
         roundsTestStr = argv[6], botStop = argv[7], tracesStr = argv[8];
 
+    int prebakedSituationId = -1;
+    if (argc == 10) {
+        prebakedSituationId = std::stoi(argv[9]);
+    }
+
     bool runTest = roundsTestStr == "t" || roundsTestStr == "tl";
     bool runTraces = tracesStr == "y";
-    bool runPrebakedRounds = tracesStr == "b" || tracesStr == "br" || tracesStr == "bro" || tracesStr == "brda" ||
-            tracesStr == "brdb";
-    bool prebakedPositionRandomization = tracesStr == "br" || tracesStr == "bro" || tracesStr == "brda" ||
-            tracesStr == "brdb";
-    bool prebakedIncludeOffense = tracesStr != "brda" && tracesStr != "brdb";
-    bool prebakedIncludeDefenseA = tracesStr != "bro" && tracesStr != "brdb";
-    bool prebakedIncludeDefenseB = tracesStr != "bro" && tracesStr != "brda";
+    bool runPrebakedRounds = tracesStr == "b" || tracesStr == "br";
+    bool prebakedPositionRandomization = tracesStr == "br";
     processModelArg(roundsTestStr);
 
     ServerState state;

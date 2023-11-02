@@ -226,8 +226,7 @@ void randomizePositions(csknow::plant_states::PlantStatesResult & plantStatesRes
 }
 
 vector<Script::Ptr> createPrebakedRoundScripts(const nav_mesh::nav_file & navFile, bool shouldRandomizePositions,
-                                               bool includeOffense, bool includeDefenseA, bool includeDefenseB,
-                                               bool quitAtEnd) {
+                                               int situationId, bool quitAtEnd) {
     vector<Script::Ptr> result;
 
     std::random_device rd;
@@ -249,7 +248,7 @@ vector<Script::Ptr> createPrebakedRoundScripts(const nav_mesh::nav_file & navFil
     Vec3 bUpperTunsToSiteLowerTunsCameraPos = {-2050.380371, 1108.248901, 136.914352};
     Vec2 bUpperTunsToSiteLowerTunsCameraAngle = {10.611423, 43.495888};
 
-    if (includeOffense) {
+    if (situationId == 0 || situationId == -1) {
         // attack a from spawn, need to eliminate t hiding long
         addRow(plantStatesResult, {1241., 2586., 127.});
         plantStatesResult.ctPlayerStates[0].alive.back() = true;
@@ -264,6 +263,8 @@ vector<Script::Ptr> createPrebakedRoundScripts(const nav_mesh::nav_file & navFil
         cameraPoses.push_back(aSiteToLongCatCameraPos);
         cameraAngles.push_back(aSiteToLongCatCameraAngle);
         repeatRow(plantStatesResult, playerFreeze, names, cameraPoses, cameraAngles, numRepeats);
+    }
+    if (situationId == 1 || situationId == -1) {
         // attack a from spawn, need to eliminate t hiding long, teammates covering that enemy
         addRow(plantStatesResult, {1241., 2586., 127.});
         plantStatesResult.ctPlayerStates[0].alive.back() = true;
@@ -284,6 +285,8 @@ vector<Script::Ptr> createPrebakedRoundScripts(const nav_mesh::nav_file & navFil
         cameraPoses.push_back(aSiteToLongCatCameraPos);
         cameraAngles.push_back(aSiteToLongCatCameraAngle);
         repeatRow(plantStatesResult, playerFreeze, names, cameraPoses, cameraAngles, numRepeats);
+    }
+    if (situationId == 2 || situationId == -1) {
         // attack a from spawn, need to eliminate t hiding extendedA
         addRow(plantStatesResult, {1241., 2586., 127.});
         plantStatesResult.ctPlayerStates[0].alive.back() = true;
@@ -298,6 +301,8 @@ vector<Script::Ptr> createPrebakedRoundScripts(const nav_mesh::nav_file & navFil
         cameraPoses.push_back(aSiteToLongCatCameraPos);
         cameraAngles.push_back(aSiteToLongCatCameraAngle);
         repeatRow(plantStatesResult, playerFreeze, names, cameraPoses, cameraAngles, numRepeats);
+    }
+    if (situationId == 3 || situationId == -1) {
         // attack b hole, teammate b doors
         addRow(plantStatesResult, {-1427.551391, 2500.479492, 2.367282});
         plantStatesResult.ctPlayerStates[0].alive.back() = true;
@@ -315,6 +320,8 @@ vector<Script::Ptr> createPrebakedRoundScripts(const nav_mesh::nav_file & navFil
         cameraPoses.push_back(bSiteToSpawnCameraPos);
         cameraAngles.push_back(bSiteToSpawnCameraAngle);
         repeatRow(plantStatesResult, playerFreeze, names, cameraPoses, cameraAngles, numRepeats);
+    }
+    if (situationId == 4 || situationId == -1) {
         // attack b doors, teammate hole
         addRow(plantStatesResult, {-1427.551391, 2500.479492, 2.367282});
         plantStatesResult.ctPlayerStates[0].alive.back() = true;
@@ -331,10 +338,9 @@ vector<Script::Ptr> createPrebakedRoundScripts(const nav_mesh::nav_file & navFil
         names.emplace_back("AttackBDoorsTeammateHole");
         cameraPoses.push_back(bSiteToSpawnCameraPos);
         cameraAngles.push_back(bSiteToSpawnCameraAngle);
-    }
-
-    if (includeDefenseA) {
         repeatRow(plantStatesResult, playerFreeze, names, cameraPoses, cameraAngles, numRepeats);
+    }
+    if (situationId == 5 || situationId == -1) {
         // defend a against cat
         addRow(plantStatesResult, {1241., 2586., 127.});
         plantStatesResult.ctPlayerStates[0].alive.back() = true;
@@ -352,6 +358,8 @@ vector<Script::Ptr> createPrebakedRoundScripts(const nav_mesh::nav_file & navFil
         cameraPoses.push_back(aSiteToLongCatCameraPos);
         cameraAngles.push_back(aSiteToLongCatCameraAngle);
         repeatRow(plantStatesResult, playerFreeze, names, cameraPoses, cameraAngles, numRepeats);
+    }
+    if (situationId == 6 || situationId == -1) {
         // defend a against cat teammates covering behind
         addRow(plantStatesResult, {1241., 2586., 127.});
         plantStatesResult.ctPlayerStates[0].alive.back() = true;
@@ -375,6 +383,8 @@ vector<Script::Ptr> createPrebakedRoundScripts(const nav_mesh::nav_file & navFil
         cameraPoses.push_back(aSiteToLongCatCameraPos);
         cameraAngles.push_back(aSiteToLongCatCameraAngle);
         repeatRow(plantStatesResult, playerFreeze, names, cameraPoses, cameraAngles, numRepeats);
+    }
+    if (situationId == 7 || situationId == -1) {
         // defend a against long
         addRow(plantStatesResult, {1241., 2586., 127.});
         plantStatesResult.ctPlayerStates[0].alive.back() = true;
@@ -392,6 +402,8 @@ vector<Script::Ptr> createPrebakedRoundScripts(const nav_mesh::nav_file & navFil
         cameraPoses.push_back(aSiteToLongCatCameraPos);
         cameraAngles.push_back(aSiteToLongCatCameraAngle);
         repeatRow(plantStatesResult, playerFreeze, names, cameraPoses, cameraAngles, numRepeats);
+    }
+    if (situationId == 8 || situationId == -1) {
         // defend a against long with teammate support
         addRow(plantStatesResult, {1241., 2586., 127.});
         plantStatesResult.ctPlayerStates[0].alive.back() = true;
@@ -412,6 +424,8 @@ vector<Script::Ptr> createPrebakedRoundScripts(const nav_mesh::nav_file & navFil
         cameraPoses.push_back(aSiteToLongCatCameraPos);
         cameraAngles.push_back(aSiteToLongCatCameraAngle);
         repeatRow(plantStatesResult, playerFreeze, names, cameraPoses, cameraAngles, numRepeats);
+    }
+    if (situationId == 9 || situationId == -1) {
         // defend a against long with two teammate support
         addRow(plantStatesResult, {1241., 2586., 127.});
         plantStatesResult.ctPlayerStates[0].alive.back() = true;
@@ -435,6 +449,8 @@ vector<Script::Ptr> createPrebakedRoundScripts(const nav_mesh::nav_file & navFil
         cameraPoses.push_back(aSiteToLongCatCameraPos);
         cameraAngles.push_back(aSiteToLongCatCameraAngle);
         repeatRow(plantStatesResult, playerFreeze, names, cameraPoses, cameraAngles, numRepeats);
+    }
+    if (situationId == 10 || situationId == -1) {
         // defend b against site
         addRow(plantStatesResult, {-1427.551391, 2500.479492, 2.367282});
         plantStatesResult.ctPlayerStates[0].alive.back() = true;
@@ -445,13 +461,12 @@ vector<Script::Ptr> createPrebakedRoundScripts(const nav_mesh::nav_file & navFil
         plantStatesResult.tPlayerStates[0].viewAngle.back() = {-19.819931, 3.903996};
         playerFreeze.push_back({true, false, false, false, false,
                                 false, false, false, false, false});
-    }
-
-    if (includeDefenseB) {
         names.emplace_back("DefendBCTSite");
         cameraPoses.push_back(bUpperTunsToSiteLowerTunsCameraPos);
         cameraAngles.push_back(bUpperTunsToSiteLowerTunsCameraAngle);
         repeatRow(plantStatesResult, playerFreeze, names, cameraPoses, cameraAngles, numRepeats);
+    }
+    if (situationId == 11 || situationId == -1) {
         // defend b against tuns
         addRow(plantStatesResult, {-1427.551391, 2500.479492, 2.367282});
         plantStatesResult.ctPlayerStates[0].alive.back() = true;
@@ -466,6 +481,8 @@ vector<Script::Ptr> createPrebakedRoundScripts(const nav_mesh::nav_file & navFil
         cameraPoses.push_back(bUpperTunsToSiteLowerTunsCameraPos);
         cameraAngles.push_back(bUpperTunsToSiteLowerTunsCameraAngle);
         repeatRow(plantStatesResult, playerFreeze, names, cameraPoses, cameraAngles, numRepeats);
+    }
+    if (situationId == 12 || situationId == -1) {
         // defend b against hole
         addRow(plantStatesResult, {-1427.551391, 2500.479492, 2.367282});
         plantStatesResult.ctPlayerStates[0].alive.back() = true;
@@ -480,6 +497,8 @@ vector<Script::Ptr> createPrebakedRoundScripts(const nav_mesh::nav_file & navFil
         cameraPoses.push_back(bSiteToSpawnCameraPos);
         cameraAngles.push_back(bSiteToSpawnCameraAngle);
         repeatRow(plantStatesResult, playerFreeze, names, cameraPoses, cameraAngles, numRepeats);
+    }
+    if (situationId == 13 || situationId == -1) {
         // defend b against hole, two teammates to keep in place
         addRow(plantStatesResult, {-1427.551391, 2500.479492, 2.367282});
         plantStatesResult.ctPlayerStates[0].alive.back() = true;
