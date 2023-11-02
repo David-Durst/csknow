@@ -89,8 +89,7 @@ int main(int argc, char * argv[]) {
     csknow::formation_initializer::FormationInitializer formationInitializer(mapMeshResult, savedDatasetsDir);
     ScriptsRunner formationDataGenerator(formationInitializer.createFormationScripts(mapMeshResult, true), false);
     ScriptsRunner prebakedRoundScriptsRunner(createPrebakedRoundScripts(navFile, prebakedPositionRandomization,
-                                                                        prebakedIncludeOffense, prebakedIncludeDefenseA,
-                                                                        prebakedIncludeDefenseB, false), false);
+                                                                        prebakedSituationId, false), false);
 
     ScriptsRunner scriptsRunner(Script::makeList(
             /*
