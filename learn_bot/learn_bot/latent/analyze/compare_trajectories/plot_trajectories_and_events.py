@@ -220,10 +220,9 @@ def plot_trajectory_dfs(filtered_trajectory_dfs: List[pd.DataFrame], valid_playe
                     first_title = False
 
                 if only_plot_post_start is None or player_index == only_plot_post_start[trajectory_index]:
-                    #if player_y_coords[0] < 1900:
-                    #    print(cur_player_trajectory_df['round id'])
-                    #    print(cur_player_trajectory_df['hdf5 id'])
-                    #    exit(0)
+                    #if player_x_coords[0] < 600:
+                    #    print(f"round id: {cur_player_trajectory_df['round id'].iloc[0]}, "
+                    #          f"hdf5 id: {cur_player_trajectory_df['hdf5 id'].iloc[0]}")
                     cur_player_d2_drw.line(xy=player_xy_coords, fill=fill_color, width=5)
                 if plot_starts:
                     cur_player_d2_drw.rectangle(

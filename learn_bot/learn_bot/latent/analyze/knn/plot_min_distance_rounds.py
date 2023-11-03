@@ -1,6 +1,6 @@
 import dataclasses
 import os
-from typing import List
+from typing import List, Optional
 
 import numpy as np
 import pandas as pd
@@ -44,15 +44,17 @@ max_future_seconds = 10
 
 
 def plot_min_distance_rounds(loaded_model: LoadedModel, min_distance_rounds_df: pd.DataFrame, test_name: str,
-                             restrict_future: bool):
+                             restrict_future: Optional[bool], num_matches: int):
     min_distance_pos_dfs: List[pd.DataFrame] = []
     target_full_table_ids: List[int] = []
     for i, hdf5_wrapper in enumerate(loaded_model.dataset.data_hdf5s):
         min_distance_rounds_cur_hdf5 = min_distance_rounds_df[min_distance_rounds_df[hdf5_id_col] == i]
         for _, round_row in min_distance_rounds_cur_hdf5.iterrows():
+            #if i != 22 or round_row[round_id_column] != 126:
+            #    continue
             min_distance_condition = (hdf5_wrapper.id_df[round_id_column] == round_row[round_id_column]) & \
                                      (hdf5_wrapper.id_df[row_id_column] >= round_row[row_id_column])
-            if restrict_future:
+            if restrict_future is not None and restrict_future:
                 min_distance_condition = min_distance_condition & \
                                          (hdf5_wrapper.id_df[game_tick_number_column] <=
                                           round_row[game_tick_number_column] + game_tick_rate*max_future_seconds)
@@ -66,10 +68,13 @@ def plot_min_distance_rounds(loaded_model: LoadedModel, min_distance_rounds_df: 
     config = dataclasses.replace(all_human_vs_all_human_config,
                                  predicted_load_data_options=load_data_option,
                                  metric_cost_title=f"Human KNN {test_name}")
-    plots_path = similarity_plots_path / load_data_option.custom_rollout_extension
+    plots_path = similarity_plots_path / load_data_option.custom_rollout_extension / f"matches_{num_matches}"
     os.makedirs(plots_path, exist_ok=True)
+    restrict_future_str = ""
+    if restrict_future is not None:
+        restrict_future_str = f"_r_{restrict_future}"
     plot_trajectory_dfs_and_event(min_distance_pos_dfs, config, True, True, True, plot_starts=True,
                                   only_plot_post_start=target_full_table_ids) \
-        .save(plots_path / f'{test_name}_r_{restrict_future}.png')
+        .save(plots_path / f'{test_name}{restrict_future_str}.png')
 
 
