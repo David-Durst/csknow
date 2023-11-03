@@ -457,7 +457,7 @@ namespace csknow::humanness_metrics {
         }
 
         // different columns have different sizes, so size not that valid here
-        size = static_cast<int64_t>(unscaledSpeedWhenFiring.size());
+        size = static_cast<int64_t>(unscaledSpeed.size());
     }
 
     void HumannessMetrics::toHDF5Inner(HighFive::File & file) {

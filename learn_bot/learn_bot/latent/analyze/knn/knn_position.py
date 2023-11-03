@@ -115,7 +115,7 @@ def get_nearest_neighbors_one_situation(ct_pos: List[Vec3], t_pos: List[Vec3], n
             .first().iloc[:num_matches]
         min_distance_rounds_per_hdf5.append(min_distance_per_round_df)
 
-    min_distance_rounds_df = pd.concat(min_distance_rounds_per_hdf5).sort_values(l2_distance_col).iloc[:num_matches]
+    min_distance_rounds_df = pd.concat(min_distance_rounds_per_hdf5).sort_values(l2_distance_col).iloc[:1]
     plot_min_distance_rounds(loaded_model, min_distance_rounds_df, situation_name, None, num_matches)
     #plot_min_distance_rounds(loaded_model, min_distance_rounds_df, situation_name, True)
     #plot_min_distance_rounds(loaded_model, min_distance_rounds_df, situation_name, False)
@@ -197,11 +197,11 @@ defend_b_ct_hole_two_teammates = PositionSituationParameters(
 )
 
 if __name__ == "__main__":
-    #get_nearest_neighbors([defend_a_ct_long_with_teammate])
-    for num_matches in [1, 5, 10, 20, 50, 100]:
-        get_nearest_neighbors([attack_a_spawn_t_long, attack_a_spawn_t_long_two_teammates, attack_a_spawn_t_extended_a,
-                               attack_b_hole_teammate_b_doors, attack_b_hole_teammate_b_hole, defend_a_cat,
-                               defend_a_cat_two_teammates, defend_a_ct_long, defend_a_ct_long_with_teammate,
-                               defend_a_ct_long_with_two_teammates, defend_b_ct_site, defend_b_ct_tuns, defend_b_ct_hole,
-                               defend_b_ct_hole_two_teammates], num_matches)
+    get_nearest_neighbors([attack_b_hole_teammate_b_hole], num_matches=100)
+    #for num_matches in [1, 5, 10, 20, 50, 100]:
+    #    get_nearest_neighbors([attack_a_spawn_t_long, attack_a_spawn_t_long_two_teammates, attack_a_spawn_t_extended_a,
+    #                           attack_b_hole_teammate_b_doors, attack_b_hole_teammate_b_hole, defend_a_cat,
+    #                           defend_a_cat_two_teammates, defend_a_ct_long, defend_a_ct_long_with_teammate,
+    #                           defend_a_ct_long_with_two_teammates, defend_b_ct_site, defend_b_ct_tuns, defend_b_ct_hole,
+    #                           defend_b_ct_hole_two_teammates], num_matches)
 
