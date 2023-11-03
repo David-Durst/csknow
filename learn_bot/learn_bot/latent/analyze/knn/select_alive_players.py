@@ -7,6 +7,7 @@ from einops import rearrange
 import numpy as np
 
 from learn_bot.latent.order.column_names import team_strs, all_prior_and_cur_ticks
+from learn_bot.latent.place_area.column_names import get_similarity_column
 from learn_bot.latent.transformer_nested_hidden_latent_model import range_list_to_index_list, get_player_columns_by_str, \
     TransformerNestedHiddenLatentModel
 from learn_bot.libs.hdf5_wrapper import HDF5Wrapper
@@ -44,7 +45,8 @@ def get_id_df_and_alive_pos_and_full_table_id_np(hdf5_wrapper: HDF5Wrapper, mode
     num_ct_alive_np = np.sum(hdf5_wrapper.get_all_input_data()[:, player_column_indices.ct_alive_cols], axis=1)
     num_t_alive_np = np.sum(hdf5_wrapper.get_all_input_data()[:, player_column_indices.t_alive_cols], axis=1)
 
-    valid = (num_ct_alive_np == num_ct_alive) & (num_t_alive_np == num_t_alive)
+    valid = (num_ct_alive_np == num_ct_alive) & (num_t_alive_np == num_t_alive) & \
+            hdf5_wrapper.id_df[get_similarity_column(0)].to_numpy() # require pushing
     valid_id_df = hdf5_wrapper.id_df[valid]
     valid_whole_np = hdf5_wrapper.get_all_input_data()[valid]
 
