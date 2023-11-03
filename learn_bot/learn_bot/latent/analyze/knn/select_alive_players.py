@@ -36,27 +36,33 @@ class PlayerColumnIndices:
             self.pos_cols.append(nested_players_pos_columns_tensor[p, 0].tolist())
 
 
-def get_id_df_and_alive_pos_np(hdf5_wrapper: HDF5Wrapper, model: TransformerNestedHiddenLatentModel,
-                               num_ct_alive: int, num_t_alive: int) -> Tuple[pd.DataFrame, np.ndarray]:
+def get_id_df_and_alive_pos_and_full_table_id_np(hdf5_wrapper: HDF5Wrapper, model: TransformerNestedHiddenLatentModel,
+                                                 num_ct_alive: int, num_t_alive: int) -> Tuple[pd.DataFrame, np.ndarray]:
     player_column_indices = PlayerColumnIndices(model)
 
     # get rows which have right number of players alive
     num_ct_alive_np = np.sum(hdf5_wrapper.get_all_input_data()[:, player_column_indices.ct_alive_cols], axis=1)
     num_t_alive_np = np.sum(hdf5_wrapper.get_all_input_data()[:, player_column_indices.t_alive_cols], axis=1)
 
-    valid = (num_ct_alive_np >= num_ct_alive) & (num_t_alive_np == num_t_alive)
+    valid = (num_ct_alive_np == num_ct_alive) & (num_t_alive_np == num_t_alive)
     valid_id_df = hdf5_wrapper.id_df[valid]
     valid_whole_np = hdf5_wrapper.get_all_input_data()[valid]
 
     # for each row, record all pos indices of alive players
     alive_players_pos_list: List[np.ndarray] = []
+    # also record id of players in full table
+    alive_players_id_list: List[np.ndarray] = []
     for i in range(len(valid_whole_np)):
         alive_players_pos_cur_row: List[int] = []
-        for i, alive_col in enumerate(player_column_indices.alive_cols):
+        alive_players_id_cur_row: List[int] = []
+        for j, alive_col in enumerate(player_column_indices.alive_cols):
             if valid_whole_np[i, alive_col]:
-                alive_players_pos_cur_row += player_column_indices.pos_cols[i]
+                alive_players_pos_cur_row += player_column_indices.pos_cols[j]
+                alive_players_id_cur_row.append(j)
         alive_players_pos_list.append(np.asarray(alive_players_pos_cur_row))
+        alive_players_id_list.append(np.array(alive_players_id_cur_row))
     alive_players_pos_np: np.ndarray = np.stack(alive_players_pos_list, axis=0)
+    alive_players_id_np: np.ndarray = np.stack(alive_players_id_list, axis=0)
 
     # get pos cols for alive players, nest it so each pos is inner dimension
     valid_alive_pos_np = np.take_along_axis(valid_whole_np, alive_players_pos_np, 1)
@@ -64,7 +70,7 @@ def get_id_df_and_alive_pos_np(hdf5_wrapper: HDF5Wrapper, model: TransformerNest
                                                             valid_alive_pos_np.shape[1] // 3,
                                                             3))
 
-    return valid_id_df, nested_valid_alive_pos_np
+    return valid_id_df, nested_valid_alive_pos_np, alive_players_id_np
 
 
 

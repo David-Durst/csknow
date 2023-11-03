@@ -6,8 +6,9 @@ import pandas as pd
 import math
 
 from learn_bot.latent.analyze.knn.generate_player_index_mappings import generate_all_player_to_column_mappings
-from learn_bot.latent.analyze.knn.plot_min_distance_rounds import plot_min_distance_rounds, l2_distance_col, hdf5_id_col
-from learn_bot.latent.analyze.knn.select_alive_players import get_id_df_and_alive_pos_np
+from learn_bot.latent.analyze.knn.plot_min_distance_rounds import plot_min_distance_rounds, l2_distance_col, \
+    hdf5_id_col, target_full_table_id_col
+from learn_bot.latent.analyze.knn.select_alive_players import get_id_df_and_alive_pos_and_full_table_id_np
 from learn_bot.latent.engagement.column_names import round_id_column
 from learn_bot.latent.load_model import load_model_file, LoadedModel
 from learn_bot.latent.place_area.load_data import LoadDataResult
@@ -19,7 +20,15 @@ from learn_bot.libs.vec import Vec3
 class PositionSituationParameters:
     ct_pos: List[Vec3]
     t_pos: List[Vec3]
+    target_ct: bool
+    target_player_index_on_team: int
     name: str
+
+    def get_target_player_index(self):
+        if self.target_ct:
+            return self.target_player_index_on_team
+        else:
+            return self.target_player_index_on_team + len(self.ct_pos)
 
 
 def get_nearest_neighbors(situations: List[PositionSituationParameters], num_matches: int = 100) -> pd.DataFrame:
@@ -30,11 +39,11 @@ def get_nearest_neighbors(situations: List[PositionSituationParameters], num_mat
     for situation in situations:
         print(f"processing {situation.name}")
         get_nearest_neighbors_one_situation(situation.ct_pos, situation.t_pos, num_matches,
-                                            loaded_model, situation.name)
+                                            loaded_model, situation.name, situation.get_target_player_index())
 
 
 def get_nearest_neighbors_one_situation(ct_pos: List[Vec3], t_pos: List[Vec3], num_matches: int,
-                                        loaded_model: LoadedModel, situation_name: str):
+                                        loaded_model: LoadedModel, situation_name: str, target_player_index: int):
     num_ct_alive = len(ct_pos)
     num_t_alive = len(t_pos)
 
@@ -45,7 +54,9 @@ def get_nearest_neighbors_one_situation(ct_pos: List[Vec3], t_pos: List[Vec3], n
     min_distance_rounds_per_hdf5: List[pd.DataFrame] = []
 
     for i, hdf5_wrapper in enumerate(loaded_model.dataset.data_hdf5s):
-        id_df, alive_pos_np = get_id_df_and_alive_pos_np(hdf5_wrapper, loaded_model.model, num_ct_alive, num_t_alive)
+        id_df, alive_pos_np, full_table_id_np = get_id_df_and_alive_pos_and_full_table_id_np(hdf5_wrapper,
+                                                                                             loaded_model.model,
+                                                                                             num_ct_alive, num_t_alive)
         alive_pos_np = alive_pos_np.astype(np.float32)
 
         base_point_np = np.zeros_like(alive_pos_np)
@@ -58,28 +69,38 @@ def get_nearest_neighbors_one_situation(ct_pos: List[Vec3], t_pos: List[Vec3], n
         # find min distance from each point to the base point across all player mappings
         min_distance_per_row = np.zeros(alive_pos_np.shape[0])
         min_distance_per_row[:] = math.inf
+        target_full_table_id_per_row = np.zeros(alive_pos_np.shape[0], dtype=np.int32)
         for player_to_column_mapping in player_to_column_mappings:
             # sum distance per player for this mapping
             player_indices = []
             column_indices = []
+            target_column_index = -1
             for player_index, column_index in player_to_column_mapping.player_to_column.items():
                 player_indices.append(player_index)
                 column_indices.append(column_index)
+                if player_index == target_player_index:
+                    target_column_index = column_index
             mapping_distance_per_player = (
                     (alive_pos_np[:, column_indices, 0] - base_point_np[:, player_indices, 0]) ** 2. +
                     (alive_pos_np[:, column_indices, 1] - base_point_np[:, player_indices, 1]) ** 2. +
                     (alive_pos_np[:, column_indices, 2] - base_point_np[:, player_indices, 2]) ** 2.
             ) ** .5
             mapping_distance = np.sum(mapping_distance_per_player, axis=1)
+            target_full_table_id_per_row = \
+                np.where(mapping_distance < min_distance_per_row, full_table_id_np[:, target_column_index],
+                         target_full_table_id_per_row)
             min_distance_per_row = \
                 np.where(mapping_distance < min_distance_per_row, mapping_distance, min_distance_per_row)
 
         id_with_distance_df = id_df.copy()
         id_with_distance_df[l2_distance_col] = min_distance_per_row
+        id_with_distance_df[target_full_table_id_col] = target_full_table_id_per_row
         id_with_distance_df[hdf5_id_col] = i
 
-        min_distance_per_round_df = id_with_distance_df.groupby(round_id_column, as_index=False).min(l2_distance_col) \
-            .sort_values(l2_distance_col).iloc[:num_matches]
+        # sort by distance within round, then take first row to get best match
+        id_with_distance_sorted_by_round_df = id_with_distance_df.sort_values([round_id_column, l2_distance_col])
+        min_distance_per_round_df = id_with_distance_sorted_by_round_df.groupby(round_id_column, as_index=False) \
+            .first().iloc[:num_matches]
         min_distance_rounds_per_hdf5.append(min_distance_per_round_df)
 
     min_distance_rounds_df = pd.concat(min_distance_rounds_per_hdf5).sort_values(l2_distance_col).iloc[:num_matches]
@@ -89,13 +110,13 @@ def get_nearest_neighbors_one_situation(ct_pos: List[Vec3], t_pos: List[Vec3], n
 defend_a_cat_parameters = PositionSituationParameters(
     [Vec3(563.968750, 2763.999511, 97.379516), Vec3(357.684234, 1650.239990, 27.671302)],
     [Vec3(1160.000976, 2573.304931, 96.338958)],
-    "DefendACat"
+    False, 0, "DefendACat"
 )
 defend_a_cat_teammates_behind_parameters = PositionSituationParameters(
     [Vec3(563.968750, 2763.999511, 97.379516), Vec3(357.684234, 1650.239990, 27.671302)],
     [Vec3(1160.000976, 2573.304931, 96.338958), Vec3(1175.846923, 2944.958984, 128.266784),
      Vec3(1427.594238, 2308.249023, 4.196350)],
-    "DefendACatTwoTeammates"
+    False, 0, "DefendACatTwoTeammates"
 )
 
 if __name__ == "__main__":

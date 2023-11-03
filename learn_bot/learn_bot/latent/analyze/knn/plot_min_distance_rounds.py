@@ -16,6 +16,7 @@ from learn_bot.latent.place_area.column_names import specific_player_place_area_
 
 l2_distance_col = 'l2 distance'
 hdf5_id_col = 'hdf5 id'
+target_full_table_id_col = 'target full table id'
 
 
 # note: this id_df is only for rows in all_np, which may not be all rows in data set
@@ -37,6 +38,7 @@ def all_np_to_pos_alive_df(all_np: np.ndarray, id_df: pd.DataFrame, loaded_model
 
 def plot_min_distance_rounds(loaded_model: LoadedModel, min_distance_rounds_df: pd.DataFrame, test_name: str):
     min_distance_pos_dfs: List[pd.DataFrame] = []
+    target_full_table_ids: List[int] = []
     for i, hdf5_wrapper in enumerate(loaded_model.dataset.data_hdf5s):
         min_distance_rounds_cur_hdf5 = min_distance_rounds_df[min_distance_rounds_df[hdf5_id_col] == i]
         for _, round_row in min_distance_rounds_cur_hdf5.iterrows():
@@ -45,6 +47,7 @@ def plot_min_distance_rounds(loaded_model: LoadedModel, min_distance_rounds_df: 
             min_distance_id_df = hdf5_wrapper.id_df[min_distance_condition]
             min_distance_np = hdf5_wrapper.get_all_input_data()[min_distance_id_df[row_id_column]]
             min_distance_pos_dfs.append(all_np_to_pos_alive_df(min_distance_np, min_distance_id_df, loaded_model))
+            target_full_table_ids.append(round_row[target_full_table_id_col])
 
     load_data_option = dataclasses.replace(all_human_load_data_option,
                                            custom_rollout_extension="human_knn")
@@ -53,7 +56,8 @@ def plot_min_distance_rounds(loaded_model: LoadedModel, min_distance_rounds_df: 
                                  metric_cost_title=f"Human KNN {test_name}")
     plots_path = similarity_plots_path / load_data_option.custom_rollout_extension
     os.makedirs(plots_path, exist_ok=True)
-    plot_trajectory_dfs_and_event(min_distance_pos_dfs, config, True, True, True, plot_starts=True) \
+    plot_trajectory_dfs_and_event(min_distance_pos_dfs, config, True, True, True, plot_starts=True,
+                                  only_plot_post_start=target_full_table_ids) \
         .save(plots_path / f'{test_name}.png')
 
 

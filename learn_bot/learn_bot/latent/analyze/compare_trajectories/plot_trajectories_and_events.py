@@ -35,7 +35,9 @@ def plot_trajectory_dfs_and_event(trajectory_dfs: List[pd.DataFrame], config: Co
                                   filter_event_type: Optional[FilterEventType] = None,
                                   key_areas: Optional[KeyAreas] = None, key_area_team: KeyAreaTeam = KeyAreaTeam.Both,
                                   title_appendix: str = "",
-                                  plot_starts: bool = False) -> Image.Image:
+                                  plot_starts: bool = False,
+                                  # if this is set, only plot post start for this player in each trajectory
+                                  only_plot_post_start: Optional[List[int]] = None) -> Image.Image:
     filtered_trajectory_dfs: List[pd.DataFrame] = []
     valid_players_dfs: List[pd.DataFrame] = []
     num_points = 0
@@ -67,7 +69,8 @@ def plot_trajectory_dfs_and_event(trajectory_dfs: List[pd.DataFrame], config: Co
                                    filter_players,
                                    filter_event_type,
                                    title_appendix,
-                                   plot_starts=plot_starts)
+                                   plot_starts=plot_starts,
+                                   only_plot_post_start=only_plot_post_start)
 
 
 #def plot_speeds(trajectory_dfs: List[pd.DataFrame], valid_players_dfs: List[pd.DataFrame],
@@ -144,7 +147,9 @@ def plot_trajectory_dfs(filtered_trajectory_dfs: List[pd.DataFrame], valid_playe
                         filter_players: Optional[FilterPlayerType] = FilterPlayerType.IncludeAll,
                         filter_event_type: Optional[FilterEventType] = None,
                         title_appendix: str = "",
-                        plot_starts: bool = False) -> Image.Image:
+                        plot_starts: bool = False,
+                        # if this is set, only plot post start for this player in each trajectory
+                        only_plot_post_start: Optional[List[int]] = None) -> Image.Image:
     all_player_d2_img_copy = d2_img.copy().convert("RGBA")
     color_alpha = int(25. / log(2.2 + num_points / 1300, 10))
     ct_color = (bot_ct_color_list[0], bot_ct_color_list[1], bot_ct_color_list[2], color_alpha)
@@ -158,8 +163,10 @@ def plot_trajectory_dfs(filtered_trajectory_dfs: List[pd.DataFrame], valid_playe
     points_text = f"\nNum Points {num_points} Alpha {color_alpha}"
 
     with tqdm(total=len(filtered_trajectory_dfs), disable=False) as pbar:
+        trajectory_index = -1
         for trajectory_df, valid_players_df in zip(filtered_trajectory_dfs, valid_players_dfs):
             assert filter_players != FilterPlayerType.IncludeOnlyInEvent
+            trajectory_index += 1
 
             # filter out the player who appears in event the most
             player_ids_to_exclude: Set[int] = set()
@@ -173,7 +180,7 @@ def plot_trajectory_dfs(filtered_trajectory_dfs: List[pd.DataFrame], valid_playe
                         max_player_valids = cur_player_valids
                 player_ids_to_exclude.add(max_player_id_col_name)
 
-            for player_place_area_columns in specific_player_place_area_columns:
+            for player_index, player_place_area_columns in enumerate(specific_player_place_area_columns):
                 if player_place_area_columns.player_id in player_ids_to_exclude:
                     continue
 
@@ -209,7 +216,8 @@ def plot_trajectory_dfs(filtered_trajectory_dfs: List[pd.DataFrame], valid_playe
                                            title_text, fill=(255, 255, 255, 255), font=title_font)
                     first_title = False
 
-                cur_player_d2_drw.line(xy=player_xy_coords, fill=fill_color, width=5)
+                if only_plot_post_start is None or player_index == only_plot_post_start[trajectory_index]:
+                    cur_player_d2_drw.line(xy=player_xy_coords, fill=fill_color, width=5)
                 if plot_starts:
                     cur_player_d2_drw.rectangle(
                         (player_xy_coords[0][0] - 5, player_xy_coords[0][1] - 5,
