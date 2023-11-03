@@ -220,6 +220,8 @@ def plot_trajectory_dfs(filtered_trajectory_dfs: List[pd.DataFrame], valid_playe
                     first_title = False
 
                 if only_plot_post_start is None or player_index == only_plot_post_start[trajectory_index]:
+                    if player_x_coords[0] < 1900:
+                        print('bad')
                     cur_player_d2_drw.line(xy=player_xy_coords, fill=fill_color, width=5)
                 if plot_starts:
                     cur_player_d2_drw.rectangle(
