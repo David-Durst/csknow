@@ -107,17 +107,85 @@ def get_nearest_neighbors_one_situation(ct_pos: List[Vec3], t_pos: List[Vec3], n
     plot_min_distance_rounds(loaded_model, min_distance_rounds_df, situation_name)
 
 
-defend_a_cat_parameters = PositionSituationParameters(
+attack_a_spawn_t_long = PositionSituationParameters(
+    [Vec3(1430.616699, 1816.052490, -10.300033)],
+    [Vec3(1704.018188, 1011.443786, 2.233371)],
+    True, 0, "AttackASpawnTLong"
+)
+attack_a_spawn_t_long_two_teammates = PositionSituationParameters(
+    [Vec3(1430.616699, 1816.052490, -10.300033), Vec3(1430.616699, 1516.052490, -10.300033),
+     Vec3(1430.616699, 1316.052490, -10.300033)],
+    [Vec3(1704.018188, 1011.443786, 2.233371)],
+    True, 0, "AttackASpawnTLongTwoTeammates"
+)
+attack_a_spawn_t_extended_a = PositionSituationParameters(
+    [Vec3(1430.616699, 1816.052490, -10.300033)],
+    [Vec3(563.968750, 2759.416259, 97.259826)],
+    True, 0, "AttackASpawnTExtendedA"
+)
+attack_b_hole_teammate_b_doors = PositionSituationParameters(
+    [Vec3(-550.731201, 2076.939208, -118.991142), Vec3(-1396.848022, 2144.354980, 1.107921)],
+    [Vec3(-1879.674072, 2378.484130, 8.714675)],
+    True, 0, "AttackBDoorsTeammateBDoors"
+)
+attack_b_hole_teammate_b_hole = PositionSituationParameters(
+    [Vec3(-550.731201, 2076.939208, -118.991142), Vec3(-1395.869873, 2652.096679, 125.027893)],
+    [Vec3(-1879.674072, 2378.484130, 8.714675)],
+    True, 0, "AttackBDoorsTeammateHole"
+)
+defend_a_cat = PositionSituationParameters(
     [Vec3(563.968750, 2763.999511, 97.379516), Vec3(357.684234, 1650.239990, 27.671302)],
     [Vec3(1160.000976, 2573.304931, 96.338958)],
     False, 0, "DefendACat"
 )
-defend_a_cat_teammates_behind_parameters = PositionSituationParameters(
+defend_a_cat_teammates_behind = PositionSituationParameters(
     [Vec3(563.968750, 2763.999511, 97.379516), Vec3(357.684234, 1650.239990, 27.671302)],
     [Vec3(1160.000976, 2573.304931, 96.338958), Vec3(1175.846923, 2944.958984, 128.266784),
      Vec3(1427.594238, 2308.249023, 4.196350)],
     False, 0, "DefendACatTwoTeammates"
 )
+defend_a_ct_long = PositionSituationParameters(
+    [Vec3(1393.406738, 521.030822, -94.765136), Vec3(1266.489990, 1308.994018, 0.008083)],
+    [Vec3(1160.000976, 2573.304931, 96.338958)],
+    False, 0, "DefendACTLong"
+)
+defend_a_ct_long_with_teammate = PositionSituationParameters(
+    [Vec3(1393.406738, 521.030822, -94.765136), Vec3(1266.489990, 1308.994018, 0.008083)],
+    [Vec3(1160.000976, 2573.304931, 96.338958), Vec3(563.968750, 2763.999511, 97.379516)],
+    False, 0, "DefendACTLongWithTeammate"
+)
+defend_a_ct_long_with_two_teammates = PositionSituationParameters(
+    [Vec3(1393.406738, 521.030822, -94.765136), Vec3(1266.489990, 1308.994018, 0.008083)],
+    [Vec3(1160.000976, 2573.304931, 96.338958), Vec3(563.968750, 2763.999511, 97.379516),
+     Vec3(462.430969, 2006.059082, 133.031250)],
+    False, 0, "DefendACTLongWithTwoTeammates"
+)
+defend_b_ct_site = PositionSituationParameters(
+    [Vec3(-1445.885375, 2497.657958, 1.294036)],
+    [Vec3(-1977.860229, 1665.813110, 31.853256)],
+    False, 0, "DefendBCTSite"
+)
+defend_b_ct_tuns = PositionSituationParameters(
+    [Vec3(-1078.543823, 1232.906372, -87.452003)],
+    [Vec3(-1977.860229, 1665.813110, 31.853256)],
+    False, 0, "DefendBCTTuns"
+)
+defend_b_ct_hole = PositionSituationParameters(
+    [Vec3(-1179.737426, 2664.458007, 79.098220)],
+    [Vec3(-1430.002441, 2676.153564, 16.374132)],
+    False, 0, "DefendBCTHole"
+)
+defend_b_ct_hole_two_teammates = PositionSituationParameters(
+    [Vec3(-1179.737426, 2664.458007, 79.098220)],
+    [Vec3(-1430.002441, 2676.153564, 16.374132), Vec3(-1925.693725, 2991.133300, 36.464263),
+     Vec3(-1925.693725, 2991.133300, 36.464263)],
+    False, 0, "DefendBCTHoleTwoTeammates"
+)
 
 if __name__ == "__main__":
-    get_nearest_neighbors([defend_a_cat_parameters, defend_a_cat_teammates_behind_parameters])
+    get_nearest_neighbors([attack_a_spawn_t_long, attack_a_spawn_t_long_two_teammates, attack_a_spawn_t_extended_a,
+                           attack_b_hole_teammate_b_doors, attack_b_hole_teammate_b_hole, defend_a_cat,
+                           defend_a_cat_teammates_behind, defend_a_ct_long, defend_a_ct_long_with_teammate,
+                           defend_a_ct_long_with_two_teammates, defend_b_ct_site, defend_b_ct_tuns, defend_b_ct_hole,
+                           defend_b_ct_hole_two_teammates])
+
