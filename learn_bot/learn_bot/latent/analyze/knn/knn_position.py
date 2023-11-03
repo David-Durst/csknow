@@ -54,9 +54,6 @@ def get_nearest_neighbors_one_situation(ct_pos: List[Vec3], t_pos: List[Vec3], n
     min_distance_rounds_per_hdf5: List[pd.DataFrame] = []
 
     for i, hdf5_wrapper in enumerate(loaded_model.dataset.data_hdf5s):
-        #if i != 39:
-        #    continue
-
         id_df, alive_pos_np, full_table_id_np = get_id_df_and_alive_pos_and_full_table_id_np(hdf5_wrapper,
                                                                                              loaded_model.model,
                                                                                              num_ct_alive, num_t_alive)
@@ -117,8 +114,6 @@ def get_nearest_neighbors_one_situation(ct_pos: List[Vec3], t_pos: List[Vec3], n
         min_distance_per_round_df = id_with_distance_sorted_by_round_df.groupby(round_id_column, as_index=False) \
             .first().iloc[:num_matches]
         min_distance_rounds_per_hdf5.append(min_distance_per_round_df)
-        if i == 39:
-            print('hi')
 
     min_distance_rounds_df = pd.concat(min_distance_rounds_per_hdf5).sort_values(l2_distance_col).iloc[:num_matches]
     plot_min_distance_rounds(loaded_model, min_distance_rounds_df, situation_name)

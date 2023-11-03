@@ -45,8 +45,6 @@ def plot_min_distance_rounds(loaded_model: LoadedModel, min_distance_rounds_df: 
     for i, hdf5_wrapper in enumerate(loaded_model.dataset.data_hdf5s):
         min_distance_rounds_cur_hdf5 = min_distance_rounds_df[min_distance_rounds_df[hdf5_id_col] == i]
         for _, round_row in min_distance_rounds_cur_hdf5.iterrows():
-            if i != 39 or round_row[round_id_column] != 521:
-                continue
             min_distance_condition = (hdf5_wrapper.id_df[round_id_column] == round_row[round_id_column]) & \
                                      (hdf5_wrapper.id_df[row_id_column] >= round_row[row_id_column])
             min_distance_id_df = hdf5_wrapper.id_df[min_distance_condition]
