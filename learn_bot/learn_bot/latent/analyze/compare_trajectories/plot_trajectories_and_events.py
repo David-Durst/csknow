@@ -151,6 +151,9 @@ def plot_trajectory_dfs(filtered_trajectory_dfs: List[pd.DataFrame], valid_playe
                         # if this is set, only plot post start for this player in each trajectory
                         only_plot_post_start: Optional[List[int]] = None) -> Image.Image:
     all_player_d2_img_copy = d2_img.copy().convert("RGBA")
+    # if only looking at one player, scale up alpha as not drawing a lot of ponts
+    if only_plot_post_start is not None:
+        num_points /= 4.
     color_alpha = int(25. / log(2.2 + num_points / 1300, 10))
     ct_color = (bot_ct_color_list[0], bot_ct_color_list[1], bot_ct_color_list[2], color_alpha)
     start_ct_color = (replay_ct_color_list[0], replay_ct_color_list[1], replay_ct_color_list[2], color_alpha)
