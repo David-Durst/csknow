@@ -31,7 +31,7 @@ class PositionSituationParameters:
             return self.target_player_index_on_team + len(self.ct_pos)
 
 
-def get_nearest_neighbors(situations: List[PositionSituationParameters], num_matches: int = 100) -> pd.DataFrame:
+def get_nearest_neighbors(situations: List[PositionSituationParameters], num_matches: int = 20) -> pd.DataFrame:
     load_data_result = LoadDataResult(load_data_options)
     loaded_model = load_model_file(load_data_result, load_pd=False)
     load_data_result.multi_hdf5_wrapper.create_np_arrays(loaded_model.model.cts)
@@ -116,7 +116,8 @@ def get_nearest_neighbors_one_situation(ct_pos: List[Vec3], t_pos: List[Vec3], n
         min_distance_rounds_per_hdf5.append(min_distance_per_round_df)
 
     min_distance_rounds_df = pd.concat(min_distance_rounds_per_hdf5).sort_values(l2_distance_col).iloc[:num_matches]
-    plot_min_distance_rounds(loaded_model, min_distance_rounds_df, situation_name)
+    plot_min_distance_rounds(loaded_model, min_distance_rounds_df, situation_name, True)
+    plot_min_distance_rounds(loaded_model, min_distance_rounds_df, situation_name, False)
 
 
 attack_a_spawn_t_long = PositionSituationParameters(
@@ -195,10 +196,9 @@ defend_b_ct_hole_two_teammates = PositionSituationParameters(
 )
 
 if __name__ == "__main__":
-    get_nearest_neighbors([defend_a_cat_teammates_behind])
-    #get_nearest_neighbors([attack_a_spawn_t_long, attack_a_spawn_t_long_two_teammates, attack_a_spawn_t_extended_a,
-    #                       attack_b_hole_teammate_b_doors, attack_b_hole_teammate_b_hole, defend_a_cat,
-    #                       defend_a_cat_teammates_behind, defend_a_ct_long, defend_a_ct_long_with_teammate,
-    #                       defend_a_ct_long_with_two_teammates, defend_b_ct_site, defend_b_ct_tuns, defend_b_ct_hole,
-    #                       defend_b_ct_hole_two_teammates])
+    get_nearest_neighbors([attack_a_spawn_t_long, attack_a_spawn_t_long_two_teammates, attack_a_spawn_t_extended_a,
+                           attack_b_hole_teammate_b_doors, attack_b_hole_teammate_b_hole, defend_a_cat,
+                           defend_a_cat_teammates_behind, defend_a_ct_long, defend_a_ct_long_with_teammate,
+                           defend_a_ct_long_with_two_teammates, defend_b_ct_site, defend_b_ct_tuns, defend_b_ct_hole,
+                           defend_b_ct_hole_two_teammates])
 

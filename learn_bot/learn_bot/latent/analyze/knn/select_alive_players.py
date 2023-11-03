@@ -38,7 +38,8 @@ class PlayerColumnIndices:
 
 
 def get_id_df_and_alive_pos_and_full_table_id_np(hdf5_wrapper: HDF5Wrapper, model: TransformerNestedHiddenLatentModel,
-                                                 num_ct_alive: int, num_t_alive: int) -> Tuple[pd.DataFrame, np.ndarray]:
+                                                 num_ct_alive: int, num_t_alive: int) \
+        -> Tuple[pd.DataFrame, np.ndarray, np.ndarray]:
     player_column_indices = PlayerColumnIndices(model)
 
     # get rows which have right number of players alive

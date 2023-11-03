@@ -10,7 +10,7 @@ from learn_bot.latent.analyze.compare_trajectories.run_trajectory_comparison imp
     all_human_vs_all_human_config
 from learn_bot.latent.analyze.comparison_column_names import similarity_plots_path
 from learn_bot.latent.analyze.knn.select_alive_players import PlayerColumnIndices
-from learn_bot.latent.engagement.column_names import round_id_column, row_id_column
+from learn_bot.latent.engagement.column_names import round_id_column, row_id_column, game_tick_number_column
 from learn_bot.latent.load_model import LoadedModel
 from learn_bot.latent.place_area.column_names import specific_player_place_area_columns
 
@@ -39,7 +39,12 @@ def all_np_to_pos_alive_df(all_np: np.ndarray, id_df: pd.DataFrame, hdf5_id: int
     return pos_alive_df
 
 
-def plot_min_distance_rounds(loaded_model: LoadedModel, min_distance_rounds_df: pd.DataFrame, test_name: str):
+game_tick_rate = 128
+max_future_seconds = 10
+
+
+def plot_min_distance_rounds(loaded_model: LoadedModel, min_distance_rounds_df: pd.DataFrame, test_name: str,
+                             restrict_future: bool):
     min_distance_pos_dfs: List[pd.DataFrame] = []
     target_full_table_ids: List[int] = []
     for i, hdf5_wrapper in enumerate(loaded_model.dataset.data_hdf5s):
@@ -47,6 +52,10 @@ def plot_min_distance_rounds(loaded_model: LoadedModel, min_distance_rounds_df: 
         for _, round_row in min_distance_rounds_cur_hdf5.iterrows():
             min_distance_condition = (hdf5_wrapper.id_df[round_id_column] == round_row[round_id_column]) & \
                                      (hdf5_wrapper.id_df[row_id_column] >= round_row[row_id_column])
+            if restrict_future:
+                min_distance_condition = min_distance_condition & \
+                                         (hdf5_wrapper.id_df[game_tick_number_column] <=
+                                          round_row[game_tick_number_column] + game_tick_rate*max_future_seconds)
             min_distance_id_df = hdf5_wrapper.id_df[min_distance_condition]
             min_distance_np = hdf5_wrapper.get_all_input_data()[min_distance_id_df[row_id_column]]
             min_distance_pos_dfs.append(all_np_to_pos_alive_df(min_distance_np, min_distance_id_df, i, loaded_model))
@@ -61,6 +70,6 @@ def plot_min_distance_rounds(loaded_model: LoadedModel, min_distance_rounds_df: 
     os.makedirs(plots_path, exist_ok=True)
     plot_trajectory_dfs_and_event(min_distance_pos_dfs, config, True, True, True, plot_starts=True,
                                   only_plot_post_start=target_full_table_ids) \
-        .save(plots_path / f'{test_name}.png')
+        .save(plots_path / f'{test_name}_r_{restrict_future}.png')
 
 
