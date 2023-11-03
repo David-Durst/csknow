@@ -54,6 +54,9 @@ def get_nearest_neighbors_one_situation(ct_pos: List[Vec3], t_pos: List[Vec3], n
     min_distance_rounds_per_hdf5: List[pd.DataFrame] = []
 
     for i, hdf5_wrapper in enumerate(loaded_model.dataset.data_hdf5s):
+        #if i != 39:
+        #    continue
+
         id_df, alive_pos_np, full_table_id_np = get_id_df_and_alive_pos_and_full_table_id_np(hdf5_wrapper,
                                                                                              loaded_model.model,
                                                                                              num_ct_alive, num_t_alive)
@@ -67,8 +70,10 @@ def get_nearest_neighbors_one_situation(ct_pos: List[Vec3], t_pos: List[Vec3], n
 
 
         # find min distance from each point to the base point across all player mappings
-        min_distance_per_row = np.zeros(alive_pos_np.shape[0])
-        min_distance_per_row[:] = math.inf
+        min_euclidean_distance_per_row = np.zeros(alive_pos_np.shape[0])
+        min_euclidean_distance_per_row[:] = math.inf
+        min_manhattan_distance_per_row = np.zeros(alive_pos_np.shape[0])
+        min_manhattan_distance_per_row[:] = math.inf
         target_full_table_id_per_row = np.zeros(alive_pos_np.shape[0], dtype=np.int32)
         for player_to_column_mapping in player_to_column_mappings:
             # sum distance per player for this mapping
@@ -80,20 +85,30 @@ def get_nearest_neighbors_one_situation(ct_pos: List[Vec3], t_pos: List[Vec3], n
                 column_indices.append(column_index)
                 if player_index == target_player_index:
                     target_column_index = column_index
-            mapping_distance_per_player = (
+            # use euclidean distance to find most similar global alignment
+            mapping_euclidean_distance_per_player = (
                     (alive_pos_np[:, column_indices, 0] - base_point_np[:, player_indices, 0]) ** 2. +
                     (alive_pos_np[:, column_indices, 1] - base_point_np[:, player_indices, 1]) ** 2. +
                     (alive_pos_np[:, column_indices, 2] - base_point_np[:, player_indices, 2]) ** 2.
             ) ** .5
-            mapping_distance = np.sum(mapping_distance_per_player, axis=1)
-            target_full_table_id_per_row = \
-                np.where(mapping_distance < min_distance_per_row, full_table_id_np[:, target_column_index],
-                         target_full_table_id_per_row)
-            min_distance_per_row = \
-                np.where(mapping_distance < min_distance_per_row, mapping_distance, min_distance_per_row)
+            mapping_euclidean_distance = np.sum(mapping_euclidean_distance_per_player, axis=1)
+            min_euclidean_distance_per_row = np.where(mapping_euclidean_distance < min_euclidean_distance_per_row,
+                                                      mapping_euclidean_distance, min_euclidean_distance_per_row)
+            # use manhattan distance to find which player is target, as that global misalignments
+            # may sacrifice target accuracy for overall accuracy
+            mapping_manhattan_distance_per_player = (
+                    np.abs(alive_pos_np[:, column_indices, 0] - base_point_np[:, player_indices, 0]) +
+                    np.abs(alive_pos_np[:, column_indices, 1] - base_point_np[:, player_indices, 1]) +
+                    np.abs(alive_pos_np[:, column_indices, 2] - base_point_np[:, player_indices, 2])
+            )
+            mapping_manhattan_distance = np.sum(mapping_manhattan_distance_per_player, axis=1)
+            target_full_table_id_per_row = np.where(mapping_manhattan_distance < min_manhattan_distance_per_row,
+                                                    full_table_id_np[:, target_column_index], target_full_table_id_per_row)
+            min_manhattan_distance_per_row = np.where(mapping_manhattan_distance < min_manhattan_distance_per_row,
+                                                      mapping_manhattan_distance, min_manhattan_distance_per_row)
 
         id_with_distance_df = id_df.copy()
-        id_with_distance_df[l2_distance_col] = min_distance_per_row
+        id_with_distance_df[l2_distance_col] = min_euclidean_distance_per_row
         id_with_distance_df[target_full_table_id_col] = target_full_table_id_per_row
         id_with_distance_df[hdf5_id_col] = i
 
@@ -102,6 +117,8 @@ def get_nearest_neighbors_one_situation(ct_pos: List[Vec3], t_pos: List[Vec3], n
         min_distance_per_round_df = id_with_distance_sorted_by_round_df.groupby(round_id_column, as_index=False) \
             .first().iloc[:num_matches]
         min_distance_rounds_per_hdf5.append(min_distance_per_round_df)
+        if i == 39:
+            print('hi')
 
     min_distance_rounds_df = pd.concat(min_distance_rounds_per_hdf5).sort_values(l2_distance_col).iloc[:num_matches]
     plot_min_distance_rounds(loaded_model, min_distance_rounds_df, situation_name)
@@ -183,7 +200,7 @@ defend_b_ct_hole_two_teammates = PositionSituationParameters(
 )
 
 if __name__ == "__main__":
-    get_nearest_neighbors([attack_a_spawn_t_long])
+    get_nearest_neighbors([defend_a_cat_teammates_behind])
     #get_nearest_neighbors([attack_a_spawn_t_long, attack_a_spawn_t_long_two_teammates, attack_a_spawn_t_extended_a,
     #                       attack_b_hole_teammate_b_doors, attack_b_hole_teammate_b_hole, defend_a_cat,
     #                       defend_a_cat_teammates_behind, defend_a_ct_long, defend_a_ct_long_with_teammate,

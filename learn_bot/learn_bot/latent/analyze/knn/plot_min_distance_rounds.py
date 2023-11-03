@@ -20,7 +20,8 @@ target_full_table_id_col = 'target full table id'
 
 
 # note: this id_df is only for rows in all_np, which may not be all rows in data set
-def all_np_to_pos_alive_df(all_np: np.ndarray, id_df: pd.DataFrame, loaded_model: LoadedModel) -> pd.DataFrame:
+def all_np_to_pos_alive_df(all_np: np.ndarray, id_df: pd.DataFrame, hdf5_id: int,
+                           loaded_model: LoadedModel) -> pd.DataFrame:
     player_column_indices = PlayerColumnIndices(loaded_model.model)
 
     column_names: List[str] = []
@@ -33,7 +34,9 @@ def all_np_to_pos_alive_df(all_np: np.ndarray, id_df: pd.DataFrame, loaded_model
             column_indices.append(player_column_indices.pos_cols[i][d])
 
     pos_alive_only_df = pd.DataFrame(all_np[:, column_indices], columns=column_names)
-    return pd.concat([pos_alive_only_df, id_df.reset_index()], axis=1)
+    pos_alive_df = pd.concat([pos_alive_only_df, id_df.reset_index()], axis=1)
+    pos_alive_df[hdf5_id_col] = hdf5_id
+    return pos_alive_df
 
 
 def plot_min_distance_rounds(loaded_model: LoadedModel, min_distance_rounds_df: pd.DataFrame, test_name: str):
@@ -42,11 +45,13 @@ def plot_min_distance_rounds(loaded_model: LoadedModel, min_distance_rounds_df: 
     for i, hdf5_wrapper in enumerate(loaded_model.dataset.data_hdf5s):
         min_distance_rounds_cur_hdf5 = min_distance_rounds_df[min_distance_rounds_df[hdf5_id_col] == i]
         for _, round_row in min_distance_rounds_cur_hdf5.iterrows():
+            if i != 39 or round_row[round_id_column] != 521:
+                continue
             min_distance_condition = (hdf5_wrapper.id_df[round_id_column] == round_row[round_id_column]) & \
                                      (hdf5_wrapper.id_df[row_id_column] >= round_row[row_id_column])
             min_distance_id_df = hdf5_wrapper.id_df[min_distance_condition]
             min_distance_np = hdf5_wrapper.get_all_input_data()[min_distance_id_df[row_id_column]]
-            min_distance_pos_dfs.append(all_np_to_pos_alive_df(min_distance_np, min_distance_id_df, loaded_model))
+            min_distance_pos_dfs.append(all_np_to_pos_alive_df(min_distance_np, min_distance_id_df, i, loaded_model))
             target_full_table_ids.append(round_row[target_full_table_id_col])
 
     load_data_option = dataclasses.replace(all_human_load_data_option,
