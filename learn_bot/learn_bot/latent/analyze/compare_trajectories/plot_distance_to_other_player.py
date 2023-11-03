@@ -27,8 +27,12 @@ def extra_data_from_metric_title(metric_title: str, predicted: bool) -> str:
         start_str = "vs "
         end_str = " Distribution"
 
-    start_index = metric_title.index(start_str) + len(start_str)
-    end_index = metric_title.index(end_str)
+    if start_str in metric_title:
+        start_index = metric_title.index(start_str) + len(start_str)
+        end_index = metric_title.index(end_str)
+    else:
+        start_index = 0
+        end_index = len(metric_title)
 
     return metric_title[start_index:end_index] + (" All Data" if predicted else " Most Similar")
 

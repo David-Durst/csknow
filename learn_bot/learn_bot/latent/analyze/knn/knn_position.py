@@ -24,7 +24,7 @@ class PositionSituationParameters:
 
 def get_nearest_neighbors(situations: List[PositionSituationParameters], num_matches: int = 100) -> pd.DataFrame:
     load_data_result = LoadDataResult(load_data_options)
-    loaded_model = load_model_file(load_data_result)
+    loaded_model = load_model_file(load_data_result, load_pd=False)
     load_data_result.multi_hdf5_wrapper.create_np_arrays(loaded_model.model.cts)
 
     for situation in situations:
@@ -49,10 +49,10 @@ def get_nearest_neighbors_one_situation(ct_pos: List[Vec3], t_pos: List[Vec3], n
         alive_pos_np = alive_pos_np.astype(np.float32)
 
         base_point_np = np.zeros_like(alive_pos_np)
-        for i, player_pos in enumerate(players_pos):
-            base_point_np[:, i, 0] = player_pos.x
-            base_point_np[:, i, 1] = player_pos.y
-            base_point_np[:, i, 2] = player_pos.z
+        for j, player_pos in enumerate(players_pos):
+            base_point_np[:, j, 0] = player_pos.x
+            base_point_np[:, j, 1] = player_pos.y
+            base_point_np[:, j, 2] = player_pos.z
 
 
         # find min distance from each point to the base point across all player mappings

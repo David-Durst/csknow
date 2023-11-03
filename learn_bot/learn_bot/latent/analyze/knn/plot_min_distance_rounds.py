@@ -1,4 +1,5 @@
 import dataclasses
+import os
 from typing import List
 
 import numpy as np
@@ -31,14 +32,14 @@ def all_np_to_pos_alive_df(all_np: np.ndarray, id_df: pd.DataFrame, loaded_model
             column_indices.append(player_column_indices.pos_cols[i][d])
 
     pos_alive_only_df = pd.DataFrame(all_np[:, column_indices], columns=column_names)
-    return pd.concat([pos_alive_only_df, id_df], axis=1)
+    return pd.concat([pos_alive_only_df, id_df.reset_index()], axis=1)
 
 
 def plot_min_distance_rounds(loaded_model: LoadedModel, min_distance_rounds_df: pd.DataFrame, test_name: str):
     min_distance_pos_dfs: List[pd.DataFrame] = []
     for i, hdf5_wrapper in enumerate(loaded_model.dataset.data_hdf5s):
         min_distance_rounds_cur_hdf5 = min_distance_rounds_df[min_distance_rounds_df[hdf5_id_col] == i]
-        for round_row in min_distance_rounds_cur_hdf5.iterrows():
+        for _, round_row in min_distance_rounds_cur_hdf5.iterrows():
             min_distance_condition = (hdf5_wrapper.id_df[round_id_column] == round_row[round_id_column]) & \
                                      (hdf5_wrapper.id_df[row_id_column] >= round_row[row_id_column])
             min_distance_id_df = hdf5_wrapper.id_df[min_distance_condition]
@@ -49,9 +50,10 @@ def plot_min_distance_rounds(loaded_model: LoadedModel, min_distance_rounds_df: 
                                            custom_rollout_extension="human_knn")
     config = dataclasses.replace(all_human_vs_all_human_config,
                                  predicted_load_data_options=load_data_option,
-                                 metric_cost_title=f"Human KNN {test_name} vs")
+                                 metric_cost_title=f"Human KNN {test_name}")
     plots_path = similarity_plots_path / load_data_option.custom_rollout_extension
+    os.makedirs(plots_path, exist_ok=True)
     plot_trajectory_dfs_and_event(min_distance_pos_dfs, config, True, True, True, plot_starts=True) \
-        .save(plots_path / f'{test_name}'.png)
+        .save(plots_path / f'{test_name}.png')
 
 

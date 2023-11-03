@@ -60,7 +60,9 @@ class TrainType(Enum):
 
 
 default_hyperparameter_options = HyperparameterOptions()
-hyperparameter_option_range = [HyperparameterOptions(num_input_time_steps=5, bc_epochs=60, internal_width=1024, layers=24, learning_rate=1e-6, control_type=ControlType.TimeControl),
+hyperparameter_option_range = [HyperparameterOptions(num_input_time_steps=1, control_type=ControlType.TimeControl),
+                               HyperparameterOptions(num_input_time_steps=1, control_type=ControlType.SimilarityControl),
+                               HyperparameterOptions(num_input_time_steps=5, bc_epochs=60, internal_width=1024, layers=24, learning_rate=1e-6, control_type=ControlType.TimeControl),
                                HyperparameterOptions(num_input_time_steps=5, bc_epochs=60, internal_width=1024, layers=24, control_type=ControlType.SimilarityControl),
                                HyperparameterOptions(num_input_time_steps=1, control_type=ControlType.SimilarityControl,
                                                      layers=20, internal_width=512),

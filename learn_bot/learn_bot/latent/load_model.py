@@ -38,7 +38,7 @@ class LoadedModel:
     cur_inference_df: Optional[pd.DataFrame]
 
     def __init__(self, column_transformers: IOColumnTransformers, model: TransformerNestedHiddenLatentModel,
-                 dataset: MultipleLatentHDF5Dataset):
+                 dataset: MultipleLatentHDF5Dataset, load_pd: bool = True):
         self.column_transformers = column_transformers
         self.model = model
         self.dataset = dataset
@@ -46,7 +46,8 @@ class LoadedModel:
         for i, hdf5_wrapper in enumerate(self.dataset.data_hdf5s):
             self.filename_to_hdf5_index[str(hdf5_wrapper.hdf5_path.name)] = i
         self.cur_hdf5_index = 0
-        self.load_cur_hdf5_as_pd()
+        if load_pd:
+            self.load_cur_hdf5_as_pd()
         # this will be set later depending on if doing off policy or on policy inference
         self.cur_inference_df = None
 
@@ -75,7 +76,7 @@ class LoadedModel:
 
 
 def load_model_file(loaded_data: LoadDataResult, use_test_data_only: bool = False,
-                    model_name_override: Optional[str] = None) -> LoadedModel:
+                    model_name_override: Optional[str] = None, load_pd: bool = True) -> LoadedModel:
     if len(sys.argv) < 2 and model_name_override is None:
         raise Exception("must pass checkpoint folder name as argument, like "
                         "07_02_2023__14_32_51_e_60_b_512_lr_4e-05_wd_0.0_l_2_h_4_n_20.0_t_5_c_human_with_added_bot_nav")
@@ -102,4 +103,5 @@ def load_model_file(loaded_data: LoadDataResult, use_test_data_only: bool = Fals
     model.load_state_dict(model_file['model_state_dict'])
     model.to(CUDA_DEVICE_STR)
 
-    return LoadedModel(column_transformers, model, MultipleLatentHDF5Dataset(hdf5_wrappers, column_transformers))
+    return LoadedModel(column_transformers, model, MultipleLatentHDF5Dataset(hdf5_wrappers, column_transformers),
+                       load_pd=load_pd)
