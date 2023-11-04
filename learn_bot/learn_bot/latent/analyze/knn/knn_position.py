@@ -130,9 +130,9 @@ def get_nearest_neighbors_one_situation(ct_pos: List[Vec3], t_pos: List[Vec3], n
 
     min_distance_rounds_df = pd.concat(min_distance_rounds_per_hdf5).sort_values(l2_distance_col).iloc[:num_matches]
     #print(f"round id: {min_distance_rounds_df['round id'].iloc[0]}, hdf5 id: {min_distance_rounds_df['hdf5 id'].iloc[0]}")
-    plot_min_distance_rounds(loaded_model, min_distance_rounds_df, situation_name, None, num_matches)
-    #plot_min_distance_rounds(loaded_model, min_distance_rounds_df, situation_name, True)
-    #plot_min_distance_rounds(loaded_model, min_distance_rounds_df, situation_name, False)
+    #plot_min_distance_rounds(loaded_model, min_distance_rounds_df, situation_name, None, num_matches)
+    plot_min_distance_rounds(loaded_model, min_distance_rounds_df, situation_name, True, num_matches)
+    plot_min_distance_rounds(loaded_model, min_distance_rounds_df, situation_name, False, num_matches)
 
 
 attack_a_spawn_t_long = PositionSituationParameters(

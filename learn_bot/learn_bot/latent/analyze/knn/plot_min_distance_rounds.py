@@ -69,7 +69,10 @@ def plot_min_distance_rounds(loaded_model: LoadedModel, min_distance_rounds_df: 
     config = dataclasses.replace(all_human_vs_all_human_config,
                                  predicted_load_data_options=load_data_option,
                                  metric_cost_title=f"Human KNN {test_name}")
-    plots_path = similarity_plots_path / load_data_option.custom_rollout_extension / f"matches_{num_matches}"
+    option_str = f"matches_{num_matches}"
+    if restrict_future is not None:
+        option_str += f"_restrict_future_{restrict_future}"
+    plots_path = similarity_plots_path / load_data_option.custom_rollout_extension / option_str
     os.makedirs(plots_path, exist_ok=True)
     restrict_future_str = ""
     if restrict_future is not None:
