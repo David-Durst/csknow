@@ -17,6 +17,7 @@ from learn_bot.latent.place_area.column_names import specific_player_place_area_
 l2_distance_col = 'l2 distance'
 hdf5_id_col = 'hdf5 id'
 target_full_table_id_col = 'target full table id'
+max_game_tick_number_column = 'max ' + game_tick_number_column
 
 
 # note: this id_df is only for rows in all_np, which may not be all rows in data set
@@ -50,7 +51,7 @@ def plot_min_distance_rounds(loaded_model: LoadedModel, min_distance_rounds_df: 
     for i, hdf5_wrapper in enumerate(loaded_model.dataset.data_hdf5s):
         min_distance_rounds_cur_hdf5 = min_distance_rounds_df[min_distance_rounds_df[hdf5_id_col] == i]
         for _, round_row in min_distance_rounds_cur_hdf5.iterrows():
-            #if i != 22 or round_row[round_id_column] != 126:
+            #if i != 18 or round_row[round_id_column] != 489:
             #    continue
             min_distance_condition = (hdf5_wrapper.id_df[round_id_column] == round_row[round_id_column]) & \
                                      (hdf5_wrapper.id_df[row_id_column] >= round_row[row_id_column])

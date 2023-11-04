@@ -7,9 +7,9 @@ import math
 
 from learn_bot.latent.analyze.knn.generate_player_index_mappings import generate_all_player_to_column_mappings
 from learn_bot.latent.analyze.knn.plot_min_distance_rounds import plot_min_distance_rounds, l2_distance_col, \
-    hdf5_id_col, target_full_table_id_col
+    hdf5_id_col, target_full_table_id_col, max_game_tick_number_column, game_tick_rate
 from learn_bot.latent.analyze.knn.select_alive_players import get_id_df_and_alive_pos_and_full_table_id_np
-from learn_bot.latent.engagement.column_names import round_id_column
+from learn_bot.latent.engagement.column_names import round_id_column, game_tick_number_column
 from learn_bot.latent.load_model import load_model_file, LoadedModel
 from learn_bot.latent.place_area.load_data import LoadDataResult
 from learn_bot.latent.train import load_data_options
@@ -109,14 +109,27 @@ def get_nearest_neighbors_one_situation(ct_pos: List[Vec3], t_pos: List[Vec3], n
         id_with_distance_df[target_full_table_id_col] = target_full_table_id_per_row
         id_with_distance_df[hdf5_id_col] = i
 
+        # ensure at least 5 seconds of gameplay to track
+        round_and_max_game_tick_number = id_with_distance_df \
+            .groupby(round_id_column, as_index=False)[game_tick_number_column].max() \
+            .rename({game_tick_number_column: max_game_tick_number_column}, axis=1)
+        id_with_distance_max_tick = id_with_distance_df.merge(round_and_max_game_tick_number, how="left",
+                                                              on=round_id_column)
+        id_with_distance_time_limited_tick = \
+            id_with_distance_max_tick[(id_with_distance_max_tick[max_game_tick_number_column] -
+                                       id_with_distance_max_tick[game_tick_number_column]) > game_tick_rate * 5]
         # sort by distance within round, then take first row to get best match
-        id_with_distance_sorted_by_round_df = id_with_distance_df.sort_values([round_id_column, l2_distance_col])
-        min_distance_per_round_df = id_with_distance_sorted_by_round_df.groupby(round_id_column, as_index=False) \
+        id_sorted_by_round_distance_df = \
+            id_with_distance_time_limited_tick.sort_values([round_id_column, l2_distance_col])
+        min_distance_per_round_df = id_sorted_by_round_distance_df.groupby(round_id_column, as_index=False) \
             .first().sort_values(l2_distance_col).iloc[:num_matches]
         min_distance_rounds_per_hdf5.append(min_distance_per_round_df)
+        #if i == 18:
+        #    print(min_distance_per_round_df[[hdf5_id_col, round_id_column, l2_distance_col]])
+        #    print('breakpoint')
 
     min_distance_rounds_df = pd.concat(min_distance_rounds_per_hdf5).sort_values(l2_distance_col).iloc[:num_matches]
-    print(f"round id: {min_distance_rounds_df['round id'].iloc[0]}, hdf5 id: {min_distance_rounds_df['hdf5 id'].iloc[0]}")
+    #print(f"round id: {min_distance_rounds_df['round id'].iloc[0]}, hdf5 id: {min_distance_rounds_df['hdf5 id'].iloc[0]}")
     plot_min_distance_rounds(loaded_model, min_distance_rounds_df, situation_name, None, num_matches)
     #plot_min_distance_rounds(loaded_model, min_distance_rounds_df, situation_name, True)
     #plot_min_distance_rounds(loaded_model, min_distance_rounds_df, situation_name, False)
@@ -198,7 +211,7 @@ defend_b_ct_hole_two_teammates = PositionSituationParameters(
 )
 
 if __name__ == "__main__":
-    #get_nearest_neighbors([attack_b_hole_teammate_b_hole], num_matches=1)
+    #get_nearest_neighbors([attack_a_spawn_t_long_two_teammates], num_matches=5)
     #get_nearest_neighbors([attack_b_hole_teammate_b_hole], num_matches=100)
     for num_matches in [1, 5, 10, 20, 50, 100]:
         get_nearest_neighbors([attack_a_spawn_t_long, attack_a_spawn_t_long_two_teammates, attack_a_spawn_t_extended_a,
