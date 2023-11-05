@@ -35,6 +35,7 @@ tests_to_compare: List[List[str]] = [
 ]
 
 
+player_type_column = 'Player Type'
 base_test_name_column = 'Base Test'
 base_mean_time_valid_column = 'Base Mean Time Valid'
 base_std_time_valid_column = 'Base Std Time Valid'
@@ -45,7 +46,7 @@ t_column = 'T Score'
 p_column = 'P Value'
 
 
-def run_t_test(data_dir: Path) -> pd.DataFrame:
+def run_t_test(data_dir: Path, player_type: str) -> pd.DataFrame:
     print(f'processing {data_dir}')
     metrics_dfs = load_metrics(data_dir)
     t_dicts: List[Dict] = []
@@ -61,6 +62,7 @@ def run_t_test(data_dir: Path) -> pd.DataFrame:
             other_percents_std = other_percents.std()
             t_test_result = scipy.stats.ttest_ind(base_percents, other_percents)
             t_dicts.append({
+                player_type_column: player_type,
                 base_test_name_column: base_test_name,
                 base_mean_time_valid_column: base_percents_mean,
                 base_std_time_valid_column: base_percents_std,
@@ -71,16 +73,18 @@ def run_t_test(data_dir: Path) -> pd.DataFrame:
                 p_column: t_test_result.pvalue
             })
     t_df = pd.DataFrame.from_records(t_dicts)
-    t_df.to_csv(data_dir / t_tests_csv, float_format='%.3f')
+    #t_df.to_csv(data_dir / t_tests_csv, float_format='%.3f')
     return t_df
 
 
 if __name__ == "__main__":
     human_knn_dir = similarity_plots_path / 'human_knn' / 'matches_20_restrict_future_True'
-    run_t_test(human_knn_dir)
-    bot_11_4 = similarity_plots_path / '_11_4_23_prebaked_no_mask_100_tries'
-    run_t_test(bot_11_4)
-    bot_11_2 = similarity_plots_path / '_11_2_23_prebaked_no_mask_100_tries'
-    run_t_test(bot_11_2)
+    human_knn_df = run_t_test(human_knn_dir, 'human knn 20 True')
+    bot_11_4_dir = similarity_plots_path / '_11_4_23_prebaked_no_mask_100_tries'
+    bot_11_4_df = run_t_test(bot_11_4_dir, '11 4 23')
+    bot_11_2_dir = similarity_plots_path / '_11_2_23_prebaked_no_mask_100_tries'
+    bot_11_2_df = run_t_test(bot_11_2_dir, '11 2 23')
+    all_df = pd.concat([human_knn_df, bot_11_2_df, bot_11_4_df])
+    all_df.to_csv(bot_11_4_dir / t_tests_csv, float_format='%.3f')
 
 
