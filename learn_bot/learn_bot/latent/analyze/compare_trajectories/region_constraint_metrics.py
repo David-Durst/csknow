@@ -183,4 +183,4 @@ def check_constraint_metrics(round_trajectory_dfs: List[pd.DataFrame], test_name
     plot_constraint_on_img(trajectories_img, constraint)
 
     return ConstraintResult(test_name, num_trials, percent_constraint_valid_per_round_series.mean(),
-                            percent_constraint_valid_per_round_series.var())
+                            percent_constraint_valid_per_round_series.std())
