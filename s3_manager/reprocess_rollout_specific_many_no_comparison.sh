@@ -19,13 +19,13 @@ export IFS=","
 i=0
 for appendix in $2; do
     python disable.py rollout
-    python enable rollout $1_$appendix.dem
+    python enable.py rollout $1_$appendix.dem
     cd ../demo_parser
-    go run cmd/main.go -ro -dn _$2_$i
+    go run cmd/main.go -ro -dn _$1_$appendix
     cd ../analytics
-    ./scripts/create_rollout_other_datasets.sh $2_$i
+    ./scripts/create_rollout_other_datasets.sh $1_$appendix
     cd ../learn_bot
-    python -m learn_bot.latent.analyze.compare_trajectories.plot_trajectories_independently 11_01_2023__15_13_54_iw_1024_bc_60_pr_0_fr_0_b_1024_it_5_lr_1e-06_wd_0.0_l_24_h_4_n_20.0_ros_2.0_ct_TimeControl_pm_NoMask_nm_False_om_NoMask_w_None_dh_None_c_just_human_all 0 _$2_$i
+    python -m learn_bot.latent.analyze.compare_trajectories.plot_trajectories_independently 11_01_2023__15_13_54_iw_1024_bc_60_pr_0_fr_0_b_1024_it_5_lr_1e-06_wd_0.0_l_24_h_4_n_20.0_ros_2.0_ct_TimeControl_pm_NoMask_nm_False_om_NoMask_w_None_dh_None_c_just_human_all 0 _$1_$appendix
     cd ../s3_manager
     ((i+=1))
 done

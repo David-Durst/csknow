@@ -24,7 +24,7 @@ from learn_bot.latent.place_area.column_names import round_test_name_col
 from learn_bot.latent.place_area.load_data import LoadDataResult, LoadDataOptions
 
 rollout_no_mask_load_data_option = dataclasses.replace(rollout_load_data_option,
-                                                       custom_rollout_extension= "_11_4_23_prebaked_no_mask_100_tries")
+                                                       custom_rollout_extension= "_11_2_23_prebaked_no_mask_100_tries")
 rollout_no_mask_config = dataclasses.replace(rollout_handcrafted_vs_all_human_config,
                                              predicted_load_data_options=rollout_no_mask_load_data_option,
                                              metric_cost_title="Rollout Learned No Mask Randomized vs")
