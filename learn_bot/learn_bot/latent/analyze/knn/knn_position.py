@@ -164,13 +164,13 @@ attack_b_hole_teammate_b_hole = PositionSituationParameters(
 defend_a_cat = PositionSituationParameters(
     [Vec3(563.968750, 2763.999511, 97.379516), Vec3(357.684234, 1650.239990, 27.671302)],
     [Vec3(1160.000976, 2573.304931, 96.338958)],
-    False, 0, "DefendACat"
+    False, 0, "DefendACTCat"
 )
 defend_a_cat_two_teammates = PositionSituationParameters(
     [Vec3(563.968750, 2763.999511, 97.379516), Vec3(357.684234, 1650.239990, 27.671302)],
     [Vec3(1160.000976, 2573.304931, 96.338958), Vec3(1175.846923, 2944.958984, 128.266784),
      Vec3(1427.594238, 2308.249023, 4.196350)],
-    False, 0, "DefendACatTwoTeammates"
+    False, 0, "DefendACTCatTwoTeammates"
 )
 defend_a_ct_long = PositionSituationParameters(
     [Vec3(1393.406738, 521.030822, -94.765136), Vec3(1266.489990, 1308.994018, 0.008083)],
