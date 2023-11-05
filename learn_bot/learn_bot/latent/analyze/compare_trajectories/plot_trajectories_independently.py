@@ -1,25 +1,22 @@
 import dataclasses
 import os
 import sys
-from pathlib import Path
-from typing import Set, List, Tuple, Optional
+from typing import List, Tuple
 
 import pandas as pd
 from PIL import Image
 
 from learn_bot.latent.analyze.compare_trajectories.plot_trajectories_and_events import plot_trajectory_dfs_and_event
 from learn_bot.latent.analyze.compare_trajectories.plot_trajectories_from_comparison import \
-    select_trajectories_into_dfs, RoundsForTrajectorySelection, TrajectoryPlots, concat_horizontal, concat_vertical
+    concat_horizontal
 from learn_bot.latent.analyze.compare_trajectories.process_trajectory_comparison import set_pd_print_options, \
     ComparisonConfig
-from learn_bot.latent.analyze.compare_trajectories.region_constraint_metrics import check_constraint_metrics, \
+from learn_bot.latent.analyze.compare_trajectories.region_constraints.compute_constraint_metrics import check_constraint_metrics, \
     ConstraintResult
-from learn_bot.latent.analyze.compare_trajectories.run_trajectory_comparison import all_human_load_data_option, \
-    rollout_load_data_option, rollout_handcrafted_vs_all_human_config
-from learn_bot.latent.analyze.comparison_column_names import rollout_handcrafted_vs_all_human_similarity_hdf5_data_path, \
-    similarity_plots_path
+from learn_bot.latent.analyze.compare_trajectories.run_trajectory_comparison import rollout_load_data_option, rollout_handcrafted_vs_all_human_config
+from learn_bot.latent.analyze.comparison_column_names import similarity_plots_path
 from learn_bot.latent.engagement.column_names import round_id_column, round_number_column
-from learn_bot.latent.load_model import LoadedModel, load_model_file
+from learn_bot.latent.load_model import load_model_file
 from learn_bot.latent.place_area.column_names import round_test_name_col
 from learn_bot.latent.place_area.load_data import LoadDataResult, LoadDataOptions
 

@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 
 from learn_bot.latent.analyze.compare_trajectories.plot_trajectories_and_events import plot_trajectory_dfs_and_event
-from learn_bot.latent.analyze.compare_trajectories.region_constraint_metrics import check_constraint_metrics
+from learn_bot.latent.analyze.compare_trajectories.region_constraints.compute_constraint_metrics import check_constraint_metrics
 from learn_bot.latent.analyze.compare_trajectories.run_trajectory_comparison import all_human_load_data_option, \
     all_human_vs_all_human_config
 from learn_bot.latent.analyze.comparison_column_names import similarity_plots_path
