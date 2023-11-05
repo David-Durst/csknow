@@ -50,19 +50,25 @@ test_name_to_constraint: Dict[str, PositionConstraint] = {
     "DefendBCTHoleTwoTeammates": defend_b_ct_hole,
 }
 
+test_name_column = 'test name'
+config_column = 'config'
+num_trials_column = 'num trials'
+mean_time_constraint_valid_column = 'mean time constraint valid'
+std_time_constraint_valid_column = 'std time constraint valid'
+
 
 @dataclass
 class ConstraintResult:
     test_name: str
     num_trials: int
     mean_time_constraint_valid: float
-    var_time_constraint_valid: float
+    std_time_constraint_valid: float
 
     def save(self, save_path: Path, config: str):
         with open(save_path, 'w') as f:
-            f.write('test name,config,num trials,mean time constraint valid,var time constraint valid\n')
+            f.write('test name,config,num trials,mean time constraint valid,std time constraint valid\n')
             f.write(f'{self.test_name},{config},{self.num_trials},'
-                    f'{self.mean_time_constraint_valid},{self.var_time_constraint_valid}\n')
+                    f'{self.mean_time_constraint_valid},{self.std_time_constraint_valid}\n')
 
 
 def get_player_that_moves_most(round_trajectory_df: pd.DataFrame) -> int:
