@@ -154,12 +154,12 @@ attack_a_spawn_t_extended_a = PositionSituationParameters(
 attack_b_hole_teammate_b_doors = PositionSituationParameters(
     [Vec3(-550.731201, 2076.939208, -118.991142), Vec3(-1396.848022, 2144.354980, 1.107921)],
     [Vec3(-1879.674072, 2378.484130, 8.714675)],
-    True, 0, "AttackBDoorsTeammateHole"
+    True, 0, "AttackBHoleTeammateBDoors"
 )
 attack_b_hole_teammate_b_hole = PositionSituationParameters(
     [Vec3(-550.731201, 2076.939208, -118.991142), Vec3(-1395.869873, 2652.096679, 125.027893)],
     [Vec3(-1879.674072, 2378.484130, 8.714675)],
-    True, 0, "AttackBHoleTeammateBDoors"
+    True, 0, "AttackBDoorsTeammateHole"
 )
 defend_a_cat = PositionSituationParameters(
     [Vec3(563.968750, 2763.999511, 97.379516), Vec3(357.684234, 1650.239990, 27.671302)],

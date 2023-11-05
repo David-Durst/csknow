@@ -4,10 +4,12 @@ from typing import List, Dict
 from math import pow
 
 import pandas as pd
+import scipy
 
 from learn_bot.latent.analyze.compare_trajectories.region_constraints.compute_constraint_metrics import \
-    test_name_column, num_trials_column, std_time_constraint_valid_column, mean_time_constraint_valid_column
+    test_name_column, percent_constraint_valid_column
 from learn_bot.latent.analyze.comparison_column_names import similarity_plots_path
+
 
 t_tests_csv = "t_tests.csv"
 
@@ -46,6 +48,7 @@ def run_t_test(data_dir: Path):
     t_dicts: List[Dict] = []
     for test_group in tests_to_compare:
         base_test_name = test_group[0]
+        base_percent_constraint_valid = metrics_df
         base_row = metrics_df[metrics_df[test_name_column] == base_test_name].iloc[0]
         # https://www.bmj.com/about-bmj/resources-readers/publications/statistics-square-one/7-t-tests
         for other_test_name in test_group[1:]:

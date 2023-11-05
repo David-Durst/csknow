@@ -52,23 +52,19 @@ test_name_to_constraint: Dict[str, PositionConstraint] = {
 
 test_name_column = 'test name'
 config_column = 'config'
-num_trials_column = 'num trials'
-mean_time_constraint_valid_column = 'mean time constraint valid'
-std_time_constraint_valid_column = 'std time constraint valid'
+percent_constraint_valid_column = 'percent constraint valid'
 
 
 @dataclass
 class ConstraintResult:
     test_name: str
-    num_trials: int
-    mean_time_constraint_valid: float
-    std_time_constraint_valid: float
+    percent_constraint_valid: List[float]
 
     def save(self, save_path: Path, config: str):
         with open(save_path, 'w') as f:
-            f.write('test name,config,num trials,mean time constraint valid,std time constraint valid\n')
-            f.write(f'{self.test_name},{config},{self.num_trials},'
-                    f'{self.mean_time_constraint_valid},{self.std_time_constraint_valid}\n')
+            f.write(f'{test_name_column},{config_column}{percent_constraint_valid_column}\n')
+            for v in self.percent_constraint_valid:
+                f.write(f'{self.test_name},{config},{v}\n')
 
 
 def get_player_that_moves_most(round_trajectory_df: pd.DataFrame) -> int:
@@ -147,7 +143,6 @@ def check_constraint_metrics(round_trajectory_dfs: List[pd.DataFrame], test_name
     if test_name not in test_name_to_constraint:
         return None
     constraint = test_name_to_constraint[test_name]
-    num_trials = len(round_trajectory_dfs)
     percent_constraint_valid_per_round: List[float] = []
 
     if target_full_table_ids is None:
@@ -184,9 +179,7 @@ def check_constraint_metrics(round_trajectory_dfs: List[pd.DataFrame], test_name
                 constraint_valid = x_constraint_valid & \
                                    (round_trajectory_df[player_place_area_columns.pos[1]] < constraint.y_constraint)
             percent_constraint_valid_per_round.append(constraint_valid.sum())
+        percent_constraint_valid_per_round[-1] = percent_constraint_valid_per_round[-1] * 1. / len(round_trajectory_df)
 
-    percent_constraint_valid_per_round_series: pd.Series = pd.Series(percent_constraint_valid_per_round)
     plot_constraint_on_img(trajectories_img, constraint)
-
-    return ConstraintResult(test_name, num_trials, percent_constraint_valid_per_round_series.mean(),
-                            percent_constraint_valid_per_round_series.std())
+    return ConstraintResult(test_name, percent_constraint_valid_per_round)
