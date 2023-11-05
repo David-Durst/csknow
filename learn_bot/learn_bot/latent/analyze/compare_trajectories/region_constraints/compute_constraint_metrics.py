@@ -62,7 +62,7 @@ class ConstraintResult:
 
     def save(self, save_path: Path, config: str):
         with open(save_path, 'w') as f:
-            f.write(f'{test_name_column},{config_column}{percent_constraint_valid_column}\n')
+            f.write(f'{test_name_column},{config_column},{percent_constraint_valid_column}\n')
             for v in self.percent_constraint_valid:
                 f.write(f'{self.test_name},{config},{v}\n')
 
