@@ -6,6 +6,7 @@ import numpy as np
 import pandas as pd
 
 from learn_bot.latent.analyze.compare_trajectories.plot_trajectories_and_events import plot_trajectory_dfs_and_event
+from learn_bot.latent.analyze.compare_trajectories.region_constraint_metrics import check_constraint_metrics
 from learn_bot.latent.analyze.compare_trajectories.run_trajectory_comparison import all_human_load_data_option, \
     all_human_vs_all_human_config
 from learn_bot.latent.analyze.comparison_column_names import similarity_plots_path
@@ -77,8 +78,10 @@ def plot_min_distance_rounds(loaded_model: LoadedModel, min_distance_rounds_df: 
     restrict_future_str = ""
     if restrict_future is not None:
         restrict_future_str = f"_r_{restrict_future}"
-    plot_trajectory_dfs_and_event(min_distance_pos_dfs, config, True, True, True, plot_starts=True,
-                                  only_plot_post_start=target_full_table_ids) \
-        .save(plots_path / f'{test_name}{restrict_future_str}.png')
+    img = plot_trajectory_dfs_and_event(min_distance_pos_dfs, config, True, True, True, plot_starts=True,
+                                  only_plot_post_start=target_full_table_ids)
+    constraint_result = check_constraint_metrics(min_distance_pos_dfs, test_name, target_full_table_ids, img)
+    img.save(plots_path / f'{test_name}{restrict_future_str}.png')
+    constraint_result.save(plots_path / f'{test_name}{restrict_future_str}.csv', 'human knn')
 
 

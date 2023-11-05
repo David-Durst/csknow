@@ -12,6 +12,8 @@ from learn_bot.latent.analyze.compare_trajectories.plot_trajectories_from_compar
     select_trajectories_into_dfs, RoundsForTrajectorySelection, TrajectoryPlots, concat_horizontal, concat_vertical
 from learn_bot.latent.analyze.compare_trajectories.process_trajectory_comparison import set_pd_print_options, \
     ComparisonConfig
+from learn_bot.latent.analyze.compare_trajectories.region_constraint_metrics import check_constraint_metrics, \
+    ConstraintResult
 from learn_bot.latent.analyze.compare_trajectories.run_trajectory_comparison import all_human_load_data_option, \
     rollout_load_data_option, rollout_handcrafted_vs_all_human_config
 from learn_bot.latent.analyze.comparison_column_names import rollout_handcrafted_vs_all_human_similarity_hdf5_data_path, \
@@ -41,10 +43,11 @@ rollout_no_mask_not_randomized_config = dataclasses.replace(rollout_handcrafted_
 
 
 def plot_trajectories_for_one_config(load_data_options: LoadDataOptions, config: ComparisonConfig) -> \
-        Tuple[List[Image.Image],  List[str]]:
+        Tuple[List[Image.Image], List[ConstraintResult],  List[str]]:
     print(f"handling {load_data_options.custom_rollout_extension}")
     set_pd_print_options()
-    result: List[Image] = []
+    img_result: List[Image] = []
+    constraint_result: List[ConstraintResult] = []
 
     # load data
     load_data_result = LoadDataResult(load_data_options)
@@ -65,15 +68,20 @@ def plot_trajectories_for_one_config(load_data_options: LoadDataOptions, config:
         for round_id in round_ids:
             round_trajectory_dfs.append(loaded_model.cur_loaded_df[loaded_model.cur_loaded_df[round_id_column] ==
                                                                    round_id])
-        result.append(plot_trajectory_dfs_and_event(round_trajectory_dfs, config, True, True, True, plot_starts=True))
+        img_result.append(plot_trajectory_dfs_and_event(round_trajectory_dfs, config, True, True, True, plot_starts=True))
+        constraint_result.append(check_constraint_metrics(round_trajectory_dfs, round_test_name, None, img_result[-1]))
 
-    return result, list(unique_round_test_names)
+    return img_result, constraint_result, list(unique_round_test_names)
 
 
 def run_independent_trajectory_vis():
     config_cases_str = sys.argv[2]
     trajectory_plots_by_config = []
     trajectory_plots_names = []
+
+    plots_path = similarity_plots_path / rollout_no_mask_load_data_option.custom_rollout_extension
+    os.makedirs(plots_path, exist_ok=True)
+
     for config_case_str in config_cases_str.split(','):
         config_case = int(config_case_str)
 
@@ -95,10 +103,10 @@ def run_independent_trajectory_vis():
             config = dataclasses.replace(config, predicted_load_data_options=data_option)
         result = plot_trajectories_for_one_config(data_option, config)
         trajectory_plots_by_config.append(result[0])
-        trajectory_plots_names = result[1]
+        for constraint_result in result[1]:
+            constraint_result.save(plots_path / f'{constraint_result.test_name}.csv', config.metric_cost_title)
+        trajectory_plots_names = result[2]
 
-    plots_path = similarity_plots_path / rollout_no_mask_load_data_option.custom_rollout_extension
-    os.makedirs(plots_path, exist_ok=True)
     trajectory_plots_by_test_name = [[p[i] for p in trajectory_plots_by_config] for i in range(len(trajectory_plots_names))]
     image_per_test_name = [concat_horizontal(plots) for plots in trajectory_plots_by_test_name]
     for img, test_name in zip(image_per_test_name, trajectory_plots_names):

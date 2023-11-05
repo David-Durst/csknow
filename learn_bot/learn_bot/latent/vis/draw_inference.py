@@ -19,6 +19,8 @@ player_width = 32
 
 d2_top_left_x = -2476
 d2_top_left_y = 3239
+d2_bottom_right_x = 2029.60
+d2_bottom_right_y = -1266.60
 
 _minimap_width = 1300
 _minimap_height = 1300
