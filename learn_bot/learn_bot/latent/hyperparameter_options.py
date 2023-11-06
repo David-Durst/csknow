@@ -2,6 +2,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Optional
 
+from learn_bot.latent.order.column_names import num_radial_ticks
 from learn_bot.latent.place_area.pos_abs_from_delta_grid_or_radial import data_ticks_per_second, data_ticks_per_sim_tick
 from learn_bot.latent.train_paths import checkpoints_path
 from learn_bot.latent.transformer_nested_hidden_latent_model import PlayerMaskType, OutputMaskType, ControlType
@@ -36,7 +37,7 @@ class HyperparameterOptions:
     def __str__(self):
         return f"{now_str}_iw_{self.internal_width}_" \
                f"bc_{self.bc_epochs}_pr_{self.probabilistic_rollout_epochs}_fr_{self.full_rollout_epochs}_" \
-               f"b_{self.batch_size}_it_{self.num_input_time_steps}_" \
+               f"b_{self.batch_size}_it_{self.num_input_time_steps}_ot_{num_radial_ticks}_" \
                f"lr_{self.learning_rate}_wd_{self.weight_decay}_" \
                f"l_{self.layers}_h_{self.heads}_n_{self.noise_var}_" \
                f"ros_{self.rollout_seconds}_ct_{str(self.control_type)}_pm_{str(self.player_mask_type)}_" \

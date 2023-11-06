@@ -76,6 +76,7 @@ class MultipleLatentHDF5Dataset(Dataset):
                 torch.stack([item[4] for item in inner_items])
 
     def inner_getitem(self, idx):
+        print('hi')
         # hdf5_index selects file, idx_in_hdf5 selects location in file
         hdf5_index = 0
         idx_in_hdf5 = 0

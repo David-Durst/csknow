@@ -6,7 +6,8 @@ import torch
 from torch import nn
 
 from learn_bot.latent.engagement.column_names import max_enemies
-from learn_bot.latent.order.column_names import team_strs, player_team_str, flatten_list, all_prior_and_cur_ticks
+from learn_bot.latent.order.column_names import team_strs, player_team_str, flatten_list, all_prior_and_cur_ticks, \
+    num_radial_ticks
 from learn_bot.latent.place_area.column_names import specific_player_place_area_columns, num_radial_bins, \
     walking_modifier, ducking_modifier
 from learn_bot.latent.place_area.pos_abs_from_delta_grid_or_radial import NavData, \
@@ -197,7 +198,7 @@ class TransformerNestedHiddenLatentModel(nn.Module):
         self.transformer_encoder = nn.TransformerEncoder(transformer_encoder_layer, num_layers=num_layers, enable_nested_tensor=False)
 
         self.decoder = nn.Sequential(
-            nn.Linear(self.internal_width, num_radial_bins),
+            nn.Linear(self.internal_width, num_radial_bins * num_radial_ticks),
         )
 
         self.prob_output = nn.Sequential(
@@ -267,9 +268,10 @@ class TransformerNestedHiddenLatentModel(nn.Module):
         # keep output temporal nesting for now, rest of system assumes it exists
         transformed_nested = rearrange(transformer_output, "b p d -> b p 1 d", p=self.num_players)
         latent = self.decoder(transformed_nested)
-        prob_output = self.prob_output(latent / temperature)
+        latent_nested = rearrange(latent, 'b p 1 (t d) -> b p t d', t=num_radial_ticks)
+        prob_output = self.prob_output(latent_nested / temperature)
         # output 0 is batch, 1 is players, 2 is output time step, 3 is probabilities/logits
-        return latent, prob_output, one_hot_prob_to_index(prob_output)
+        return latent_nested, prob_output, one_hot_prob_to_index(prob_output)
 
 
 def combine_padding_sequence_masks(sequence_mask: torch.Tensor, padding_mask: torch.Tensor, num_heads: int,
