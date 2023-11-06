@@ -214,6 +214,7 @@ if __name__ == "__main__":
     #get_nearest_neighbors([attack_a_spawn_t_long_two_teammates], num_matches=5)
     #get_nearest_neighbors([attack_b_hole_teammate_b_doors, attack_b_doors_teammate_b_hole], num_matches=5)
     #get_nearest_neighbors([defend_b_ct_hole], num_matches=100)
+    #get_nearest_neighbors([defend_a_ct_long], num_matches=10)
     #exit(0)
     for num_matches in [1, 5, 10, 20, 50, 100]:
         get_nearest_neighbors([attack_a_spawn_t_long, attack_a_spawn_t_long_two_teammates, attack_a_spawn_t_extended_a,
