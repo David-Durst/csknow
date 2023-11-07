@@ -141,6 +141,7 @@ class TransformerNestedHiddenLatentModel(nn.Module):
         ])
         self.num_similarity_columns = 2
         self.num_input_time_steps = num_input_time_steps
+        self.num_output_time_steps = num_radial_ticks
         self.control_type = control_type
         self.time_control_columns = get_columns_by_str(cts, "player decrease distance to c4")
 
@@ -182,6 +183,12 @@ class TransformerNestedHiddenLatentModel(nn.Module):
                                   self.spatial_positional_encoder_out_dim * num_input_time_steps + \
                                   num_input_time_steps # for the nearest_crosshair_to_enemy_columns
 
+        # positional encoding library doesn't play well with torchscript, so I'll just make the
+        # encoding matrices upfront and add them during inference
+        temporal_positional_encoder = PositionalEncoding1D(self.internal_width)
+        self.temporal_positional_encoding = \
+            temporal_positional_encoder(torch.zeros([self.num_players, self.num_output_time_steps, self.internal_width]))
+
         # build actual model layers
         self.embedding_model = nn.Sequential(
             nn.Linear(self.columns_per_player, self.internal_width),
@@ -198,7 +205,7 @@ class TransformerNestedHiddenLatentModel(nn.Module):
         self.transformer_encoder = nn.TransformerEncoder(transformer_encoder_layer, num_layers=num_layers, enable_nested_tensor=False)
 
         self.decoder = nn.Sequential(
-            nn.Linear(self.internal_width, num_radial_bins * num_radial_ticks),
+            nn.Linear(self.internal_width, num_radial_bins),
         )
 
         self.prob_output = nn.Sequential(
@@ -256,22 +263,39 @@ class TransformerNestedHiddenLatentModel(nn.Module):
             x_gathered = torch.cat([x_pos_encoded_per_player, x_crosshair, x_non_pos], -1)
         #x_gathered = torch.cat([x_pos_encoded, x_vel_scaled, x_non_pos], -1)
         x_embedded = self.embedding_model(x_gathered)
+        x_embedded_nested = rearrange(x_embedded, 'b p d -> b p 1 d')
+        x_embedded_nested_temporal = repeat(x_embedded_nested, 'b p 1 d -> b p repeat d',
+                                            repeat=self.num_output_time_steps)
+
+        # add temporal enocding to separate tokens
+        x_batch_player_flattened = rearrange(x_embedded_nested_temporal, "b p t d -> (b p) t d")
+        batch_temporal_positional_encoding = self.temporal_positional_encoding.repeat([x.shape[0], 1, 1]) \
+            .to(x.device.type)
+        x_batch_player_flattened_temporal_with_encoding = x_batch_player_flattened + batch_temporal_positional_encoding
+        x_player_time_flattened_temporal_with_encoding = rearrange(x_batch_player_flattened_temporal_with_encoding,
+                                                                   '(b p) t d -> b (p t) d',
+                                                                   p=self.num_players, t=self.num_output_time_steps)
+
 
         # figure out alive and dead for masking out dead ploayers
         alive_gathered = x[:, self.alive_columns]
-        dead_gathered = alive_gathered < 0.1
+        dead_gathered = alive_gathered < 0.5
 
-        combined_input_mask = combine_padding_sequence_masks(self.input_per_player_mask_cpu.to(x.device.type),
+        combined_mask = combine_padding_sequence_masks(self.input_per_player_mask_cpu.to(x.device.type),
                                                              dead_gathered, self.num_heads)
+        combined_temporal_mask = repeat(combined_mask, 'b p0 p1 -> b (p0 repeat0) (p1 repeat1)',
+                                        repeat0=self.num_output_time_steps,
+                                        repeat1=self.num_output_time_steps)
 
-        transformer_output = self.transformer_encoder(x_embedded, mask=combined_input_mask)
+        transformer_output = self.transformer_encoder(x_player_time_flattened_temporal_with_encoding,
+                                                      mask=combined_temporal_mask)
         # keep output temporal nesting for now, rest of system assumes it exists
-        transformed_nested = rearrange(transformer_output, "b p d -> b p 1 d", p=self.num_players)
+        transformed_nested = rearrange(transformer_output, "b (p t) d -> b p t d",
+                                       p=self.num_players, t=self.num_output_time_steps)
         latent = self.decoder(transformed_nested)
-        latent_nested = rearrange(latent, 'b p 1 (t d) -> b p t d', t=num_radial_ticks)
-        prob_output = self.prob_output(latent_nested / temperature)
+        prob_output = self.prob_output(latent / temperature)
         # output 0 is batch, 1 is players, 2 is output time step, 3 is probabilities/logits
-        return latent_nested, prob_output, one_hot_prob_to_index(prob_output)
+        return latent, prob_output, one_hot_prob_to_index(prob_output)
 
 
 def combine_padding_sequence_masks(sequence_mask: torch.Tensor, padding_mask: torch.Tensor, num_heads: int,
