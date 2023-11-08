@@ -7,3 +7,4 @@ humanness_plots/
 saved_models/
 trace_plots/
 *.log
+old_runs/
