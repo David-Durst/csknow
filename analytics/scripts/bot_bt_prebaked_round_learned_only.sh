@@ -26,12 +26,12 @@ if make -j 8; then
     sleep 40
     date
 
-    models=(11_07_2023__15_45_52_iw_256_bc_40_pr_0_fr_0_b_1024_it_1_ot_3_lr_1e-05_wd_0.0_l_8_h_8_n_20.0_ros_2.0_ct_TimeControl_pm_NoMask_nm_False_om_NoMask_w_None_dh_None_c_just_human_all 11_07_2023__12_23_52_iw_256_bc_20_pr_0_fr_0_b_1024_it_1_ot_3_lr_4e-05_wd_0.0_l_4_h_4_n_20.0_ros_2.0_ct_TimeControl_pm_NoMask_nm_False_om_NoMask_w_None_dh_None_c_just_human_all)
+    models=(11_08_2023__10_35_01_iw_128_bc_20_pr_0_fr_0_b_1024_it_1_ot_3_lr_4e-05_wd_0.0_l_2_h_4_n_20.0_ros_2.0_ct_TimeControl_pm_NoMask_nm_False_om_NoMask_w_None_dh_None_c_just_human_all)
     for model in "${models[@]}"
     do
         # learned no mask with position randomization
         learned_demos=()
-        for i in {0..13}
+        for i in {5..6}
         do
             cd ${script_dir}/../../learn_bot/
             ./scripts/deploy_latent_models_specific.sh $model 
