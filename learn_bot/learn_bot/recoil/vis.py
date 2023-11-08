@@ -13,6 +13,7 @@ from dataclasses import dataclass
 from pathlib import Path
 import numpy as np
 
+import learn_bot.libs.io_transforms
 from learn_bot.recoil.weapon_id_name_conversion import weapon_id_to_name, weapon_name_to_id
 
 data_path = Path(__file__).parent / '..' / '..' / '..' / 'analytics' / 'csv_outputs' / 'engagementAim.csv'
@@ -350,5 +351,5 @@ if __name__ == "__main__":
     x = all_data_df[(all_data_df[ticks_since_last_fire_column] == 0) &
                     (all_data_df[recoil_index_column] - 0.5 <= all_data_df[prior_recoil_index_column])]
     print(len(x))
-    x.copy().sort_index(axis=1).T.to_csv(bad_recoil_index_path)
+    learn_bot.libs.io_transforms.T.to_csv(bad_recoil_index_path)
     vis(all_data_df)

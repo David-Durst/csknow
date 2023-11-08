@@ -9,6 +9,7 @@ from learn_bot.latent.analyze.test_traces.run_trace_creation import *
 from learn_bot.latent.analyze.test_traces.column_names import *
 from PIL import Image, ImageDraw
 
+from learn_bot.libs.hdf5_to_pd import load_hdf5_to_pd
 from learn_bot.libs.multi_hdf5_wrapper import train_test_split_folder_path
 from learn_bot.mining.area_cluster import d2_radar_path
 from learn_bot.latent.vis.draw_inference import minimap_width, minimap_height, d2_top_left_x, d2_top_left_y, \

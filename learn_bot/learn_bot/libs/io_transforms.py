@@ -4,13 +4,11 @@ from functools import cache
 
 import numpy as np
 import pandas as pd
-from typing import List, Dict, Tuple, FrozenSet, Union, Optional
+from typing import List, Dict, Tuple, FrozenSet, Union, Optional, TypeVar
 from enum import Enum
 from abc import abstractmethod, ABC
 from torch.nn import functional as F
 import torch
-
-from learn_bot.latent.order.column_names import T
 
 CPU_DEVICE_STR = "cpu"
 CUDA_DEVICE_STR = "cuda"
@@ -21,6 +19,8 @@ FUTURE_TICKS = 13
 CUR_TICK = 1
 
 ModelOutput = Tuple[torch.Tensor, torch.Tensor, torch.Tensor]
+
+T = TypeVar('T')
 
 
 class ColumnTransformerType(Enum):

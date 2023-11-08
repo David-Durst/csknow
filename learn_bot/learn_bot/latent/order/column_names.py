@@ -1,5 +1,4 @@
 from enum import Enum
-from typing import TypeVar
 
 from learn_bot.latent.engagement.column_names import *
 from learn_bot.libs.io_transforms import flatten_list
@@ -147,8 +146,6 @@ def get_player_prior_area_grid_cell_in_place_columns(player_index: int, area_gri
 
 def get_trace_is_bot_player(player_index: int, team_str: str) -> str:
     return "trace is bot player " + team_str + " " + str(player_index)
-
-T = TypeVar('T')
 
 
 def player_team_str(team_str: str, player_index: int, uniform_space: str = False) -> str:

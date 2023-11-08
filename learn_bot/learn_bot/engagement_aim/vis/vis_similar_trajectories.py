@@ -1,5 +1,7 @@
 import pandas as pd
 import numpy as np
+
+import learn_bot.libs.io_transforms
 from learn_bot.engagement_aim.dataset import *
 from dataclasses import dataclass
 import tkinter as tk
@@ -111,7 +113,7 @@ def find_similar_trajectories(not_selected_df: pd.DataFrame, selected_df: pd.Dat
     result = []
 
     selected_row = selected_df[selected_df[tick_id_column] == tick_id].iloc[0, :].copy()
-    selected_row_df = selected_row.to_frame(0).T
+    selected_row_df = learn_bot.libs.io_transforms.T
     derived_df = not_selected_df.copy()
     # just a base true condition to && with
     conditions = derived_df[tick_id_column] == derived_df[tick_id_column]
