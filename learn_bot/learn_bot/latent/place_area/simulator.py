@@ -184,7 +184,7 @@ def match_round_lengths(df: pd.DataFrame, rollout_tensor: torch.Tensor, pred_ten
 
 
 def delta_pos_rollout(loaded_model: LoadedModel):
-    round_lengths = get_round_lengths(loaded_model.cur_loaded_df)
+    round_lengths = get_round_lengths(loaded_model.get_cur_id_df())
     rollout_tensor, similarity_tensor = build_rollout_and_similarity_tensors(round_lengths, loaded_model.cur_dataset)
     pred_tensor = torch.zeros(rollout_tensor.shape[0], loaded_model.cur_dataset.Y.shape[1])
     loaded_model.model.eval()

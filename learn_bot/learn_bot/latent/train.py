@@ -46,16 +46,6 @@ from typing import Optional
 
 time_model = False
 
-@dataclass(frozen=True)
-class TrainResult:
-    train_dataset: LatentDataset
-    test_dataset: LatentDataset
-    train_df: pd.DataFrame
-    test_df: pd.DataFrame
-    column_transformers: IOColumnTransformers
-    model: nn.Module
-
-
 class TrainType(Enum):
     DeltaPos = 1
 

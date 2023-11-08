@@ -282,8 +282,8 @@ def run_analysis_per_mask(loaded_model: LoadedModel, player_mask_config: PlayerM
         Tuple[pd.Series, pd.Series]:
     displacement_errors = DisplacementErrors()
     for i, hdf5_wrapper in enumerate(loaded_model.dataset.data_hdf5s):
-        #if i > 1:
-        #    break
+        if i > 1:
+            break
 
         print(f"Processing hdf5 {i} / {len(loaded_model.dataset.data_hdf5s)}: {hdf5_wrapper.hdf5_path}")
         per_iteration_displacement_errors: List[DisplacementErrors] = []
@@ -338,8 +338,8 @@ def run_analysis(loaded_model: LoadedModel):
     mask_result_latex_strs = ["Simulation Type & minADE Mean & minADE Std Dev & minFDE Mean & minFDE Std Dev \\\\",
                               "\\hline"]
     player_mask_configs = [PlayerMaskConfig.ALL,
-                           PlayerMaskConfig.CT, PlayerMaskConfig.T,
-                           PlayerMaskConfig.LAST_ALIVE,
+                           #PlayerMaskConfig.CT, PlayerMaskConfig.T,
+                           #PlayerMaskConfig.LAST_ALIVE,
                            PlayerMaskConfig.CONSTANT_VELOCITY]
     ades_per_mask_config: List[pd.Series] = []
     fdes_per_mask_config: List[pd.Series] = []
