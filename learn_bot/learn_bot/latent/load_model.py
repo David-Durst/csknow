@@ -34,7 +34,7 @@ class LoadedModel:
     cur_hdf5_index: int
     cur_loaded_df: pd.DataFrame
     cur_demo_names: np.ndarray
-    cur_dataset: LatentDataset
+    cur_dataset: LatentSubsetHDF5Dataset
     cur_inference_df: Optional[pd.DataFrame]
 
     def __init__(self, column_transformers: IOColumnTransformers, model: TransformerNestedHiddenLatentModel,

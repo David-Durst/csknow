@@ -4,10 +4,11 @@ from typing import Dict, Tuple, Optional
 
 from tqdm import tqdm
 
-from learn_bot.latent.latent_subset_hdf5_dataset import LatentDataset
+from learn_bot.latent.latent_subset_hdf5_dataset import LatentSubsetHDF5Dataset
 from learn_bot.latent.engagement.column_names import round_id_column, tick_id_column
 from learn_bot.latent.load_model import load_model_file, LoadedModel
-from learn_bot.latent.place_area.pos_abs_from_delta_grid_or_radial import compute_new_pos, data_ticks_per_sim_tick
+from learn_bot.latent.place_area.pos_abs_from_delta_grid_or_radial import compute_new_pos, data_ticks_per_sim_tick, \
+    one_hot_max_to_index
 from learn_bot.latent.place_area.load_data import LoadDataResult, LoadDataOptions
 from learn_bot.latent.train_paths import train_test_split_file_name
 from learn_bot.latent.transformer_nested_hidden_latent_model import *
@@ -70,7 +71,7 @@ def get_round_lengths(df: pd.DataFrame, compute_last_player_alive: bool = True) 
 
 # src tensor is variable length per round, rollout tensor is fixed length for efficiency
 # fillout rollout tensor for as much as possible for each round so have non-sim input features (like visibility)
-def build_rollout_and_similarity_tensors(round_lengths: RoundLengths, dataset: LatentDataset) -> \
+def build_rollout_and_similarity_tensors(round_lengths: RoundLengths, dataset: LatentSubsetHDF5Dataset) -> \
         Tuple[torch.Tensor,torch.Tensor]:
     rollout_tensor = torch.zeros([round_lengths.num_rounds * round_lengths.max_length_per_round, dataset.X.shape[1]])
     print(dataset.X.shape)
@@ -155,8 +156,8 @@ def step(rollout_tensor: torch.Tensor, all_similarity_tensor: torch.Tensor, pred
 
 
 # undo the fixed length across all rounds, just get right length for each round
-def match_round_lengths(df: pd.DataFrame, rollout_tensor: torch.Tensor, pred_tensor: torch.Tensor,
-                        round_lengths: RoundLengths, cts: IOColumnTransformers) -> Tuple[pd.DataFrame, pd.DataFrame]:
+def create_dfs_with_matching_round_lengths(df: pd.DataFrame, rollout_tensor: torch.Tensor, pred_tensor: torch.Tensor,
+                                           round_lengths: RoundLengths, cts: IOColumnTransformers) -> Tuple[pd.DataFrame, pd.DataFrame]:
     complete_matched_rollout_df = df.copy()
     required_indices = [round_lengths.round_id_to_list_id[round_id] * round_lengths.max_length_per_round + tick_index
                         for round_id, round_tick_range in round_lengths.round_to_tick_ids.items()
@@ -185,8 +186,8 @@ def delta_pos_rollout(loaded_model: LoadedModel):
                 pbar.update(1)
     # need to modify cur_loaded_df as rollout_df has constant length of all rounds for sim efficiency
     loaded_model.cur_loaded_df, loaded_model.cur_inference_df = \
-        match_round_lengths(loaded_model.cur_loaded_df, rollout_tensor, pred_tensor, round_lengths,
-                            loaded_model.column_transformers)
+        create_dfs_with_matching_round_lengths(loaded_model.cur_loaded_df, rollout_tensor, pred_tensor, round_lengths,
+                                               loaded_model.column_transformers)
 
 
 load_data_options = LoadDataOptions(

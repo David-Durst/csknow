@@ -1,6 +1,5 @@
 from einops import rearrange
 
-from learn_bot.latent.latent_subset_hdf5_dataset import LatentDataset
 from learn_bot.latent.load_model import LoadedModel
 from learn_bot.latent.transformer_nested_hidden_latent_model import TransformerNestedHiddenLatentModel
 from learn_bot.libs.io_transforms import IOColumnTransformers, CUDA_DEVICE_STR, get_untransformed_outputs, \

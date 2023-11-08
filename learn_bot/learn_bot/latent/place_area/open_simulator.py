@@ -23,7 +23,7 @@ from learn_bot.latent.place_area.load_data import LoadDataResult
 from learn_bot.latent.place_area.pos_abs_from_delta_grid_or_radial import NavData, data_ticks_per_second, \
     data_ticks_per_sim_tick
 from learn_bot.latent.place_area.simulator import LoadedModel, RoundLengths, PlayerEnableMask, max_enemies, \
-    build_rollout_and_similarity_tensors, match_round_lengths, step, get_round_lengths, load_data_options, \
+    build_rollout_and_similarity_tensors, create_dfs_with_matching_round_lengths, step, get_round_lengths, load_data_options, \
     limit_to_every_nth_row
 from learn_bot.latent.vis.vis import vis
 from learn_bot.libs.io_transforms import CUDA_DEVICE_STR, flatten_list
@@ -131,8 +131,8 @@ def delta_pos_open_rollout(loaded_model: LoadedModel, round_lengths: Optional[Ro
                 pbar.update(1)
     # need to modify cur_loaded_df as rollout_df has constant length of all rounds for sim efficiency
     loaded_model.cur_loaded_df, loaded_model.cur_inference_df = \
-        match_round_lengths(loaded_model.cur_loaded_df, rollout_tensor, pred_tensor, round_lengths,
-                            loaded_model.column_transformers)
+        create_dfs_with_matching_round_lengths(loaded_model.cur_loaded_df, rollout_tensor, pred_tensor, round_lengths,
+                                               loaded_model.column_transformers)
 
 
 def gen_vis_wrapper_delta_pos_open_rollout(player_mask_config: PlayerMaskConfig) -> Callable[[LoadedModel], None]:
