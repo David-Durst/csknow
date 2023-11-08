@@ -1106,3 +1106,11 @@ def get_untransformed_outputs(x: ModelOutput):
 
 def get_label_outputs(x: ModelOutput):
     return x[2]
+
+
+def range_list_to_index_list(range_list: list[range]) -> list[int]:
+    result: list[int] = []
+    for range in range_list:
+        for i in range:
+            result.append(i)
+    return result

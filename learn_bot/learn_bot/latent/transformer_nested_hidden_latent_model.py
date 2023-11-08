@@ -1,9 +1,5 @@
-import math
 from enum import Enum
 from typing import List, Callable
-
-import torch
-from torch import nn
 
 from learn_bot.latent.engagement.column_names import max_enemies
 from learn_bot.latent.order.column_names import team_strs, player_team_str, flatten_list, all_prior_and_cur_ticks, \
@@ -11,19 +7,11 @@ from learn_bot.latent.order.column_names import team_strs, player_team_str, flat
 from learn_bot.latent.place_area.column_names import specific_player_place_area_columns, num_radial_bins, \
     walking_modifier, ducking_modifier
 from learn_bot.latent.place_area.pos_abs_from_delta_grid_or_radial import NavData, \
-    one_hot_max_to_index, one_hot_prob_to_index, max_speed_per_second, max_run_speed_per_sim_tick
-from learn_bot.libs.io_transforms import IOColumnTransformers, CUDA_DEVICE_STR, CPU_DEVICE_STR
+    one_hot_prob_to_index, max_speed_per_second
+from learn_bot.libs.io_transforms import IOColumnTransformers, CUDA_DEVICE_STR, CPU_DEVICE_STR, range_list_to_index_list
 from learn_bot.libs.positional_encoding import *
 from einops import rearrange, repeat
-from positional_encodings.torch_encodings import PositionalEncoding1D, Summer
-
-
-def range_list_to_index_list(range_list: list[range]) -> list[int]:
-    result: list[int] = []
-    for range in range_list:
-        for i in range:
-            result.append(i)
-    return result
+from positional_encodings.torch_encodings import PositionalEncoding1D
 
 
 def get_player_columns_by_str(cts: IOColumnTransformers, contained_str: str) -> List[int]:
@@ -104,9 +92,9 @@ class TransformerNestedHiddenLatentModel(nn.Module):
         c4_decrease_distance_columns_ranges = range_list_to_index_list(cts.get_name_ranges(True, True, contained_str="decrease distance to c4"))
         non_player_c4_columns_ranges = [i for i in all_c4_columns_ranges if i not in c4_decrease_distance_columns_ranges]
         #baiting_columns_ranges = range_list_to_index_list(cts.get_name_ranges(True, True, contained_str="baiting"))
-        players_columns = [non_player_c4_columns_ranges + #baiting_columns_ranges +
-                          range_list_to_index_list(cts.get_name_ranges(True, True, contained_str=" " + player_team_str(team_str, player_index)))
-                          for team_str in team_strs for player_index in range(max_enemies)]
+        players_columns = [non_player_c4_columns_ranges +  #baiting_columns_ranges +
+                           range_list_to_index_list(cts.get_name_ranges(True, True, contained_str=" " + player_team_str(team_str, player_index)))
+                           for team_str in team_strs for player_index in range(max_enemies)]
         #players_columns_names = [cts.get_name_ranges(True, True, contained_str=" " + player_team_str(team_str, player_index), include_names=True)[1]
         #                         for team_str in team_strs for player_index in range(max_enemies)]
         self.num_players = len(players_columns)
@@ -271,7 +259,7 @@ class TransformerNestedHiddenLatentModel(nn.Module):
         x_batch_player_flattened = rearrange(x_embedded_nested_temporal, "b p t d -> (b p) t d")
         batch_temporal_positional_encoding = self.temporal_positional_encoding.repeat([x.shape[0], 1, 1]) \
             .to(x.device.type)
-        x_batch_player_flattened_temporal_with_encoding = x_batch_player_flattened + batch_temporal_positional_encoding
+        x_batch_player_flattened_temporal_with_encoding = x_batch_player_flattened #+ batch_temporal_positional_encoding
         x_player_time_flattened_temporal_with_encoding = rearrange(x_batch_player_flattened_temporal_with_encoding,
                                                                    '(b p) t d -> b (p t) d',
                                                                    p=self.num_players, t=self.num_output_time_steps)

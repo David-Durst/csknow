@@ -8,8 +8,9 @@ import numpy as np
 
 from learn_bot.latent.order.column_names import team_strs, all_prior_and_cur_ticks
 from learn_bot.latent.place_area.column_names import get_similarity_column
-from learn_bot.latent.transformer_nested_hidden_latent_model import range_list_to_index_list, get_player_columns_by_str, \
+from learn_bot.latent.transformer_nested_hidden_latent_model import get_player_columns_by_str, \
     TransformerNestedHiddenLatentModel
+from learn_bot.libs.io_transforms import range_list_to_index_list
 from learn_bot.libs.hdf5_wrapper import HDF5Wrapper
 
 
