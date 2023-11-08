@@ -94,10 +94,13 @@ def run_independent_trajectory_vis():
         else:
             print(f"invalid config case: {config_case}")
             exit(0)
-        if len(sys.argv) == 4:
+        if len(sys.argv) >= 4:
             data_option = dataclasses.replace(data_option,
                                               custom_rollout_extension=sys.argv[3])
             config = dataclasses.replace(config, predicted_load_data_options=data_option)
+        if len(sys.argv) >= 5:
+            plots_path = similarity_plots_path / sys.argv[4]
+            os.makedirs(plots_path, exist_ok=True)
         result = plot_trajectories_for_one_config(data_option, config)
         trajectory_plots_by_config.append(result[0])
         for constraint_result in result[1]:
