@@ -3,7 +3,7 @@ from pathlib import Path
 import pandas as pd
 from matplotlib import pyplot as plt
 
-from learn_bot.latent.dataset import latent_hdf5_data_path
+from learn_bot.latent.latent_subset_hdf5_dataset import latent_hdf5_data_path
 from learn_bot.latent.engagement.column_names import get_ith_enemy_columns
 from learn_bot.libs.hdf5_to_pd import load_hdf5_to_pd
 from learn_bot.latent.train_paths import plot_path

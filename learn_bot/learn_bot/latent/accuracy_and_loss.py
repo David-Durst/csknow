@@ -4,7 +4,7 @@ import torch
 from einops import rearrange, repeat, pack
 from torch.utils.tensorboard import SummaryWriter
 
-from learn_bot.latent.dataset import *
+from learn_bot.latent.latent_subset_hdf5_dataset import *
 from learn_bot.latent.order.column_names import num_radial_ticks
 from learn_bot.latent.place_area.pos_abs_from_delta_grid_or_radial import get_delta_indices_from_grid, \
     get_delta_pos_from_radial

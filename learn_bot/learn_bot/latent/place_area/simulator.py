@@ -4,7 +4,7 @@ from typing import Dict, Tuple, Optional
 
 from tqdm import tqdm
 
-from learn_bot.latent.dataset import LatentDataset
+from learn_bot.latent.latent_subset_hdf5_dataset import LatentDataset
 from learn_bot.latent.engagement.column_names import round_id_column, tick_id_column
 from learn_bot.latent.load_model import load_model_file, LoadedModel
 from learn_bot.latent.place_area.pos_abs_from_delta_grid_or_radial import compute_new_pos, data_ticks_per_sim_tick

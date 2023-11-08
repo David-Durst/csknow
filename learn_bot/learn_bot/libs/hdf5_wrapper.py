@@ -78,6 +78,9 @@ class HDF5Wrapper:
     def get_output_data(self, index: int) -> np.ndarray:
         return HDF5Wrapper.output_data[self.hdf5_path][index]
 
+    def get_all_output_data(self, index: int) -> np.ndarray:
+        return HDF5Wrapper.output_data[self.hdf5_path]
+
 
 def load_hdf5_to_np_array(hdf5_path: Path, cols_to_get: List[str], cast_to_float: bool) -> np.ndarray:
     # get data as numpy arrays and column names

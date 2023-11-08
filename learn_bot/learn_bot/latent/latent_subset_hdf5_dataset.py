@@ -1,5 +1,6 @@
 from typing import Optional
 
+import numpy as np
 import pandas as pd
 import torch
 from torch.utils.data import Dataset
@@ -13,15 +14,11 @@ latent_hdf5_data_path = Path(__file__).parent / '..' / '..' / '..' / 'analytics'
 latent_window_hdf5_data_path = Path(__file__).parent / '..' / '..' / '..' / 'analytics' / 'csv_outputs' / 'behaviorTreeWindowFeatureStore.hdf5'
 
 # https://androidkt.com/load-pandas-dataframe-using-dataset-and-dataloader-in-pytorch/
-class LatentDataset(Dataset):
-    def __init__(self, all_data_tensor: torch.Tensor, cts: IOColumnTransformers, id_df: pd.DataFrame):
+class LatentSubsetHDF5Dataset(Dataset):
+    def __init__(self, X: np.ndarray, Y: np.ndarray, id_df: pd.DataFrame):
         # convert player id's to indexes
-        self.X = all_data_tensor[column_names_to_index_list(cts,
-                                                            cts.input_types.column_names_all_categorical_columns(),
-                                                            True)].to_numpy().float()
-        self.Y = all_data_tensor[column_names_to_index_list(cts,
-                                                            cts.output_types.column_names_all_categorical_columns(),
-                                                            True)].to_numpy().float()
+        self.X = X
+        self.Y = Y
         self.similarity_columns = [c for c in id_df.columns if get_base_similarity_column() in c]
         self.similarity_tensor = torch.tensor(id_df.loc[:, self.similarity_columns].to_numpy()).float()
 

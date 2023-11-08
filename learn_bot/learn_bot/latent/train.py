@@ -16,7 +16,7 @@ from torch.utils.tensorboard import SummaryWriter
 from learn_bot.latent.analyze.comparison_column_names import small_human_good_rounds, \
     all_human_28_second_filter_good_rounds, all_human_vs_small_human_similarity_hdf5_data_path, \
     all_human_vs_human_28_similarity_hdf5_data_path
-from learn_bot.latent.dataset import *
+from learn_bot.latent.latent_subset_hdf5_dataset import *
 from learn_bot.latent.engagement.column_names import round_id_column
 from learn_bot.latent.hyperparameter_options import HyperparameterOptions
 from learn_bot.latent.latent_hdf5_dataset import MultipleLatentHDF5Dataset

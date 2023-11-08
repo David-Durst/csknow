@@ -8,7 +8,7 @@ import pandas as pd
 import torch
 from torch import nn
 
-from learn_bot.latent.dataset import LatentDataset
+from learn_bot.latent.latent_subset_hdf5_dataset import LatentSubsetHDF5Dataset
 from learn_bot.latent.engagement.column_names import max_enemies
 from learn_bot.latent.hyperparameter_options import HyperparameterOptions
 from learn_bot.latent.latent_hdf5_dataset import MultipleLatentHDF5Dataset
@@ -59,8 +59,9 @@ class LoadedModel:
         make_index_column(self.cur_loaded_df)
         self.cur_demo_names = self.load_cur_hdf5_demo_names()
         if load_cur_dataset:
-            self.cur_dataset = LatentDataset(self.cur_loaded_df, self.column_transformers,
-                                             self.dataset.data_hdf5s[self.cur_hdf5_index].id_df)
+            self.cur_dataset = LatentSubsetHDF5Dataset(self.dataset.data_hdf5s[self.cur_hdf5_index].get_all_input_data(),
+                                                       self.dataset.data_hdf5s[self.cur_hdf5_index].get_all_output_data(),
+                                                       self.dataset.data_hdf5s[self.cur_hdf5_index].id_df)
 
     def load_cur_hdf5_demo_names(self) -> np.ndarray:
         return load_hdf5_extra_column(self.dataset.data_hdf5s[self.cur_hdf5_index].hdf5_path, 'demo file').astype('U')
