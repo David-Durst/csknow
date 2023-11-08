@@ -10,6 +10,8 @@ from abc import abstractmethod, ABC
 from torch.nn import functional as F
 import torch
 
+from learn_bot.latent.order.column_names import T
+
 CPU_DEVICE_STR = "cpu"
 CUDA_DEVICE_STR = "cuda"
 
@@ -1114,3 +1116,14 @@ def range_list_to_index_list(range_list: list[range]) -> list[int]:
         for i in range:
             result.append(i)
     return result
+
+
+def flatten_list(xss: list[list[T]]) -> list[T]:
+    return [xi for xs in xss for xi in xs]
+
+
+def column_names_to_index_list(cts: IOColumnTransformers, column_names: list[str], input=bool) -> list[int]:
+    return flatten_list([range_list_to_index_list(cts.get_name_ranges(input, True, contained_str=column_name))
+                         for column_name in column_names])
+
+

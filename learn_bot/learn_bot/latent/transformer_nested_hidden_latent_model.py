@@ -2,13 +2,14 @@ from enum import Enum
 from typing import List, Callable
 
 from learn_bot.latent.engagement.column_names import max_enemies
-from learn_bot.latent.order.column_names import team_strs, player_team_str, flatten_list, all_prior_and_cur_ticks, \
+from learn_bot.latent.order.column_names import team_strs, player_team_str, all_prior_and_cur_ticks, \
     num_radial_ticks
 from learn_bot.latent.place_area.column_names import specific_player_place_area_columns, num_radial_bins, \
     walking_modifier, ducking_modifier
 from learn_bot.latent.place_area.pos_abs_from_delta_grid_or_radial import NavData, \
     one_hot_prob_to_index, max_speed_per_second
-from learn_bot.libs.io_transforms import IOColumnTransformers, CUDA_DEVICE_STR, CPU_DEVICE_STR, range_list_to_index_list
+from learn_bot.libs.io_transforms import IOColumnTransformers, CUDA_DEVICE_STR, CPU_DEVICE_STR, \
+    range_list_to_index_list, flatten_list
 from learn_bot.libs.positional_encoding import *
 from einops import rearrange, repeat
 from positional_encodings.torch_encodings import PositionalEncoding1D

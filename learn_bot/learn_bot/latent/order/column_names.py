@@ -1,8 +1,8 @@
 from enum import Enum
 from typing import TypeVar
-from math import isqrt
 
 from learn_bot.latent.engagement.column_names import *
+from learn_bot.libs.io_transforms import flatten_list
 
 
 class C4Status(Enum):
@@ -151,10 +151,6 @@ def get_trace_is_bot_player(player_index: int, team_str: str) -> str:
 T = TypeVar('T')
 
 
-def flatten_list(xss: list[list[T]]) -> list[T]:
-    return [xi for xs in xss for xi in xs]
-
-
 def player_team_str(team_str: str, player_index: int, uniform_space: str = False) -> str:
     if uniform_space and team_str == "T":
         return team_str + "  " + str(player_index)
@@ -247,7 +243,7 @@ class PlayerOrderColumns:
             flatten_list([self.pos, self.prior_pos, self.vel, self.cur_place,  # self.prior_place,
                           self.area_grid_cell_in_place,  # self.prior_area_grid_cell_in_place,
                           self.distance_to_nearest_a_order_nav_area, self.distance_to_nearest_b_order_nav_area,
-                          self.distribution_nearest_a_order, #self.distribution_nearest_a_order_15s, self.distribution_nearest_a_order_30s,
+                          self.distribution_nearest_a_order,  #self.distribution_nearest_a_order_15s, self.distribution_nearest_a_order_30s,
                           self.distribution_nearest_b_order])#, self.distribution_nearest_b_order_15s, self.distribution_nearest_b_order_30s])
 
     def to_input_float_list(self) -> list[str]:

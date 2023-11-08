@@ -18,7 +18,6 @@ from learn_bot.latent.analyze.compare_trajectories.process_trajectory_comparison
     set_pd_print_options
 from learn_bot.latent.engagement.column_names import round_id_column
 from learn_bot.latent.load_model import load_model_file
-from learn_bot.latent.order.column_names import flatten_list
 from learn_bot.latent.place_area.column_names import specific_player_place_area_columns
 from learn_bot.latent.place_area.load_data import LoadDataResult
 from learn_bot.latent.place_area.pos_abs_from_delta_grid_or_radial import NavData, data_ticks_per_second, \
@@ -27,7 +26,7 @@ from learn_bot.latent.place_area.simulator import LoadedModel, RoundLengths, Pla
     build_rollout_and_similarity_tensors, match_round_lengths, step, get_round_lengths, load_data_options, \
     limit_to_every_nth_row
 from learn_bot.latent.vis.vis import vis
-from learn_bot.libs.io_transforms import CUDA_DEVICE_STR
+from learn_bot.libs.io_transforms import CUDA_DEVICE_STR, flatten_list
 
 # this is a open loop version of the simulator for computing metrics based on short time horizons
 

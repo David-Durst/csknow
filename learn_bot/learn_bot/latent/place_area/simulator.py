@@ -1,30 +1,19 @@
-from pathlib import Path
-
 import pandas as pd
 from dataclasses import dataclass
 from typing import Dict, Tuple, Optional
 
-import torch
 from tqdm import tqdm
 
-from learn_bot.latent.analyze.comparison_column_names import small_human_good_rounds, \
-    all_human_28_second_filter_good_rounds, all_human_vs_small_human_similarity_hdf5_data_path, \
-    all_human_vs_human_28_similarity_hdf5_data_path
 from learn_bot.latent.dataset import LatentDataset
 from learn_bot.latent.engagement.column_names import round_id_column, tick_id_column
 from learn_bot.latent.load_model import load_model_file, LoadedModel
-from learn_bot.latent.order.column_names import num_radial_ticks
-from learn_bot.latent.place_area.pos_abs_from_delta_grid_or_radial import delta_pos_grid_num_cells_per_xy_dim, \
-    delta_pos_grid_cell_dim, \
-    delta_pos_grid_num_xy_cells_per_z_change, compute_new_pos, NavData, data_ticks_per_sim_tick
-from learn_bot.latent.place_area.load_data import human_latent_team_hdf5_data_path, manual_latent_team_hdf5_data_path, \
-    rollout_latent_team_hdf5_data_path, LoadDataResult, LoadDataOptions, SimilarityFn
+from learn_bot.latent.place_area.pos_abs_from_delta_grid_or_radial import compute_new_pos, data_ticks_per_sim_tick
+from learn_bot.latent.place_area.load_data import LoadDataResult, LoadDataOptions
 from learn_bot.latent.train_paths import train_test_split_file_name
 from learn_bot.latent.transformer_nested_hidden_latent_model import *
 from learn_bot.latent.vis.vis import vis
-from learn_bot.libs.hdf5_to_pd import load_hdf5_to_pd, load_hdf5_extra_to_list
 from learn_bot.libs.io_transforms import get_untransformed_outputs, CPU_DEVICE_STR, get_label_outputs, \
-    get_transformed_outputs
+    get_transformed_outputs, flatten_list
 
 
 @dataclass

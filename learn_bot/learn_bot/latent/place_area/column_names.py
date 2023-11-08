@@ -1,8 +1,5 @@
-from enum import Enum
-from typing import TypeVar, Optional
-
-from learn_bot.latent.engagement.column_names import *
 from learn_bot.latent.order.column_names import *
+from learn_bot.libs.io_transforms import flatten_list
 
 # rectangular grid const
 delta_pos_grid_radius = 130
