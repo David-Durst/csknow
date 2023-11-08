@@ -29,6 +29,7 @@ from learn_bot.latent.place_area.rollout_simulator import rollout_simulate
 from learn_bot.latent.profiling import profile_latent_model
 from learn_bot.latent.train_paths import checkpoints_path, runs_path, train_test_split_file_name, \
     default_selected_retake_rounds_path
+from learn_bot.latent.transformer_10_17 import TransformerNestedHiddenLatentModel_10_17
 from learn_bot.latent.transformer_nested_hidden_latent_model import TransformerNestedHiddenLatentModel, PlayerMaskType, \
     OutputMaskType, ControlType
 from learn_bot.libs.hdf5_to_pd import load_hdf5_to_pd
@@ -61,6 +62,7 @@ class TrainType(Enum):
 
 default_hyperparameter_options = HyperparameterOptions()
 hyperparameter_option_range = [HyperparameterOptions(num_input_time_steps=1, control_type=ControlType.TimeControl),
+                               HyperparameterOptions(num_input_time_steps=1, internal_width=128, layers=2, control_type=ControlType.TimeControl),
                                HyperparameterOptions(num_input_time_steps=1, layers=8, heads=8, bc_epochs=40, learning_rate=1e-5, control_type=ControlType.TimeControl),
                                HyperparameterOptions(num_input_time_steps=1, layers=8, bc_epochs=40, learning_rate=1e-5, control_type=ControlType.TimeControl),
                                HyperparameterOptions(num_input_time_steps=1, layers=8, bc_epochs=40, learning_rate=5e-6, control_type=ControlType.TimeControl),
@@ -173,12 +175,20 @@ def train(train_type: TrainType, multi_hdf5_wrapper: MultiHDF5Wrapper,
         column_transformers = IOColumnTransformers(place_area_input_column_types, radial_vel_output_column_types,
                                                    multi_hdf5_wrapper.train_hdf5_wrappers[0].sample_df)
         # plus 1 on future ticks to include present tick
-        model = TransformerNestedHiddenLatentModel(column_transformers, hyperparameter_options.internal_width,
-                                                   2 * max_enemies, hyperparameter_options.num_input_time_steps,
-                                                   hyperparameter_options.layers, hyperparameter_options.heads,
-                                                   hyperparameter_options.control_type,
-                                                   hyperparameter_options.player_mask_type,
-                                                   hyperparameter_options.non_pos_mask)
+        if True:
+            model = TransformerNestedHiddenLatentModel(column_transformers, hyperparameter_options.internal_width,
+                                                       2 * max_enemies, hyperparameter_options.num_input_time_steps,
+                                                       hyperparameter_options.layers, hyperparameter_options.heads,
+                                                       hyperparameter_options.control_type,
+                                                       hyperparameter_options.player_mask_type,
+                                                       hyperparameter_options.non_pos_mask)
+        else:
+            model = TransformerNestedHiddenLatentModel_10_17(column_transformers, hyperparameter_options.internal_width,
+                                                             2 * max_enemies, hyperparameter_options.num_input_time_steps,
+                                                             hyperparameter_options.layers, hyperparameter_options.heads,
+                                                             hyperparameter_options.control_type,
+                                                             hyperparameter_options.player_mask_type,
+                                                             hyperparameter_options.non_pos_mask)
         if load_model_path:
             model_file = torch.load(load_model_path)
             model.load_state_dict(model_file['model_state_dict'])
