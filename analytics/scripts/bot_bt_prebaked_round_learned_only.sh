@@ -26,24 +26,30 @@ if make -j 8; then
     sleep 40
     date
 
-    # learned no mask with position randomization
-    learned_demos=()
-    for i in {0..13}
+    models=(11_07_2023__15_45_52_iw_256_bc_40_pr_0_fr_0_b_1024_it_1_ot_3_lr_1e-05_wd_0.0_l_8_h_8_n_20.0_ros_2.0_ct_TimeControl_pm_NoMask_nm_False_om_NoMask_w_None_dh_None_c_just_human_all 11_07_2023__12_23_52_iw_256_bc_20_pr_0_fr_0_b_1024_it_1_ot_3_lr_4e-05_wd_0.0_l_4_h_4_n_20.0_ros_2.0_ct_TimeControl_pm_NoMask_nm_False_om_NoMask_w_None_dh_None_c_just_human_all)
+    for model in models
     do
-        cd ${script_dir}/../../learn_bot/
-        ./scripts/deploy_latent_models_specific.sh 11_07_2023__12_23_52_iw_256_bc_20_pr_0_fr_0_b_1024_it_1_ot_3_lr_4e-05_wd_0.0_l_4_h_4_n_20.0_ros_2.0_ct_TimeControl_pm_NoMask_nm_False_om_NoMask_w_None_dh_None_c_just_human_all 
-        cd ${script_dir}/../build
-        echo "most recent demo file before learned $i no mask run with position randomization"
-        learned_demo=$(ls -tp /home/steam/csgo-ds/csgo/*.dem | grep -v /$ | head -1)
-        learned_demo_no_path=$(basename $learned_demo)
-        echo $learned_demo
-        learned_demos+=($learned_demo_no_path)
-        ./csknow_test_bt_bot ${script_dir}/../nav /home/steam/csgo-ds/csgo/addons/sourcemod/bot-link-data ${script_dir}/../ ${script_dir}/../../learn_bot/models ${script_dir}/../../learn_bot/learn_bot/libs/saved_train_test_splits r 1 br $i
-        sleep 40
-        date
-    done
+        # learned no mask with position randomization
+        learned_demos=()
+        for i in {5..6}
+        do
+            cd ${script_dir}/../../learn_bot/
+            ./scripts/deploy_latent_models_specific.sh $model 
+            cd ${script_dir}/../build
+            echo "most recent demo file before learned $i no mask run with position randomization"
+            learned_demo=$(ls -tp /home/steam/csgo-ds/csgo/*.dem | grep -v /$ | head -1)
+            learned_demo_no_path=$(basename $learned_demo)
+            echo $learned_demo
+            learned_demos+=($learned_demo_no_path)
+            ./csknow_test_bt_bot ${script_dir}/../nav /home/steam/csgo-ds/csgo/addons/sourcemod/bot-link-data ${script_dir}/../ ${script_dir}/../../learn_bot/models ${script_dir}/../../learn_bot/learn_bot/libs/saved_train_test_splits r 1 br $i
+            sleep 40
+            date
+        done
 
-    echo "learned demos: "
-    export IFS=,
-    echo "${learned_demos[*]}"
+        echo "learned demos: "
+        old_ifs=$IFS
+        export IFS=,
+        echo "${learned_demos[*]}"
+        export IFS=$old_ifs
+    done
 fi
