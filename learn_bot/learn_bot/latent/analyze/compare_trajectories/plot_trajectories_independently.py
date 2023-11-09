@@ -48,7 +48,7 @@ def plot_trajectories_for_one_config(load_data_options: LoadDataOptions, config:
 
     # load data
     load_data_result = LoadDataResult(load_data_options)
-    loaded_model = load_model_file(load_data_result)
+    loaded_model = load_model_file(load_data_result, load_pd=True)
     per_round_df = loaded_model.cur_loaded_df[[round_id_column, round_number_column]] \
         .groupby([round_id_column], as_index=False).min()
     round_test_names_with_invalid = loaded_model.get_round_test_names().tolist()
