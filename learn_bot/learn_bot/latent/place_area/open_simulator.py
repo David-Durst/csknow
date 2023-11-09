@@ -136,8 +136,8 @@ def delta_pos_open_rollout(loaded_model: LoadedModel, round_lengths: Optional[Ro
 
 
 def gen_vis_wrapper_delta_pos_open_rollout(player_mask_config: PlayerMaskConfig) -> Callable[[LoadedModel], None]:
-    def result_func(loaded_model: loaded_model):
-        round_lengths = get_round_lengths(loaded_model.cur_loaded_df)
+    def result_func(loaded_model: LoadedModel):
+        round_lengths = get_round_lengths(loaded_model.get_cur_id_df())
         player_enable_mask = build_player_mask(loaded_model, player_mask_config, round_lengths)
         delta_pos_open_rollout(loaded_model, round_lengths, player_enable_mask,
                                constant_velocity=player_mask_config == PlayerMaskConfig.CONSTANT_VELOCITY)

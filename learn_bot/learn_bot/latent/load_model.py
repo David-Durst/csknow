@@ -63,6 +63,11 @@ class LoadedModel:
                                                        self.dataset.data_hdf5s[self.cur_hdf5_index].get_all_output_data(),
                                                        self.dataset.data_hdf5s[self.cur_hdf5_index].id_df)
 
+    def load_cur_dataset_only(self):
+        self.cur_dataset = LatentSubsetHDF5Dataset(self.dataset.data_hdf5s[self.cur_hdf5_index].get_all_input_data(),
+                                                   self.dataset.data_hdf5s[self.cur_hdf5_index].get_all_output_data(),
+                                                   self.dataset.data_hdf5s[self.cur_hdf5_index].id_df)
+
     def load_cur_hdf5_demo_names(self) -> np.ndarray:
         return load_hdf5_extra_column(self.dataset.data_hdf5s[self.cur_hdf5_index].hdf5_path, 'demo file').astype('U')
 
@@ -88,8 +93,10 @@ def load_model_file(loaded_data: LoadDataResult, use_test_data_only: bool = Fals
         cur_checkpoints_path = cur_checkpoints_path / sys.argv[1]
     model_file = torch.load(cur_checkpoints_path / "delta_pos_checkpoint.pt")
 
+    loaded_data.multi_hdf5_wrapper.create_np_arrays(model_file['column_transformers'], True)
     hdf5_wrappers = loaded_data.multi_hdf5_wrapper.test_hdf5_wrappers if use_test_data_only else \
         loaded_data.multi_hdf5_wrapper.hdf5_wrappers
+
 
     column_transformers = IOColumnTransformers(place_area_input_column_types, radial_vel_output_column_types,
                                                hdf5_wrappers[0].sample_df)

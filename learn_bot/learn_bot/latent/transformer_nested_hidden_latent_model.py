@@ -260,7 +260,7 @@ class TransformerNestedHiddenLatentModel(nn.Module):
         x_batch_player_flattened = rearrange(x_embedded_nested_temporal, "b p t d -> (b p) t d")
         batch_temporal_positional_encoding = self.temporal_positional_encoding.repeat([x.shape[0], 1, 1]) \
             .to(x.device.type)
-        x_batch_player_flattened_temporal_with_encoding = x_batch_player_flattened #+ batch_temporal_positional_encoding
+        x_batch_player_flattened_temporal_with_encoding = x_batch_player_flattened + batch_temporal_positional_encoding
         x_player_time_flattened_temporal_with_encoding = rearrange(x_batch_player_flattened_temporal_with_encoding,
                                                                    '(b p) t d -> b (p t) d',
                                                                    p=self.num_players, t=self.num_output_time_steps)

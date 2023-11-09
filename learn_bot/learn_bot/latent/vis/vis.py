@@ -70,7 +70,7 @@ def vis(loaded_model: LoadedModel, inference_fn: Callable[[LoadedModel], None], 
     def hdf5_id_update():
         nonlocal rounds, cur_round
         loaded_model.cur_hdf5_index = int(new_hdf5_id_entry.get())
-        loaded_model.load_cur_hdf5_as_pd()
+        loaded_model.load_cur_dataset_only()
         inference_fn(loaded_model)
         index_cur_hdf5(loaded_model)
         rounds = get_rounds_for_cur_hdf5(loaded_model)
@@ -237,6 +237,7 @@ def vis(loaded_model: LoadedModel, inference_fn: Callable[[LoadedModel], None], 
     # state setters
     def change_round_dependent_data():
         nonlocal selected_df, id_df, pred_selected_df, cur_round, indices, ticks, game_ticks
+        #selected_df =
         selected_df = loaded_model.cur_loaded_df.loc[loaded_model.cur_loaded_df[round_id_column] == cur_round]
         id_df = loaded_model.get_cur_id_df()
         pred_selected_df = loaded_model.cur_inference_df.loc[loaded_model.cur_loaded_df[round_id_column] == cur_round]
