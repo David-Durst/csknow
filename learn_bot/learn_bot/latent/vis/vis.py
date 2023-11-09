@@ -14,11 +14,11 @@ import pandas as pd
 
 
 def get_rounds_for_cur_hdf5(loaded_model: LoadedModel) -> List[int]:
-    return loaded_model.cur_loaded_df.loc[:, round_id_column].unique().tolist()
+    return loaded_model.get_cur_id_df().loc[:, round_id_column].unique().tolist()
 
 
 def index_cur_hdf5(loaded_model: LoadedModel):
-    make_index_column(loaded_model.cur_loaded_df)
+    #make_index_column(loaded_model.cur_loaded_df)
     make_index_column(loaded_model.cur_inference_df)
     make_index_column(loaded_model.get_cur_id_df())
 
@@ -58,7 +58,7 @@ def vis(loaded_model: LoadedModel, inference_fn: Callable[[LoadedModel], None], 
     cur_round: int = -1
     cur_tick: int = -1
     cur_tick_index: int = -1
-    selected_df: pd.DataFrame = loaded_model.cur_loaded_df
+    selected_df = loaded_model.load_round_df_from_cur_dataset(cur_round)
     pred_selected_df: pd.DataFrame = loaded_model.cur_inference_df
     id_df: pd.DataFrame = loaded_model.get_cur_id_df()
     draw_pred: bool = True
@@ -237,10 +237,9 @@ def vis(loaded_model: LoadedModel, inference_fn: Callable[[LoadedModel], None], 
     # state setters
     def change_round_dependent_data():
         nonlocal selected_df, id_df, pred_selected_df, cur_round, indices, ticks, game_ticks
-        #selected_df =
-        selected_df = loaded_model.cur_loaded_df.loc[loaded_model.cur_loaded_df[round_id_column] == cur_round]
+        selected_df = loaded_model.load_round_df_from_cur_dataset(cur_round)
         id_df = loaded_model.get_cur_id_df()
-        pred_selected_df = loaded_model.cur_inference_df.loc[loaded_model.cur_loaded_df[round_id_column] == cur_round]
+        pred_selected_df = loaded_model.cur_inference_df.loc[loaded_model.get_cur_id_df()[round_id_column] == cur_round]
 
         indices = selected_df.loc[:, 'index'].tolist()
         ticks = selected_df.loc[:, 'tick id'].tolist()

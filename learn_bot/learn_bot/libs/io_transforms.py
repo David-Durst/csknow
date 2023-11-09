@@ -1070,6 +1070,23 @@ class IOColumnTransformers:
 
         return pd.DataFrame(x, columns=col_names)
 
+    def get_untransformed_values_input_and_output(self, x: np.ndarray, y: np.ndarray,
+                                                  filter_series: Optional[pd.Series] = None) -> pd.DataFrame:
+        if filter_series is not None:
+            if sum(filter_series) == 0:
+                return pd.DataFrame(columns=self.input_types.column_names() + self.output_types.column_names())
+            x_to_convert = x[filter_series]
+            y_to_convert = y[filter_series]
+        else:
+            x_to_convert = x
+            y_to_convert = y
+
+        x_df = self.get_untransformed_values_whole_pd(x_to_convert, True)
+        y_df = self.get_untransformed_values_whole_pd(y_to_convert, False)
+
+        return pd.concat([x_df, y_df], axis=1)
+
+
 
     def get_untransformed_values_like(self, x: Union[torch.Tensor, ModelOutput], input: bool, subset_str: str) -> Dict:
         all_untransformed_values = self.get_untransformed_values(x, input)

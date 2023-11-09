@@ -48,6 +48,8 @@ class LoadedModel:
         self.cur_hdf5_index = 0
         if load_pd:
             self.load_cur_hdf5_as_pd()
+        else:
+            self.load_cur_dataset_only()
         # this will be set later depending on if doing off policy or on policy inference
         self.cur_inference_df = None
 
@@ -74,15 +76,20 @@ class LoadedModel:
     def get_round_test_names(self) -> np.ndarray:
         return load_hdf5_extra_column(self.dataset.data_hdf5s[self.cur_hdf5_index].hdf5_path, 'round test name').astype('U')
 
-    def get_cur_id_df(self):
+    def get_cur_id_df(self) -> pd.DataFrame:
         return self.dataset.data_hdf5s[self.cur_hdf5_index].id_df
 
     def get_cur_hdf5_filename(self) -> str:
         return str(self.dataset.data_hdf5s[self.cur_hdf5_index].hdf5_path.name)
 
+    def load_round_df_from_cur_dataset(self, round_id: int) -> pd.DataFrame:
+        return self.column_transformers.get_untransformed_values_input_and_output(
+            self.cur_dataset.X, self.cur_dataset.Y, self.get_cur_id_df()[round_id_column] == round_id
+        )
+
 
 def load_model_file(loaded_data: LoadDataResult, use_test_data_only: bool = False,
-                    model_name_override: Optional[str] = None, load_pd: bool = True) -> LoadedModel:
+                    model_name_override: Optional[str] = None, load_pd: bool = False) -> LoadedModel:
     if len(sys.argv) < 2 and model_name_override is None:
         raise Exception("must pass checkpoint folder name as argument, like "
                         "07_02_2023__14_32_51_e_60_b_512_lr_4e-05_wd_0.0_l_2_h_4_n_20.0_t_5_c_human_with_added_bot_nav")
