@@ -27,7 +27,8 @@ ct_color = (4, 190, 196)
 t_color = (187, 142, 52)
 
 
-def vis(loaded_model: LoadedModel, inference_fn: Callable[[LoadedModel], None], window_title_appendix: str = ""):
+def vis(loaded_model: LoadedModel, inference_fn: Callable[[LoadedModel], None], window_title_appendix: str = "",
+        use_sim_dataset: bool = False):
     inference_fn(loaded_model)
     index_cur_hdf5(loaded_model)
 
@@ -58,7 +59,7 @@ def vis(loaded_model: LoadedModel, inference_fn: Callable[[LoadedModel], None], 
     cur_round: int = -1
     cur_tick: int = -1
     cur_tick_index: int = -1
-    selected_df = loaded_model.load_round_df_from_cur_dataset(cur_round)
+    selected_df = loaded_model.load_round_df_from_cur_dataset(cur_round, use_sim_dataset=use_sim_dataset)
     pred_selected_df: pd.DataFrame = loaded_model.cur_inference_df
     id_df: pd.DataFrame = loaded_model.get_cur_id_df()
     draw_pred: bool = True
@@ -239,7 +240,8 @@ def vis(loaded_model: LoadedModel, inference_fn: Callable[[LoadedModel], None], 
         nonlocal selected_df, id_df, pred_selected_df, cur_round, indices, ticks, game_ticks
         vis_only_df = loaded_model.load_cols_from_cur_hdf5(vis_only_columns)
         make_index_column(vis_only_df)
-        selected_df = loaded_model.load_round_df_from_cur_dataset(cur_round, vis_only_df)
+        selected_df = loaded_model.load_round_df_from_cur_dataset(cur_round, vis_only_df,
+                                                                  use_sim_dataset=use_sim_dataset)
         id_df = loaded_model.get_cur_id_df()
         pred_selected_df = loaded_model.cur_inference_df.loc[loaded_model.get_cur_id_df()[round_id_column] == cur_round]
         pred_selected_df = pred_selected_df.reset_index(drop=True)

@@ -7,6 +7,7 @@ import numpy as np
 import pandas as pd
 import torch
 
+from learn_bot.libs.df_grouping import make_index_column
 from learn_bot.libs.hdf5_to_pd import load_hdf5_to_pd
 from learn_bot.libs.io_transforms import IOColumnTransformers
 
@@ -25,6 +26,7 @@ class HDF5Wrapper:
         self.id_cols = id_cols
         if id_df is None:
             self.id_df = load_hdf5_to_pd(hdf5_path, cols_to_get=id_cols)
+            make_index_column(self.id_df)
         else:
             self.id_df = id_df
         if sample_df is None:
@@ -34,6 +36,7 @@ class HDF5Wrapper:
 
     def limit(self, selector_df: pd.Series):
         self.id_df = self.id_df[selector_df]
+        make_index_column(self.id_df)
 
     def add_extra_column(self, extra_column_name: str, extra_column: pd.Series):
         self.id_df[extra_column_name] = extra_column

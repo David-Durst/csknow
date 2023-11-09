@@ -13,6 +13,7 @@ from learn_bot.latent.place_area.load_data import LoadDataResult, LoadDataOption
 from learn_bot.latent.train_paths import train_test_split_file_name
 from learn_bot.latent.transformer_nested_hidden_latent_model import *
 from learn_bot.latent.vis.vis import vis
+from learn_bot.libs.df_grouping import make_index_column
 from learn_bot.libs.io_transforms import get_untransformed_outputs, CPU_DEVICE_STR, get_label_outputs, \
     get_transformed_outputs, flatten_list
 
@@ -40,7 +41,7 @@ def limit_to_every_nth_row(df: pd.DataFrame):
     return condition
 
 
-def get_round_lengths(df: pd.DataFrame, compute_last_player_alive: bool = True) -> RoundLengths:
+def get_round_lengths(df: pd.DataFrame, compute_last_player_alive: bool = False) -> RoundLengths:
     grouped_df = df.groupby([round_id_column]).agg({tick_id_column: ['count', 'min', 'max'],
                                                     'index': ['count', 'min', 'max']})
     result = RoundLengths(len(grouped_df), max(grouped_df[tick_id_column]['count']), [], {}, {}, {}, {}, False, {})
@@ -74,12 +75,11 @@ def get_round_lengths(df: pd.DataFrame, compute_last_player_alive: bool = True) 
 def build_rollout_and_similarity_tensors(round_lengths: RoundLengths, dataset: LatentSubsetHDF5Dataset) -> \
         Tuple[torch.Tensor,torch.Tensor]:
     rollout_tensor = torch.zeros([round_lengths.num_rounds * round_lengths.max_length_per_round, dataset.X.shape[1]])
-    print(dataset.X.shape)
 
     rollout_ticks_in_round = flatten_list(
         [[round_index * round_lengths.max_length_per_round + i for i in range(round_lengths.round_to_length[round_id])]
          for round_index, round_id in enumerate(round_lengths.round_ids)])
-    rollout_tensor[rollout_ticks_in_round] = dataset.X
+    rollout_tensor[rollout_ticks_in_round] = torch.tensor(dataset.X, dtype=rollout_tensor.dtype)
 
     src_first_tick_in_round = [tick_range.start for _, tick_range in round_lengths.round_to_subset_tick_indices.items()]
     similarity_tensor = dataset.similarity_tensor[src_first_tick_in_round].to(CUDA_DEVICE_STR)
@@ -156,21 +156,18 @@ def step(rollout_tensor: torch.Tensor, all_similarity_tensor: torch.Tensor, pred
 
 
 # undo the fixed length across all rounds, just get right length for each round
-def create_dfs_with_matching_round_lengths(df: pd.DataFrame, rollout_tensor: torch.Tensor, pred_tensor: torch.Tensor,
-                                           round_lengths: RoundLengths, cts: IOColumnTransformers) -> Tuple[pd.DataFrame, pd.DataFrame]:
-    complete_matched_rollout_df = None #df.copy()
+def save_inference_model_data_with_matching_round_lengths(loaded_model: LoadedModel, rollout_tensor: torch.Tensor,
+                                                          pred_tensor: torch.Tensor, round_lengths: RoundLengths):
     required_indices = [round_lengths.round_id_to_list_id[round_id] * round_lengths.max_length_per_round + tick_index
                         for round_id, round_tick_range in round_lengths.round_to_tick_ids.items()
                         for tick_index in range(len(round_tick_range))]
     matched_rollout_tensor = rollout_tensor[required_indices]
     matched_pred_tensor = pred_tensor[required_indices]
 
-    matched_rollout_df = cts.get_untransformed_values_whole_pd(matched_rollout_tensor, True)
-    matched_pred_df = cts.get_untransformed_values_whole_pd(matched_pred_tensor, False)
-
-    complete_matched_rollout_df[matched_rollout_df.columns] = matched_rollout_df
-
-    return complete_matched_rollout_df, matched_pred_df
+    loaded_model.cur_simulated_dataset = loaded_model.cur_dataset
+    loaded_model.cur_simulated_dataset.X = matched_rollout_tensor
+    loaded_model.cur_inference_df = loaded_model.column_transformers \
+        .get_untransformed_values_whole_pd(matched_pred_tensor, False)
 
 
 def delta_pos_rollout(loaded_model: LoadedModel):
@@ -184,10 +181,7 @@ def delta_pos_rollout(loaded_model: LoadedModel):
             for step_index in range(num_steps):
                 step(rollout_tensor, similarity_tensor, pred_tensor, loaded_model.model, round_lengths, step_index, nav_data)
                 pbar.update(1)
-    # need to modify cur_loaded_df as rollout_df has constant length of all rounds for sim efficiency
-    loaded_model.cur_loaded_df, loaded_model.cur_inference_df = \
-        create_dfs_with_matching_round_lengths(loaded_model.cur_loaded_df, rollout_tensor, pred_tensor, round_lengths,
-                                               loaded_model.column_transformers)
+    save_inference_model_data_with_matching_round_lengths(loaded_model, rollout_tensor, pred_tensor, round_lengths)
 
 
 load_data_options = LoadDataOptions(
@@ -225,4 +219,4 @@ if __name__ == "__main__":
     #load_result = load_model_file_for_rollout(all_data_df, "delta_pos_checkpoint.pt")
 
     loaded_model = load_model_file(load_data_result, use_test_data_only=True)
-    vis(loaded_model, delta_pos_rollout, " Simulator")
+    vis(loaded_model, delta_pos_rollout, " Simulator", use_sim_dataset=True)

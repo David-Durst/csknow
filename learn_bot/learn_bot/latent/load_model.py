@@ -35,6 +35,7 @@ class LoadedModel:
     cur_loaded_df: pd.DataFrame
     cur_demo_names: np.ndarray
     cur_dataset: LatentSubsetHDF5Dataset
+    cur_simulated_dataset: Optional[LatentSubsetHDF5Dataset]
     cur_inference_df: Optional[pd.DataFrame]
 
     def __init__(self, column_transformers: IOColumnTransformers, model: TransformerNestedHiddenLatentModel,
@@ -89,9 +90,11 @@ class LoadedModel:
     def get_cur_hdf5_filename(self) -> str:
         return str(self.dataset.data_hdf5s[self.cur_hdf5_index].hdf5_path.name)
 
-    def load_round_df_from_cur_dataset(self, round_id: int, extra_cols_df: Optional[pd.DataFrame] = None) -> pd.DataFrame:
+    def load_round_df_from_cur_dataset(self, round_id: int, extra_cols_df: Optional[pd.DataFrame] = None,
+                                       use_sim_dataset: bool = False) -> pd.DataFrame:
+        dataset = self.cur_simulated_dataset if use_sim_dataset else self.cur_dataset
         return self.column_transformers.get_untransformed_values_input_and_output(
-            self.cur_dataset.X, self.cur_dataset.Y, self.get_cur_id_df(),
+            dataset.X, dataset.Y, self.get_cur_id_df(),
             self.get_cur_id_df()[round_id_column] == round_id,
             extra_cols_df
         )
