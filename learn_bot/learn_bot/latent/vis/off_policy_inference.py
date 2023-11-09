@@ -14,7 +14,7 @@ import numpy as np
 
 def off_policy_inference(loaded_model: LoadedModel):
     loaded_model.model.eval()
-    dataloader = DataLoader(loaded_model.cur_dataset, batch_size=256, shuffle=False)
+    dataloader = DataLoader(loaded_model.cur_dataset, batch_size=1024, shuffle=False)
     result_np: Optional[np.ndarray] = None
     with torch.no_grad():
         with tqdm(total=len(dataloader), disable=False) as pbar:
