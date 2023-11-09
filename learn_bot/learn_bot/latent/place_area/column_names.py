@@ -38,7 +38,8 @@ float_c4_cols = c4_time_left_percent #c4_ticks_since_plant #[c4_distance_to_a_si
 test_success_col = 'test success'
 round_test_name_col = 'round test name'
 
-hdf5_id_columns = ['id', tick_id_column, game_tick_number_column, round_id_column, game_id_column, test_success_col]
+hdf5_id_columns = ['id', tick_id_column, game_tick_number_column, round_id_column, round_number_column,
+                   game_id_column, test_success_col]
 
 def get_player_distribution_nearest_place(player_index: int, place_index: int, team_str: str) -> str:
     return "distribution nearest place " + str(place_index) + " " + team_str + " " + str(player_index)
@@ -185,6 +186,9 @@ class PlayerPlaceAreaColumns:
                 result.append(self.future_radial_vel[future_tick])
         return result
 
+    def get_vis_only_columns(self) -> list[str]:
+        return [self.player_id] + self.vel + self.view_angle
+
 
 specific_player_place_area_columns: list[PlayerPlaceAreaColumns] = \
     [PlayerPlaceAreaColumns(team_str, player_index) for team_str in team_strs for player_index in range(max_enemies)]
@@ -216,6 +220,10 @@ place_output_column_types = get_simplified_column_types([], [], [], flat_output_
 area_output_column_types = get_simplified_column_types([], [], [], flat_output_cat_area_distribution_columns)
 delta_pos_output_column_types = get_simplified_column_types([], [], [], flat_output_cat_delta_pos_columns)
 radial_vel_output_column_types = get_simplified_column_types([], [], [], flat_output_cat_radial_vel_columns)
+
+vis_only_columns: list[str] = c4_pos_cols + \
+                              flatten_list([player_place_area_columns.get_vis_only_columns() for
+                                            player_place_area_columns in specific_player_place_area_columns])
 
 
 def get_base_similarity_column() -> str:

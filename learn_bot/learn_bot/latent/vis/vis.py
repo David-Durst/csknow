@@ -125,7 +125,7 @@ def vis(loaded_model: LoadedModel, inference_fn: Callable[[LoadedModel], None], 
         other_state_text_var.set(f"Planted A {data_series[c4_plant_a_col]}, "
                                  f"Planted B {data_series[c4_plant_b_col]}, "
                                  f"Not Planted {data_series[c4_not_planted_col]}, "
-                                 f"C4 Pos ({data_series[c4_pos_cols[0]]:.2f}, {data_series[c4_pos_cols[1]]:.2f}, {data_series[c4_pos_cols[2]]:.2f}),"
+                                 #f"C4 Pos ({data_series[c4_pos_cols[0]]:.2f}, {data_series[c4_pos_cols[1]]:.2f}, {data_series[c4_pos_cols[2]]:.2f}),"
                                  f"C4 Time Left Percent {data_series[c4_time_left_percent[0]]:.2f}")
 
         d2_img_copy = d2_img.copy().convert("RGBA")
@@ -237,11 +237,13 @@ def vis(loaded_model: LoadedModel, inference_fn: Callable[[LoadedModel], None], 
     # state setters
     def change_round_dependent_data():
         nonlocal selected_df, id_df, pred_selected_df, cur_round, indices, ticks, game_ticks
-        selected_df = loaded_model.load_round_df_from_cur_dataset(cur_round)
+        vis_only_df = loaded_model.load_cols_from_cur_hdf5(vis_only_columns)
+        make_index_column(vis_only_df)
+        selected_df = loaded_model.load_round_df_from_cur_dataset(cur_round, vis_only_df)
         id_df = loaded_model.get_cur_id_df()
         pred_selected_df = loaded_model.cur_inference_df.loc[loaded_model.get_cur_id_df()[round_id_column] == cur_round]
 
-        indices = selected_df.loc[:, 'index'].tolist()
+        indices = selected_df.index.tolist()
         ticks = selected_df.loc[:, 'tick id'].tolist()
         game_ticks = selected_df.loc[:, 'game tick number'].tolist()
         tick_slider.configure(to=len(ticks)-1)

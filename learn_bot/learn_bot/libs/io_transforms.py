@@ -1070,21 +1070,35 @@ class IOColumnTransformers:
 
         return pd.DataFrame(x, columns=col_names)
 
-    def get_untransformed_values_input_and_output(self, x: np.ndarray, y: np.ndarray,
-                                                  filter_series: Optional[pd.Series] = None) -> pd.DataFrame:
+    def get_untransformed_values_input_and_output(self, x: np.ndarray, y: np.ndarray, id_df: pd.DataFrame,
+                                                  filter_series: Optional[pd.Series] = None,
+                                                  extra_cols_df: Optional[pd.DataFrame] = None) -> pd.DataFrame:
+        extra_cols_df_subset = None
         if filter_series is not None:
             if sum(filter_series) == 0:
                 return pd.DataFrame(columns=self.input_types.column_names() + self.output_types.column_names())
             x_to_convert = x[filter_series]
             y_to_convert = y[filter_series]
+            id_df_subset = id_df[filter_series]
+            if extra_cols_df is not None:
+                extra_cols_df_subset = extra_cols_df[filter_series]
         else:
             x_to_convert = x
             y_to_convert = y
+            id_df_subset = id_df
+            if extra_cols_df is not None:
+                extra_cols_df_subset = extra_cols_df
 
         x_df = self.get_untransformed_values_whole_pd(x_to_convert, True)
         y_df = self.get_untransformed_values_whole_pd(y_to_convert, False)
 
-        return pd.concat([x_df, y_df], axis=1)
+        id_df_subset = id_df_subset.reset_index(drop=True)
+
+        if extra_cols_df is not None:
+            extra_cols_df_subset = extra_cols_df_subset.reset_index(drop=True)
+            return pd.concat([x_df, y_df, id_df_subset, extra_cols_df_subset], axis=1)
+        else:
+            return pd.concat([x_df, y_df, id_df_subset], axis=1)
 
 
 

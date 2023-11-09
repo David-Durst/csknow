@@ -65,7 +65,14 @@ class LoadedModel:
                                                        self.dataset.data_hdf5s[self.cur_hdf5_index].get_all_output_data(),
                                                        self.dataset.data_hdf5s[self.cur_hdf5_index].id_df)
 
+    def load_cols_from_cur_hdf5(self, cols_to_get: list[str], cast_bool_to_int=True) -> pd.DataFrame:
+        result = load_hdf5_to_pd(self.dataset.data_hdf5s[self.cur_hdf5_index].hdf5_path,
+                                  cols_to_get=cols_to_get, cast_bool_to_int=cast_bool_to_int)
+        result = result.iloc[self.dataset.data_hdf5s[self.cur_hdf5_index].id_df['id'], :]
+        return result
+
     def load_cur_dataset_only(self):
+        self.cur_demo_names = self.load_cur_hdf5_demo_names()
         self.cur_dataset = LatentSubsetHDF5Dataset(self.dataset.data_hdf5s[self.cur_hdf5_index].get_all_input_data(),
                                                    self.dataset.data_hdf5s[self.cur_hdf5_index].get_all_output_data(),
                                                    self.dataset.data_hdf5s[self.cur_hdf5_index].id_df)
@@ -82,9 +89,11 @@ class LoadedModel:
     def get_cur_hdf5_filename(self) -> str:
         return str(self.dataset.data_hdf5s[self.cur_hdf5_index].hdf5_path.name)
 
-    def load_round_df_from_cur_dataset(self, round_id: int) -> pd.DataFrame:
+    def load_round_df_from_cur_dataset(self, round_id: int, extra_cols_df: Optional[pd.DataFrame] = None) -> pd.DataFrame:
         return self.column_transformers.get_untransformed_values_input_and_output(
-            self.cur_dataset.X, self.cur_dataset.Y, self.get_cur_id_df()[round_id_column] == round_id
+            self.cur_dataset.X, self.cur_dataset.Y, self.get_cur_id_df(),
+            self.get_cur_id_df()[round_id_column] == round_id,
+            extra_cols_df
         )
 
 
