@@ -158,7 +158,7 @@ def step(rollout_tensor: torch.Tensor, all_similarity_tensor: torch.Tensor, pred
 # undo the fixed length across all rounds, just get right length for each round
 def create_dfs_with_matching_round_lengths(df: pd.DataFrame, rollout_tensor: torch.Tensor, pred_tensor: torch.Tensor,
                                            round_lengths: RoundLengths, cts: IOColumnTransformers) -> Tuple[pd.DataFrame, pd.DataFrame]:
-    complete_matched_rollout_df = df.copy()
+    complete_matched_rollout_df = None #df.copy()
     required_indices = [round_lengths.round_id_to_list_id[round_id] * round_lengths.max_length_per_round + tick_index
                         for round_id, round_tick_range in round_lengths.round_to_tick_ids.items()
                         for tick_index in range(len(round_tick_range))]
