@@ -242,6 +242,7 @@ def vis(loaded_model: LoadedModel, inference_fn: Callable[[LoadedModel], None], 
         selected_df = loaded_model.load_round_df_from_cur_dataset(cur_round, vis_only_df)
         id_df = loaded_model.get_cur_id_df()
         pred_selected_df = loaded_model.cur_inference_df.loc[loaded_model.get_cur_id_df()[round_id_column] == cur_round]
+        pred_selected_df = pred_selected_df.reset_index(drop=True)
 
         indices = selected_df.index.tolist()
         ticks = selected_df.loc[:, 'tick id'].tolist()
