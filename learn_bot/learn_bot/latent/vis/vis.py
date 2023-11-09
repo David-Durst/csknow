@@ -112,8 +112,8 @@ def vis(loaded_model: LoadedModel, inference_fn: Callable[[LoadedModel], None], 
         hdf5_id_text_var.set(f"Predicted Cur HDF5 Id: {loaded_model.get_cur_hdf5_filename()} - {loaded_model.cur_hdf5_index} / "
                              f"{len(loaded_model.dataset.data_hdf5s) - 1}, ")
         tick_id_text_var.set("Tick ID: " + str(cur_tick))
-        data_series = selected_df.loc[cur_index, :]
-        pred_series = pred_selected_df.loc[cur_index, :]
+        data_dict = selected_df.loc[cur_index, :].to_dict()
+        pred_dict = pred_selected_df.loc[cur_index, :].to_dict()
         tick_game_id_text_var.set(f"Game Tick ID: {cur_game_tick}")
         extra_round_data_str = ""
         if get_similarity_column(0) in id_df.columns:
@@ -122,11 +122,11 @@ def vis(loaded_model: LoadedModel, inference_fn: Callable[[LoadedModel], None], 
         demo_file_text_var.set(loaded_model.cur_demo_names[game_id])
         round_id_text_var.set(f"Round ID: {int(cur_round)}, "
                               f"Round Number: {selected_df.loc[cur_index, round_number_column]}, {extra_round_data_str}")
-        other_state_text_var.set(f"Planted A {data_series[c4_plant_a_col]}, "
-                                 f"Planted B {data_series[c4_plant_b_col]}, "
-                                 f"Not Planted {data_series[c4_not_planted_col]}, "
-                                 #f"C4 Pos ({data_series[c4_pos_cols[0]]:.2f}, {data_series[c4_pos_cols[1]]:.2f}, {data_series[c4_pos_cols[2]]:.2f}),"
-                                 f"C4 Time Left Percent {data_series[c4_time_left_percent[0]]:.2f}")
+        other_state_text_var.set(f"Planted A {data_dict[c4_plant_a_col]}, "
+                                 f"Planted B {data_dict[c4_plant_b_col]}, "
+                                 f"Not Planted {data_dict[c4_not_planted_col]}, "
+                                 f"C4 Pos ({data_dict[c4_pos_cols[0]]:.2f}, {data_dict[c4_pos_cols[1]]:.2f}, {data_dict[c4_pos_cols[2]]:.2f}),"
+                                 f"C4 Time Left Percent {data_dict[c4_time_left_percent[0]]:.2f}")
 
         d2_img_copy = d2_img.copy().convert("RGBA")
         d2_overlay_im = Image.new("RGBA", d2_img_copy.size, (255, 255, 255, 0))
@@ -141,7 +141,7 @@ def vis(loaded_model: LoadedModel, inference_fn: Callable[[LoadedModel], None], 
             for i in range(max_enemies):
                 player_to_color[i] = ct_color
                 player_to_color[i+max_enemies] = t_color
-        players_status = draw_all_players(data_series, pred_series, d2_img_draw, draw_max, players_to_draw,
+        players_status = draw_all_players(data_dict, pred_dict, d2_img_draw, draw_max, players_to_draw,
                                           player_to_color=player_to_color, draw_only_pos=not draw_pred,
                                           radial_vel_time_step=radial_vel_time_step_slider.get())
 
@@ -179,7 +179,7 @@ def vis(loaded_model: LoadedModel, inference_fn: Callable[[LoadedModel], None], 
         if play_active and num_play_updates_sleeping == 0:
             step_forward_clicked()
             num_play_updates_sleeping += 1
-            play_button.after(250, play_update)
+            play_button.after(63, play_update)
 
 
     def step_forward_clicked():

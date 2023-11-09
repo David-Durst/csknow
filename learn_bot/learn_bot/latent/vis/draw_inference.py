@@ -167,38 +167,38 @@ class PlayerStatus:
     temporal: str = ""
 
 
-def draw_all_players(data_series: pd.Series, pred_series: Optional[pd.Series], im_draw: ImageDraw, draw_max: bool,
+def draw_all_players(data_dict: Dict, pred_dict: Optional[Dict], im_draw: ImageDraw, draw_max: bool,
                      players_to_draw: List[int], draw_only_pos: bool = False, player_to_color: Dict[int, Tuple] = {},
                      rectangle = True, radial_vel_time_step: int = 0, player_to_text: Dict[int, str] = {}) -> PlayerStatus:
     result = PlayerStatus()
     # colors track by number of players drawn
     for player_index in range(len(specific_player_place_area_columns)):
         player_place_area_columns = specific_player_place_area_columns[player_index]
-        if data_series[player_place_area_columns.player_id] != -1:
+        if data_dict[player_place_area_columns.player_id] != -1:
             if player_index not in players_to_draw:
                 continue
 
             # draw player
-            pos_coord = VisMapCoordinate(data_series[player_place_area_columns.pos[0]],
-                                         data_series[player_place_area_columns.pos[1]],
-                                         data_series[player_place_area_columns.pos[2]])
-            vel_per_player = Vec3(data_series[player_place_area_columns.vel[0]],
-                                  data_series[player_place_area_columns.vel[1]],
-                                  data_series[player_place_area_columns.vel[2]])
+            pos_coord = VisMapCoordinate(data_dict[player_place_area_columns.pos[0]],
+                                         data_dict[player_place_area_columns.pos[1]],
+                                         data_dict[player_place_area_columns.pos[2]])
+            vel_per_player = Vec3(data_dict[player_place_area_columns.vel[0]],
+                                  data_dict[player_place_area_columns.vel[1]],
+                                  data_dict[player_place_area_columns.vel[2]])
 
             # temporal data that this function always receives
-            seconds_after_prior_hit_enemy = data_series[player_place_area_columns.seconds_after_prior_hit_enemy]
-            seconds_until_next_hit_enemy = data_series[player_place_area_columns.seconds_until_next_hit_enemy]
-            decrease_distance_to_c4_5s = data_series[player_place_area_columns.decrease_distance_to_c4_5s]
-            decrease_distance_to_c4_10s = data_series[player_place_area_columns.decrease_distance_to_c4_10s]
-            decrease_distance_to_c4_20s = data_series[player_place_area_columns.decrease_distance_to_c4_20s]
-            nearest_crosshair_distance_to_enemy = data_series[player_place_area_columns.nearest_crosshair_distance_to_enemy]
-            hurt_last_5s = data_series[player_place_area_columns.player_hurt_in_last_5s]
-            fire_last_5s = data_series[player_place_area_columns.player_fire_in_last_5s]
-            no_fov_enemy_visible_last_5s = data_series[player_place_area_columns.player_no_fov_enemy_visible_in_last_5s]
-            fov_enemy_visible_last_5s = data_series[player_place_area_columns.player_fov_enemy_visible_in_last_5s]
-            health = data_series[player_place_area_columns.player_health]
-            armor = data_series[player_place_area_columns.player_armor]
+            seconds_after_prior_hit_enemy = data_dict[player_place_area_columns.seconds_after_prior_hit_enemy]
+            seconds_until_next_hit_enemy = data_dict[player_place_area_columns.seconds_until_next_hit_enemy]
+            decrease_distance_to_c4_5s = data_dict[player_place_area_columns.decrease_distance_to_c4_5s]
+            decrease_distance_to_c4_10s = data_dict[player_place_area_columns.decrease_distance_to_c4_10s]
+            decrease_distance_to_c4_20s = data_dict[player_place_area_columns.decrease_distance_to_c4_20s]
+            nearest_crosshair_distance_to_enemy = data_dict[player_place_area_columns.nearest_crosshair_distance_to_enemy]
+            hurt_last_5s = data_dict[player_place_area_columns.player_hurt_in_last_5s]
+            fire_last_5s = data_dict[player_place_area_columns.player_fire_in_last_5s]
+            no_fov_enemy_visible_last_5s = data_dict[player_place_area_columns.player_no_fov_enemy_visible_in_last_5s]
+            fov_enemy_visible_last_5s = data_dict[player_place_area_columns.player_fov_enemy_visible_in_last_5s]
+            health = data_dict[player_place_area_columns.player_health]
+            armor = data_dict[player_place_area_columns.player_armor]
             temporal_str = f"{player_place_area_columns.player_id_uniform_space} " \
                            f"decrease distance to c4 5s {decrease_distance_to_c4_5s} 10s {decrease_distance_to_c4_10s} 20s {decrease_distance_to_c4_20s}, " \
                            f"nearest crosshair distance to enemy {nearest_crosshair_distance_to_enemy:3.2f}, " \
@@ -213,7 +213,7 @@ def draw_all_players(data_series: pd.Series, pred_series: Optional[pd.Series], i
                     custom_color = player_to_color[player_index]
                 pos_coord.draw_vis(im_draw, True, custom_color=custom_color, rectangle=rectangle,
                                    player_text=player_to_text[player_index] if player_index in player_to_text else None,
-                                   view_angle=data_series[player_place_area_columns.view_angle[0]])
+                                   view_angle=data_dict[player_place_area_columns.view_angle[0]])
                 result.status += f"{player_place_area_columns.player_id} pos {pos_coord.coords}, " \
                                  f"vel {vel_per_player}, health {health:3.2f}, armor {armor:3.2f}\n"
                 continue
@@ -229,11 +229,11 @@ def draw_all_players(data_series: pd.Series, pred_series: Optional[pd.Series], i
                 radial_vel_column = player_place_area_columns.radial_vel[i]
                 if radial_vel_time_step > 0:
                     radial_vel_column = player_place_area_columns.future_radial_vel[radial_vel_time_step-1][i]
-                cur_data_prob = data_series[radial_vel_column]
+                cur_data_prob = data_dict[radial_vel_column]
                 if cur_data_prob > max_data_prob:
                     max_data_prob = cur_data_prob
                     max_data_index = i
-                cur_pred_prob = pred_series[radial_vel_column]
+                cur_pred_prob = pred_dict[radial_vel_column]
                 if cur_pred_prob > max_pred_prob:
                     max_pred_prob = cur_pred_prob
                     max_pred_index = i
@@ -259,7 +259,7 @@ def draw_all_players(data_series: pd.Series, pred_series: Optional[pd.Series], i
                 xy_coord_to_sum_coord: Dict[Tuple[float, float], VisMapCoordinate] = {}
                 xy_coord_to_max_prob_z_index: Dict[Tuple[float, float], int] = {}
                 for i in range(num_radial_bins):
-                    cur_pred_prob = pred_series[player_place_area_columns.radial_vel[i]]
+                    cur_pred_prob = pred_dict[player_place_area_columns.radial_vel[i]]
                     cur_pred_coord = pos_coord.get_radial_cell(i, True)
                     xy_coord = cur_pred_coord.coords.x, cur_pred_coord.coords.y
                     if xy_coord not in xy_coord_to_sum_prob:
