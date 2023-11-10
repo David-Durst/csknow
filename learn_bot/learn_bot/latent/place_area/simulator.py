@@ -1,3 +1,5 @@
+import copy
+
 import pandas as pd
 from dataclasses import dataclass
 from typing import Dict, Tuple, Optional
@@ -164,8 +166,8 @@ def save_inference_model_data_with_matching_round_lengths(loaded_model: LoadedMo
     matched_rollout_tensor = rollout_tensor[required_indices]
     matched_pred_tensor = pred_tensor[required_indices]
 
-    loaded_model.cur_simulated_dataset = loaded_model.cur_dataset
-    loaded_model.cur_simulated_dataset.X = matched_rollout_tensor
+    loaded_model.cur_simulated_dataset = copy.copy(loaded_model.cur_dataset)
+    loaded_model.cur_simulated_dataset.X = matched_rollout_tensor.numpy()
     loaded_model.cur_inference_df = loaded_model.column_transformers \
         .get_untransformed_values_whole_pd(matched_pred_tensor, False)
 

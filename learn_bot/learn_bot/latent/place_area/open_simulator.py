@@ -23,8 +23,8 @@ from learn_bot.latent.place_area.load_data import LoadDataResult
 from learn_bot.latent.place_area.pos_abs_from_delta_grid_or_radial import NavData, data_ticks_per_second, \
     data_ticks_per_sim_tick
 from learn_bot.latent.place_area.simulator import LoadedModel, RoundLengths, PlayerEnableMask, max_enemies, \
-    build_rollout_and_similarity_tensors, create_dfs_with_matching_round_lengths, step, get_round_lengths, load_data_options, \
-    limit_to_every_nth_row
+    build_rollout_and_similarity_tensors, save_inference_model_data_with_matching_round_lengths, step, \
+    get_round_lengths, load_data_options, limit_to_every_nth_row
 from learn_bot.latent.vis.vis import vis
 from learn_bot.libs.io_transforms import CUDA_DEVICE_STR, flatten_list
 
@@ -129,10 +129,7 @@ def delta_pos_open_rollout(loaded_model: LoadedModel, round_lengths: Optional[Ro
                     step(rollout_tensor, similarity_tensor, pred_tensor, loaded_model.model, round_lengths, step_index,
                          nav_data, player_enable_mask, constant_velocity)
                 pbar.update(1)
-    # need to modify cur_loaded_df as rollout_df has constant length of all rounds for sim efficiency
-    loaded_model.cur_loaded_df, loaded_model.cur_inference_df = \
-        create_dfs_with_matching_round_lengths(loaded_model.cur_loaded_df, rollout_tensor, pred_tensor, round_lengths,
-                                               loaded_model.column_transformers)
+    save_inference_model_data_with_matching_round_lengths(loaded_model, rollout_tensor, pred_tensor, round_lengths)
 
 
 def gen_vis_wrapper_delta_pos_open_rollout(player_mask_config: PlayerMaskConfig) -> Callable[[LoadedModel], None]:
@@ -160,10 +157,10 @@ class DisplacementErrors:
 
 
 # compute indices in open rollout that are actually predicted
-def compare_predicted_rollout_indices(orig_df: pd.DataFrame, pred_df: pd.DataFrame, round_lengths: RoundLengths,
-                                      player_enable_mask: PlayerEnableMask,
-                                      loaded_model: LoadedModel) -> DisplacementErrors:
-    round_lengths = get_round_lengths(loaded_model.cur_loaded_df)
+def compare_predicted_rollout_indices(loaded_model: LoadedModel,
+                                      player_enable_mask: PlayerEnableMask) -> DisplacementErrors:
+    id_df = loaded_model.get_cur_id_df().copy()
+    round_lengths = get_round_lengths(id_df)
 
     # get a counter for the ground truth group for each trajectory
     # first row will be ground truth, and rest will be relative to it
@@ -174,47 +171,53 @@ def compare_predicted_rollout_indices(orig_df: pd.DataFrame, pred_df: pd.DataFra
         [idx for idx in round_subset_tick_indices if (idx - round_subset_tick_indices.start) % num_time_steps == 0]
         for _, round_subset_tick_indices in round_lengths.round_to_subset_tick_indices.items()
     ])
-    ground_truth_tick_indicators = orig_df[tick_id_column] * 0
+    ground_truth_tick_indicators = id_df[tick_id_column] * 0
     ground_truth_tick_indicators.iloc[ground_truth_tick_indices] = 1
     # new trajectory for each ground truth starting point
     trajectory_counter = ground_truth_tick_indicators.cumsum()
 
     # use counter to compute first/last in each trajectory
-    orig_df[trajectory_counter_column] = trajectory_counter
-    orig_df[index_in_trajectory_column] = \
-        orig_df.groupby(trajectory_counter_column)[trajectory_counter_column].transform('cumcount')
+    id_df[trajectory_counter_column] = trajectory_counter
+    id_df[index_in_trajectory_column] = \
+        id_df.groupby(trajectory_counter_column)[trajectory_counter_column].transform('cumcount')
     # first if counter in trajectory is 0
-    orig_df[is_ground_truth_column] = orig_df[index_in_trajectory_column] == 0
+    id_df[is_ground_truth_column] = id_df[index_in_trajectory_column] == 0
 
     result = DisplacementErrors()
 
-    round_and_delta_df = orig_df.loc[:, [round_id_column, index_in_trajectory_column, trajectory_counter_column]]
+    round_and_delta_df = id_df.loc[:, [round_id_column, index_in_trajectory_column, trajectory_counter_column]]
 
     # compute deltas
-    for column_index, player_columns in enumerate(specific_player_place_area_columns):
+    for column_index in range(len(specific_player_place_area_columns)):
+        pos_column_indices = loaded_model.model.nested_players_pos_columns_tensor[column_index, 0].tolist()
+        alive_column_index = loaded_model.model.alive_columns[column_index]
         pred_vs_orig_delta_x = \
-            pred_df[player_columns.pos[0]] - orig_df[player_columns.pos[0]]
+            loaded_model.cur_simulated_dataset.X[:, pos_column_indices[0]] - \
+            loaded_model.cur_dataset.X[:, pos_column_indices[0]]
         pred_vs_orig_delta_y = \
-            pred_df[player_columns.pos[1]] - orig_df[player_columns.pos[1]]
+            loaded_model.cur_simulated_dataset.X[:, pos_column_indices[1]] - \
+            loaded_model.cur_dataset.X[:, pos_column_indices[1]]
         pred_vs_orig_delta_z = \
-            pred_df[player_columns.pos[2]] - orig_df[player_columns.pos[2]]
+            loaded_model.cur_simulated_dataset.X[:, pos_column_indices[2]] - \
+            loaded_model.cur_dataset.X[:, pos_column_indices[2]]
 
         round_and_delta_df[pred_vs_orig_total_delta_column] = \
-            (pred_vs_orig_delta_x ** 2. + pred_vs_orig_delta_y ** 2. + pred_vs_orig_delta_z ** 2.).pow(0.5)
+            (pred_vs_orig_delta_x ** 2. + pred_vs_orig_delta_y ** 2. + pred_vs_orig_delta_z ** 2.) ** 0.5
 
         # last if counter in trajectory equals max index - need to recompute this for every player
         # as last will be different if die in middle of trajectory
-        orig_df[index_in_trajectory_if_alive_column] = orig_df[index_in_trajectory_column]
-        orig_df[index_in_trajectory_if_alive_column].where(orig_df[player_columns.alive] == 1, -1, inplace=True)
-        orig_df[last_pred_column] = \
-            orig_df.groupby(trajectory_counter_column)[index_in_trajectory_if_alive_column].transform('max')
-        orig_df[is_last_pred_column] = orig_df[last_pred_column] == orig_df[index_in_trajectory_if_alive_column]
+        id_df[index_in_trajectory_if_alive_column] = id_df[index_in_trajectory_column]
+        player_alive_series = pd.Series(loaded_model.cur_dataset.X[:, alive_column_index] == 1)
+        id_df[index_in_trajectory_if_alive_column].where(player_alive_series, -1, inplace=True)
+        id_df[last_pred_column] = \
+            id_df.groupby(trajectory_counter_column)[index_in_trajectory_if_alive_column].transform('max')
+        id_df[is_last_pred_column] = id_df[last_pred_column] == id_df[index_in_trajectory_if_alive_column]
 
-        all_pred_steps_df = round_and_delta_df[~orig_df[is_ground_truth_column] & orig_df[player_columns.alive]]
+        all_pred_steps_df = round_and_delta_df[~id_df[is_ground_truth_column] & player_alive_series]
         # need to remove ground truth, otherwise include FDE for 1 tick trajecotries where first tick is ground truth
         # and die before can make any predictions (no nothing worth evaluating, just get incorrect 0 FDE)
-        final_pred_step_df = round_and_delta_df[orig_df[is_last_pred_column] & ~orig_df[is_ground_truth_column] &
-                                                orig_df[player_columns.alive]]
+        final_pred_step_df = round_and_delta_df[id_df[is_last_pred_column] & ~id_df[is_ground_truth_column] &
+                                                player_alive_series]
 
         ade_traj_ids = all_pred_steps_df[trajectory_counter_column].unique()
         fde_traj_ids = final_pred_step_df[trajectory_counter_column].unique()
@@ -288,24 +291,17 @@ def run_analysis_per_mask(loaded_model: LoadedModel, player_mask_config: PlayerM
         per_iteration_displacement_errors: List[DisplacementErrors] = []
 
         loaded_model.cur_hdf5_index = i
-        loaded_model.load_cur_hdf5_as_pd()
-
-        # running rollout updates df, so keep original copy for analysis
-        orig_loaded_df = loaded_model.cur_loaded_df.copy()
+        loaded_model.load_cur_dataset_only()
 
         for iteration in range(num_iterations):
             print(f"iteration {iteration} / {num_iterations}")
 
-            # reset cur_loaded_df
-            if iteration != 0:
-                loaded_model.cur_loaded_df = orig_loaded_df.copy()
-            round_lengths = get_round_lengths(loaded_model.cur_loaded_df)
+            round_lengths = get_round_lengths(loaded_model.get_cur_id_df())
             player_enable_mask = build_player_mask(loaded_model, player_mask_config, round_lengths)
             delta_pos_open_rollout(loaded_model, round_lengths, player_enable_mask,
                                    constant_velocity=player_mask_config == PlayerMaskConfig.CONSTANT_VELOCITY)
 
-            hdf5_displacement_errors = compare_predicted_rollout_indices(orig_loaded_df, loaded_model.cur_loaded_df,
-                                                                         round_lengths, player_enable_mask, loaded_model)
+            hdf5_displacement_errors = compare_predicted_rollout_indices(loaded_model, player_enable_mask)
             per_iteration_displacement_errors.append(hdf5_displacement_errors)
 
         per_iteration_ade: List[List[float]] = [de.player_round_ades for de in per_iteration_displacement_errors]
@@ -387,11 +383,13 @@ if __name__ == "__main__":
 
     # load_result = load_model_file_for_rollout(all_data_df, "delta_pos_checkpoint.pt")
 
-    loaded_model = load_model_file(load_data_result, use_test_data_only=True)
+    # named outer as uusing loaded_model in lots of parameters to functions as well
+    outer_loaded_model = load_model_file(load_data_result, use_test_data_only=True)
 
     set_pd_print_options()
 
     if perform_analysis:
-        run_analysis(loaded_model)
+        run_analysis(outer_loaded_model)
     else:
-        vis(loaded_model, gen_vis_wrapper_delta_pos_open_rollout(vis_player_mask_config), " Open Loop Simulator")
+        vis(outer_loaded_model, gen_vis_wrapper_delta_pos_open_rollout(vis_player_mask_config), " Open Loop Simulator",
+            use_sim_dataset=True)

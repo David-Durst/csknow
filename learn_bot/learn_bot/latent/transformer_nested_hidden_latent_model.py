@@ -104,9 +104,9 @@ class TransformerNestedHiddenLatentModel(nn.Module):
 
         all_players_pos_columns = get_player_columns_by_str(cts, "player pos")
         all_players_pos_columns_tensor = torch.IntTensor(all_players_pos_columns)
-        nested_players_pos_columns_tensor = rearrange(all_players_pos_columns_tensor, '(p t d) -> p t d',
+        self.nested_players_pos_columns_tensor = rearrange(all_players_pos_columns_tensor, '(p t d) -> p t d',
                                                       p=self.num_players, t=all_prior_and_cur_ticks, d=self.num_dim)
-        self.players_pos_columns = rearrange(nested_players_pos_columns_tensor[:, 0:num_input_time_steps, :],
+        self.players_pos_columns = rearrange(self.nested_players_pos_columns_tensor[:, 0:num_input_time_steps, :],
                                              'p t d -> (p t d)',
                                              p=self.num_players, t=num_input_time_steps, d=self.num_dim).tolist()
         all_players_nearest_crosshair_to_enemy_columns = \
