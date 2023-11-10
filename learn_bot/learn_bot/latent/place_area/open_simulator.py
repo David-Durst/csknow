@@ -108,7 +108,7 @@ def build_constant_velocity_pred_tensor(loaded_model: LoadedModel, round_lengths
                                     # get first pred in num_time_steps trajectory
                                     round_subset_tick_indices[0] + step_index // num_time_steps * num_time_steps)
                                 for step_index in range(round_lengths.max_length_per_round)]
-    return loaded_model.cur_dataset.Y[pred_tensor_indices]
+    return torch.tensor(loaded_model.cur_dataset.Y[pred_tensor_indices])
 
 
 # round_lengths only accepts none so it can be called from vis, which handles many different sim functions
@@ -332,7 +332,7 @@ def run_analysis(loaded_model: LoadedModel):
     mask_result_strs = []
     mask_result_latex_strs = ["Simulation Type & minADE Mean & minADE Std Dev & minFDE Mean & minFDE Std Dev \\\\",
                               "\\hline"]
-    player_mask_configs = [PlayerMaskConfig.ALL,
+    player_mask_configs = [#PlayerMaskConfig.ALL,
                            #PlayerMaskConfig.CT, PlayerMaskConfig.T,
                            #PlayerMaskConfig.LAST_ALIVE,
                            PlayerMaskConfig.CONSTANT_VELOCITY]
