@@ -145,9 +145,10 @@ class RoundStartEndLength:
 
     def get_percent_end(self) -> torch.Tensor:
         cur_steps = self.round_cur_index - self.interpolation_start_index
-        cur_alive_steps = torch.where(self.player_max_alive_steps < cur_steps, cur_steps, self.player_max_alive_steps)
+        cur_alive_steps = torch.where(self.player_max_alive_steps < cur_steps, self.player_max_alive_steps, cur_steps)
         max_steps = self.interpolation_end_index - self.interpolation_start_index
-        max_alive_steps = torch.where(self.player_max_alive_steps < max_steps, max_steps, self.player_max_alive_steps)
+        max_alive_steps = torch.where(self.player_max_alive_steps < max_steps, self.player_max_alive_steps, max_steps)
+        max_alive_steps = torch.where(max_alive_steps < 1., 1., max_alive_steps)
         return cur_alive_steps / max_alive_steps
 
     def get_percent_start(self) -> torch.Tensor:
