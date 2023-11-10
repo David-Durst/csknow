@@ -150,9 +150,37 @@ class RoundStartEndLength:
         return 1 - self.get_percent_end()
 
 
+def fix_dead_positions(loaded_model: LoadedModel, round_lengths: RoundLengths,
+                       ground_truth_rollout_tensor: torch.tensor) -> torch.Tensor:
+    ground_truth_rollout_tensor = ground_truth_rollout_tensor.clone().detach()
+
+    for round_index, round_id in enumerate(round_lengths.round_ids):
+        round_start_index = round_index * round_lengths.max_length_per_round
+        round_end_index = round_start_index + round_lengths.round_to_length[round_id] - 1
+        round_rollout_tensor = ground_truth_rollout_tensor[round_start_index:(round_end_index + 1)]
+
+        for column_index in range(len(specific_player_place_area_columns)):
+            player_pos_column_indices = loaded_model.model.nested_players_pos_columns_tensor[column_index, 0].tolist()
+            player_alive_column_index = loaded_model.model.alive_columns[column_index]
+            player_alive = repeat(round_rollout_tensor[:, player_alive_column_index] == 1, 't -> t d',
+                                  d=len(player_pos_column_indices))
+            player_max_alive_steps = max(0, player_alive[:, 0].sum() - 1)
+            if player_max_alive_steps > 0 and player_max_alive_steps < len(round_rollout_tensor) - 1:
+                print('hi')
+            player_max_alive_pos = round_rollout_tensor[player_max_alive_steps, player_pos_column_indices]
+
+            round_rollout_tensor[:, player_pos_column_indices] = \
+                torch.where(player_alive,
+                            round_rollout_tensor[:, player_pos_column_indices],
+                            player_max_alive_pos)
+
+    return ground_truth_rollout_tensor
+
+
 def update_interpolation_position_rollout_tensor(loaded_model: LoadedModel, round_lengths: RoundLengths,
                                                  ground_truth_rollout_tensor: torch.Tensor,
                                                  interpolate_to_end_of_round: bool) -> torch.Tensor:
+    ground_truth_rollout_tensor = fix_dead_positions(loaded_model, round_lengths, ground_truth_rollout_tensor)
     round_start_end_lengths = []
     for round_index, round_id in enumerate(round_lengths.round_ids):
         for step_index in range(round_lengths.round_to_length[round_id]):
