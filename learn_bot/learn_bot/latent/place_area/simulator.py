@@ -46,6 +46,7 @@ def limit_to_every_nth_row(df: pd.DataFrame):
 def get_round_lengths(df: pd.DataFrame, compute_last_player_alive: bool = False) -> RoundLengths:
     grouped_df = df.groupby([round_id_column]).agg({tick_id_column: ['count', 'min', 'max'],
                                                     'index': ['count', 'min', 'max']})
+    # already decimated data when loading it (see main section of code, custom_limit_fn), so fine to use count here
     result = RoundLengths(len(grouped_df), max(grouped_df[tick_id_column]['count']), [], {}, {}, {}, {}, False, {})
     list_id = 0
     for round_id, round_row in grouped_df[tick_id_column].iterrows():

@@ -133,7 +133,7 @@ def delta_pos_open_rollout(loaded_model: LoadedModel, round_lengths: RoundLength
     rollout_tensor, similarity_tensor = \
         build_rollout_and_similarity_tensors(round_lengths, loaded_model.cur_dataset)
     fixed_pred = False
-    if player_mask_config in [PlayerMaskConfig.STARTING_CMD, PlayerMaskConfig.GROUND_TRUTH_CMD] :
+    if player_mask_config in [PlayerMaskConfig.STARTING_CMD, PlayerMaskConfig.GROUND_TRUTH_CMD]:
         fixed_pred = True
         pred_tensor = build_ground_truth_or_starting_cmd_pred_tensor(loaded_model,
                                                                      player_mask_config == PlayerMaskConfig.GROUND_TRUTH_CMD,
@@ -227,20 +227,27 @@ def compare_predicted_rollout_indices(loaded_model: LoadedModel,
         round_and_delta_df[pred_vs_orig_total_delta_column] = \
             (pred_vs_orig_delta_x ** 2. + pred_vs_orig_delta_y ** 2. + pred_vs_orig_delta_z ** 2.) ** 0.5
 
+        # ignore ends of trajectories where no ground truth command
+        output_columns_per_player = loaded_model.cur_dataset.Y.shape[1] // loaded_model.model.num_players
+        has_ground_truth_command = np.sum(loaded_model.cur_dataset.Y[:,
+                                          (output_columns_per_player*column_index):
+                                          (output_columns_per_player*(column_index+1))], axis=1) > 0.5
+
         # last if counter in trajectory equals max index - need to recompute this for every player
         # as last will be different if die in middle of trajectory
         id_df[index_in_trajectory_if_alive_column] = id_df[index_in_trajectory_column]
         player_alive_series = pd.Series(loaded_model.cur_dataset.X[:, alive_column_index] == 1)
-        id_df[index_in_trajectory_if_alive_column].where(player_alive_series, -1, inplace=True)
+        id_df[index_in_trajectory_if_alive_column].where(player_alive_series & has_ground_truth_command, -1, inplace=True)
         id_df[last_pred_column] = \
             id_df.groupby(trajectory_counter_column)[index_in_trajectory_if_alive_column].transform('max')
         id_df[is_last_pred_column] = id_df[last_pred_column] == id_df[index_in_trajectory_if_alive_column]
 
-        all_pred_steps_df = round_and_delta_df[~id_df[is_ground_truth_column] & player_alive_series]
+        all_pred_steps_df = round_and_delta_df[~id_df[is_ground_truth_column] & player_alive_series &
+                                               has_ground_truth_command]
         # need to remove ground truth, otherwise include FDE for 1 tick trajecotries where first tick is ground truth
         # and die before can make any predictions (no nothing worth evaluating, just get incorrect 0 FDE)
         final_pred_step_df = round_and_delta_df[id_df[is_last_pred_column] & ~id_df[is_ground_truth_column] &
-                                                player_alive_series]
+                                                player_alive_series & has_ground_truth_command]
 
         ade_traj_ids = all_pred_steps_df[trajectory_counter_column].unique()
         fde_traj_ids = final_pred_step_df[trajectory_counter_column].unique()
