@@ -40,8 +40,9 @@ class PlayerMaskConfig(IntEnum):
     T = 2
     LAST_ALIVE = 3
     CONSTANT_VELOCITY = 4
-    NONE = 5
-    NUM_MASK_CONFIGS = 6
+    CONSTANT_POSITION = 5
+    GROUND_TRUTH = 6
+    NUM_MASK_CONFIGS = 7
 
     def __str__(self) -> str:
         if self == PlayerMaskConfig.ALL:
@@ -54,12 +55,10 @@ class PlayerMaskConfig(IntEnum):
             return "Last Alive"
         if self == PlayerMaskConfig.CONSTANT_VELOCITY:
             return "Constant Velocity"
-        if self == PlayerMaskConfig.NONE:
-            return "None"
-
-
-# debugging flag where compute errors on players who are masked out (aka using ground truth)
-include_ground_truth_players_in_afde = False
+        if self == PlayerMaskConfig.CONSTANT_POSITION:
+            return "Constant Position"
+        if self == PlayerMaskConfig.GROUND_TRUTH:
+            return "Ground Truth"
 
 
 def compute_mask_elements_per_player(loaded_model: LoadedModel) -> int:
@@ -68,7 +67,8 @@ def compute_mask_elements_per_player(loaded_model: LoadedModel) -> int:
 
 def build_player_mask(loaded_model: LoadedModel, config: PlayerMaskConfig,
                       round_lengths: RoundLengths) -> PlayerEnableMask:
-    if config != PlayerMaskConfig.ALL and config != PlayerMaskConfig.CONSTANT_VELOCITY:
+    if config != PlayerMaskConfig.ALL and config != PlayerMaskConfig.CONSTANT_VELOCITY and \
+            config != PlayerMaskConfig.CONSTANT_POSITION:
         enabled_player_columns: List[List[bool]] = []
         if config == PlayerMaskConfig.CT:
             for _ in range(round_lengths.num_rounds):
@@ -87,7 +87,7 @@ def build_player_mask(loaded_model: LoadedModel, config: PlayerMaskConfig,
         elif config == PlayerMaskConfig.LAST_ALIVE:
             for _, last_alive in round_lengths.round_to_last_alive_index.items():
                 enabled_player_columns.append([i == last_alive for i in range(0, 2 * max_enemies)])
-        elif config == PlayerMaskConfig.NONE:
+        elif config == PlayerMaskConfig.GROUND_TRUTH:
             for _ in range(round_lengths.num_rounds):
                 enabled_player_columns.append([False for _ in range(0, 2 * max_enemies)])
         player_enable_mask = torch.tensor(enabled_player_columns)
@@ -158,7 +158,8 @@ class DisplacementErrors:
 
 # compute indices in open rollout that are actually predicted
 def compare_predicted_rollout_indices(loaded_model: LoadedModel,
-                                      player_enable_mask: PlayerEnableMask) -> DisplacementErrors:
+                                      player_enable_mask: PlayerEnableMask,
+                                      include_ground_truth_players_in_afde: bool) -> DisplacementErrors:
     id_df = loaded_model.get_cur_id_df().copy()
     round_lengths = get_round_lengths(id_df)
 
@@ -270,6 +271,8 @@ num_iterations = 6
 def plot_ade_fde(player_mask_configs: List[PlayerMaskConfig], displacement_errors: list[pd.Series], axs, is_ade: bool):
     min_value = int(floor(min([de.min() for de in displacement_errors])))
     max_value = int(floor(max([de.max() for de in displacement_errors])))
+    if min_value == max_value:
+        return
     bin_width = (max_value - min_value) // num_bins
     bins = generate_bins(min_value, max_value, bin_width)
     for player_mask_config, de, ax in zip(player_mask_configs, displacement_errors, axs):
@@ -301,7 +304,8 @@ def run_analysis_per_mask(loaded_model: LoadedModel, player_mask_config: PlayerM
             delta_pos_open_rollout(loaded_model, round_lengths, player_enable_mask,
                                    constant_velocity=player_mask_config == PlayerMaskConfig.CONSTANT_VELOCITY)
 
-            hdf5_displacement_errors = compare_predicted_rollout_indices(loaded_model, player_enable_mask)
+            hdf5_displacement_errors = compare_predicted_rollout_indices(loaded_model, player_enable_mask,
+                                                                         player_mask_config == PlayerMaskConfig.GROUND_TRUTH)
             per_iteration_displacement_errors.append(hdf5_displacement_errors)
 
         per_iteration_ade: List[List[float]] = [de.player_round_ades for de in per_iteration_displacement_errors]
@@ -335,7 +339,8 @@ def run_analysis(loaded_model: LoadedModel):
     player_mask_configs = [#PlayerMaskConfig.ALL,
                            #PlayerMaskConfig.CT, PlayerMaskConfig.T,
                            #PlayerMaskConfig.LAST_ALIVE,
-                           PlayerMaskConfig.CONSTANT_VELOCITY]
+                           #PlayerMaskConfig.CONSTANT_VELOCITY,
+                           PlayerMaskConfig.GROUND_TRUTH]
     ades_per_mask_config: List[pd.Series] = []
     fdes_per_mask_config: List[pd.Series] = []
     for i, player_mask_config in enumerate(player_mask_configs):
