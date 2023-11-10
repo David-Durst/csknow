@@ -28,8 +28,6 @@ direction_angle_range = 360. / num_directions
 num_z_axis_layers = 3
 num_radial_bins_per_z_axis = num_directions * StatureOptions.NUM_STATURE_OPTIONS.value
 num_radial_bins = 1 + num_z_axis_layers * num_radial_bins_per_z_axis
-# half of max speed, can upgrade simulator with per-weapon speeds later
-default_speed = 125
 
 
 
