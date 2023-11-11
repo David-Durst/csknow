@@ -141,13 +141,15 @@ class RoundStartEndLength:
     round_cur_index: int
     interpolation_start_index: int
     interpolation_end_index: int
-    player_max_alive_steps: torch.Tensor
+    player_max_alive_steps_in_interpolation: torch.Tensor
 
     def get_percent_end(self) -> torch.Tensor:
         cur_steps = self.round_cur_index - self.interpolation_start_index
-        cur_alive_steps = torch.where(self.player_max_alive_steps < cur_steps, self.player_max_alive_steps, cur_steps)
+        cur_alive_steps = torch.where(self.player_max_alive_steps_in_interpolation < cur_steps,
+                                      self.player_max_alive_steps_in_interpolation, cur_steps)
         max_steps = self.interpolation_end_index - self.interpolation_start_index
-        max_alive_steps = torch.where(self.player_max_alive_steps < max_steps, self.player_max_alive_steps, max_steps)
+        max_alive_steps = torch.where(self.player_max_alive_steps_in_interpolation < max_steps,
+                                      self.player_max_alive_steps_in_interpolation, max_steps)
         max_alive_steps = torch.where(max_alive_steps < 1., 1., max_alive_steps)
         return cur_alive_steps / max_alive_steps
 
@@ -205,9 +207,21 @@ def update_interpolation_position_rollout_tensor(loaded_model: LoadedModel, roun
                     round_end_index
                 )
 
+            interpolation_start_step_index = interpolation_start_index - round_start_index
+            player_max_alive_steps_in_interpolation = round_id_to_player_max_alive_steps[round_id] - \
+                                                      interpolation_start_step_index
+            player_max_alive_steps_in_interpolation = torch.where(
+                player_max_alive_steps_in_interpolation > 0.,
+                player_max_alive_steps_in_interpolation,
+                0.
+            )
+
+            #if round_index == 1 and step_index == 108:
+            #    print('hi')
+
             round_start_end_lengths.append(RoundStartEndLength(
                 round_start_index + step_index, interpolation_start_index, interpolation_end_index,
-                round_id_to_player_max_alive_steps[round_id]
+                player_max_alive_steps_in_interpolation
             ))
 
     pos_column_indices = []
@@ -221,6 +235,9 @@ def update_interpolation_position_rollout_tensor(loaded_model: LoadedModel, roun
         # need to repeat once per pos dimension
         percent_start_repeated = repeat(round_start_end_length.get_percent_start(), 'b -> (b d)', d=3)
         percent_end_repeated = repeat(round_start_end_length.get_percent_end(), 'b -> (b d)', d=3)
+        #if round_start_end_length.round_cur_index == 437:
+        #    print('hi')
+        #    percent_end_repeated = repeat(round_start_end_length.get_percent_end(), 'b -> (b d)', d=3)
         interpolation_rollout_tensor[round_start_end_length.round_cur_index, pos_column_indices] = \
             start_pos * percent_start_repeated + end_pos * percent_end_repeated
 
