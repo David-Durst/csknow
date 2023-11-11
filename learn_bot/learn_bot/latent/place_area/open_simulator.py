@@ -307,7 +307,8 @@ class DisplacementErrors:
 # compute indices in open rollout that are actually predicted
 def compare_predicted_rollout_indices(loaded_model: LoadedModel,
                                       player_enable_mask: PlayerEnableMask,
-                                      include_ground_truth_players_in_afde: bool) -> DisplacementErrors:
+                                      include_ground_truth_players_in_afde: bool,
+                                      include_steps_without_actions: bool) -> DisplacementErrors:
     id_df = loaded_model.get_cur_id_df().copy()
     round_lengths = get_round_lengths(id_df)
 
@@ -358,6 +359,8 @@ def compare_predicted_rollout_indices(loaded_model: LoadedModel,
         has_ground_truth_command = np.sum(loaded_model.cur_dataset.Y[:,
                                           (output_columns_per_player*column_index):
                                           (output_columns_per_player*(column_index+1))], axis=1) > 0.5
+        if not include_steps_without_actions:
+            has_ground_truth_command = has_ground_truth_command | True
 
         # last if counter in trajectory equals max index - need to recompute this for every player
         # as last will be different if die in middle of trajectory
@@ -458,7 +461,8 @@ def run_analysis_per_mask(loaded_model: LoadedModel, player_mask_config: PlayerM
             player_enable_mask = build_player_mask(loaded_model, player_mask_config, round_lengths)
             delta_pos_open_rollout(loaded_model, round_lengths, player_enable_mask, player_mask_config)
             hdf5_displacement_errors = compare_predicted_rollout_indices(loaded_model, player_enable_mask,
-                                                                         player_mask_config in mask_all_configs)
+                                                                         player_mask_config in mask_all_configs,
+                                                                         player_mask_config == PlayerMaskConfig.GROUND_TRUTH_CMD)
             per_iteration_displacement_errors.append(hdf5_displacement_errors)
 
         per_iteration_ade: List[List[float]] = [de.player_round_ades for de in per_iteration_displacement_errors]
