@@ -48,6 +48,7 @@ def get_player_distribution_nearest_grid_area(player_index: int, area_grid_index
 
 
 class PlayerPlaceAreaColumns:
+    is_ct: bool
     player_id: str
     index_on_team: list[str]
     ct_team: str
@@ -70,6 +71,7 @@ class PlayerPlaceAreaColumns:
     trace_is_bot_player: str
 
     def __init__(self, team_str: str, player_index: int):
+        self.is_ct = team_strs[0] == team_str
         self.player_id = player_id_column + " " + player_team_str(team_str, player_index)
         self.player_id_uniform_space = player_id_column + " " + player_team_str(team_str, player_index,
                                                                                 uniform_space=True)

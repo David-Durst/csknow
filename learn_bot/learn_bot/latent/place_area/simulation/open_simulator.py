@@ -78,7 +78,7 @@ def compute_mask_elements_per_player(loaded_model: LoadedModel) -> int:
 non_mask_configs = [PlayerMaskConfig.ALL, PlayerMaskConfig.STARTING_CMD, PlayerMaskConfig.STARTING_POSITION,
                     PlayerMaskConfig.GROUND_TRUTH_CMD]
 mask_all_configs = [PlayerMaskConfig.INTERPOLATION_ROLLOUT_POSITION, PlayerMaskConfig.INTERPOLATION_ROUND_POSITION,
-                    PlayerMaskConfig.GROUND_TRUTH_POSITION]
+                    PlayerMaskConfig.NN_POSITION, PlayerMaskConfig.GROUND_TRUTH_POSITION]
 
 
 def build_player_mask(loaded_model: LoadedModel, config: PlayerMaskConfig,

@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import List, Tuple
+from typing import List, Tuple, Optional
 
 import pandas as pd
 import torch
@@ -39,8 +39,8 @@ class PlayerColumnIndices:
 
 
 def get_id_df_and_alive_pos_and_full_table_id_np(hdf5_wrapper: HDF5Wrapper, model: TransformerNestedHiddenLatentModel,
-                                                 num_ct_alive: int, num_t_alive: int) \
-        -> Tuple[pd.DataFrame, np.ndarray, np.ndarray]:
+                                                 num_ct_alive: int, num_t_alive: int, push_only: bool) \
+        -> Tuple[pd.DataFrame, Optional[np.ndarray], Optional[np.ndarray]]:
     player_column_indices = PlayerColumnIndices(model)
 
     # get rows which have right number of players alive
@@ -48,10 +48,15 @@ def get_id_df_and_alive_pos_and_full_table_id_np(hdf5_wrapper: HDF5Wrapper, mode
     num_t_alive_np = np.sum(hdf5_wrapper.get_all_input_data()[:, player_column_indices.t_alive_cols], axis=1)
 
     # include similarity require pushing rounds only
-    valid = (num_ct_alive_np == num_ct_alive) & (num_t_alive_np == num_t_alive) & \
-            hdf5_wrapper.id_df[get_similarity_column(0)].to_numpy()
+    valid = (num_ct_alive_np == num_ct_alive) & (num_t_alive_np == num_t_alive)
+    if push_only:
+        valid = valid & hdf5_wrapper.id_df[get_similarity_column(0)].to_numpy()
     valid_id_df = hdf5_wrapper.id_df[valid]
     valid_whole_np = hdf5_wrapper.get_all_input_data()[valid]
+
+    # if no matches in this hdf5, just get our and return something that
+    if valid_whole_np.shape[0] == 0:
+        return valid_id_df, None, None
 
     # for each row, record all pos indices of alive players
     alive_players_pos_list: List[np.ndarray] = []
@@ -76,10 +81,3 @@ def get_id_df_and_alive_pos_and_full_table_id_np(hdf5_wrapper: HDF5Wrapper, mode
                                                             3))
 
     return valid_id_df, nested_valid_alive_pos_np, alive_players_id_np
-
-
-
-
-
-
-

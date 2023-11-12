@@ -6,7 +6,7 @@ import pandas as pd
 import math
 
 from learn_bot.latent.analyze.knn.generate_player_index_mappings import generate_all_player_to_column_mappings
-from learn_bot.latent.analyze.knn.plot_min_distance_rounds import plot_min_distance_rounds, l2_distance_col, \
+from learn_bot.latent.analyze.knn.plot_min_distance_rounds import collect_plot_plot_min_distance_rounds, l2_distance_col, \
     hdf5_id_col, target_full_table_id_col, max_game_tick_number_column, game_tick_rate
 from learn_bot.latent.analyze.knn.select_alive_players import get_id_df_and_alive_pos_and_full_table_id_np
 from learn_bot.latent.engagement.column_names import round_id_column, game_tick_number_column
@@ -39,11 +39,13 @@ def get_nearest_neighbors(situations: List[PositionSituationParameters], num_mat
     for situation in situations:
         print(f"processing {situation.name}")
         get_nearest_neighbors_one_situation(situation.ct_pos, situation.t_pos, num_matches,
-                                            loaded_model, situation.name, situation.get_target_player_index())
+                                            loaded_model, situation.name, situation.get_target_player_index(), True,
+                                            True)
 
 
 def get_nearest_neighbors_one_situation(ct_pos: List[Vec3], t_pos: List[Vec3], num_matches: int,
-                                        loaded_model: LoadedModel, situation_name: str, target_player_index: int):
+                                        loaded_model: LoadedModel, situation_name: str, target_player_index: int,
+                                        plot: bool, push_only: bool) -> List[np.ndarray]:
     num_ct_alive = len(ct_pos)
     num_t_alive = len(t_pos)
 
@@ -56,7 +58,12 @@ def get_nearest_neighbors_one_situation(ct_pos: List[Vec3], t_pos: List[Vec3], n
     for i, hdf5_wrapper in enumerate(loaded_model.dataset.data_hdf5s):
         id_df, alive_pos_np, full_table_id_np = get_id_df_and_alive_pos_and_full_table_id_np(hdf5_wrapper,
                                                                                              loaded_model.model,
-                                                                                             num_ct_alive, num_t_alive)
+                                                                                             num_ct_alive, num_t_alive,
+                                                                                             push_only)
+
+        if id_df.empty:
+            continue
+
         alive_pos_np = alive_pos_np.astype(np.float32)
 
         base_point_np = np.zeros_like(alive_pos_np)
@@ -135,8 +142,14 @@ def get_nearest_neighbors_one_situation(ct_pos: List[Vec3], t_pos: List[Vec3], n
     min_distance_rounds_df = pd.concat(min_distance_rounds_per_hdf5).sort_values(l2_distance_col).iloc[:num_matches]
     #print(f"round id: {min_distance_rounds_df['round id'].iloc[0]}, hdf5 id: {min_distance_rounds_df['hdf5 id'].iloc[0]}")
     #plot_min_distance_rounds(loaded_model, min_distance_rounds_df, situation_name, None, num_matches)
-    plot_min_distance_rounds(loaded_model, min_distance_rounds_df, situation_name, True, num_matches)
-    plot_min_distance_rounds(loaded_model, min_distance_rounds_df, situation_name, False, num_matches)
+    if plot:
+        collect_plot_plot_min_distance_rounds(loaded_model, min_distance_rounds_df, situation_name,
+                                              True, num_matches, True)
+        return collect_plot_plot_min_distance_rounds(loaded_model, min_distance_rounds_df, situation_name,
+                                                     False, num_matches, True)
+    else:
+        return collect_plot_plot_min_distance_rounds(loaded_model, min_distance_rounds_df, situation_name,
+                                                     True, num_matches, False)
 
 
 attack_a_spawn_t_long = PositionSituationParameters(

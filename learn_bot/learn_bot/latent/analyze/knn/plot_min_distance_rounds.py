@@ -45,8 +45,9 @@ game_tick_rate = 128
 max_future_seconds = 10
 
 
-def plot_min_distance_rounds(loaded_model: LoadedModel, min_distance_rounds_df: pd.DataFrame, test_name: str,
-                             restrict_future: Optional[bool], num_matches: int):
+def collect_plot_plot_min_distance_rounds(loaded_model: LoadedModel, min_distance_rounds_df: pd.DataFrame, test_name: str,
+                                          restrict_future: Optional[bool], num_matches: int, plot: bool) -> List[np.ndarray]:
+    min_distance_nps: List[np.ndarray] = []
     min_distance_pos_dfs: List[pd.DataFrame] = []
     target_full_table_ids: List[int] = []
     for i, hdf5_wrapper in enumerate(loaded_model.dataset.data_hdf5s):
@@ -61,27 +62,32 @@ def plot_min_distance_rounds(loaded_model: LoadedModel, min_distance_rounds_df: 
                                          (hdf5_wrapper.id_df[game_tick_number_column] <=
                                           round_row[game_tick_number_column] + game_tick_rate*max_future_seconds)
             min_distance_id_df = hdf5_wrapper.id_df[min_distance_condition]
-            min_distance_np = hdf5_wrapper.get_all_input_data()[min_distance_id_df[row_id_column]]
+            # need to use condtiion, not ids, might have filtered down based on id or test/train split
+            min_distance_np = hdf5_wrapper.get_all_input_data()[min_distance_condition]
+            min_distance_nps.append(min_distance_np)
             min_distance_pos_dfs.append(all_np_to_pos_alive_df(min_distance_np, min_distance_id_df, i, loaded_model))
             target_full_table_ids.append(round_row[target_full_table_id_col])
 
-    load_data_option = dataclasses.replace(all_human_load_data_option,
-                                           custom_rollout_extension="human_knn")
-    config = dataclasses.replace(all_human_vs_all_human_config,
-                                 predicted_load_data_options=load_data_option,
-                                 metric_cost_title=f"Human KNN {test_name}")
-    option_str = f"matches_{num_matches}"
-    if restrict_future is not None:
-        option_str += f"_restrict_future_{restrict_future}"
-    plots_path = similarity_plots_path / load_data_option.custom_rollout_extension / option_str
-    os.makedirs(plots_path, exist_ok=True)
-    restrict_future_str = ""
-    if restrict_future is not None:
-        restrict_future_str = f"_r_{restrict_future}"
-    img = plot_trajectory_dfs_and_event(min_distance_pos_dfs, config, True, True, True, plot_starts=True,
-                                  only_plot_post_start=target_full_table_ids)
-    constraint_result = check_constraint_metrics(min_distance_pos_dfs, test_name, target_full_table_ids, img)
-    img.save(plots_path / f'{test_name}{restrict_future_str}.png')
-    constraint_result.save(plots_path / f'{test_name}{restrict_future_str}.csv', 'human knn')
+    if plot:
+        load_data_option = dataclasses.replace(all_human_load_data_option,
+                                               custom_rollout_extension="human_knn")
+        config = dataclasses.replace(all_human_vs_all_human_config,
+                                     predicted_load_data_options=load_data_option,
+                                     metric_cost_title=f"Human KNN {test_name}")
+        option_str = f"matches_{num_matches}"
+        if restrict_future is not None:
+            option_str += f"_restrict_future_{restrict_future}"
+        plots_path = similarity_plots_path / load_data_option.custom_rollout_extension / option_str
+        os.makedirs(plots_path, exist_ok=True)
+        restrict_future_str = ""
+        if restrict_future is not None:
+            restrict_future_str = f"_r_{restrict_future}"
+        img = plot_trajectory_dfs_and_event(min_distance_pos_dfs, config, True, True, True, plot_starts=True,
+                                      only_plot_post_start=target_full_table_ids)
+        constraint_result = check_constraint_metrics(min_distance_pos_dfs, test_name, target_full_table_ids, img)
+        img.save(plots_path / f'{test_name}{restrict_future_str}.png')
+        constraint_result.save(plots_path / f'{test_name}{restrict_future_str}.csv', 'human knn')
+    else:
+        return min_distance_nps
 
 
