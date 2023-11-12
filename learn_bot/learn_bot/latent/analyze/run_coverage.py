@@ -3,13 +3,10 @@ import pickle
 from pathlib import Path
 
 import numpy as np
-import pandas as pd
-import torch
 from matplotlib import pyplot as plt
-from matplotlib.colors import TwoSlopeNorm, LinearSegmentedColormap, LogNorm
+from matplotlib.colors import LogNorm
 
-from learn_bot.latent.place_area.column_names import PlayerPlaceAreaColumns
-from learn_bot.latent.place_area.simulator import *
+from learn_bot.latent.place_area.simulation.simulator import *
 
 coverage_pickle_path = Path(__file__).parent / 'plots' / 'coverage.pickle'
 

@@ -4,7 +4,7 @@ from dataclasses import field, dataclass
 from enum import IntEnum
 from math import floor
 from pathlib import Path
-from typing import List, Optional, Callable, Tuple, Dict
+from typing import List, Callable, Tuple, Dict
 
 import numpy as np
 import pandas as pd
@@ -22,12 +22,11 @@ from learn_bot.latent.place_area.column_names import specific_player_place_area_
 from learn_bot.latent.place_area.load_data import LoadDataResult
 from learn_bot.latent.place_area.pos_abs_from_delta_grid_or_radial import NavData, data_ticks_per_second, \
     data_ticks_per_sim_tick
-from learn_bot.latent.place_area.simulator import LoadedModel, RoundLengths, PlayerEnableMask, max_enemies, \
+from learn_bot.latent.place_area.simulation.simulator import LoadedModel, RoundLengths, PlayerEnableMask, max_enemies, \
     build_rollout_and_similarity_tensors, save_inference_model_data_with_matching_round_lengths, step, \
     get_round_lengths, load_data_options, limit_to_every_nth_row
 from learn_bot.latent.vis.vis import vis
 from learn_bot.libs.io_transforms import CUDA_DEVICE_STR, flatten_list
-from learn_bot.libs.vec import Vec3
 
 # this is a open loop version of the simulator for computing metrics based on short time horizons
 
@@ -44,9 +43,10 @@ class PlayerMaskConfig(IntEnum):
     STARTING_POSITION = 5
     INTERPOLATION_ROLLOUT_POSITION = 6
     INTERPOLATION_ROUND_POSITION = 7
-    GROUND_TRUTH_CMD = 8
-    GROUND_TRUTH_POSITION = 9
-    NUM_MASK_CONFIGS = 10
+    NN_POSITION = 8
+    GROUND_TRUTH_CMD = 9
+    GROUND_TRUTH_POSITION = 10
+    NUM_MASK_CONFIGS = 11
 
     def __str__(self) -> str:
         if self == PlayerMaskConfig.ALL:
@@ -65,6 +65,8 @@ class PlayerMaskConfig(IntEnum):
             return "Interpolation Rollout Position"
         if self == PlayerMaskConfig.INTERPOLATION_ROUND_POSITION:
             return "Interpolation Round Position"
+        if self == PlayerMaskConfig.NN_POSITION:
+            return "NN Position"
         if self == PlayerMaskConfig.GROUND_TRUTH_CMD:
             return "Ground Truth Command"
         if self == PlayerMaskConfig.GROUND_TRUTH_POSITION:
@@ -268,16 +270,17 @@ def delta_pos_open_rollout(loaded_model: LoadedModel, round_lengths: RoundLength
             player_mask_config == PlayerMaskConfig.INTERPOLATION_ROUND_POSITION:
         rollout_tensor = update_interpolation_position_rollout_tensor(loaded_model, round_lengths, rollout_tensor,
                                                                       player_mask_config == PlayerMaskConfig.INTERPOLATION_ROUND_POSITION)
-
-    loaded_model.model.eval()
-    with torch.no_grad():
-        num_steps = round_lengths.max_length_per_round - 1
-        with tqdm(total=num_steps, disable=False) as pbar:
-            for step_index in range(num_steps):
-                if (step_index + 1) % num_time_steps != 0:
-                    step(rollout_tensor, similarity_tensor, pred_tensor, loaded_model.model, round_lengths, step_index,
-                         nav_data, player_enable_mask, fixed_pred)
-                pbar.update(1)
+    elif player_mask_config == PlayerMaskConfig.NN_POSITION:
+    else:
+        loaded_model.model.eval()
+        with torch.no_grad():
+            num_steps = round_lengths.max_length_per_round - 1
+            with tqdm(total=num_steps, disable=False) as pbar:
+                for step_index in range(num_steps):
+                    if (step_index + 1) % num_time_steps != 0:
+                        step(rollout_tensor, similarity_tensor, pred_tensor, loaded_model.model, round_lengths, step_index,
+                             nav_data, player_enable_mask, fixed_pred)
+                    pbar.update(1)
     save_inference_model_data_with_matching_round_lengths(loaded_model, rollout_tensor, pred_tensor, round_lengths)
 
 
@@ -498,8 +501,9 @@ def run_analysis(loaded_model: LoadedModel):
                            #PlayerMaskConfig.LAST_ALIVE,
                            #PlayerMaskConfig.STARTING_CMD,
                            #PlayerMaskConfig.STARTING_POSITION,
-                           PlayerMaskConfig.INTERPOLATION_ROLLOUT_POSITION,
-                           PlayerMaskConfig.INTERPOLATION_ROUND_POSITION]
+                           #PlayerMaskConfig.INTERPOLATION_ROLLOUT_POSITION,
+                           #PlayerMaskConfig.INTERPOLATION_ROUND_POSITION,
+                           PlayerMaskConfig.NN_POSITION]
                            #PlayerMaskConfig.GROUND_TRUTH_CMD,
                            #PlayerMaskConfig.GROUND_TRUTH_POSITION]
     ades_per_mask_config: List[pd.Series] = []

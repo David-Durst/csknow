@@ -1,11 +1,11 @@
 from dataclasses import dataclass
 from random import random
-from typing import Optional, Tuple
+from typing import Tuple
 import torch
 from einops import rearrange
 
 from learn_bot.latent.latent_hdf5_dataset import round_id_index_in_tensor
-from learn_bot.latent.place_area.simulator import step, get_round_lengths, RoundLengths
+from learn_bot.latent.place_area.simulation.simulator import step, RoundLengths
 from learn_bot.latent.transformer_nested_hidden_latent_model import TransformerNestedHiddenLatentModel
 
 

@@ -7,7 +7,7 @@ from typing import Dict
 import sys
 
 import torch.optim
-from torch import nn, autocast
+from torch import autocast
 from torch.profiler import profile, ProfilerActivity, schedule
 from torch.utils.data import DataLoader
 
@@ -20,12 +20,11 @@ from learn_bot.latent.latent_subset_hdf5_dataset import *
 from learn_bot.latent.engagement.column_names import round_id_column
 from learn_bot.latent.hyperparameter_options import HyperparameterOptions
 from learn_bot.latent.latent_hdf5_dataset import MultipleLatentHDF5Dataset
-from learn_bot.latent.order.column_names import num_radial_ticks
 from learn_bot.latent.place_area.load_data import human_latent_team_hdf5_data_path, manual_latent_team_hdf5_data_path, \
     LoadDataResult, LoadDataOptions
 from learn_bot.latent.place_area.column_names import place_area_input_column_types, radial_vel_output_column_types, \
-    test_success_col, num_radial_bins
-from learn_bot.latent.place_area.rollout_simulator import rollout_simulate
+    test_success_col
+from learn_bot.latent.place_area.simulation.rollout_simulator import rollout_simulate
 from learn_bot.latent.profiling import profile_latent_model
 from learn_bot.latent.train_paths import checkpoints_path, runs_path, train_test_split_file_name, \
     default_selected_retake_rounds_path

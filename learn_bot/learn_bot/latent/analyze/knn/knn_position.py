@@ -93,6 +93,10 @@ def get_nearest_neighbors_one_situation(ct_pos: List[Vec3], t_pos: List[Vec3], n
                                                       mapping_euclidean_distance, min_euclidean_distance_per_row)
             # use manhattan distance to find which player is target, as that global misalignments
             # may sacrifice target accuracy for overall accuracy
+            # WHY DOESN'T THIS DEPEND ON EUCLIDEAN? COULDN'T THIS LEAD TO PLAYER MATCHES FOR DIFFERENT GAME STATES?
+            # NO - THIS IS COMPUTES BEST MAPPING ON A PER GAME STATE BASIS. AFTER USING L2 TO COMPUTE BEST POSITION,
+            # THIS WILL TELL YOU ALIGNMENT, SO THIS ALWAYS USED AFTER L2 (SORT BY L2 BELOW DONE FIRST, THEN LOOK AT
+            # target_full_table_id_col)
             mapping_manhattan_distance_per_player = (
                     np.abs(alive_pos_np[:, column_indices, 0] - base_point_np[:, player_indices, 0]) +
                     np.abs(alive_pos_np[:, column_indices, 1] - base_point_np[:, player_indices, 1]) +

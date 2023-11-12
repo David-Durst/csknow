@@ -1,10 +1,7 @@
-from learn_bot.latent.analyze.humanness_metrics.hdf5_loader import HumannessMetrics, HumannessDataOptions
 from learn_bot.latent.engagement.column_names import game_id_column, round_number_column
-from learn_bot.latent.order.column_names import c4_pos_cols
-from learn_bot.latent.place_area.simulator import *
+from learn_bot.latent.place_area.simulation.simulator import *
 from dataclasses import dataclass
 
-from learn_bot.libs.df_grouping import make_index_column
 from learn_bot.libs.hdf5_to_pd import save_pd_to_hdf5
 from learn_bot.libs.multi_hdf5_wrapper import absolute_to_relative_train_test_key
 

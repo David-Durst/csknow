@@ -1,11 +1,10 @@
 import torch
-from einops import rearrange
 from torch.utils.data import DataLoader
 
 from learn_bot.latent.engagement.column_names import max_enemies
 from learn_bot.latent.load_model import load_model_file
 from learn_bot.latent.place_area.load_data import LoadDataResult
-from learn_bot.latent.place_area.simulator import limit_to_every_nth_row
+from learn_bot.latent.place_area.simulation.simulator import limit_to_every_nth_row
 from learn_bot.latent.train import load_data_options
 from learn_bot.libs.io_transforms import CPU_DEVICE_STR, get_transformed_outputs
 
