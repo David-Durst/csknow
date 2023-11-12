@@ -175,12 +175,12 @@ def get_nearest_neighbors_one_situation(ct_pos: List[Vec3], t_pos: List[Vec3], n
                                                      False, num_matches, True, num_future_ticks)
     else:
         start_collect_time = time.time()
-        tmp = collect_plot_plot_min_distance_rounds(loaded_model, min_distance_rounds_df, situation_name,
+        result = collect_plot_plot_min_distance_rounds(loaded_model, min_distance_rounds_df, situation_name,
                                                      True, num_matches, False, num_future_ticks)
         collect_time = time.time() - start_collect_time
         end = time.time()
         print(f"total time {end - start}, mappings time {mappings_time}, data time {data_time}, math time {math_time}, pd time {pd_time}, collect time {collect_time}")
-        return tmp
+        return result
 
 
 attack_a_spawn_t_long = PositionSituationParameters(
