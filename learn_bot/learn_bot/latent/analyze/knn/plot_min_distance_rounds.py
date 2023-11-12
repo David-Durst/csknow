@@ -11,7 +11,8 @@ from learn_bot.latent.analyze.compare_trajectories.run_trajectory_comparison imp
     all_human_vs_all_human_config
 from learn_bot.latent.analyze.comparison_column_names import similarity_plots_path
 from learn_bot.latent.analyze.knn.select_alive_players import PlayerColumnIndices
-from learn_bot.latent.engagement.column_names import round_id_column, row_id_column, game_tick_number_column
+from learn_bot.latent.engagement.column_names import round_id_column, row_id_column, game_tick_number_column, \
+    index_column
 from learn_bot.latent.load_model import LoadedModel
 from learn_bot.latent.place_area.column_names import specific_player_place_area_columns
 
@@ -19,6 +20,7 @@ l2_distance_col = 'l2 distance'
 hdf5_id_col = 'hdf5 id'
 target_full_table_id_col = 'target full table id'
 max_game_tick_number_column = 'max ' + game_tick_number_column
+max_index_column = 'max ' + index_column
 
 
 # note: this id_df is only for rows in all_np, which may not be all rows in data set
@@ -46,7 +48,8 @@ max_future_seconds = 10
 
 
 def collect_plot_plot_min_distance_rounds(loaded_model: LoadedModel, min_distance_rounds_df: pd.DataFrame, test_name: str,
-                                          restrict_future: Optional[bool], num_matches: int, plot: bool) -> List[np.ndarray]:
+                                          restrict_future: Optional[bool], num_matches: int, plot: bool,
+                                          num_future_ticks: Optional[int]) -> List[np.ndarray]:
     min_distance_nps: List[np.ndarray] = []
     min_distance_pos_dfs: List[pd.DataFrame] = []
     target_full_table_ids: List[int] = []
@@ -58,9 +61,14 @@ def collect_plot_plot_min_distance_rounds(loaded_model: LoadedModel, min_distanc
             min_distance_condition = (hdf5_wrapper.id_df[round_id_column] == round_row[round_id_column]) & \
                                      (hdf5_wrapper.id_df[row_id_column] >= round_row[row_id_column])
             if restrict_future is not None and restrict_future:
-                min_distance_condition = min_distance_condition & \
-                                         (hdf5_wrapper.id_df[game_tick_number_column] <=
-                                          round_row[game_tick_number_column] + game_tick_rate*max_future_seconds)
+                if num_future_ticks is not None:
+                    min_distance_condition = min_distance_condition & \
+                                             (hdf5_wrapper.id_df[index_column] <
+                                              round_row[index_column] + num_future_ticks)
+                else:
+                    min_distance_condition = min_distance_condition & \
+                                             (hdf5_wrapper.id_df[game_tick_number_column] <=
+                                              round_row[game_tick_number_column] + game_tick_rate*max_future_seconds)
             min_distance_id_df = hdf5_wrapper.id_df[min_distance_condition]
             # need to use condtiion, not ids, might have filtered down based on id or test/train split
             min_distance_np = hdf5_wrapper.get_all_input_data()[min_distance_condition]

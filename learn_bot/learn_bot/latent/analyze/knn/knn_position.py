@@ -1,15 +1,16 @@
 from dataclasses import dataclass
-from typing import List
+from typing import List, Optional
 
 import numpy as np
 import pandas as pd
 import math
 
 from learn_bot.latent.analyze.knn.generate_player_index_mappings import generate_all_player_to_column_mappings
-from learn_bot.latent.analyze.knn.plot_min_distance_rounds import collect_plot_plot_min_distance_rounds, l2_distance_col, \
-    hdf5_id_col, target_full_table_id_col, max_game_tick_number_column, game_tick_rate
+from learn_bot.latent.analyze.knn.plot_min_distance_rounds import collect_plot_plot_min_distance_rounds, \
+    l2_distance_col, \
+    hdf5_id_col, target_full_table_id_col, max_game_tick_number_column, game_tick_rate, max_index_column
 from learn_bot.latent.analyze.knn.select_alive_players import get_id_df_and_alive_pos_and_full_table_id_np
-from learn_bot.latent.engagement.column_names import round_id_column, game_tick_number_column
+from learn_bot.latent.engagement.column_names import round_id_column, game_tick_number_column, index_column
 from learn_bot.latent.load_model import load_model_file, LoadedModel
 from learn_bot.latent.place_area.load_data import LoadDataResult
 from learn_bot.latent.train import load_data_options
@@ -40,12 +41,14 @@ def get_nearest_neighbors(situations: List[PositionSituationParameters], num_mat
         print(f"processing {situation.name}")
         get_nearest_neighbors_one_situation(situation.ct_pos, situation.t_pos, num_matches,
                                             loaded_model, situation.name, situation.get_target_player_index(), True,
-                                            True)
+                                            True, None)
 
 
+# if num_future_ticks is None, then will restrict based on game ticks (actual in game clock time) rather than number
+# of ticks
 def get_nearest_neighbors_one_situation(ct_pos: List[Vec3], t_pos: List[Vec3], num_matches: int,
                                         loaded_model: LoadedModel, situation_name: str, target_player_index: int,
-                                        plot: bool, push_only: bool) -> List[np.ndarray]:
+                                        plot: bool, push_only: bool, num_future_ticks: Optional[int]) -> List[np.ndarray]:
     num_ct_alive = len(ct_pos)
     num_t_alive = len(t_pos)
 
@@ -121,14 +124,24 @@ def get_nearest_neighbors_one_situation(ct_pos: List[Vec3], t_pos: List[Vec3], n
         id_with_distance_df[hdf5_id_col] = i
 
         # ensure at least 5 seconds of gameplay to track
-        round_and_max_game_tick_number = id_with_distance_df \
-            .groupby(round_id_column, as_index=False)[game_tick_number_column].max() \
-            .rename({game_tick_number_column: max_game_tick_number_column}, axis=1)
-        id_with_distance_max_tick = id_with_distance_df.merge(round_and_max_game_tick_number, how="left",
-                                                              on=round_id_column)
-        id_with_distance_time_limited_tick = \
-            id_with_distance_max_tick[(id_with_distance_max_tick[max_game_tick_number_column] -
-                                       id_with_distance_max_tick[game_tick_number_column]) > game_tick_rate * 5]
+        if num_future_ticks is None:
+            round_and_max_game_tick_number = id_with_distance_df \
+                .groupby(round_id_column, as_index=False)[game_tick_number_column].max() \
+                .rename({game_tick_number_column: max_game_tick_number_column}, axis=1)
+            id_with_distance_max_tick = id_with_distance_df.merge(round_and_max_game_tick_number, how="left",
+                                                                  on=round_id_column)
+            id_with_distance_time_limited_tick = \
+                id_with_distance_max_tick[(id_with_distance_max_tick[max_game_tick_number_column] -
+                                           id_with_distance_max_tick[game_tick_number_column]) > game_tick_rate * 5]
+        else:
+            round_and_max_index_number = id_with_distance_df \
+                .groupby(round_id_column, as_index=False)[index_column].max() \
+                .rename({index_column: max_index_column}, axis=1)
+            id_with_distance_max_tick = id_with_distance_df.merge(round_and_max_index_number, how="left",
+                                                                  on=round_id_column)
+            id_with_distance_time_limited_tick = \
+                id_with_distance_max_tick[(id_with_distance_max_tick[max_index_column] -
+                                           id_with_distance_max_tick[index_column]) > num_future_ticks]
         # sort by distance within round, then take first row to get best match
         id_sorted_by_round_distance_df = \
             id_with_distance_time_limited_tick.sort_values([round_id_column, l2_distance_col])
@@ -144,12 +157,12 @@ def get_nearest_neighbors_one_situation(ct_pos: List[Vec3], t_pos: List[Vec3], n
     #plot_min_distance_rounds(loaded_model, min_distance_rounds_df, situation_name, None, num_matches)
     if plot:
         collect_plot_plot_min_distance_rounds(loaded_model, min_distance_rounds_df, situation_name,
-                                              True, num_matches, True)
+                                              True, num_matches, True, num_future_ticks)
         return collect_plot_plot_min_distance_rounds(loaded_model, min_distance_rounds_df, situation_name,
-                                                     False, num_matches, True)
+                                                     False, num_matches, True, num_future_ticks)
     else:
         return collect_plot_plot_min_distance_rounds(loaded_model, min_distance_rounds_df, situation_name,
-                                                     True, num_matches, False)
+                                                     True, num_matches, False, num_future_ticks)
 
 
 attack_a_spawn_t_long = PositionSituationParameters(

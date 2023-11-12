@@ -42,7 +42,8 @@ def update_nn_position_rollout_tensor(loaded_model: LoadedModel, round_lengths: 
                     t_pos.append(pos)
 
         # 2 as 1 should be this, second should be second best
-        same_and_nearest_nps = get_nearest_neighbors_one_situation(ct_pos, t_pos, 2, loaded_model, '', 0, False, False)
+        same_and_nearest_nps = get_nearest_neighbors_one_situation(ct_pos, t_pos, 2, loaded_model, '', 0, False, False,
+                                                                   num_time_steps)
         nn_rollout_tensor[point_index:point_index+num_time_steps] = torch.tensor(same_and_nearest_nps[1])
 
     return nn_rollout_tensor

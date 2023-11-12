@@ -7,6 +7,7 @@ from learn_bot.libs.io_transforms import ColumnTypes
 max_enemies = 5
 num_engagement_states = 4
 
+index_column = "index"
 row_id_column = "id"
 game_id_column = "game id"
 round_id_column = "round id"
