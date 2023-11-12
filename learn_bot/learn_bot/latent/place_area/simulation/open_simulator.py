@@ -79,6 +79,8 @@ non_mask_configs = [PlayerMaskConfig.ALL, PlayerMaskConfig.STARTING_CMD, PlayerM
                     PlayerMaskConfig.GROUND_TRUTH_CMD]
 mask_all_configs = [PlayerMaskConfig.INTERPOLATION_ROLLOUT_POSITION, PlayerMaskConfig.INTERPOLATION_ROUND_POSITION,
                     PlayerMaskConfig.NN_POSITION, PlayerMaskConfig.GROUND_TRUTH_POSITION]
+deterministic_configs = [PlayerMaskConfig.INTERPOLATION_ROLLOUT_POSITION, PlayerMaskConfig.INTERPOLATION_ROUND_POSITION,
+                         PlayerMaskConfig.NN_POSITION, PlayerMaskConfig.GROUND_TRUTH_POSITION]
 
 
 def build_player_mask(loaded_model: LoadedModel, config: PlayerMaskConfig,
@@ -337,6 +339,7 @@ def plot_ade_fde(player_mask_configs: List[PlayerMaskConfig], displacement_error
 def run_analysis_per_mask(loaded_model: LoadedModel, player_mask_config: PlayerMaskConfig) -> \
         Tuple[pd.Series, pd.Series]:
     displacement_errors = DisplacementErrors()
+    mask_iterations = num_iterations if player_mask_config not in deterministic_configs else 1
     for i, hdf5_wrapper in enumerate(loaded_model.dataset.data_hdf5s):
         if i > 1:
             break
@@ -347,8 +350,9 @@ def run_analysis_per_mask(loaded_model: LoadedModel, player_mask_config: PlayerM
         loaded_model.cur_hdf5_index = i
         loaded_model.load_cur_dataset_only()
 
-        for iteration in range(num_iterations):
-            print(f"iteration {iteration} / {num_iterations}")
+        for iteration in range(mask_iterations):
+            if mask_iterations > 1:
+                print(f"iteration {iteration} / {num_iterations}")
 
             round_lengths = get_round_lengths(loaded_model.get_cur_id_df(), round_length_divisible_by=num_time_steps)
             player_enable_mask = build_player_mask(loaded_model, player_mask_config, round_lengths)
