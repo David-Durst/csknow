@@ -176,7 +176,7 @@ def delta_pos_open_rollout(loaded_model: LoadedModel, round_lengths: RoundLength
 
 def gen_vis_wrapper_delta_pos_open_rollout(player_mask_config: PlayerMaskConfig) -> Callable[[LoadedModel], None]:
     def result_func(loaded_model: LoadedModel):
-        round_lengths = get_round_lengths(loaded_model.get_cur_id_df())
+        round_lengths = get_round_lengths(loaded_model.get_cur_id_df(), round_length_divisible_by=num_time_steps)
         player_enable_mask = build_player_mask(loaded_model, player_mask_config, round_lengths)
         delta_pos_open_rollout(loaded_model, round_lengths, player_enable_mask, player_mask_config)
     return result_func
@@ -203,7 +203,7 @@ def compare_predicted_rollout_indices(loaded_model: LoadedModel,
                                       include_ground_truth_players_in_afde: bool,
                                       include_steps_without_actions: bool) -> DisplacementErrors:
     id_df = loaded_model.get_cur_id_df().copy()
-    round_lengths = get_round_lengths(id_df)
+    round_lengths = get_round_lengths(id_df, round_length_divisible_by=num_time_steps)
 
     # get a counter for the ground truth group for each trajectory
     # first row will be ground truth, and rest will be relative to it
@@ -350,7 +350,7 @@ def run_analysis_per_mask(loaded_model: LoadedModel, player_mask_config: PlayerM
         for iteration in range(num_iterations):
             print(f"iteration {iteration} / {num_iterations}")
 
-            round_lengths = get_round_lengths(loaded_model.get_cur_id_df())
+            round_lengths = get_round_lengths(loaded_model.get_cur_id_df(), round_length_divisible_by=num_time_steps)
             player_enable_mask = build_player_mask(loaded_model, player_mask_config, round_lengths)
             delta_pos_open_rollout(loaded_model, round_lengths, player_enable_mask, player_mask_config)
             hdf5_displacement_errors = compare_predicted_rollout_indices(loaded_model, player_enable_mask,

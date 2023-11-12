@@ -16,10 +16,16 @@ def update_nn_position_rollout_tensor(loaded_model: LoadedModel, round_lengths: 
     nn_rollout_tensor = ground_truth_rollout_tensor.clone().detach()
 
     # the tick indices to check similarity on, rest will be copied from these positions
-    similarity_tick_indices = flatten_list([
-        [idx for idx in round_subset_tick_indices if (idx - round_subset_tick_indices.start) % num_time_steps == 0]
-        for _, round_subset_tick_indices in round_lengths.round_to_subset_tick_indices.items()
-    ])
+    similarity_tick_indices = [round_lengths.round_id_to_list_id[round_id] * round_lengths.max_length_per_round + tick_index
+                               for round_id, round_tick_range in round_lengths.round_to_tick_ids.items()
+                               for tick_index in range(len(round_tick_range))
+                               if tick_index % num_time_steps == 0]
+    #similarity_tick_indices = [i for i in range(round_lengths.max_length_per_round * len(round_lengths.round_ids)) if i % num_time_steps == 0 ]
+    #tmp = flatten_list([
+    #    [idx for idx in round_subset_tick_indices if (idx - round_subset_tick_indices.start) % num_time_steps == 0]
+    #    for _, round_subset_tick_indices in round_lengths.round_to_subset_tick_indices.items()
+    #])
+
 
     points_for_nn_tensor = ground_truth_rollout_tensor[similarity_tick_indices]
 

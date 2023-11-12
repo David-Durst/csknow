@@ -43,7 +43,8 @@ def limit_to_every_nth_row(df: pd.DataFrame):
     return condition
 
 
-def get_round_lengths(df: pd.DataFrame, compute_last_player_alive: bool = False) -> RoundLengths:
+def get_round_lengths(df: pd.DataFrame, compute_last_player_alive: bool = False,
+                      round_length_divisible_by: Optional[int] = None) -> RoundLengths:
     grouped_df = df.groupby([round_id_column]).agg({tick_id_column: ['count', 'min', 'max'],
                                                     'index': ['count', 'min', 'max']})
     # already decimated data when loading it (see main section of code, custom_limit_fn), so fine to use count here
@@ -69,6 +70,12 @@ def get_round_lengths(df: pd.DataFrame, compute_last_player_alive: bool = False)
 
     for round_id, round_row in grouped_df['index'].iterrows():
         result.round_to_subset_tick_indices[round_id] = range(round_row['min'], round_row['max']+1)
+
+    # if round length must be divisble by a number (like num_time_steps in open simulator), adjust max round length to
+    # match
+    if round_length_divisible_by is not None:
+        result.max_length_per_round = result.max_length_per_round + \
+                                      (round_length_divisible_by - result.max_length_per_round % round_length_divisible_by)
 
     return result
 
