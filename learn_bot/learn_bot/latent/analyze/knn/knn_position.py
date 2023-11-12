@@ -1,3 +1,4 @@
+import time
 from dataclasses import dataclass
 from typing import List, Optional
 
@@ -49,20 +50,29 @@ def get_nearest_neighbors(situations: List[PositionSituationParameters], num_mat
 def get_nearest_neighbors_one_situation(ct_pos: List[Vec3], t_pos: List[Vec3], num_matches: int,
                                         loaded_model: LoadedModel, situation_name: str, target_player_index: int,
                                         plot: bool, push_only: bool, num_future_ticks: Optional[int]) -> List[np.ndarray]:
+    start = time.time()
     num_ct_alive = len(ct_pos)
     num_t_alive = len(t_pos)
 
     players_pos = ct_pos + t_pos
 
+    start_mappings_time = time.time()
     player_to_column_mappings = generate_all_player_to_column_mappings(num_ct_alive, num_t_alive)
+    mappings_time = time.time() - start_mappings_time
 
     min_distance_rounds_per_hdf5: List[pd.DataFrame] = []
 
+    data_time: float = 0.
+    math_time: float = 0.
+    pd_time: float = 0.
+
     for i, hdf5_wrapper in enumerate(loaded_model.dataset.data_hdf5s):
+        get_data_start_time = time.time()
         id_df, alive_pos_np, full_table_id_np = get_id_df_and_alive_pos_and_full_table_id_np(hdf5_wrapper,
                                                                                              loaded_model.model,
                                                                                              num_ct_alive, num_t_alive,
                                                                                              push_only)
+        data_time += time.time() - get_data_start_time
 
         if id_df.empty:
             continue
@@ -75,8 +85,8 @@ def get_nearest_neighbors_one_situation(ct_pos: List[Vec3], t_pos: List[Vec3], n
             base_point_np[:, j, 1] = player_pos.y
             base_point_np[:, j, 2] = player_pos.z
 
-
         # find min distance from each point to the base point across all player mappings
+        start_math_time = time.time()
         min_euclidean_distance_per_row = np.zeros(alive_pos_np.shape[0])
         min_euclidean_distance_per_row[:] = math.inf
         min_manhattan_distance_per_row = np.zeros(alive_pos_np.shape[0])
@@ -117,12 +127,14 @@ def get_nearest_neighbors_one_situation(ct_pos: List[Vec3], t_pos: List[Vec3], n
                                                     full_table_id_np[:, target_column_index], target_full_table_id_per_row)
             min_manhattan_distance_per_row = np.where(mapping_manhattan_distance < min_manhattan_distance_per_row,
                                                       mapping_manhattan_distance, min_manhattan_distance_per_row)
+        math_time += time.time() - start_math_time
 
         id_with_distance_df = id_df.copy()
         id_with_distance_df[l2_distance_col] = min_euclidean_distance_per_row
         id_with_distance_df[target_full_table_id_col] = target_full_table_id_per_row
         id_with_distance_df[hdf5_id_col] = i
 
+        start_pd_time = time.time()
         # ensure at least 5 seconds of gameplay to track
         if num_future_ticks is None:
             round_and_max_game_tick_number = id_with_distance_df \
@@ -148,6 +160,7 @@ def get_nearest_neighbors_one_situation(ct_pos: List[Vec3], t_pos: List[Vec3], n
         min_distance_per_round_df = id_sorted_by_round_distance_df.groupby(round_id_column, as_index=False) \
             .first().sort_values(l2_distance_col).iloc[:num_matches]
         min_distance_rounds_per_hdf5.append(min_distance_per_round_df)
+        pd_time += time.time() - start_pd_time
         #if i == 18:
         #    print(min_distance_per_round_df[[hdf5_id_col, round_id_column, l2_distance_col]])
         #    print('breakpoint')
@@ -161,8 +174,13 @@ def get_nearest_neighbors_one_situation(ct_pos: List[Vec3], t_pos: List[Vec3], n
         return collect_plot_plot_min_distance_rounds(loaded_model, min_distance_rounds_df, situation_name,
                                                      False, num_matches, True, num_future_ticks)
     else:
-        return collect_plot_plot_min_distance_rounds(loaded_model, min_distance_rounds_df, situation_name,
+        start_collect_time = time.time()
+        tmp = collect_plot_plot_min_distance_rounds(loaded_model, min_distance_rounds_df, situation_name,
                                                      True, num_matches, False, num_future_ticks)
+        collect_time = time.time() - start_collect_time
+        end = time.time()
+        print(f"total time {end - start}, mappings time {mappings_time}, data time {data_time}, math time {math_time}, pd time {pd_time}, collect time {collect_time}")
+        return tmp
 
 
 attack_a_spawn_t_long = PositionSituationParameters(

@@ -20,11 +20,6 @@ def update_nn_position_rollout_tensor(loaded_model: LoadedModel, round_lengths: 
                                for round_id, round_tick_range in round_lengths.round_to_tick_ids.items()
                                for tick_index in range(len(round_tick_range))
                                if tick_index % num_time_steps == 0]
-    #similarity_tick_indices = [i for i in range(round_lengths.max_length_per_round * len(round_lengths.round_ids)) if i % num_time_steps == 0 ]
-    #tmp = flatten_list([
-    #    [idx for idx in round_subset_tick_indices if (idx - round_subset_tick_indices.start) % num_time_steps == 0]
-    #    for _, round_subset_tick_indices in round_lengths.round_to_subset_tick_indices.items()
-    #])
 
 
     points_for_nn_tensor = ground_truth_rollout_tensor[similarity_tick_indices]
@@ -50,7 +45,10 @@ def update_nn_position_rollout_tensor(loaded_model: LoadedModel, round_lengths: 
         # 2 as 1 should be this, second should be second best
         same_and_nearest_nps = get_nearest_neighbors_one_situation(ct_pos, t_pos, 2, loaded_model, '', 0, False, False,
                                                                    num_time_steps)
-        nn_rollout_tensor[point_index:point_index+num_time_steps] = torch.tensor(same_and_nearest_nps[1])
+        nn_rollout_tensor[similarity_tick_indices[point_index]:similarity_tick_indices[point_index + 1]] = \
+            torch.tensor(same_and_nearest_nps[1])
+        if True:#point_index == 5:
+            quit(0)
 
     return nn_rollout_tensor
 
