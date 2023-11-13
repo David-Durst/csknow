@@ -19,7 +19,7 @@ from learn_bot.latent.place_area.column_names import specific_player_place_area_
 l2_distance_col = 'l2 distance'
 hdf5_id_col = 'hdf5 id'
 target_full_table_id_col = 'target full table id'
-player_to_full_table_id_col = 'player to full table id'
+player_to_full_table_counter_col = 'player to full table counter'
 max_game_tick_number_column = 'max ' + game_tick_number_column
 max_index_column = 'max ' + index_column
 
