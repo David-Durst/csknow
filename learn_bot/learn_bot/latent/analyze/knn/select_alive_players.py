@@ -44,15 +44,16 @@ def get_id_df_and_alive_pos_and_full_table_id_np(hdf5_wrapper: HDF5Wrapper, mode
     player_column_indices = PlayerColumnIndices(model)
 
     # get rows which have right number of players alive
-    num_ct_alive_np = np.sum(hdf5_wrapper.get_all_input_data()[:, player_column_indices.ct_alive_cols], axis=1)
-    num_t_alive_np = np.sum(hdf5_wrapper.get_all_input_data()[:, player_column_indices.t_alive_cols], axis=1)
+    all_input_data = hdf5_wrapper.get_all_input_data()
+    num_ct_alive_np = np.sum(all_input_data[:, player_column_indices.ct_alive_cols], axis=1)
+    num_t_alive_np = np.sum(all_input_data[:, player_column_indices.t_alive_cols], axis=1)
 
     # include similarity require pushing rounds only
     valid = (num_ct_alive_np == num_ct_alive) & (num_t_alive_np == num_t_alive)
     if push_only:
         valid = valid & hdf5_wrapper.id_df[get_similarity_column(0)].to_numpy()
     valid_id_df = hdf5_wrapper.id_df[valid]
-    valid_whole_np = hdf5_wrapper.get_all_input_data()[valid]
+    valid_whole_np = all_input_data[valid]
 
     # if no matches in this hdf5, just get our and return something that
     if valid_whole_np.shape[0] == 0:

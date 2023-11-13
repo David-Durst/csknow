@@ -57,7 +57,8 @@ class CachedNNData:
 def get_nearest_neighbors_one_situation(ct_pos: List[Vec3], t_pos: List[Vec3], num_matches: int,
                                         loaded_model: LoadedModel, situation_name: str, target_player_index: int,
                                         plot: bool, push_only: bool, num_future_ticks: Optional[int],
-                                        cached_nn_data: Optional[CachedNNData] = None) -> Tuple[List[np.ndarray], CachedNNData]:
+                                        cached_nn_data: Optional[CachedNNData] = None,
+                                        math_decimation: Optional[int] = None) -> Tuple[List[np.ndarray], CachedNNData]:
     start = time.time()
     num_ct_alive = len(ct_pos)
     num_t_alive = len(t_pos)
@@ -95,6 +96,9 @@ def get_nearest_neighbors_one_situation(ct_pos: List[Vec3], t_pos: List[Vec3], n
             continue
 
         alive_pos_np = alive_pos_np.astype(np.float32)
+        if math_decimation is not None:
+            alive_pos_np = alive_pos_np[::math_decimation]
+            full_table_id_np = full_table_id_np[::math_decimation]
 
         base_point_np = np.zeros_like(alive_pos_np)
         for j, player_pos in enumerate(players_pos):
@@ -144,6 +148,11 @@ def get_nearest_neighbors_one_situation(ct_pos: List[Vec3], t_pos: List[Vec3], n
                                                     full_table_id_np[:, target_column_index], target_full_table_id_per_row)
             min_manhattan_distance_per_row = np.where(mapping_manhattan_distance < min_manhattan_distance_per_row,
                                                       mapping_manhattan_distance, min_manhattan_distance_per_row)
+        if math_decimation is not None:
+            min_euclidean_distance_per_row = min_euclidean_distance_per_row[:, np.newaxis].repeat(math_decimation, 1) \
+                .reshape([-1])
+            target_full_table_id_per_row = target_full_table_id_per_row[:, np.newaxis].repeat(math_decimation, 1) \
+                .reshape([-1])
         math_time += time.time() - start_math_time
 
         id_with_distance_df = id_df.copy()

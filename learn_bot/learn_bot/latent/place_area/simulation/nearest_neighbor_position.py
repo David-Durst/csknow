@@ -58,7 +58,7 @@ def update_nn_position_rollout_tensor(loaded_model: LoadedModel, round_lengths: 
         print(f"point index {point_index}, round id {similarity_round_ids[point_index]}, num ct {len(ct_pos)}, num t {len(t_pos)}")
         # 2 as 1 should be this, second should be second best
         same_and_nearest_nps, cached_nn_data = get_nearest_neighbors_one_situation(ct_pos, t_pos, 2, loaded_model, '', 0, False, False,
-                                                                                   num_time_steps, cached_nn_data)
+                                                                                   num_time_steps, cached_nn_data, 4)
         nn_rollout_tensor[similarity_tick_indices[point_index]:similarity_tick_indices[point_index] + num_time_steps] = \
             torch.tensor(same_and_nearest_nps[1])
 
