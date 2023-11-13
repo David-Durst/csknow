@@ -1,6 +1,6 @@
 import time
-from dataclasses import dataclass
-from typing import List, Optional
+from dataclasses import dataclass, field
+from typing import List, Optional, Tuple
 
 import numpy as np
 import pandas as pd
@@ -45,11 +45,19 @@ def get_nearest_neighbors(situations: List[PositionSituationParameters], num_mat
                                             True, None)
 
 
+@dataclass
+class CachedNNData:
+    id_dfs: List[pd.DataFrame] = field(default_factory=list)
+    alive_pos_nps: List[np.ndarray] = field(default_factory=list)
+    full_table_id_nps: List[np.ndarray] = field(default_factory=list)
+
+
 # if num_future_ticks is None, then will restrict based on game ticks (actual in game clock time) rather than number
 # of ticks
 def get_nearest_neighbors_one_situation(ct_pos: List[Vec3], t_pos: List[Vec3], num_matches: int,
                                         loaded_model: LoadedModel, situation_name: str, target_player_index: int,
-                                        plot: bool, push_only: bool, num_future_ticks: Optional[int]) -> List[np.ndarray]:
+                                        plot: bool, push_only: bool, num_future_ticks: Optional[int],
+                                        cached_nn_data: Optional[CachedNNData] = None) -> Tuple[List[np.ndarray], CachedNNData]:
     start = time.time()
     num_ct_alive = len(ct_pos)
     num_t_alive = len(t_pos)
@@ -68,10 +76,19 @@ def get_nearest_neighbors_one_situation(ct_pos: List[Vec3], t_pos: List[Vec3], n
 
     for i, hdf5_wrapper in enumerate(loaded_model.dataset.data_hdf5s):
         get_data_start_time = time.time()
-        id_df, alive_pos_np, full_table_id_np = get_id_df_and_alive_pos_and_full_table_id_np(hdf5_wrapper,
-                                                                                             loaded_model.model,
-                                                                                             num_ct_alive, num_t_alive,
-                                                                                             push_only)
+        if cached_nn_data is None or len(cached_nn_data.id_dfs) <= i:
+            id_df, alive_pos_np, full_table_id_np = get_id_df_and_alive_pos_and_full_table_id_np(hdf5_wrapper,
+                                                                                                 loaded_model.model,
+                                                                                                 num_ct_alive, num_t_alive,
+                                                                                                 push_only)
+            if cached_nn_data is not None:
+                cached_nn_data.id_dfs.append(id_df)
+                cached_nn_data.alive_pos_nps.append(alive_pos_np)
+                cached_nn_data.full_table_id_nps.append(full_table_id_np)
+        else:
+            id_df = cached_nn_data.id_dfs[i]
+            alive_pos_np = cached_nn_data.alive_pos_nps[i]
+            full_table_id_np = cached_nn_data.full_table_id_nps[i]
         data_time += time.time() - get_data_start_time
 
         if id_df.empty:
@@ -172,7 +189,7 @@ def get_nearest_neighbors_one_situation(ct_pos: List[Vec3], t_pos: List[Vec3], n
         collect_plot_plot_min_distance_rounds(loaded_model, min_distance_rounds_df, situation_name,
                                               True, num_matches, True, num_future_ticks)
         return collect_plot_plot_min_distance_rounds(loaded_model, min_distance_rounds_df, situation_name,
-                                                     False, num_matches, True, num_future_ticks)
+                                                     False, num_matches, True, num_future_ticks), cached_nn_data
     else:
         start_collect_time = time.time()
         result = collect_plot_plot_min_distance_rounds(loaded_model, min_distance_rounds_df, situation_name,
@@ -180,7 +197,7 @@ def get_nearest_neighbors_one_situation(ct_pos: List[Vec3], t_pos: List[Vec3], n
         collect_time = time.time() - start_collect_time
         end = time.time()
         print(f"total time {end - start}, mappings time {mappings_time}, data time {data_time}, math time {math_time}, pd time {pd_time}, collect time {collect_time}")
-        return result
+        return result, cached_nn_data
 
 
 attack_a_spawn_t_long = PositionSituationParameters(
