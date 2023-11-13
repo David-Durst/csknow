@@ -119,6 +119,16 @@ all_human_load_data_option = LoadDataOptions(
     limit_manual_data_to_no_enemies_nav=False
 )
 
+all_human_vs_all_human_config = ComparisonConfig(
+    all_human_vs_all_human_similarity_hdf5_data_path,
+    all_human_load_data_option,
+    all_human_load_data_option,
+    False,
+    False,
+    "all_human_vs_all_human_distribution",
+    "All Human vs All Human Distribution"
+)
+
 human_28_load_data_option = LoadDataOptions(
     use_manual_data=False,
     use_rollout_data=False,
@@ -130,28 +140,18 @@ human_28_load_data_option = LoadDataOptions(
     limit_manual_data_to_no_enemies_nav=False
 )
 
-all_human_vs_all_human_config = ComparisonConfig(
-    all_human_vs_all_human_similarity_hdf5_data_path,
+all_human_vs_human_28_config = ComparisonConfig(
+    all_human_vs_human_28_similarity_hdf5_data_path,
     all_human_load_data_option,
-    all_human_load_data_option,
+    human_28_load_data_option,
     False,
     False,
-    "all_human_vs_all_human_distribution",
-    "All Human vs All Human Distribution"
+    "all_human_vs_human_28_distribution",
+    "All Human vs Human 28 Distribution"
 )
 
 all_human_vs_small_human_config = ComparisonConfig(
     all_human_vs_small_human_similarity_hdf5_data_path,
-    all_human_load_data_option,
-    small_human_load_data_option,
-    False,
-    False,
-    "all_human_vs_small_human_distribution",
-    "All Human vs Small Human Distribution"
-)
-
-all_human_vs_human_28_config = ComparisonConfig(
-    all_human_vs_human_28_similarity_hdf5_data_path,
     all_human_load_data_option,
     small_human_load_data_option,
     False,
@@ -327,7 +327,7 @@ def compare_trajectories(config_case: int) -> Optional[TrajectoryPlots]:
     elif config_case == 4:
         config = all_human_vs_all_human_config
     elif config_case == 5:
-        config = all_human_vs_small_human_config
+        config = all_human_vs_human_28_config
     elif config_case == 6:
         config = rollout_vs_all_human_config
     elif config_case == 7:
@@ -351,8 +351,11 @@ def compare_trajectories(config_case: int) -> Optional[TrajectoryPlots]:
     #elif config_case == 13:
     #    config = rollout_no_history_learned_vs_all_human_config
 
-    cur_run_similarity_plots_path = \
-        similarity_plots_path / rollout_learned_no_mask_load_data_option.custom_rollout_extension
+    if config_case >= 6:
+        cur_run_similarity_plots_path = \
+            similarity_plots_path / rollout_learned_no_mask_load_data_option.custom_rollout_extension
+    else:
+        cur_run_similarity_plots_path = similarity_plots_path
 
     os.makedirs(cur_run_similarity_plots_path, exist_ok=True)
     similarity_df = load_hdf5_to_pd(config.similarity_data_path)
