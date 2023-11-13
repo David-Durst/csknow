@@ -19,12 +19,14 @@ just_bot_comment = "just_bot"
 bot_and_human_comment = "bot_and_human"
 just_small_human_comment = "just_small_human"
 just_human_comment = "just_human"
+comment_28 = "_28"
 all_comment = "_all"
 human_with_bot_nav_added_comment = "human_with_added_bot_nav"
 limited_comment = "_limited"
 curriculum_comment = "_curriculum"
 
 all_train_latent_team_hdf5_dir_path = Path(__file__).parent / '..' / '..' / '..' / '..' / 'analytics' / 'all_train_outputs'
+human_28_latent_team_hdf5_dir_path = Path(__file__).parent / '..' / '..' / '..' / '..' / 'analytics' / 'all_train_outputs' / 'behaviorTreeTeamFeatureStore_28.hdf5'
 human_latent_team_hdf5_data_path = Path(__file__).parent / '..' / '..' / '..' / '..' / 'analytics' / 'csv_outputs' / 'behaviorTreeTeamFeatureStore.hdf5'
 small_latent_team_hdf5_data_path = Path(__file__).parent / '..' / '..' / '..' / '..' / 'analytics' / 'csv_outputs' / 'smallBehaviorTreeTeamFeatureStore.parquet'
 manual_latent_team_hdf5_data_path = Path(__file__).parent / '..' / '..' / '..' / '..' / 'analytics' / 'manual_outputs' / 'behaviorTreeTeamFeatureStore.hdf5'
@@ -39,6 +41,7 @@ class LoadDataOptions:
     use_rollout_data: bool
     use_synthetic_data: bool
     use_small_human_data: bool
+    use_human_28_data: bool
     use_all_human_data: bool
     add_manual_to_all_human_data: bool
     limit_manual_data_to_no_enemies_nav: bool
@@ -114,6 +117,9 @@ class LoadDataResult:
             #    good_retake_rounds = eval(f.read())
             #human_data.limit(human_data.id_df[round_id_column].isin(good_retake_rounds))
             hdf5_sources.append(human_data)
+        elif load_data_options.use_human_28_data:
+            self.dataset_comment = just_human_comment + comment_28
+            hdf5_sources.append(human_28_latent_team_hdf5_dir_path)
         elif load_data_options.use_all_human_data:
             self.dataset_comment = just_human_comment + all_comment
             hdf5_sources.append(all_train_latent_team_hdf5_dir_path)

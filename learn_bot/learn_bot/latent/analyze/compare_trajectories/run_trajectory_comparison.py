@@ -40,6 +40,7 @@ manual_load_data_option = LoadDataOptions(
     use_rollout_data=False,
     use_synthetic_data=False,
     use_small_human_data=False,
+    use_human_28_data=False,
     use_all_human_data=False,
     add_manual_to_all_human_data=False,
     limit_manual_data_to_no_enemies_nav=False
@@ -60,6 +61,7 @@ rollout_load_data_option = LoadDataOptions(
     use_rollout_data=True,
     use_synthetic_data=False,
     use_small_human_data=False,
+    use_human_28_data=False,
     use_all_human_data=False,
     add_manual_to_all_human_data=False,
     limit_manual_data_to_no_enemies_nav=False
@@ -90,6 +92,7 @@ small_human_load_data_option = LoadDataOptions(
     use_rollout_data=False,
     use_synthetic_data=False,
     use_small_human_data=True,
+    use_human_28_data=False,
     use_all_human_data=False,
     add_manual_to_all_human_data=False,
     limit_manual_data_to_no_enemies_nav=False
@@ -110,7 +113,19 @@ all_human_load_data_option = LoadDataOptions(
     use_rollout_data=False,
     use_synthetic_data=False,
     use_small_human_data=False,
+    use_human_28_data=False,
     use_all_human_data=True,
+    add_manual_to_all_human_data=False,
+    limit_manual_data_to_no_enemies_nav=False
+)
+
+human_28_load_data_option = LoadDataOptions(
+    use_manual_data=False,
+    use_rollout_data=False,
+    use_synthetic_data=False,
+    use_small_human_data=False,
+    use_human_28_data=True,
+    use_all_human_data=False,
     add_manual_to_all_human_data=False,
     limit_manual_data_to_no_enemies_nav=False
 )
@@ -127,6 +142,16 @@ all_human_vs_all_human_config = ComparisonConfig(
 
 all_human_vs_small_human_config = ComparisonConfig(
     all_human_vs_small_human_similarity_hdf5_data_path,
+    all_human_load_data_option,
+    small_human_load_data_option,
+    False,
+    False,
+    "all_human_vs_small_human_distribution",
+    "All Human vs Small Human Distribution"
+)
+
+all_human_vs_human_28_config = ComparisonConfig(
+    all_human_vs_human_28_similarity_hdf5_data_path,
     all_human_load_data_option,
     small_human_load_data_option,
     False,
@@ -286,8 +311,8 @@ rollout_all_human_vs_default_config = ComparisonConfig(
     True
 )
 
-just_plot_summaries = True
-plot_trajectories = True
+just_plot_summaries = False
+plot_trajectories = False
 
 
 def compare_trajectories(config_case: int) -> Optional[TrajectoryPlots]:

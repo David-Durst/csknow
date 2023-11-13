@@ -13,6 +13,7 @@ load_data_options = LoadDataOptions(
     use_rollout_data=False,
     use_synthetic_data=False,
     use_small_human_data=False,
+    use_human_28_data=False,
     use_all_human_data=True,
     add_manual_to_all_human_data=False,
     limit_manual_data_to_no_enemies_nav=False,
