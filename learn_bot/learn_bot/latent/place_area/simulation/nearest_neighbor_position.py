@@ -2,7 +2,7 @@ from typing import List
 
 import torch
 
-from learn_bot.latent.analyze.knn.knn_position import get_nearest_neighbors_one_situation
+from learn_bot.latent.analyze.knn.knn_by_position import get_nearest_neighbors_one_situation
 from learn_bot.latent.load_model import LoadedModel
 from learn_bot.latent.place_area.column_names import specific_player_place_area_columns
 from learn_bot.latent.place_area.simulation.constants import num_time_steps
