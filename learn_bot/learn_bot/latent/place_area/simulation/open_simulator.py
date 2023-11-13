@@ -390,16 +390,16 @@ def run_analysis(loaded_model: LoadedModel):
     mask_result_strs = []
     mask_result_latex_strs = ["Simulation Type & minADE Mean & minADE Std Dev & minFDE Mean & minFDE Std Dev \\\\",
                               "\\hline"]
-    player_mask_configs = [#PlayerMaskConfig.ALL,
-                           #PlayerMaskConfig.CT, PlayerMaskConfig.T,
+    player_mask_configs = [PlayerMaskConfig.ALL,
+                           PlayerMaskConfig.CT, PlayerMaskConfig.T,
                            #PlayerMaskConfig.LAST_ALIVE,
-                           #PlayerMaskConfig.STARTING_CMD,
-                           #PlayerMaskConfig.STARTING_POSITION,
-                           #PlayerMaskConfig.INTERPOLATION_ROLLOUT_POSITION,
-                           #PlayerMaskConfig.INTERPOLATION_ROUND_POSITION,
-                           PlayerMaskConfig.NN_POSITION]
-                           #PlayerMaskConfig.GROUND_TRUTH_CMD,
-                           #PlayerMaskConfig.GROUND_TRUTH_POSITION]
+                           PlayerMaskConfig.STARTING_CMD,
+                           PlayerMaskConfig.STARTING_POSITION,
+                           PlayerMaskConfig.INTERPOLATION_ROLLOUT_POSITION,
+                           PlayerMaskConfig.INTERPOLATION_ROUND_POSITION,
+                           PlayerMaskConfig.NN_POSITION,
+                           PlayerMaskConfig.GROUND_TRUTH_CMD,
+                           PlayerMaskConfig.GROUND_TRUTH_POSITION]
     ades_per_mask_config: List[pd.Series] = []
     fdes_per_mask_config: List[pd.Series] = []
     for i, player_mask_config in enumerate(player_mask_configs):
