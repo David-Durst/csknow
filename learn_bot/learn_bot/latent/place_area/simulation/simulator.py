@@ -113,8 +113,11 @@ def step(rollout_tensor: torch.Tensor, all_similarity_tensor: torch.Tensor, pred
     rollout_tensor_input_indices = [step_index + round_lengths.max_length_per_round * round_index
                                     for round_index in range(round_lengths.num_rounds)
                                     if rounds_containing_step_index[round_index]]
+    # ok to have no valid rollout tensor input indices - open sim must have space extended beyond last round length
+    # so everything aligns to barrier
     if len(rollout_tensor_input_indices) == 0:
-        print('empty rollout tensor input indices')
+        return
+        #print('empty rollout tensor input indices')
     similarity_tensor = all_similarity_tensor[rounds_containing_step_index]
     rollout_tensor_output_indices = [index + 1 for index in rollout_tensor_input_indices]
 

@@ -341,8 +341,8 @@ def run_analysis_per_mask(loaded_model: LoadedModel, player_mask_config: PlayerM
     displacement_errors = DisplacementErrors()
     mask_iterations = num_iterations if player_mask_config not in deterministic_configs else 1
     for i, hdf5_wrapper in enumerate(loaded_model.dataset.data_hdf5s):
-        if i > 1:
-            break
+        #if i > 1:
+        #    break
 
         print(f"Processing hdf5 {i} / {len(loaded_model.dataset.data_hdf5s)}: {hdf5_wrapper.hdf5_path}")
         per_iteration_displacement_errors: List[DisplacementErrors] = []
@@ -351,8 +351,8 @@ def run_analysis_per_mask(loaded_model: LoadedModel, player_mask_config: PlayerM
         loaded_model.load_cur_dataset_only()
 
         for iteration in range(mask_iterations):
-            #if mask_iterations > 1:
-            #    print(f"iteration {iteration} / {num_iterations}")
+            if mask_iterations > 1:
+                print(f"iteration {iteration} / {num_iterations}")
 
             round_lengths = get_round_lengths(loaded_model.get_cur_id_df(), round_length_divisible_by=num_time_steps)
             player_enable_mask = build_player_mask(loaded_model, player_mask_config, round_lengths)
