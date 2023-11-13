@@ -351,8 +351,8 @@ def run_analysis_per_mask(loaded_model: LoadedModel, player_mask_config: PlayerM
         loaded_model.load_cur_dataset_only()
 
         for iteration in range(mask_iterations):
-            if mask_iterations > 1:
-                print(f"iteration {iteration} / {num_iterations}")
+            #if mask_iterations > 1:
+            #    print(f"iteration {iteration} / {num_iterations}")
 
             round_lengths = get_round_lengths(loaded_model.get_cur_id_df(), round_length_divisible_by=num_time_steps)
             player_enable_mask = build_player_mask(loaded_model, player_mask_config, round_lengths)
