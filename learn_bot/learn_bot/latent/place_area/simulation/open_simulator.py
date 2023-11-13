@@ -394,7 +394,7 @@ def run_analysis(loaded_model: LoadedModel):
     axs = fig.subplots(num_metrics, PlayerMaskConfig.NUM_MASK_CONFIGS, squeeze=False)
 
     mask_result_strs = []
-    mask_result_latex_strs = ["Simulation Type & minADE Mean & minADE Std Dev & minFDE Mean & minFDE Std Dev \\\\",
+    mask_result_latex_strs = ["Simulation Type & minSADE Mean & minSADE Std Dev & minSFDE Mean & minSFDE Std Dev \\\\",
                               "\\hline"]
     player_mask_configs = [PlayerMaskConfig.ALL,
                            PlayerMaskConfig.CT, PlayerMaskConfig.T,
