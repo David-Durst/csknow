@@ -6,6 +6,7 @@ import torch
 from einops import rearrange
 import numpy as np
 
+from learn_bot.latent.engagement.column_names import index_column
 from learn_bot.latent.order.column_names import team_strs, all_prior_and_cur_ticks
 from learn_bot.latent.place_area.column_names import get_similarity_column
 from learn_bot.latent.transformer_nested_hidden_latent_model import get_player_columns_by_str, \
@@ -39,7 +40,8 @@ class PlayerColumnIndices:
 
 
 def get_id_df_and_alive_pos_and_full_table_id_np(hdf5_wrapper: HDF5Wrapper, model: TransformerNestedHiddenLatentModel,
-                                                 num_ct_alive: int, num_t_alive: int, push_only: bool) \
+                                                 num_ct_alive: int, num_t_alive: int, push_only: bool,
+                                                 decimation: Optional[int]) \
         -> Tuple[pd.DataFrame, Optional[np.ndarray], Optional[np.ndarray]]:
     player_column_indices = PlayerColumnIndices(model)
 
@@ -52,6 +54,9 @@ def get_id_df_and_alive_pos_and_full_table_id_np(hdf5_wrapper: HDF5Wrapper, mode
     valid = (num_ct_alive_np == num_ct_alive) & (num_t_alive_np == num_t_alive)
     if push_only:
         valid = valid & hdf5_wrapper.id_df[get_similarity_column(0)].to_numpy()
+    if decimation is not None:
+        valid = valid & (hdf5_wrapper.id_df[index_column] % decimation == 0)
+
     valid_id_df = hdf5_wrapper.id_df[valid]
     valid_whole_np = all_input_data[valid]
 

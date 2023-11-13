@@ -9,7 +9,8 @@ import math
 from learn_bot.latent.analyze.knn.generate_player_index_mappings import generate_all_player_to_column_mappings
 from learn_bot.latent.analyze.knn.plot_min_distance_rounds import collect_plot_plot_min_distance_rounds, \
     l2_distance_col, \
-    hdf5_id_col, target_full_table_id_col, max_game_tick_number_column, game_tick_rate, max_index_column
+    hdf5_id_col, target_full_table_id_col, max_game_tick_number_column, game_tick_rate, max_index_column, \
+    player_to_full_table_id_col
 from learn_bot.latent.analyze.knn.select_alive_players import get_id_df_and_alive_pos_and_full_table_id_np
 from learn_bot.latent.engagement.column_names import round_id_column, game_tick_number_column, index_column
 from learn_bot.latent.load_model import load_model_file, LoadedModel
@@ -58,7 +59,7 @@ def get_nearest_neighbors_one_situation(ct_pos: List[Vec3], t_pos: List[Vec3], n
                                         loaded_model: LoadedModel, situation_name: str, target_player_index: int,
                                         plot: bool, push_only: bool, num_future_ticks: Optional[int],
                                         cached_nn_data: Optional[CachedNNData] = None,
-                                        math_decimation: Optional[int] = None) -> Tuple[List[np.ndarray], CachedNNData]:
+                                        decimation: Optional[int] = None) -> Tuple[List[np.ndarray], CachedNNData]:
     start = time.time()
     num_ct_alive = len(ct_pos)
     num_t_alive = len(t_pos)
@@ -81,7 +82,8 @@ def get_nearest_neighbors_one_situation(ct_pos: List[Vec3], t_pos: List[Vec3], n
             id_df, alive_pos_np, full_table_id_np = get_id_df_and_alive_pos_and_full_table_id_np(hdf5_wrapper,
                                                                                                  loaded_model.model,
                                                                                                  num_ct_alive, num_t_alive,
-                                                                                                 push_only)
+                                                                                                 push_only,
+                                                                                                 decimation)
             if cached_nn_data is not None:
                 cached_nn_data.id_dfs.append(id_df)
                 cached_nn_data.alive_pos_nps.append(alive_pos_np)
@@ -96,9 +98,6 @@ def get_nearest_neighbors_one_situation(ct_pos: List[Vec3], t_pos: List[Vec3], n
             continue
 
         alive_pos_np = alive_pos_np.astype(np.float32)
-        if math_decimation is not None:
-            alive_pos_np = alive_pos_np[::math_decimation]
-            full_table_id_np = full_table_id_np[::math_decimation]
 
         base_point_np = np.zeros_like(alive_pos_np)
         for j, player_pos in enumerate(players_pos):
@@ -113,6 +112,7 @@ def get_nearest_neighbors_one_situation(ct_pos: List[Vec3], t_pos: List[Vec3], n
         min_manhattan_distance_per_row = np.zeros(alive_pos_np.shape[0])
         min_manhattan_distance_per_row[:] = math.inf
         target_full_table_id_per_row = np.zeros(alive_pos_np.shape[0], dtype=np.int32)
+        player_to_full_table_id_per_row = np.zeros_like(full_table_id_np)
         for player_to_column_mapping in player_to_column_mappings:
             # sum distance per player for this mapping
             player_indices = []
@@ -130,6 +130,11 @@ def get_nearest_neighbors_one_situation(ct_pos: List[Vec3], t_pos: List[Vec3], n
                     (alive_pos_np[:, column_indices, 2] - base_point_np[:, player_indices, 2]) ** 2.
             ) ** .5
             mapping_euclidean_distance = np.sum(mapping_euclidean_distance_per_player, axis=1)
+            # since looking at all players, use global alignment
+            euclidean_condition_repeated = (mapping_euclidean_distance < min_euclidean_distance_per_row) \
+                [:, np.newaxis].repeat(player_to_full_table_id_per_row.shape[1], 1)
+            player_to_full_table_id_per_row = np.where(euclidean_condition_repeated,
+                                                       full_table_id_np, player_to_full_table_id_per_row)
             min_euclidean_distance_per_row = np.where(mapping_euclidean_distance < min_euclidean_distance_per_row,
                                                       mapping_euclidean_distance, min_euclidean_distance_per_row)
             # use manhattan distance to find which player is target, as that global misalignments
@@ -148,16 +153,12 @@ def get_nearest_neighbors_one_situation(ct_pos: List[Vec3], t_pos: List[Vec3], n
                                                     full_table_id_np[:, target_column_index], target_full_table_id_per_row)
             min_manhattan_distance_per_row = np.where(mapping_manhattan_distance < min_manhattan_distance_per_row,
                                                       mapping_manhattan_distance, min_manhattan_distance_per_row)
-        if math_decimation is not None:
-            min_euclidean_distance_per_row = min_euclidean_distance_per_row[:, np.newaxis].repeat(math_decimation, 1) \
-                .reshape([-1])
-            target_full_table_id_per_row = target_full_table_id_per_row[:, np.newaxis].repeat(math_decimation, 1) \
-                .reshape([-1])
         math_time += time.time() - start_math_time
 
         id_with_distance_df = id_df.copy()
         id_with_distance_df[l2_distance_col] = min_euclidean_distance_per_row
         id_with_distance_df[target_full_table_id_col] = target_full_table_id_per_row
+        #id_with_distance_df[player_to_full_table_id_col] = player_to_full_table_id_per_row
         id_with_distance_df[hdf5_id_col] = i
 
         start_pd_time = time.time()
@@ -197,7 +198,7 @@ def get_nearest_neighbors_one_situation(ct_pos: List[Vec3], t_pos: List[Vec3], n
     if plot:
         collect_plot_plot_min_distance_rounds(loaded_model, min_distance_rounds_df, situation_name,
                                               True, num_matches, True, num_future_ticks)
-        return collect_plot_plot_min_distance_rounds(loaded_model, min_distance_rounds_df, situation_name,
+        collect_plot_plot_min_distance_rounds(loaded_model, min_distance_rounds_df, situation_name,
                                                      False, num_matches, True, num_future_ticks), cached_nn_data
     else:
         start_collect_time = time.time()
@@ -205,7 +206,7 @@ def get_nearest_neighbors_one_situation(ct_pos: List[Vec3], t_pos: List[Vec3], n
                                                      True, num_matches, False, num_future_ticks)
         collect_time = time.time() - start_collect_time
         end = time.time()
-        print(f"total time {end - start}, mappings time {mappings_time}, data time {data_time}, math time {math_time}, pd time {pd_time}, collect time {collect_time}")
+        #print(f"total time {end - start}, mappings time {mappings_time}, data time {data_time}, math time {math_time}, pd time {pd_time}, collect time {collect_time}")
         return result, cached_nn_data
 
 

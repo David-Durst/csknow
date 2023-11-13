@@ -1,3 +1,4 @@
+import time
 from typing import List, Optional
 
 import torch
@@ -32,6 +33,7 @@ def update_nn_position_rollout_tensor(loaded_model: LoadedModel, round_lengths: 
     prior_ct_alive = 0
     prior_t_alive = 0
 
+    start_time = time.time()
     for point_index in range(points_for_nn_tensor.shape[0]):
         #if point_index != 12:
         #    continue
@@ -55,7 +57,7 @@ def update_nn_position_rollout_tensor(loaded_model: LoadedModel, round_lengths: 
 
         if prior_ct_alive != len(ct_pos) or prior_t_alive != len(t_pos):
             cached_nn_data = CachedNNData()
-        print(f"point index {point_index}, round id {similarity_round_ids[point_index]}, num ct {len(ct_pos)}, num t {len(t_pos)}")
+        #print(f"point index {point_index}, round id {similarity_round_ids[point_index]}, num ct {len(ct_pos)}, num t {len(t_pos)}")
         # 2 as 1 should be this, second should be second best
         same_and_nearest_nps, cached_nn_data = get_nearest_neighbors_one_situation(ct_pos, t_pos, 2, loaded_model, '', 0, False, False,
                                                                                    num_time_steps, cached_nn_data, 4)
@@ -64,7 +66,9 @@ def update_nn_position_rollout_tensor(loaded_model: LoadedModel, round_lengths: 
 
         prior_ct_alive = len(ct_pos)
         prior_t_alive = len(t_pos)
-        if point_index == 100:
+        if point_index == 99:
+            total_time = time.time() - start_time
+            print(f"nearest neighbor position time {total_time}, time per point {total_time / (point_index + 1)}")
             quit(0)
 
     return nn_rollout_tensor
