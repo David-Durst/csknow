@@ -82,7 +82,7 @@ def get_round_lengths(df: pd.DataFrame, compute_last_player_alive: bool = False,
 
 # src tensor is variable length per round, rollout tensor is fixed length for efficiency
 # fillout rollout tensor for as much as possible for each round so have non-sim input features (like visibility)
-def build_rollout_and_similarity_tensors(round_lengths: RoundLengths, dataset: LatentSubsetHDF5Dataset) -> \
+def build_rollout_similarity_vis_tensors(round_lengths: RoundLengths, dataset: LatentSubsetHDF5Dataset) -> \
         Tuple[torch.Tensor,torch.Tensor]:
     rollout_tensor = torch.zeros([round_lengths.num_rounds * round_lengths.max_length_per_round, dataset.X.shape[1]])
 
@@ -185,7 +185,7 @@ def save_inference_model_data_with_matching_round_lengths(loaded_model: LoadedMo
 
 def delta_pos_rollout(loaded_model: LoadedModel):
     round_lengths = get_round_lengths(loaded_model.get_cur_id_df())
-    rollout_tensor, similarity_tensor = build_rollout_and_similarity_tensors(round_lengths, loaded_model.cur_dataset)
+    rollout_tensor, similarity_tensor = build_rollout_similarity_vis_tensors(round_lengths, loaded_model.cur_dataset)
     pred_tensor = torch.zeros(rollout_tensor.shape[0], loaded_model.cur_dataset.Y.shape[1])
     loaded_model.model.eval()
     with torch.no_grad():

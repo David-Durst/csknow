@@ -107,6 +107,11 @@ def get_player_armor_columns(player_index: int, team_str: str, history_index: in
     return "player armor " + team_str + " " + str(player_index) + \
         ("" if history_index == 0 else " t-" + str(history_index))
 
+def get_player_weapon_id_columns(player_index: int, team_str: str, history_index: int = 0) -> str:
+    return "player weapon id " + team_str + " " + str(player_index) + \
+        ("" if history_index == 0 else " t-" + str(history_index))
+
+
 def get_player_aligned_pos_columns(player_index: int, team_str: str, dim_str: str, history_index: int = 0) -> str:
     return "player aligned pos " + team_str + " " + str(player_index) + \
         ("" if history_index == 0 else " t-" + str(history_index)) + " " + dim_str

@@ -1279,7 +1279,7 @@ namespace csknow::feature_store {
                 file.createDataSet("/data/player decrease distance to c4 over 20s " + columnTeam + " " + iStr,
                                    columnData[columnPlayer].decreaseDistanceToC4Over20s, hdf5FlatCreateProps);
                 saveEnumVectorToHDF5(columnData[columnPlayer].weaponId, file,
-                                     "/data/player weapon id " + columnTeam + " " + iStr,
+                                     "player weapon id " + columnTeam + " " + iStr,
                                      hdf5FlatCreateProps);
                 /*
                 vector<string> deltaPosNames;

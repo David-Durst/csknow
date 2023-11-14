@@ -25,7 +25,7 @@ from learn_bot.latent.place_area.simulation.constants import num_time_steps
 from learn_bot.latent.place_area.simulation.interpolate_position import update_interpolation_position_rollout_tensor
 from learn_bot.latent.place_area.simulation.nearest_neighbor_position import update_nn_position_rollout_tensor
 from learn_bot.latent.place_area.simulation.simulator import LoadedModel, RoundLengths, PlayerEnableMask, max_enemies, \
-    build_rollout_and_similarity_tensors, save_inference_model_data_with_matching_round_lengths, step, \
+    build_rollout_similarity_vis_tensors, save_inference_model_data_with_matching_round_lengths, step, \
     get_round_lengths, load_data_options, limit_to_every_nth_row
 from learn_bot.latent.vis.vis import vis
 from learn_bot.libs.io_transforms import CUDA_DEVICE_STR, flatten_list
@@ -141,7 +141,7 @@ def build_starting_position_pred_tensor(loaded_model: LoadedModel, rollout_tenso
 def delta_pos_open_rollout(loaded_model: LoadedModel, round_lengths: RoundLengths, player_enable_mask: PlayerEnableMask,
                            player_mask_config: PlayerMaskConfig):
     rollout_tensor, similarity_tensor = \
-        build_rollout_and_similarity_tensors(round_lengths, loaded_model.cur_dataset)
+        build_rollout_similarity_vis_tensors(round_lengths, loaded_model.cur_dataset)
 
     # set pred tensor if fixed or if making predictions)
     fixed_pred = False
