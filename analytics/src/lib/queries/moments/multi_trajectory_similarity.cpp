@@ -397,10 +397,10 @@ namespace csknow::multi_trajectory_similarity {
                 continue;
             }
             MultiTrajectorySimilarityMetricData bestUnconstrainedCurDTWData, bestSlopeConstrainedCurDTWData,
-                bestADECurData;
+                bestPercentileADECurData;
             bestUnconstrainedCurDTWData.dtwResult.cost = std::numeric_limits<double>::infinity();
             bestSlopeConstrainedCurDTWData.dtwResult.cost = std::numeric_limits<double>::infinity();
-            bestADECurData.dtwResult.cost = std::numeric_limits<double>::infinity();
+            bestPercentileADECurData.dtwResult.cost = std::numeric_limits<double>::infinity();
             for (const auto & agentMapping :
                 ctAliveTAliveToAgentMappingOptions[predictedMT.ctTrajectories][predictedMT.tTrajectories]) {
                 if (!useADEForMappingAlignment) {
@@ -420,24 +420,24 @@ namespace csknow::multi_trajectory_similarity {
                     }
 
                 }
-                DTWResult adeCurResult = predictedMT.percentileADE(groundTruthMT, agentMapping);
-                if (adeCurResult.cost < bestADECurData.dtwResult.cost) {
-                    bestADECurData.dtwResult = adeCurResult;
-                    bestADECurData.agentMapping = agentMapping;
-                    bestADECurData.mt = groundTruthMT;
+                DTWResult percentileADECurResult = predictedMT.percentileADE(groundTruthMT, agentMapping);
+                if (percentileADECurResult.cost < bestPercentileADECurData.dtwResult.cost) {
+                    bestPercentileADECurData.dtwResult = percentileADECurResult;
+                    bestPercentileADECurData.agentMapping = agentMapping;
+                    bestPercentileADECurData.mt = groundTruthMT;
                 }
             }
 
             if (useADEForMappingAlignment) {
-                DTWResult unconstrainedCurDTWResult = predictedMT.dtw(groundTruthMT, bestADECurData.agentMapping,
+                DTWResult unconstrainedCurDTWResult = predictedMT.dtw(groundTruthMT, bestPercentileADECurData.agentMapping,
                                                                       stopOptionsP0Symmetric);
                 bestUnconstrainedCurDTWData.dtwResult = unconstrainedCurDTWResult;
-                bestUnconstrainedCurDTWData.agentMapping = bestADECurData.agentMapping;
+                bestUnconstrainedCurDTWData.agentMapping = bestPercentileADECurData.agentMapping;
                 bestUnconstrainedCurDTWData.mt = groundTruthMT;
-                DTWResult slopeConstrainedCurDTWResult = predictedMT.dtw(groundTruthMT, bestADECurData.agentMapping,
+                DTWResult slopeConstrainedCurDTWResult = predictedMT.dtw(groundTruthMT, bestPercentileADECurData.agentMapping,
                                                                          stopOptionsP1_2Symmetric);
                 bestSlopeConstrainedCurDTWData.dtwResult = slopeConstrainedCurDTWResult;
-                bestSlopeConstrainedCurDTWData.agentMapping = bestADECurData.agentMapping;
+                bestSlopeConstrainedCurDTWData.agentMapping = bestPercentileADECurData.agentMapping;
                 bestSlopeConstrainedCurDTWData.mt = groundTruthMT;
             }
 
@@ -445,7 +445,7 @@ namespace csknow::multi_trajectory_similarity {
             if (bestSlopeConstrainedCurDTWData.dtwResult.cost < std::numeric_limits<double>::infinity()) {
                 slopeConstrainedDTWDataMatches.push_back(bestSlopeConstrainedCurDTWData);
             }
-            adeDataMatches.push_back(bestADECurData);
+            percentileADEDataMatches.push_back(bestPercentileADECurData);
             if (unconstrainedDTWDataMatches.size() > 100) {
                 filterTopDataMatches();
             }
@@ -461,7 +461,7 @@ namespace csknow::multi_trajectory_similarity {
             slopeConstrainedDTWData.deltaTime = predictedMT.maxTime() - slopeConstrainedDTWData.mt.maxTime();
             slopeConstrainedDTWData.deltaDistance = predictedMT.distance() - slopeConstrainedDTWData.mt.distance();
         }
-        for (auto & adeData : adeDataMatches) {
+        for (auto & adeData : percentileADEDataMatches) {
             adeData.name = getName(adeData.mt);
             adeData.deltaTime = predictedMT.maxTime() - adeData.mt.maxTime();
             adeData.deltaDistance = predictedMT.distance() - adeData.mt.distance();
@@ -555,7 +555,7 @@ namespace csknow::multi_trajectory_similarity {
             case MetricType::SlopeConstrainedDTW:
                 return slopeConstrainedDTWDataMatches;
             default:
-                return adeDataMatches;
+                return percentileADEDataMatches;
         }
     }
 
@@ -573,8 +573,8 @@ namespace csknow::multi_trajectory_similarity {
                   multiTrajectorySimilarityMetricDataComparator);
         slopeConstrainedDTWDataMatches.resize(std::min(num_similar_trajectory_matches,
                                                        slopeConstrainedDTWDataMatches.size()));
-        std::sort(adeDataMatches.begin(), adeDataMatches.end(), multiTrajectorySimilarityMetricDataComparator);
-        adeDataMatches.resize(std::min(num_similar_trajectory_matches, adeDataMatches.size()));
+        std::sort(percentileADEDataMatches.begin(), percentileADEDataMatches.end(), multiTrajectorySimilarityMetricDataComparator);
+        percentileADEDataMatches.resize(std::min(num_similar_trajectory_matches, percentileADEDataMatches.size()));
     }
 
     string metricTypeToString(MetricType metricType) {

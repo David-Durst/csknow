@@ -97,7 +97,7 @@ namespace csknow::multi_trajectory_similarity {
         MultiTrajectory predictedMT;
         string predictedMTName;
         vector<MultiTrajectorySimilarityMetricData> unconstrainedDTWDataMatches, slopeConstrainedDTWDataMatches,
-            adeDataMatches;
+            percentileADEDataMatches;
         // used when filtering out invalid rounds
         bool valid;
 
