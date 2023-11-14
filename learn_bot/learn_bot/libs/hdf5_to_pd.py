@@ -22,7 +22,6 @@ def load_hdf5_to_pd(hdf5_path: Path, selector_df: Optional[pd.DataFrame] = None,
             elif isinstance(rows_to_get, List):
                 np_arr: np.ndarray = hdf5_data[k][rows_to_get]
             else:
-                print(k)
                 np_arr: np.ndarray = hdf5_data[k][:rows_to_get]
             col_names: List[str]
             if hdf5_data[k].attrs:

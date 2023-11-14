@@ -175,7 +175,7 @@ void saveEnumVectorToHDF5(const std::vector<T> & vectorOfEnums, HighFive::File &
         result.push_back(enumAsInt(vectorOfEnums[vectorIndex]));
     }
 
-    file.createDataSet("/data/" + baseString, result[0], hdf5CreateProps);
+    file.createDataSet("/data/" + baseString, result, hdf5CreateProps);
 }
 
 
