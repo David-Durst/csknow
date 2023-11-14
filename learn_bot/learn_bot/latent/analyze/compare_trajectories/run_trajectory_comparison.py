@@ -359,6 +359,7 @@ def compare_trajectories(config_case: int) -> Optional[TrajectoryPlots]:
 
     os.makedirs(cur_run_similarity_plots_path, exist_ok=True)
     similarity_df = load_hdf5_to_pd(config.similarity_data_path)
+    # remove matches to self
     similarity_df = similarity_df[similarity_df[dtw_cost_col] != 0.]
     # need to load this early for filtering
     predicted_data = LoadDataResult(config.predicted_load_data_options)

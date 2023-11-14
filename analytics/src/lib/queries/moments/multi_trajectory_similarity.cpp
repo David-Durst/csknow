@@ -231,7 +231,7 @@ namespace csknow::multi_trajectory_similarity {
     size_t MultiTrajectory::maxTimeSteps() const {
         size_t maxTimeSteps = 0;
         for (const auto & trajectory : trajectories) {
-            maxTimeSteps = std::max(maxTimeSteps, trajectory.endTraceIndex - trajectory.startTraceIndex);
+            maxTimeSteps = std::max(maxTimeSteps, trajectory.endTraceIndex - trajectory.startTraceIndex + 1);
         }
         return maxTimeSteps;
     }
@@ -504,6 +504,15 @@ namespace csknow::multi_trajectory_similarity {
 #pragma omp parallel for
         for (size_t i = 0; i < totalSize/*predictedMTs.size()*/; i++) {
             const auto & predictedMT = predictedMTs[i];
+
+            /*
+            if (predictedMT.traceBatch->get().fileName == "behaviorTreeTeamFeatureStore_3.hdf5" && predictedMT.roundId == 375) {
+                std::cout << "hi" << std::endl;
+            }
+            else {
+                continue;
+            }
+             */
 
             similarityMutex.lock();
             valid[omp_get_thread_num()] = true;
