@@ -163,6 +163,20 @@ void saveVec2VectorToHDF5(const std::vector<Vec2> & vectorOfVec2, HighFive::File
                           const string & baseString, const HighFive::DataSetCreateProps & hdf5CreateProps);
 void loadVec3VectorFromHDF5(std::vector<Vec3> & vectorOfVec3, HighFive::File & file, const string & baseString);
 void loadVec2VectorFromHDF5(std::vector<Vec2> & vectorOfVec2, HighFive::File & file, const string & baseString);
+template <typename T>
+void saveEnumVectorToHDF5(const std::vector<T> & vectorOfEnums, HighFive::File & file,
+                          const string & baseString, const HighFive::DataSetCreateProps & hdf5CreateProps) {
+    std::vector<int> result;
+    for (size_t i = 0; i < result.size(); i++) {
+        result.reserve(vectorOfEnums.size());
+    }
+
+    for (size_t vectorIndex = 0; vectorIndex < vectorOfEnums.size(); vectorIndex++) {
+        result.push_back(enumAsInt(vectorOfEnums[vectorIndex]));
+    }
+
+    file.createDataSet("/data/" + baseString, result[0], hdf5CreateProps);
+}
 
 
 void mergeThreadResults(int numThreads, vector<RangeIndexEntry> &rowIndicesPerRound, const vector<vector<int64_t>> & tmpRoundIds,
