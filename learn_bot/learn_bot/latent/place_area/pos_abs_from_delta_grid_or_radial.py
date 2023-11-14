@@ -2,13 +2,13 @@ from math import isqrt, ceil
 from pathlib import Path
 
 import torch
-from einops import rearrange
+from einops import rearrange, repeat
 
 from learn_bot.latent.order.column_names import num_future_ticks, num_radial_ticks
 from learn_bot.latent.place_area.column_names import specific_player_place_area_columns, delta_pos_grid_radius, \
     delta_pos_grid_cell_dim, delta_pos_z_num_cells, delta_pos_grid_num_cells, delta_pos_grid_num_cells_per_xy_dim, \
     delta_pos_grid_num_xy_cells_per_z_change, num_radial_bins, num_radial_bins_per_z_axis, direction_angle_range, \
-    StatureOptions
+    StatureOptions, vis_columns_names_to_index
 from learn_bot.libs.hdf5_to_pd import load_hdf5_extra_to_list, load_hdf5_to_pd
 from learn_bot.libs.vec import Vec3
 from dataclasses import dataclass
@@ -79,7 +79,14 @@ class DeltaPosWithZIndex:
     z_jump_index: torch.Tensor
 
 
-def get_delta_pos_from_radial(pred_labels: torch.Tensor, stature_to_speed: torch.Tensor) -> DeltaPosWithZIndex:
+weapon_id_cols = [vis_columns_names_to_index[player_place_area_columns.player_weapon_id]
+                  for player_place_area_columns in specific_player_place_area_columns]
+scoped_cols = [vis_columns_names_to_index[player_place_area_columns.player_scoped]
+                  for player_place_area_columns in specific_player_place_area_columns]
+
+
+def get_delta_pos_from_radial(pred_labels: torch.Tensor, vis_tensor: torch.Tensor, stature_to_speed: torch.Tensor,
+                              weapon_scoped_to_max_speed: torch.Tensor) -> DeltaPosWithZIndex:
     not_moving = pred_labels == 0.
     moving_pred_labels = pred_labels - 1.
     not_moving_z_index = torch.ones_like(moving_pred_labels)
@@ -92,13 +99,22 @@ def get_delta_pos_from_radial(pred_labels: torch.Tensor, stature_to_speed: torch
     # necessary since index select expects 1d
     flattened_stature_index = rearrange(per_batch_stature_index, 'b pt -> (b pt)',
                                         pt=len(specific_player_place_area_columns) * num_radial_ticks)
+    flattened_weapon_id_index = rearrange(
+        repeat(vis_tensor[:, weapon_id_cols], 'b p -> b (p t)', t=num_radial_ticks).int(),
+        'b pt -> (b pt)')
+    flattened_scoped_index = rearrange(
+        repeat(vis_tensor[:, scoped_cols], 'b p -> b (p t)', t=num_radial_ticks).int(),
+        'b pt -> (b pt)')
     dir_degrees = torch.floor(dir_stature_pred_label / StatureOptions.NUM_STATURE_OPTIONS.value) * direction_angle_range
     # stature to lookup table of speeds
-    # divide by 2 since changes are per half second
-    flattened_max_speed_per_stature = torch.index_select(stature_to_speed, 0, flattened_stature_index) / 2.
-    per_batch_max_speed_per_stature = rearrange(flattened_max_speed_per_stature, '(b pt) -> b pt',
+    flattened_max_speed_per_stature = torch.index_select(stature_to_speed, 0, flattened_stature_index)
+    flattened_max_speed_per_weapon_scoped = torch.index_select(
+        torch.index_select(weapon_scoped_to_max_speed, 0, flattened_weapon_id_index), 1, flattened_scoped_index)
+    flattened_max_speed_per_stature_weapon_scoped = \
+        flattened_max_speed_per_weapon_scoped * flattened_max_speed_per_stature
+    per_batch_max_speed_per_stature = rearrange(flattened_max_speed_per_stature_weapon_scoped, '(b pt) -> b pt',
                                                 pt=len(specific_player_place_area_columns) * num_radial_ticks)
-    # return cos/sin of dir degre
+    # return cos/sin of dir degree
     not_moving_zeros = torch.zeros_like(per_batch_max_speed_per_stature)
     delta_pos = torch.stack([
         torch.where(not_moving, not_moving_zeros, torch.cos(torch.deg2rad(dir_degrees)) * per_batch_max_speed_per_stature),
@@ -108,8 +124,9 @@ def get_delta_pos_from_radial(pred_labels: torch.Tensor, stature_to_speed: torch
     return DeltaPosWithZIndex(delta_pos, z_jump_index)
 
 
-def compute_new_pos(input_pos_tensor: torch.Tensor, pred_labels: torch.Tensor, nav_data: NavData, pred_is_grid: bool,
-                    stature_to_speed: torch.Tensor):
+def compute_new_pos(input_pos_tensor: torch.Tensor, vis_tensor: torch.Tensor, pred_labels: torch.Tensor,
+                    nav_data: NavData, pred_is_grid: bool,
+                    stature_to_speed: torch.Tensor, weapon_scoped_to_max_speed: torch.Tensor):
     if pred_is_grid:
         delta_xyz_indices = get_delta_indices_from_grid(pred_labels)
         z_jump_index = delta_xyz_indices.z_jump_index
@@ -125,7 +142,8 @@ def compute_new_pos(input_pos_tensor: torch.Tensor, pred_labels: torch.Tensor, n
         scaled_pos_change = torch.where(pos_change_norm > max_run_speed_per_sim_tick, all_scaled_pos_change,
                                         unscaled_pos_change)
     else:
-        delta_pos_with_z = get_delta_pos_from_radial(pred_labels, stature_to_speed)
+        delta_pos_with_z = get_delta_pos_from_radial(pred_labels, vis_tensor, stature_to_speed,
+                                                     weapon_scoped_to_max_speed)
         # since this is for sim, and simulator steps one tick at a time (rather than 500ms like prediction), rescale it
         unscaled_pos_change = delta_pos_with_z.delta_pos
         pos_change_norm = torch.linalg.vector_norm(unscaled_pos_change, dim=-1, keepdim=True)

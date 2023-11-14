@@ -140,8 +140,8 @@ def build_starting_position_pred_tensor(loaded_model: LoadedModel, rollout_tenso
 
 def delta_pos_open_rollout(loaded_model: LoadedModel, round_lengths: RoundLengths, player_enable_mask: PlayerEnableMask,
                            player_mask_config: PlayerMaskConfig):
-    rollout_tensor, similarity_tensor = \
-        build_rollout_similarity_vis_tensors(round_lengths, loaded_model.cur_dataset)
+    rollout_tensor, similarity_tensor, vis_tensor = \
+        build_rollout_similarity_vis_tensors(loaded_model, round_lengths, loaded_model.cur_dataset)
 
     # set pred tensor if fixed or if making predictions)
     fixed_pred = False
@@ -170,8 +170,8 @@ def delta_pos_open_rollout(loaded_model: LoadedModel, round_lengths: RoundLength
             with tqdm(total=num_steps, disable=False) as pbar:
                 for step_index in range(num_steps):
                     if (step_index + 1) % num_time_steps != 0:
-                        step(rollout_tensor, similarity_tensor, pred_tensor, loaded_model.model, round_lengths, step_index,
-                             nav_data, player_enable_mask, fixed_pred)
+                        step(rollout_tensor, similarity_tensor, pred_tensor, vis_tensor, loaded_model.model,
+                             round_lengths, step_index, nav_data, player_enable_mask, fixed_pred)
                     pbar.update(1)
     save_inference_model_data_with_matching_round_lengths(loaded_model, rollout_tensor, pred_tensor, round_lengths)
 

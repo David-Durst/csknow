@@ -1281,6 +1281,8 @@ namespace csknow::feature_store {
                 saveEnumVectorToHDF5(columnData[columnPlayer].weaponId, file,
                                      "player weapon id " + columnTeam + " " + iStr,
                                      hdf5FlatCreateProps);
+                file.createDataSet("/data/player scoped " + columnTeam + " " + iStr,
+                                   columnData[columnPlayer].scoped, hdf5FlatCreateProps);
                 /*
                 vector<string> deltaPosNames;
                 for (size_t deltaPosIndex = 0; deltaPosIndex < delta_pos_grid_num_cells; deltaPosIndex++) {

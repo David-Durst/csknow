@@ -1,4 +1,5 @@
 from math import isqrt
+from typing import Dict
 
 from learn_bot.latent.order.column_names import *
 from learn_bot.libs.io_transforms import flatten_list
@@ -100,6 +101,7 @@ class PlayerPlaceAreaColumns:
         self.decrease_distance_to_c4_5s = f"player decrease distance to c4 over 5s {team_str} {player_index}"
         self.decrease_distance_to_c4_10s = f"player decrease distance to c4 over 10s {team_str} {player_index}"
         self.decrease_distance_to_c4_20s = f"player decrease distance to c4 over 20s {team_str} {player_index}"
+        self.player_scoped = get_player_scoped_columns(player_index, team_str)
         self.player_weapon_id = get_player_weapon_id_columns(player_index, team_str)
         self.cur_place = []
         #self.prior_place = []
@@ -188,7 +190,7 @@ class PlayerPlaceAreaColumns:
         return result
 
     def get_vis_only_columns(self) -> list[str]:
-        return [self.player_id, self.player_weapon_id] + self.vel + self.view_angle
+        return [self.player_id, self.player_weapon_id, self.player_scoped] + self.vel + self.view_angle
 
 
 specific_player_place_area_columns: list[PlayerPlaceAreaColumns] = \
@@ -225,6 +227,7 @@ radial_vel_output_column_types = get_simplified_column_types([], [], [], flat_ou
 vis_only_columns: list[str] = c4_pos_cols + \
                               flatten_list([player_place_area_columns.get_vis_only_columns() for
                                             player_place_area_columns in specific_player_place_area_columns])
+vis_columns_names_to_index: Dict[str, int] = {s: i for i, s in enumerate(vis_only_columns)}
 
 
 def get_base_similarity_column() -> str:

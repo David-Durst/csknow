@@ -8,6 +8,7 @@ from learn_bot.latent.place_area.column_names import specific_player_place_area_
     walking_modifier, ducking_modifier
 from learn_bot.latent.place_area.pos_abs_from_delta_grid_or_radial import NavData, \
     one_hot_prob_to_index, max_speed_per_second
+from learn_bot.latent.place_area.simulation.constants import weapon_scoped_to_max_speed_tensor
 from learn_bot.libs.io_transforms import IOColumnTransformers, CUDA_DEVICE_STR, CPU_DEVICE_STR, \
     range_list_to_index_list, flatten_list
 from learn_bot.libs.positional_encoding import *
@@ -29,8 +30,7 @@ def get_columns_by_str(cts: IOColumnTransformers, contained_str: str) -> List[in
 
 d2_min = [-2257., -1207., -204.128]
 d2_max = [1832., 3157., 236.]
-stature_to_speed_list = [max_speed_per_second, max_speed_per_second * walking_modifier,
-                         max_speed_per_second * ducking_modifier]
+stature_to_speed_list = [1., walking_modifier, ducking_modifier]
 
 
 class PlayerMaskType(Enum):
@@ -163,6 +163,7 @@ class TransformerNestedHiddenLatentModel(nn.Module):
         # radial speed matrices
         self.stature_to_speed_cpu = torch.tensor(stature_to_speed_list)
         self.stature_to_speed_gpu = self.stature_to_speed_cpu.to(CUDA_DEVICE_STR)
+        self.weapon_scoped_to_max_speed_tensor_gpu = weapon_scoped_to_max_speed_tensor.to(CUDA_DEVICE_STR)
 
 
         # NERF code calls it positional embedder, but it's encoder since not learned

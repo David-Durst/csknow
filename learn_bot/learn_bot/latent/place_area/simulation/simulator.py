@@ -4,14 +4,17 @@ import pandas as pd
 from dataclasses import dataclass
 from typing import Dict, Tuple, Optional
 
+import torch
 from tqdm import tqdm
 
 from learn_bot.latent.latent_subset_hdf5_dataset import LatentSubsetHDF5Dataset
 from learn_bot.latent.engagement.column_names import round_id_column, tick_id_column
 from learn_bot.latent.load_model import load_model_file, LoadedModel
+from learn_bot.latent.place_area.column_names import vis_only_columns
 from learn_bot.latent.place_area.pos_abs_from_delta_grid_or_radial import compute_new_pos, data_ticks_per_sim_tick, \
     one_hot_max_to_index
 from learn_bot.latent.place_area.load_data import LoadDataResult, LoadDataOptions
+from learn_bot.latent.place_area.simulation.constants import EngineWeaponId
 from learn_bot.latent.train_paths import train_test_split_file_name
 from learn_bot.latent.transformer_nested_hidden_latent_model import *
 from learn_bot.latent.vis.vis import vis
@@ -82,8 +85,9 @@ def get_round_lengths(df: pd.DataFrame, compute_last_player_alive: bool = False,
 
 # src tensor is variable length per round, rollout tensor is fixed length for efficiency
 # fillout rollout tensor for as much as possible for each round so have non-sim input features (like visibility)
-def build_rollout_similarity_vis_tensors(round_lengths: RoundLengths, dataset: LatentSubsetHDF5Dataset) -> \
-        Tuple[torch.Tensor,torch.Tensor]:
+def build_rollout_similarity_vis_tensors(loaded_model: LoadedModel, round_lengths: RoundLengths,
+                                         dataset: LatentSubsetHDF5Dataset) -> \
+        Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
     rollout_tensor = torch.zeros([round_lengths.num_rounds * round_lengths.max_length_per_round, dataset.X.shape[1]])
 
     rollout_ticks_in_round = flatten_list(
@@ -91,15 +95,21 @@ def build_rollout_similarity_vis_tensors(round_lengths: RoundLengths, dataset: L
          for round_index, round_id in enumerate(round_lengths.round_ids)])
     rollout_tensor[rollout_ticks_in_round] = torch.tensor(dataset.X, dtype=rollout_tensor.dtype)
 
-    src_first_tick_in_round = [tick_range.start for _, tick_range in round_lengths.round_to_subset_tick_indices.items()]
-    similarity_tensor = dataset.similarity_tensor[src_first_tick_in_round].to(CUDA_DEVICE_STR)
-    return rollout_tensor, similarity_tensor
+    similarity_tensor = torch.zeros([rollout_tensor.shape[0], dataset.similarity_tensor.shape[1]],
+                                    dtype=dataset.similarity_tensor.dtype)
+    similarity_tensor[rollout_ticks_in_round] = dataset.similarity_tensor
+
+    all_vis_tensor = torch.tensor(loaded_model.load_cols_from_cur_hdf5(vis_only_columns).loc[:, vis_only_columns].values)
+    vis_tensor = torch.zeros([rollout_tensor.shape[0], len(vis_only_columns)], dtype=rollout_tensor.dtype)
+    vis_tensor[rollout_ticks_in_round] = all_vis_tensor
+
+    return rollout_tensor, similarity_tensor, vis_tensor
 
 
 PlayerEnableMask = Optional[torch.Tensor]
 
-
 def step(rollout_tensor: torch.Tensor, all_similarity_tensor: torch.Tensor, pred_tensor: torch.Tensor,
+         all_vis_tensor: torch.Tensor,
          model: TransformerNestedHiddenLatentModel, round_lengths: RoundLengths, step_index: int, nav_data: NavData,
          player_enable_mask: PlayerEnableMask = None, fixed_pred: bool = False, convert_to_cpu: bool = True,
          save_new_pos: bool = True, rollout_tensor_grad: Optional[torch.Tensor] = None,
@@ -118,12 +128,13 @@ def step(rollout_tensor: torch.Tensor, all_similarity_tensor: torch.Tensor, pred
     if len(rollout_tensor_input_indices) == 0:
         return
         #print('empty rollout tensor input indices')
-    similarity_tensor = all_similarity_tensor[rounds_containing_step_index]
     rollout_tensor_output_indices = [index + 1 for index in rollout_tensor_input_indices]
 
     input_tensor = rollout_tensor[rollout_tensor_input_indices].to(CUDA_DEVICE_STR)
     input_pos_tensor = rearrange(input_tensor[:, model.players_pos_columns], 'b (p t d) -> b p t d',
                                  p=model.num_players, t=model.num_input_time_steps, d=model.num_dim)
+    similarity_tensor = all_similarity_tensor[rollout_tensor_input_indices].to(CUDA_DEVICE_STR)
+    vis_tensor = all_vis_tensor[rollout_tensor_input_indices].to(CUDA_DEVICE_STR)
     if not fixed_pred:
         temperature = torch.Tensor([1.]).to(CUDA_DEVICE_STR)
         pred = model(input_tensor, similarity_tensor, temperature)
@@ -152,8 +163,9 @@ def step(rollout_tensor: torch.Tensor, all_similarity_tensor: torch.Tensor, pred
     # also this will out of bounds in that case, as need prediction at time t and no position at t+1 to save at
     if save_new_pos:
         tmp_rollout = rollout_tensor[rollout_tensor_output_indices]
-        new_player_pos = rearrange(compute_new_pos(input_pos_tensor, pred_labels, nav_data, False,
-                                                   model.stature_to_speed_gpu), "b p t d -> b (p t d)")
+        new_player_pos = rearrange(compute_new_pos(input_pos_tensor, vis_tensor, pred_labels, nav_data, False,
+                                                   model.stature_to_speed_gpu,
+                                                   model.weapon_scoped_to_max_speed_tensor_gpu), "b p t d -> b (p t d)")
         if convert_to_cpu:
             new_player_pos = new_player_pos.to(CPU_DEVICE_STR)
         if player_enable_mask is not None:
@@ -185,14 +197,16 @@ def save_inference_model_data_with_matching_round_lengths(loaded_model: LoadedMo
 
 def delta_pos_rollout(loaded_model: LoadedModel):
     round_lengths = get_round_lengths(loaded_model.get_cur_id_df())
-    rollout_tensor, similarity_tensor = build_rollout_similarity_vis_tensors(round_lengths, loaded_model.cur_dataset)
+    rollout_tensor, similarity_tensor, vis_tensor = build_rollout_similarity_vis_tensors(loaded_model, round_lengths,
+                                                                                         loaded_model.cur_dataset)
     pred_tensor = torch.zeros(rollout_tensor.shape[0], loaded_model.cur_dataset.Y.shape[1])
     loaded_model.model.eval()
     with torch.no_grad():
         num_steps = round_lengths.max_length_per_round - 1
         with tqdm(total=num_steps, disable=False) as pbar:
             for step_index in range(num_steps):
-                step(rollout_tensor, similarity_tensor, pred_tensor, loaded_model.model, round_lengths, step_index, nav_data)
+                step(rollout_tensor, similarity_tensor, pred_tensor, vis_tensor, loaded_model.model, round_lengths,
+                     step_index, nav_data)
                 pbar.update(1)
     save_inference_model_data_with_matching_round_lengths(loaded_model, rollout_tensor, pred_tensor, round_lengths)
 
