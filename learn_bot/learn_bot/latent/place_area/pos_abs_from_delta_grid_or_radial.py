@@ -12,7 +12,7 @@ from learn_bot.latent.place_area.column_names import specific_player_place_area_
 from learn_bot.libs.hdf5_to_pd import load_hdf5_extra_to_list, load_hdf5_to_pd
 from learn_bot.libs.vec import Vec3
 from dataclasses import dataclass
-from typing import List, Tuple
+from typing import List, Tuple, Optional
 from learn_bot.libs.io_transforms import CUDA_DEVICE_STR, CPU_DEVICE_STR
 
 @dataclass
@@ -85,8 +85,8 @@ scoped_cols = [vis_columns_names_to_index[player_place_area_columns.player_scope
                   for player_place_area_columns in specific_player_place_area_columns]
 
 
-def get_delta_pos_from_radial(pred_labels: torch.Tensor, vis_tensor: torch.Tensor, stature_to_speed: torch.Tensor,
-                              weapon_scoped_to_max_speed: torch.Tensor) -> DeltaPosWithZIndex:
+def get_delta_pos_from_radial(pred_labels: torch.Tensor, vis_tensor: Optional[torch.Tensor], stature_to_speed: torch.Tensor,
+                              weapon_scoped_to_max_speed: Optional[torch.Tensor]) -> DeltaPosWithZIndex:
     not_moving = pred_labels == 0.
     moving_pred_labels = pred_labels - 1.
     not_moving_z_index = torch.ones_like(moving_pred_labels)
@@ -100,20 +100,24 @@ def get_delta_pos_from_radial(pred_labels: torch.Tensor, vis_tensor: torch.Tenso
     player_time_steps = len(specific_player_place_area_columns) * num_radial_ticks
     flattened_stature_index = rearrange(per_batch_stature_index, 'b pt -> (b pt)',
                                         pt=player_time_steps)
-    flattened_weapon_id_index = rearrange(
-        repeat(vis_tensor[:, weapon_id_cols], 'b p -> b (p t)', t=num_radial_ticks).int(),
-        'b pt -> (b pt)', pt=player_time_steps)
-    flattened_scoped_index = rearrange(
-        repeat(vis_tensor[:, scoped_cols], 'b p -> b (p t)', t=num_radial_ticks).int(),
-        'b pt -> (b pt)', pt=player_time_steps)
     dir_degrees = torch.floor(dir_stature_pred_label / StatureOptions.NUM_STATURE_OPTIONS.value) * direction_angle_range
     # stature to lookup table of speeds
     flattened_max_speed_per_stature = torch.index_select(stature_to_speed, 0, flattened_stature_index)
     # since pytorch doesn't support nested index_select, flatten it and I'll do lookup index computation my self
-    flattened_max_speed_per_weapon_scoped = torch.index_select(
-        weapon_scoped_to_max_speed, 0, 2 * flattened_weapon_id_index + flattened_scoped_index)
-    flattened_max_speed_per_stature_weapon_scoped = \
-        flattened_max_speed_per_weapon_scoped * flattened_max_speed_per_stature
+    if vis_tensor is not None:
+        flattened_weapon_id_index = rearrange(
+            repeat(vis_tensor[:, weapon_id_cols], 'b p -> b (p t)', t=num_radial_ticks).int(),
+            'b pt -> (b pt)', pt=player_time_steps)
+        flattened_scoped_index = rearrange(
+            repeat(vis_tensor[:, scoped_cols], 'b p -> b (p t)', t=num_radial_ticks).int(),
+            'b pt -> (b pt)', pt=player_time_steps)
+        flattened_max_speed_per_weapon_scoped = torch.index_select(
+            weapon_scoped_to_max_speed, 0, 2 * flattened_weapon_id_index + flattened_scoped_index)
+        flattened_max_speed_per_stature_weapon_scoped = \
+            flattened_max_speed_per_weapon_scoped * flattened_max_speed_per_stature
+    else:
+        flattened_max_speed_per_stature_weapon_scoped = \
+            max_speed_per_second * flattened_max_speed_per_stature
     per_batch_max_speed_per_stature = rearrange(flattened_max_speed_per_stature_weapon_scoped, '(b pt) -> b pt',
                                                 pt=len(specific_player_place_area_columns) * num_radial_ticks)
     # scale by time per tick

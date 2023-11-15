@@ -119,7 +119,7 @@ def vis(loaded_model: LoadedModel, inference_fn: Callable[[LoadedModel], None], 
         tick_game_id_text_var.set(f"Game Tick ID: {cur_game_tick}")
         extra_round_data_str = ""
         if get_similarity_column(0) in id_df.columns:
-            extra_round_data_str = f"similarity 0: {id_df.loc[cur_index, get_similarity_column(0)]}, similarity 1: {id_df.loc[cur_index, get_similarity_column(1)]}"
+            extra_round_data_str = f"similarity 0: {id_df.loc[cur_index, get_similarity_column(0)]}"
         game_id = selected_df.loc[cur_index, game_id_column]
         demo_file_text_var.set(loaded_model.cur_demo_names[game_id])
         round_id_text_var.set(f"Round ID: {int(cur_round)}, "

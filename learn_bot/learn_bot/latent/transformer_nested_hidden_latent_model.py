@@ -5,7 +5,7 @@ from learn_bot.latent.engagement.column_names import max_enemies
 from learn_bot.latent.order.column_names import team_strs, player_team_str, all_prior_and_cur_ticks, \
     num_radial_ticks
 from learn_bot.latent.place_area.column_names import specific_player_place_area_columns, num_radial_bins, \
-    walking_modifier, ducking_modifier
+    walking_modifier, ducking_modifier, default_similarity_columns
 from learn_bot.latent.place_area.pos_abs_from_delta_grid_or_radial import NavData, \
     one_hot_prob_to_index, max_speed_per_second
 from learn_bot.latent.place_area.simulation.constants import weapon_scoped_to_max_speed_tensor
@@ -128,7 +128,7 @@ class TransformerNestedHiddenLatentModel(nn.Module):
              if player_column not in (self.players_all_temporal_columns + self.players_seconds_to_hit_enemy)]
             for player_columns in players_columns
         ])
-        self.num_similarity_columns = 2
+        self.num_similarity_columns = default_similarity_columns
         self.num_input_time_steps = num_input_time_steps
         self.num_output_time_steps = num_radial_ticks
         self.control_type = control_type
@@ -230,7 +230,8 @@ class TransformerNestedHiddenLatentModel(nn.Module):
         x = x_in.clone()
         if self.control_type != ControlType.TimeControl:
             x[:, self.time_control_columns] = 0.
-        similarity = similarity_in.clone()
+        # legacy, so that if hand in too many similarity columns, still use them
+        similarity = similarity_in[:, self.num_similarity_columns * -1:].clone()
         if self.control_type != ControlType.SimilarityControl:
             similarity[:, :] = 0.
         x_pos = rearrange(x[:, self.players_pos_columns], "b (p t d) -> b p t d", p=self.num_players,

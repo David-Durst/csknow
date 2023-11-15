@@ -8,9 +8,8 @@ from learn_bot.latent.analyze.comparison_column_names import predicted_trace_bat
     best_fit_ground_truth_round_id_col, predicted_round_id_col, best_match_id_col, metric_type_col
 from learn_bot.latent.engagement.column_names import game_id_column, round_id_column
 from learn_bot.latent.place_area.column_names import hdf5_id_columns, test_success_col, get_similarity_column, \
-    vis_only_columns
-from learn_bot.latent.place_area.create_test_data import create_zeros_train_data, create_similarity_data, \
-    create_left_right_train_data
+    vis_only_columns, default_similarity_columns
+from learn_bot.latent.place_area.create_test_data import create_zeros_train_data, create_similarity_data
 from learn_bot.libs.hdf5_to_pd import load_hdf5_to_pd
 from learn_bot.libs.hdf5_wrapper import HDF5Wrapper, PDWrapper
 from learn_bot.libs.multi_hdf5_wrapper import MultiHDF5Wrapper, HDF5SourceOptions
@@ -60,9 +59,6 @@ class LoadDataOptions:
     # custom limit fn to be used for all human data
     custom_limit_fn: Optional[SimilarityFn] = None
 
-
-# system depends on 2 similarity columns, in future should be more flexible
-default_similarity_columns = 2
 
 class LoadDataResult:
     diff_train_test: bool

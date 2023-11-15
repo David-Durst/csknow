@@ -224,9 +224,9 @@ def compute_accuracy_and_delta_diff(pred, Y, duplicated_last, accuracy, delta_di
     # compute delta diffs
     #Y_delta_indices = get_delta_indices_from_grid(Y_label_per_player)
     #pred_untransformed_delta_indices = get_delta_indices_from_grid(pred_untransformed_label_per_player)
-    Y_delta_pos = get_delta_pos_from_radial(Y_label_per_player, stature_to_speed)
+    Y_delta_pos = get_delta_pos_from_radial(Y_label_per_player, None, stature_to_speed, None)
     pred_untransformed_delta_pos = \
-        get_delta_pos_from_radial(pred_untransformed_label_per_player, stature_to_speed)
+        get_delta_pos_from_radial(pred_untransformed_label_per_player, None, stature_to_speed, None)
     delta_diff_xy_per_player = \
         torch.sqrt(torch.sum(torch.pow(Y_delta_pos.delta_pos - pred_untransformed_delta_pos.delta_pos, 2), dim=-1))
     #torch.sqrt(

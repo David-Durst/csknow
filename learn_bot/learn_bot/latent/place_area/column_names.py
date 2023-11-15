@@ -236,3 +236,7 @@ def get_base_similarity_column() -> str:
 
 def get_similarity_column(idx: int) -> str:
     return f'similarity {idx}'
+
+
+# system depends on 1 similarity columns, in future should be more flexible
+default_similarity_columns = 1

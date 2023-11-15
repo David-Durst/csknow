@@ -2,7 +2,7 @@ import pandas as pd
 import torch
 from torch.utils.data import Dataset
 
-from learn_bot.latent.place_area.column_names import get_similarity_column
+from learn_bot.latent.place_area.column_names import get_similarity_column, default_similarity_columns
 from learn_bot.libs.hdf5_wrapper import HDF5Wrapper
 from learn_bot.libs.io_transforms import IOColumnTransformers
 from pathlib import Path
@@ -67,7 +67,8 @@ class MultipleLatentHDF5Dataset(Dataset):
                 break
         id_series = self.data_hdf5s[hdf5_index].id_df.iloc[idx_in_hdf5]
         if get_similarity_column(0) in id_series.index:
-            similarity_tensor = torch.tensor([id_series.loc[get_similarity_column(0)], id_series.loc[get_similarity_column(1)]])
+            similarity_tensor = torch.tensor([id_series.loc[get_similarity_column(s)]
+                                              for s in range(default_similarity_columns)])
         else:
             # for now, only thing without hdf5 is bot data, which always pushes to objective
             similarity_tensor = torch.tensor([True, True])
