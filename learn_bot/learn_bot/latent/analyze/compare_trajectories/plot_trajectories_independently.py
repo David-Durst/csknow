@@ -9,8 +9,8 @@ from PIL import Image
 from learn_bot.latent.analyze.compare_trajectories.plot_trajectories_and_events import plot_trajectory_dfs_and_event
 from learn_bot.latent.analyze.compare_trajectories.plot_trajectories_from_comparison import \
     concat_horizontal
-from learn_bot.latent.analyze.compare_trajectories.process_trajectory_comparison import set_pd_print_options, \
-    ComparisonConfig
+from learn_bot.latent.analyze.compare_trajectories.process_trajectory_comparison import ComparisonConfig
+from learn_bot.libs.pd_printing import set_pd_print_options
 from learn_bot.latent.analyze.compare_trajectories.region_constraints.compute_constraint_metrics import check_constraint_metrics, \
     ConstraintResult
 from learn_bot.latent.analyze.compare_trajectories.run_trajectory_comparison import rollout_load_data_option, rollout_handcrafted_vs_all_human_config

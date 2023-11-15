@@ -3,6 +3,7 @@ from typing import Dict, Optional
 import pandas as pd
 
 from learn_bot.latent.load_model import LoadedModel
+from learn_bot.latent.vis.vis import index_cur_hdf5
 from learn_bot.libs.df_grouping import make_index_column
 from learn_bot.latent.place_area.column_names import *
 from learn_bot.mining.area_cluster import d2_radar_path
@@ -28,7 +29,7 @@ class PredictedToGroundTruthRoundData:
             self.similarity_row[start_dtw_matched_indices_col]:
             self.similarity_row[start_dtw_matched_indices_col] + self.similarity_row[length_dtw_matched_inidices_col]]
 
-
+# hdf5 file name to round id to metric type to list of matches
 PredictedToGroundTruthDict = Dict[str, Dict[int, Dict[str, List[PredictedToGroundTruthRoundData]]]]
 
 cmap = mpl.cm.get_cmap("Set3").colors
@@ -36,8 +37,8 @@ cmap = mpl.cm.get_cmap("Set3").colors
 
 def vis_two(predicted_model: LoadedModel, ground_truth_model: LoadedModel,
             predicted_to_ground_truth_dict: PredictedToGroundTruthDict, similarity_match_index_df: pd.DataFrame):
-    make_index_column(predicted_model.cur_loaded_df)
-    make_index_column(ground_truth_model.cur_loaded_df)
+    index_cur_hdf5(predicted_model, False)
+    index_cur_hdf5(ground_truth_model, False)
 
     #This creates the main window of an application
     window = tk.Tk()
@@ -70,8 +71,10 @@ def vis_two(predicted_model: LoadedModel, ground_truth_model: LoadedModel,
     cur_round_match_id: int = -1
     num_round_matches: int = 5
     cur_similarity_tick_index: int = -1
-    predicted_selected_df: pd.DataFrame = predicted_model.cur_loaded_df
-    ground_truth_selected_df: pd.DataFrame = ground_truth_model.cur_loaded_df
+    predicted_selected_df: pd.DataFrame = \
+        predicted_model.load_round_df_from_cur_dataset(cur_round, use_sim_dataset=False)
+    ground_truth_selected_df: pd.DataFrame = \
+        ground_truth_model.load_round_df_from_cur_dataset(cur_round, use_sim_dataset=False)
     similarity_match_index_subset_df: Optional[pd.DataFrame] = None
     predicted_to_ground_truth_round_data: Optional[PredictedToGroundTruthRoundData] = None
     draw_max: bool = True
@@ -80,8 +83,8 @@ def vis_two(predicted_model: LoadedModel, ground_truth_model: LoadedModel,
     def hdf5_id_update():
         nonlocal rounds, cur_round
         predicted_model.cur_hdf5_index = int(new_hdf5_id_entry.get())
-        predicted_model.load_cur_hdf5_as_pd(False)
-        make_index_column(predicted_model.cur_loaded_df)
+        predicted_model.load_cur_dataset_only()
+        index_cur_hdf5(predicted_model, False)
         rounds = list(predicted_to_ground_truth_dict[predicted_model.get_cur_hdf5_filename()].keys())
         cur_round = rounds[0]
         round_slider.set(0)
@@ -172,22 +175,22 @@ def vis_two(predicted_model: LoadedModel, ground_truth_model: LoadedModel,
             cur_similarity_tick_index = int(cur_similarity_tick_index_str)
 
             cur_predicted_index = similarity_match_index_subset_df.iloc[cur_similarity_tick_index].loc[first_matched_index_col]
-            cur_predicted_row = predicted_selected_df.iloc[cur_predicted_index]
-            cur_predicted_tick_id = cur_predicted_row.loc[tick_id_column]
-            cur_predicted_game_tick_id = cur_predicted_row.loc[game_tick_number_column]
+            cur_predicted_dict = predicted_selected_df.iloc[cur_predicted_index].to_dict()
+            cur_predicted_tick_id = cur_predicted_dict[tick_id_column]
+            cur_predicted_game_tick_id = cur_predicted_dict[game_tick_number_column]
 
             cur_ground_truth_index = similarity_match_index_subset_df.iloc[cur_similarity_tick_index].loc[second_matched_index_col]
-            cur_ground_truth_row = ground_truth_selected_df.iloc[cur_ground_truth_index]
-            cur_ground_truth_round = cur_ground_truth_row.loc[round_id_column]
-            cur_ground_truth_tick_id = cur_ground_truth_row.loc[tick_id_column]
-            cur_ground_truth_game_tick_id = cur_ground_truth_row.loc[game_tick_number_column]
+            cur_ground_truth_dict = ground_truth_selected_df.iloc[cur_ground_truth_index].to_dict()
+            cur_ground_truth_round = cur_ground_truth_dict[round_id_column]
+            cur_ground_truth_tick_id = cur_ground_truth_dict[tick_id_column]
+            cur_ground_truth_game_tick_id = cur_ground_truth_dict[game_tick_number_column]
 
             hdf5_id_text_var.set(f"Predicted Cur HDF5 Id: {predicted_model.get_cur_hdf5_filename()} - {predicted_model.cur_hdf5_index} / {len(predicted_model.dataset.data_hdf5s) - 1}, "
                                  f"Ground Truth Cur HDF5 Id: {ground_truth_model.get_cur_hdf5_filename()} - {ground_truth_model.cur_hdf5_index} / {len(ground_truth_model.dataset.data_hdf5s) - 1}, ")
             tick_id_text_var.set(f"Predicted Tick ID: {cur_predicted_tick_id}, Predicted Game Tick ID: {cur_predicted_game_tick_id}, "
                                  f"Ground Truth Tick Id: {cur_ground_truth_tick_id}, Ground Truth Game Tick ID: {cur_ground_truth_game_tick_id}")
-            round_id_text_var.set(f"Predicted Round ID: {int(cur_round)}, Predicted Round Number: {cur_predicted_row.loc['round number']}, "
-                                  f"Ground Truth Round ID: {int(cur_ground_truth_round)}, Ground Truth Round Number: {cur_ground_truth_row.loc['round number']}")
+            round_id_text_var.set(f"Predicted Round ID: {int(cur_round)}, Predicted Round Number: {cur_predicted_dict['round number']}, "
+                                  f"Ground Truth Round ID: {int(cur_ground_truth_round)}, Ground Truth Round Number: {cur_ground_truth_dict['round number']}")
             metric_id_text_var.set(cur_metric_type)
             round_match_id_text_var.set(f"Round Match {cur_round_match_id} / {num_round_matches - 1}, "
                                         f"DTW/ADE Cost {predicted_to_ground_truth_round_data.similarity_row[dtw_cost_col]: .2f}, "
@@ -214,9 +217,9 @@ def vis_two(predicted_model: LoadedModel, ground_truth_model: LoadedModel,
                 predicted_players_active = []
                 ground_truth_players_active = []
                 for player_index in range(len(specific_player_place_area_columns)):
-                    if cur_predicted_row[specific_player_place_area_columns[player_index].player_id] != -1:
+                    if cur_predicted_dict[specific_player_place_area_columns[player_index].player_id] != -1:
                         predicted_players_active.append(player_index)
-                    if cur_ground_truth_row[specific_player_place_area_columns[player_index].player_id] != -1:
+                    if cur_ground_truth_dict[specific_player_place_area_columns[player_index].player_id] != -1:
                         ground_truth_players_active.append(player_index)
                 player_index_mapping = {}
                 for src, tgt in predicted_to_ground_truth_round_data.agent_mapping.items():
@@ -240,21 +243,21 @@ def vis_two(predicted_model: LoadedModel, ground_truth_model: LoadedModel,
                                                                   int(255 * ground_truth_color[2]))
 
             if draw_overlap:
-                draw_player_connection_lines(cur_predicted_row, cur_ground_truth_row, ground_truth_d2_img_draw,
+                draw_player_connection_lines(cur_predicted_dict, cur_ground_truth_dict, ground_truth_d2_img_draw,
                                              player_index_mapping, predicted_players_to_draw, predicted_colors)
                 player_to_text = {}
                 for i in range(max_enemies):
                     player_to_text[i] = 'PA'
                     player_to_text[i + max_enemies] = 'PD'
                 predicted_players_str = \
-                    draw_all_players(cur_predicted_row, None, predicted_d2_img_draw, draw_max,
+                    draw_all_players(cur_predicted_dict, None, predicted_d2_img_draw, draw_max,
                                      predicted_players_to_draw, draw_only_pos=True, player_to_color=predicted_colors,
                                      rectangle=False, player_to_text=player_to_text)
                 for i in range(max_enemies):
                     player_to_text[i] = 'GA'
                     player_to_text[i + max_enemies] = 'GD'
                 ground_truth_players_str = \
-                    draw_all_players(cur_ground_truth_row, None, ground_truth_d2_img_draw, draw_max,
+                    draw_all_players(cur_ground_truth_dict, None, ground_truth_d2_img_draw, draw_max,
                                      ground_truth_players_to_draw, draw_only_pos=True, player_to_color=ground_truth_colors,
                                      rectangle=False, player_to_text=player_to_text)
             else:
@@ -263,12 +266,13 @@ def vis_two(predicted_model: LoadedModel, ground_truth_model: LoadedModel,
                     player_to_color[i] = (4, 190, 196)
                     player_to_color[i + max_enemies] = (187, 142, 52)
                 predicted_players_str = \
-                    draw_all_players(cur_predicted_row, None, predicted_d2_img_draw, draw_max,
+                    draw_all_players(cur_predicted_dict, None, predicted_d2_img_draw, draw_max,
                                      predicted_players_to_draw, draw_only_pos=True, player_to_color=player_to_color)
                 ground_truth_players_str = \
-                    draw_all_players(cur_ground_truth_row, None, ground_truth_d2_img_draw, draw_max,
+                    draw_all_players(cur_ground_truth_dict, None, ground_truth_d2_img_draw, draw_max,
                                      ground_truth_players_to_draw, draw_only_pos=True, player_to_color=player_to_color)
-            details_text_var.set("predicted\n" + predicted_players_str + "\nground_truth\n" + ground_truth_players_str)
+            details_text_var.set("predicted\n" + predicted_players_str.status +
+                                 "\nground_truth\n" + ground_truth_players_str.status)
 
             if draw_overlap:
                 predicted_d2_img_copy.alpha_composite(predicted_d2_overlay_im)
@@ -345,8 +349,10 @@ def vis_two(predicted_model: LoadedModel, ground_truth_model: LoadedModel,
     def change_round_metric_dependent_data():
         nonlocal predicted_selected_df, ground_truth_selected_df, similarity_match_index_subset_df, cur_round, cur_metric_type, \
             predicted_to_ground_truth_round_data
-        predicted_selected_df = \
-            predicted_model.cur_loaded_df.loc[predicted_model.cur_loaded_df[round_id_column] == cur_round]
+        predicted_vis_only_df = predicted_model.get_cur_vis_df()
+        make_index_column(predicted_vis_only_df)
+        predicted_selected_df = predicted_model.load_round_df_from_cur_dataset(cur_round, predicted_vis_only_df,
+                                                                               use_sim_dataset=False)
 
         predicted_to_ground_truth_round_data = \
             predicted_to_ground_truth_dict[predicted_model.get_cur_hdf5_filename()][cur_round][cur_metric_type][cur_round_match_id]
@@ -355,11 +361,12 @@ def vis_two(predicted_model: LoadedModel, ground_truth_model: LoadedModel,
         new_ground_truth_hdf5_index = ground_truth_model.filename_to_hdf5_index[new_ground_truth_hdf5_filename]
         if new_ground_truth_hdf5_index != ground_truth_model.cur_hdf5_index:
             ground_truth_model.cur_hdf5_index = new_ground_truth_hdf5_index
-            ground_truth_model.load_cur_hdf5_as_pd(False)
-            make_index_column(ground_truth_model.cur_loaded_df)
-        ground_truth_selected_df = \
-            ground_truth_model.cur_loaded_df.loc[ground_truth_model.cur_loaded_df[round_id_column] ==
-                                                 predicted_to_ground_truth_round_data.ground_truth_round_id]
+            ground_truth_model.load_cur_dataset_only()
+            index_cur_hdf5(ground_truth_model, False)
+        ground_truth_vis_only_df = ground_truth_model.get_cur_vis_df()
+        make_index_column(ground_truth_vis_only_df)
+        ground_truth_selected_df = ground_truth_model.load_round_df_from_cur_dataset(cur_round, ground_truth_vis_only_df,
+                                                                                     use_sim_dataset=False)
         similarity_match_index_subset_df = \
             predicted_to_ground_truth_round_data.get_similarity_match_index_df_subset(similarity_match_index_df)
 

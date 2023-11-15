@@ -2,7 +2,8 @@ import os
 from math import ceil
 
 from learn_bot.latent.analyze.humanness_metrics.hdf5_loader import *
-from learn_bot.latent.analyze.compare_trajectories.process_trajectory_comparison import set_pd_print_options, generate_bins, plot_hist
+from learn_bot.latent.analyze.compare_trajectories.process_trajectory_comparison import generate_bins, plot_hist
+from learn_bot.libs.pd_printing import set_pd_print_options
 import matplotlib.pyplot as plt
 
 fig_length = 6

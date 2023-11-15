@@ -286,29 +286,29 @@ def draw_all_players(data_dict: Dict, pred_dict: Optional[Dict], im_draw: ImageD
     return result
 
 
-def draw_player_connection_lines(src_data_series: pd.Series, tgt_data_series, im_draw: ImageDraw,
-                                src_to_tgt_player_index: Dict[int, int], players_to_draw: List[int],
-                                src_player_to_color: Dict[int, Tuple]):
+def draw_player_connection_lines(src_data: Dict, tgt_data: Dict, im_draw: ImageDraw,
+                                 src_to_tgt_player_index: Dict[int, int], players_to_draw: List[int],
+                                 src_player_to_color: Dict[int, Tuple]):
     # colors track by number of players drawn
     for player_index in range(len(specific_player_place_area_columns)):
         player_place_area_columns = specific_player_place_area_columns[player_index]
-        if src_data_series[player_place_area_columns.player_id] != -1:
+        if src_data[player_place_area_columns.player_id] != -1:
             if player_index not in players_to_draw:
                 continue
 
-            src_pos_coord = VisMapCoordinate(src_data_series[player_place_area_columns.pos[0]],
-                                             src_data_series[player_place_area_columns.pos[1]],
-                                             src_data_series[player_place_area_columns.pos[2]])
+            src_pos_coord = VisMapCoordinate(src_data[player_place_area_columns.pos[0]],
+                                             src_data[player_place_area_columns.pos[1]],
+                                             src_data[player_place_area_columns.pos[2]])
 
             if player_index not in src_to_tgt_player_index:
                 continue
             tgt_player_index = src_to_tgt_player_index[player_index]
             tgt_player_place_area_columns = specific_player_place_area_columns[tgt_player_index]
-            if tgt_data_series[tgt_player_place_area_columns.player_id] == -1:
+            if tgt_data[tgt_player_place_area_columns.player_id] == -1:
                 continue
-            tgt_pos_coord = VisMapCoordinate(tgt_data_series[tgt_player_place_area_columns.pos[0]],
-                                             tgt_data_series[tgt_player_place_area_columns.pos[1]],
-                                             tgt_data_series[tgt_player_place_area_columns.pos[2]])
+            tgt_pos_coord = VisMapCoordinate(tgt_data[tgt_player_place_area_columns.pos[0]],
+                                             tgt_data[tgt_player_place_area_columns.pos[1]],
+                                             tgt_data[tgt_player_place_area_columns.pos[2]])
             distance = sqrt(pow(src_pos_coord.coords.x - tgt_pos_coord.coords.x, 2) +
                             pow(src_pos_coord.coords.y - tgt_pos_coord.coords.y, 2))
             abs_distance_x = abs(src_pos_coord.coords.x - tgt_pos_coord.coords.x)

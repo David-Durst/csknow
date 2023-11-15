@@ -1,4 +1,4 @@
-from typing import List, Dict, Optional, Tuple
+from typing import List, Dict, Tuple
 
 import pandas as pd
 from learn_bot.latent.analyze.comparison_column_names import *
@@ -9,10 +9,10 @@ from pathlib import Path
 
 from learn_bot.latent.analyze.create_test_plant_states import hdf5_key_column, push_only_test_plant_states_file_name
 from learn_bot.latent.engagement.column_names import round_id_column
-from learn_bot.latent.load_model import LoadedModel
 from learn_bot.latent.place_area.load_data import LoadDataOptions, LoadDataResult
 from learn_bot.latent.vis.vis_two import PredictedToGroundTruthDict, PredictedToGroundTruthRoundData
 from learn_bot.libs.hdf5_to_pd import load_hdf5_to_pd
+from learn_bot.libs.pd_printing import set_pd_print_options
 
 
 @dataclass
@@ -45,13 +45,6 @@ def percentile_filter_series(data: pd.Series, low_pct_to_remove=0.01, high_pct_t
 dtw_cost_bins = generate_bins(0, 8000, 250)
 delta_distance_bins = generate_bins(-20000, 20000, 2500)
 delta_time_bins = generate_bins(-40, 40, 5)
-
-
-def set_pd_print_options():
-    pd.options.display.max_columns = None
-    pd.options.display.max_rows = None
-    pd.options.display.width = 1000
-    pd.set_option('display.float_format', lambda x: '%.2f' % x)
 
 
 def filter_similarity_for_first_n_test_rounds(loaded_data_result: LoadDataResult, similarity_df: pd.DataFrame,

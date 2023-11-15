@@ -81,6 +81,9 @@ class LoadedModel:
     def get_cur_vis_np(self) -> np.ndarray:
         return self.dataset.data_hdf5s[self.cur_hdf5_index].get_vis_data()
 
+    def get_cur_vis_df(self) -> pd.DataFrame:
+        return pd.DataFrame(self.get_cur_vis_np(), columns=self.dataset.data_hdf5s[self.cur_hdf5_index].vis_cols)
+
     def load_cur_hdf5_demo_names(self) -> np.ndarray:
         return load_hdf5_extra_column(self.dataset.data_hdf5s[self.cur_hdf5_index].hdf5_path, 'demo file').astype('U')
 

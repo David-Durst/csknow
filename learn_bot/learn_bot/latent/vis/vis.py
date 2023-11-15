@@ -1,6 +1,6 @@
 from typing import Set, Callable, List
 
-from learn_bot.latent.analyze.compare_trajectories.process_trajectory_comparison import set_pd_print_options
+from learn_bot.libs.pd_printing import set_pd_print_options
 from learn_bot.latent.place_area.column_names import *
 from learn_bot.latent.load_model import LoadedModel
 from learn_bot.latent.train_paths import default_selected_retake_rounds_path
@@ -17,9 +17,10 @@ def get_rounds_for_cur_hdf5(loaded_model: LoadedModel) -> List[int]:
     return loaded_model.get_cur_id_df().loc[:, round_id_column].unique().tolist()
 
 
-def index_cur_hdf5(loaded_model: LoadedModel):
+def index_cur_hdf5(loaded_model: LoadedModel, index_inference_df: bool = True):
     #make_index_column(loaded_model.cur_loaded_df)
-    make_index_column(loaded_model.cur_inference_df)
+    if index_inference_df:
+        make_index_column(loaded_model.cur_inference_df)
     make_index_column(loaded_model.get_cur_id_df())
 
 
@@ -238,7 +239,7 @@ def vis(loaded_model: LoadedModel, inference_fn: Callable[[LoadedModel], None], 
     # state setters
     def change_round_dependent_data():
         nonlocal selected_df, id_df, pred_selected_df, cur_round, indices, ticks, game_ticks
-        vis_only_df = loaded_model.load_cols_from_cur_hdf5(vis_only_columns)
+        vis_only_df = loaded_model.get_cur_vis_df()
         make_index_column(vis_only_df)
         selected_df = loaded_model.load_round_df_from_cur_dataset(cur_round, vis_only_df,
                                                                   use_sim_dataset=use_sim_dataset)

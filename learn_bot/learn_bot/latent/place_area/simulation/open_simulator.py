@@ -14,8 +14,8 @@ from matplotlib import pyplot as plt
 from tqdm import tqdm
 
 from learn_bot.engagement_aim.column_names import tick_id_column
-from learn_bot.latent.analyze.compare_trajectories.process_trajectory_comparison import plot_hist, generate_bins, \
-    set_pd_print_options
+from learn_bot.latent.analyze.compare_trajectories.process_trajectory_comparison import plot_hist, generate_bins
+from learn_bot.libs.pd_printing import set_pd_print_options
 from learn_bot.latent.engagement.column_names import round_id_column
 from learn_bot.latent.load_model import load_model_file
 from learn_bot.latent.place_area.column_names import specific_player_place_area_columns

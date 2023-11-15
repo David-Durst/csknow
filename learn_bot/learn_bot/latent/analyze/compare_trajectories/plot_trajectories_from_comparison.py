@@ -10,8 +10,8 @@ from learn_bot.latent.analyze.compare_trajectories.filter_trajectory_key_events 
     KeyAreas, KeyAreaTeam
 from learn_bot.latent.analyze.compare_trajectories.plot_trajectories_and_events import FilterPlayerType, \
     plot_trajectory_dfs_and_event
-from learn_bot.latent.analyze.compare_trajectories.process_trajectory_comparison import set_pd_print_options, \
-    ComparisonConfig
+from learn_bot.latent.analyze.compare_trajectories.process_trajectory_comparison import ComparisonConfig
+from learn_bot.libs.pd_printing import set_pd_print_options
 from learn_bot.latent.analyze.comparison_column_names import metric_type_col, best_fit_ground_truth_trace_batch_col, predicted_trace_batch_col, best_match_id_col, predicted_round_id_col, \
     best_fit_ground_truth_round_id_col, predicted_round_number_col, best_fit_ground_truth_round_number_col
 from learn_bot.latent.engagement.column_names import round_id_column, round_number_column

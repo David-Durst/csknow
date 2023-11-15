@@ -18,7 +18,8 @@ from learn_bot.latent.analyze.humanness_metrics.column_names import distance_to_
     delta_distance_to_nearest_teammate_when_shot_name, all_train_humanness_folder_path
 
 from learn_bot.latent.analyze.humanness_metrics.hdf5_loader import HumannessMetrics, HumannessDataOptions
-from learn_bot.latent.analyze.compare_trajectories.process_trajectory_comparison import plot_hist, generate_bins, set_pd_print_options
+from learn_bot.latent.analyze.compare_trajectories.process_trajectory_comparison import plot_hist, generate_bins
+from learn_bot.libs.pd_printing import set_pd_print_options
 from learn_bot.latent.analyze.test_traces.column_names import rollout_aggressive_humanness_hdf5_data_path, \
     rollout_passive_humanness_hdf5_data_path, trace_index_name, trace_one_non_replay_team_name, \
     trace_one_non_replay_bot_name, rollout_aggressive_trace_hdf5_data_path, rollout_passive_trace_hdf5_data_path, \

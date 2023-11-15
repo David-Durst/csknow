@@ -60,7 +60,7 @@ class MultiHDF5Wrapper:
                         #if len(self.hdf5_wrappers) > 0:
                         #    break
                 elif hdf5_source.is_file() and hdf5_source.name.endswith('.hdf5'):
-                    self.hdf5_wrappers.append(HDF5Wrapper(hdf5_source, id_cols))
+                    self.hdf5_wrappers.append(HDF5Wrapper(hdf5_source, id_cols, vis_cols=vis_cols))
             elif isinstance(hdf5_source, HDF5Wrapper):
                 self.hdf5_wrappers.append(hdf5_source)
             else:
