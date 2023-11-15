@@ -1,4 +1,4 @@
-from enum import Enum, unique, auto
+from enum import Enum, unique, auto, IntEnum
 
 import torch
 
@@ -7,53 +7,56 @@ from learn_bot.latent.place_area.pos_abs_from_delta_grid_or_radial import data_t
 num_seconds_per_loop = 5
 num_time_steps = data_ticks_per_second // data_ticks_per_sim_tick * num_seconds_per_loop
 
+
 @unique
-class EngineWeaponId(Enum):
-    NoWeapon = 0,
-    Deagle = auto(),
-    Dualies = auto(),
-    FiveSeven = auto(),
-    Glock = auto(),
-    AK = 7,
-    AUG = auto(),
-    AWP = auto(),
-    FAMAS = auto(),
-    G3 = auto(),
-    Galil = 13,
-    M249 = auto(),
-    M4A4 = 16,
-    Mac10 = auto(),
-    P90 = 19,
-    MP5 = 23,
-    UMP = auto(),
-    XM1014 = auto(),
-    Bizon = auto(),
-    MAG7 = auto(),
-    Negev = auto(),
-    SawedOff = auto(),
-    Tec9 = auto(),
-    Zeus = auto(),
-    P2000 = auto(),
-    MP7 = auto(),
-    MP9 = auto(),
-    Nova = auto(),
-    P250 = auto(),
-    Scar = 38,
-    SG553 = auto(),
-    SSG = auto(),
-    Flashbang = 43,
-    HEGrenade = auto(),
-    Smoke = auto(),
-    Molotov = auto(),
-    Decoy = auto(),
-    Incendiary = auto(),
-    C4 = auto(),
-    M4A1S = 60,
-    USPS = auto(),
-    CZ = 63,
+class EngineWeaponId(IntEnum):
+    NoWeapon = 0
+    Deagle = auto()
+    Dualies = auto()
+    FiveSeven = auto()
+    Glock = auto()
+    AK = 7
+    AUG = auto()
+    AWP = auto()
+    FAMAS = auto()
+    G3 = auto()
+    Galil = 13
+    M249 = auto()
+    M4A4 = 16
+    Mac10 = auto()
+    P90 = 19
+    MP5 = 23
+    UMP = auto()
+    XM1014 = auto()
+    Bizon = auto()
+    MAG7 = auto()
+    Negev = auto()
+    SawedOff = auto()
+    Tec9 = auto()
+    Zeus = auto()
+    P2000 = auto()
+    MP7 = auto()
+    MP9 = auto()
+    Nova = auto()
+    P250 = auto()
+    Scar = 38
+    SG553 = auto()
+    SSG = auto()
+    Flashbang = 43
+    HEGrenade = auto()
+    Smoke = auto()
+    Molotov = auto()
+    Decoy = auto()
+    Incendiary = auto()
+    C4 = auto()
+    M4A1S = 60
+    USPS = auto()
+    CZ = 63
     R8 = auto()
 
-    def max_speed(self, scoped: bool):
+    def max_speed(self, scoped: bool) -> float:
+        if self == EngineWeaponId.NoWeapon:
+            return 250.
         if self == EngineWeaponId.Deagle:
             return 230.
         if self == EngineWeaponId.Dualies:
@@ -154,7 +157,7 @@ class EngineWeaponId(Enum):
         if self == EngineWeaponId.R8:
             return 220.
 
-    def __str__(self):
+    def __str__(self) -> str:
         if self == EngineWeaponId.NoWeapon:
             return "None"
         if self == EngineWeaponId.Deagle:
@@ -243,8 +246,9 @@ class EngineWeaponId(Enum):
             return "R8"
 
 
-weapon_scoped_to_max_speed_tensor: torch.Tensor = torch.zeros([EngineWeaponId.R8, 2])
+# since pytorch doesn't support nested index_select, flatten it and I'll do lookup index computation my self
+weapon_scoped_to_max_speed_tensor: torch.Tensor = torch.zeros([2 * (int(EngineWeaponId.R8) + 1)])
 for engine_weapon_id in EngineWeaponId:
-    weapon_scoped_to_max_speed_tensor[engine_weapon_id, 0] = engine_weapon_id.max_speed(False)
-    weapon_scoped_to_max_speed_tensor[engine_weapon_id, 1] = engine_weapon_id.max_speed(True)
+    weapon_scoped_to_max_speed_tensor[2 * int(engine_weapon_id)] = engine_weapon_id.max_speed(False)
+    weapon_scoped_to_max_speed_tensor[2 * int(engine_weapon_id) + 1] = engine_weapon_id.max_speed(True)
 

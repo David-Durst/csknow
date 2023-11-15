@@ -1,3 +1,4 @@
+import time
 from pathlib import Path
 from typing import List, Dict, Union, Optional
 from dataclasses import dataclass
@@ -42,8 +43,9 @@ class MultiHDF5Wrapper:
     # each source is a path to an hdf5, a directory with hdf5, or an hdf5 wrapper
     def __init__(self, hdf5_sources: List[HDF5SourceOptions], id_cols: List[str], diff_train_test: bool,
                  force_test_hdf5: Optional[HDF5Wrapper] = None, duplicate_last_hdf5_equal_to_rest: bool = False,
-                 train_test_split_file_name: Optional[str] = None):
+                 train_test_split_file_name: Optional[str] = None, vis_cols: Optional[List[str]] = None):
         self.hdf5_wrappers = []
+        start_load_time = time.time()
         for hdf5_source in hdf5_sources:
             if isinstance(hdf5_source, Path):
                 if hdf5_source.is_dir():
@@ -51,7 +53,8 @@ class MultiHDF5Wrapper:
                     # only need sample df from first file, rest can just be empty
                     empty_like_first_sample_df: Optional[pd.DataFrame] = None
                     for hdf5_file in hdf5_files:
-                        self.hdf5_wrappers.append(HDF5Wrapper(hdf5_file, id_cols, sample_df=empty_like_first_sample_df))
+                        self.hdf5_wrappers.append(HDF5Wrapper(hdf5_file, id_cols, sample_df=empty_like_first_sample_df,
+                                                              vis_cols=vis_cols))
                         if empty_like_first_sample_df is None:
                             empty_like_first_sample_df = pd.DataFrame().reindex_like(self.hdf5_wrappers[0].sample_df)
                         #if len(self.hdf5_wrappers) > 0:
@@ -62,6 +65,7 @@ class MultiHDF5Wrapper:
                 self.hdf5_wrappers.append(hdf5_source)
             else:
                 raise Exception("MultiHDF5Wrapper initialized with source that isn't path or PDWrapper")
+        print(f"hdf5 load time {time.time() - start_load_time}")
         self.train_hdf5_wrappers = []
         self.test_hdf5_wrappers = []
         self.test_group_ids = {}

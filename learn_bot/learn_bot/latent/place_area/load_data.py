@@ -7,7 +7,8 @@ import pandas as pd
 from learn_bot.latent.analyze.comparison_column_names import predicted_trace_batch_col, \
     best_fit_ground_truth_round_id_col, predicted_round_id_col, best_match_id_col, metric_type_col
 from learn_bot.latent.engagement.column_names import game_id_column, round_id_column
-from learn_bot.latent.place_area.column_names import hdf5_id_columns, test_success_col, get_similarity_column
+from learn_bot.latent.place_area.column_names import hdf5_id_columns, test_success_col, get_similarity_column, \
+    vis_only_columns
 from learn_bot.latent.place_area.create_test_data import create_zeros_train_data, create_similarity_data, \
     create_left_right_train_data
 from learn_bot.libs.hdf5_to_pd import load_hdf5_to_pd
@@ -138,7 +139,8 @@ class LoadDataResult:
         self.multi_hdf5_wrapper = MultiHDF5Wrapper(hdf5_sources, hdf5_id_columns, diff_train_test=self.diff_train_test,
                                                    force_test_hdf5=force_test_data,
                                                    duplicate_last_hdf5_equal_to_rest=duplicate_last_hdf5_equal_to_rest,
-                                                   train_test_split_file_name=load_data_options.train_test_split_file_name)
+                                                   train_test_split_file_name=load_data_options.train_test_split_file_name,
+                                                   vis_cols=vis_only_columns)
         # load similarity
         if not load_data_options.use_synthetic_data and \
                 load_data_options.small_good_rounds is not None and load_data_options.similarity_dfs is not None:

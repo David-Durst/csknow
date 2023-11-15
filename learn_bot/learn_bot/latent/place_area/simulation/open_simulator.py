@@ -141,7 +141,7 @@ def build_starting_position_pred_tensor(loaded_model: LoadedModel, rollout_tenso
 def delta_pos_open_rollout(loaded_model: LoadedModel, round_lengths: RoundLengths, player_enable_mask: PlayerEnableMask,
                            player_mask_config: PlayerMaskConfig):
     rollout_tensor, similarity_tensor, vis_tensor = \
-        build_rollout_similarity_vis_tensors(loaded_model, round_lengths, loaded_model.cur_dataset)
+        build_rollout_similarity_vis_tensors(round_lengths, loaded_model.cur_dataset, loaded_model.get_cur_vis_np())
 
     # set pred tensor if fixed or if making predictions)
     fixed_pred = False

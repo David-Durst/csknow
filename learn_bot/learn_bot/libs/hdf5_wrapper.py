@@ -17,11 +17,13 @@ class HDF5Wrapper:
     id_cols: List[str]
     id_df: pd.DataFrame
     sample_df: pd.DataFrame
+    vis_cols: Optional[List[str]]
+    vis_np: Optional[np.ndarray]
     input_data: Dict[Path, np.ndarray] = {}
     output_data: Dict[Path, np.ndarray] = {}
 
     def __init__(self, hdf5_path: Path, id_cols: List[str], id_df: Optional[pd.DataFrame] = None,
-                 sample_df: Optional[pd.DataFrame] = None):
+                 sample_df: Optional[pd.DataFrame] = None, vis_cols: Optional[List[str]] = None):
         self.hdf5_path = hdf5_path
         self.id_cols = id_cols
         if id_df is None:
@@ -33,6 +35,11 @@ class HDF5Wrapper:
             self.sample_df = load_hdf5_to_pd(hdf5_path, rows_to_get=min(100, len(self.id_df)))
         else:
             self.sample_df = sample_df
+        self.vis_cols = vis_cols
+        if vis_cols is not None:
+            self.vis_np = load_hdf5_to_np_array(hdf5_path, cols_to_get=vis_cols, cast_to_float=True)
+        else:
+            self.vis_np = None
 
     def limit(self, selector_df: pd.Series):
         self.id_df = self.id_df[selector_df]
@@ -46,6 +53,8 @@ class HDF5Wrapper:
 
     def clone(self):
         result = HDF5Wrapper(self.hdf5_path, self.id_cols, self.id_df.copy(), self.sample_df.copy())
+        result.vis_cols = self.vis_cols
+        result.vis_np = self.vis_np
         return result
 
     def create_np_array(self, cts: IOColumnTransformers, load_output_data: bool = True):
@@ -84,6 +93,11 @@ class HDF5Wrapper:
 
     def get_all_output_data(self) -> np.ndarray:
         return HDF5Wrapper.output_data[self.hdf5_path][self.id_df['id']]
+
+    def get_vis_data(self) -> np.ndarray:
+        if self.vis_np is None:
+            raise Exception("calling get_vis_data without loading vis data")
+        return self.vis_np[self.id_df['id']]
 
 
 def load_hdf5_to_np_array(hdf5_path: Path, cols_to_get: List[str], cast_to_float: bool) -> np.ndarray:

@@ -97,23 +97,27 @@ def get_delta_pos_from_radial(pred_labels: torch.Tensor, vis_tensor: torch.Tenso
     per_batch_stature_index = \
         torch.floor(torch.remainder(dir_stature_pred_label, StatureOptions.NUM_STATURE_OPTIONS.value)).int()
     # necessary since index select expects 1d
+    player_time_steps = len(specific_player_place_area_columns) * num_radial_ticks
     flattened_stature_index = rearrange(per_batch_stature_index, 'b pt -> (b pt)',
-                                        pt=len(specific_player_place_area_columns) * num_radial_ticks)
+                                        pt=player_time_steps)
     flattened_weapon_id_index = rearrange(
         repeat(vis_tensor[:, weapon_id_cols], 'b p -> b (p t)', t=num_radial_ticks).int(),
-        'b pt -> (b pt)')
+        'b pt -> (b pt)', pt=player_time_steps)
     flattened_scoped_index = rearrange(
         repeat(vis_tensor[:, scoped_cols], 'b p -> b (p t)', t=num_radial_ticks).int(),
-        'b pt -> (b pt)')
+        'b pt -> (b pt)', pt=player_time_steps)
     dir_degrees = torch.floor(dir_stature_pred_label / StatureOptions.NUM_STATURE_OPTIONS.value) * direction_angle_range
     # stature to lookup table of speeds
     flattened_max_speed_per_stature = torch.index_select(stature_to_speed, 0, flattened_stature_index)
+    # since pytorch doesn't support nested index_select, flatten it and I'll do lookup index computation my self
     flattened_max_speed_per_weapon_scoped = torch.index_select(
-        torch.index_select(weapon_scoped_to_max_speed, 0, flattened_weapon_id_index), 1, flattened_scoped_index)
+        weapon_scoped_to_max_speed, 0, 2 * flattened_weapon_id_index + flattened_scoped_index)
     flattened_max_speed_per_stature_weapon_scoped = \
         flattened_max_speed_per_weapon_scoped * flattened_max_speed_per_stature
     per_batch_max_speed_per_stature = rearrange(flattened_max_speed_per_stature_weapon_scoped, '(b pt) -> b pt',
                                                 pt=len(specific_player_place_area_columns) * num_radial_ticks)
+    # scale by time per tick
+    per_batch_max_speed_per_stature *= max_run_speed_per_sim_tick / max_speed_per_second
     # return cos/sin of dir degree
     not_moving_zeros = torch.zeros_like(per_batch_max_speed_per_stature)
     delta_pos = torch.stack([
@@ -144,13 +148,14 @@ def compute_new_pos(input_pos_tensor: torch.Tensor, vis_tensor: torch.Tensor, pr
     else:
         delta_pos_with_z = get_delta_pos_from_radial(pred_labels, vis_tensor, stature_to_speed,
                                                      weapon_scoped_to_max_speed)
-        # since this is for sim, and simulator steps one tick at a time (rather than 500ms like prediction), rescale it
-        unscaled_pos_change = delta_pos_with_z.delta_pos
-        pos_change_norm = torch.linalg.vector_norm(unscaled_pos_change, dim=-1, keepdim=True)
-        all_scaled_pos_change = (max_run_speed_per_sim_tick / pos_change_norm) * unscaled_pos_change
-        # if norm less than max run speed, don't scale
-        scaled_pos_change = torch.where(pos_change_norm > max_run_speed_per_sim_tick, all_scaled_pos_change,
-                                        unscaled_pos_change)
+        ## since this is for sim, and simulator steps one tick at a time (rather than 500ms like prediction), rescale it
+        #unscaled_pos_change = delta_pos_with_z.delta_pos
+        #pos_change_norm = torch.linalg.vector_norm(unscaled_pos_change, dim=-1, keepdim=True)
+        #all_scaled_pos_change = (max_run_speed_per_sim_tick / pos_change_norm) * unscaled_pos_change
+        ## if norm less than max run speed, don't scale
+        #scaled_pos_change = torch.where(pos_change_norm > max_run_speed_per_sim_tick, all_scaled_pos_change,
+        #                                unscaled_pos_change)
+        scaled_pos_change = delta_pos_with_z.delta_pos
         # z is treated differently as need to look at navmesh
         z_jump_index = delta_pos_with_z.z_jump_index
 
