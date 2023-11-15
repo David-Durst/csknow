@@ -8,8 +8,9 @@ import pandas as pd
 from PIL import Image, ImageDraw, ImageTk as itk, ImageFont
 from numpy import deg2rad
 
-from learn_bot.latent.place_area.pos_abs_from_delta_grid_or_radial import delta_pos_grid_num_cells, delta_pos_grid_num_cells_per_xy_dim, \
-    delta_pos_grid_cell_dim, delta_pos_grid_num_xy_cells_per_z_change
+from learn_bot.latent.place_area.pos_abs_from_delta_grid_or_radial import delta_pos_grid_num_cells, \
+    delta_pos_grid_num_cells_per_xy_dim, \
+    delta_pos_grid_cell_dim, delta_pos_grid_num_xy_cells_per_z_change, max_speed_per_second
 from learn_bot.latent.place_area.column_names import specific_player_place_area_columns, num_radial_bins, \
     num_radial_bins_per_z_axis, StatureOptions, direction_angle_range
 from learn_bot.latent.transformer_nested_hidden_latent_model import stature_to_speed_list
@@ -101,7 +102,7 @@ class VisMapCoordinate():
         new_radial_cell.z_index = int(moving_radial_index / num_radial_bins_per_z_axis)
         dir_stature_radial_index = moving_radial_index % num_radial_bins_per_z_axis
         stature_index = int(dir_stature_radial_index % StatureOptions.NUM_STATURE_OPTIONS.value)
-        speed = stature_to_speed_list[stature_index]
+        speed = stature_to_speed_list[stature_index] * max_speed_per_second
         dir_index = int(dir_stature_radial_index / StatureOptions.NUM_STATURE_OPTIONS.value)
         dir_degrees = dir_index * direction_angle_range
         # divide by 2 for speed as looking at half second
