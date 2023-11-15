@@ -365,8 +365,8 @@ def vis_two(predicted_model: LoadedModel, ground_truth_model: LoadedModel,
             index_cur_hdf5(ground_truth_model, False)
         ground_truth_vis_only_df = ground_truth_model.get_cur_vis_df()
         make_index_column(ground_truth_vis_only_df)
-        ground_truth_selected_df = ground_truth_model.load_round_df_from_cur_dataset(cur_round, ground_truth_vis_only_df,
-                                                                                     use_sim_dataset=False)
+        ground_truth_selected_df = ground_truth_model.load_round_df_from_cur_dataset(
+            predicted_to_ground_truth_round_data.ground_truth_round_id, ground_truth_vis_only_df, use_sim_dataset=False)
         similarity_match_index_subset_df = \
             predicted_to_ground_truth_round_data.get_similarity_match_index_df_subset(similarity_match_index_df)
 

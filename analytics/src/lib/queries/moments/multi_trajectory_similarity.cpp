@@ -142,7 +142,12 @@ namespace csknow::multi_trajectory_similarity {
 
             size_t i = dtwMatrix.n, j = dtwMatrix.m;
             while (i > 0 || j > 0) {
-                result.matchedIndices.emplace_back(i, j);
+                // index in matrx is 1 greater than index in sequence, since (0,0) is before first step and all other
+                // (x,0) or (0,x) are inf
+                if (i == 0 || j == 0) {
+                    throw std::runtime_error("non inf cost has matched indices that are inf (x,0) or (0,x)");
+                }
+                result.matchedIndices.emplace_back(i - 1, j - 1);
                 double minStepOptionCost = std::numeric_limits<double>::infinity();
                 size_t minStepOptionIndex = 0;
                 for (size_t curStepOptionIndex = 0; curStepOptionIndex < stepOptions.options.size(); curStepOptionIndex++) {
@@ -162,7 +167,6 @@ namespace csknow::multi_trajectory_similarity {
                 i -= stepOptions.options[minStepOptionIndex].front().iOffset;
                 j -= stepOptions.options[minStepOptionIndex].front().jOffset;
             }
-            result.matchedIndices.emplace_back(0, 0);
             std::reverse(result.matchedIndices.begin(), result.matchedIndices.end());
         }
         return result;
