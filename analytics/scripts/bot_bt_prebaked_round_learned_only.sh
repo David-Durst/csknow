@@ -31,7 +31,7 @@ if make -j 8; then
     do
         # learned no mask with position randomization
         learned_demos=()
-        for i in {0..13}
+        for i in {9..9}
         do
             cd ${script_dir}/../../learn_bot/
             ./scripts/deploy_latent_models_specific.sh $model 
