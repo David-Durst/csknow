@@ -415,8 +415,8 @@ vector<Script::Ptr> createPrebakedRoundScripts(const nav_mesh::nav_file & navFil
         plantStatesResult.tPlayerStates[0].pos.back() = {1160.000976, 2573.304931, 96.338958};
         plantStatesResult.tPlayerStates[0].viewAngle.back() = {-144., 1.084169};
         plantStatesResult.tPlayerStates[1].alive.back() = true;
-        plantStatesResult.tPlayerStates[1].pos.back() = {563.968750, 2763.999511, 97.379516};
-        plantStatesResult.tPlayerStates[1].viewAngle.back() = {71.024917, -9.370210};
+        plantStatesResult.tPlayerStates[1].pos.back() = {1105.557983, 3027.858642, 129.793701};
+        plantStatesResult.tPlayerStates[1].viewAngle.back() = {-83.956398, 4.489911};
         playerFreeze.push_back({true, false, true, true, false,
                                 false, false, false, false, false});
         names.emplace_back("DefendACTLongWithTeammate");
@@ -437,11 +437,11 @@ vector<Script::Ptr> createPrebakedRoundScripts(const nav_mesh::nav_file & navFil
         plantStatesResult.tPlayerStates[0].pos.back() = {1160.000976, 2573.304931, 96.338958};
         plantStatesResult.tPlayerStates[0].viewAngle.back() = {-144., 1.084169};
         plantStatesResult.tPlayerStates[1].alive.back() = true;
-        plantStatesResult.tPlayerStates[1].pos.back() = {563.968750, 2763.999511, 97.379516};
-        plantStatesResult.tPlayerStates[1].viewAngle.back() = {71.024917, -9.370210};
+        plantStatesResult.tPlayerStates[1].pos.back() = {1105.557983, 3027.858642, 129.793701};
+        plantStatesResult.tPlayerStates[1].viewAngle.back() = {-83.956398, 4.489911};
         plantStatesResult.tPlayerStates[2].alive.back() = true;
-        plantStatesResult.tPlayerStates[2].pos.back() = {462.430969, 2006.059082, 133.031250};
-        plantStatesResult.tPlayerStates[2].viewAngle.back() = {42.536399, 2.168326};
+        plantStatesResult.tPlayerStates[2].pos.back() = {1319.525756, 2899.028564, 128.393173};
+        plantStatesResult.tPlayerStates[2].viewAngle.back() = {-87.314796, 4.414069};
         playerFreeze.push_back({true, false, true, true, true,
                                 false, false, false, false, false});
         names.emplace_back("DefendACTLongWithTwoTeammates");
