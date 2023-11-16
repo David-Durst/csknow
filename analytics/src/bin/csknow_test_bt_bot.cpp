@@ -45,16 +45,16 @@ int main(int argc, char * argv[]) {
             << "6. t for tests, tl for tests with learned, r for rounds, rh for rounds with hueristics, rht for rounds with t hueristics, rhct for rounds with ct heuristics\n"
             << "7. 1 for all csknow bots, ct for ct only csknow bots, t for t only csknow bots, 0 for for no csknow bots\n"
             << "8. y for traces, n for normal bots, b for prebaked rounds, br for prebaked rounds with position randomization"
-            << "(optional) 9. prebaked situation to run (if none provided, then run all)"
+            << "(optional) 9. situation to run (if none provided, then run all)"
             << std::endl;
         return 1;
     }
     string mapsPath = argv[1], dataPath = argv[2], logPath = argv[3], modelsDir = argv[4], savedDatasetsDir = argv[5],
         roundsTestStr = argv[6], botStop = argv[7], tracesStr = argv[8];
 
-    int prebakedSituationId = -1;
+    int situationId = -1;
     if (argc == 10) {
-        prebakedSituationId = std::stoi(argv[9]);
+        situationId = std::stoi(argv[9]);
     }
 
     bool runTest = roundsTestStr == "t" || roundsTestStr == "tl";
@@ -73,7 +73,7 @@ int main(int argc, char * argv[]) {
     bool finishedTests = false;
     csknow::plant_states::PlantStatesResult plantStatesResult;
     plantStatesResult.loadFromPython(savedDatasetsDir + "/push_only_test_plant_states.hdf5");
-    ScriptsRunner roundScriptsRunner(createRoundScripts(plantStatesResult, false), false);
+    ScriptsRunner roundScriptsRunner(createRoundScripts(plantStatesResult, situationId, false), false);
     csknow::tests::trace::TracesData traceData(savedDatasetsDir + "/traces.hdf5");
     ScriptsRunner traceScriptsRunner(csknow::tests::trace::createTracesScripts(traceData, botStop, true), false);
 
@@ -89,7 +89,7 @@ int main(int argc, char * argv[]) {
     csknow::formation_initializer::FormationInitializer formationInitializer(mapMeshResult, savedDatasetsDir);
     ScriptsRunner formationDataGenerator(formationInitializer.createFormationScripts(mapMeshResult, true), false);
     ScriptsRunner prebakedRoundScriptsRunner(createPrebakedRoundScripts(navFile, prebakedPositionRandomization,
-                                                                        prebakedSituationId, false), false);
+                                                                        situationId, false), false);
 
     ScriptsRunner scriptsRunner(Script::makeList(
             /*

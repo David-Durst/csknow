@@ -120,15 +120,22 @@ void WaitUntilScoreScript::initialize(Tree & tree, ServerState & state) {
 }
 
 vector<Script::Ptr> createRoundScripts(const csknow::plant_states::PlantStatesResult & plantStatesResult,
-                                       bool quitAtEnd) {
+                                       int startSituationId, bool quitAtEnd) {
     vector<Script::Ptr> result;
 
     std::random_device rd;
     std::mt19937 gen;
     std::uniform_real_distribution<> dis;
 
-    size_t numRounds = 300;//static_cast<size_t>(plantStatesResult.size);
-    for (size_t i = 0; i < numRounds; i++) {
+    size_t numRounds = static_cast<size_t>(plantStatesResult.size);
+
+    size_t batchSize = 3;//100;
+    size_t maxI = std::min(batchSize * (startSituationId + 1), numRounds);
+    if (startSituationId == -1) {
+        startSituationId = 0;
+        maxI = numRounds;
+    }
+    for (size_t i = batchSize * startSituationId; i < maxI; i++) {
         result.push_back(make_unique<RoundScript>(plantStatesResult, i/*1*//*8*//*12*//*205*/, numRounds, gen, dis,
                                                   std::nullopt, "RoundScript", std::nullopt, std::nullopt));
     }
