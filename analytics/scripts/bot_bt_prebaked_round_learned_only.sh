@@ -26,7 +26,7 @@ if make -j 8; then
     sleep 40
     date
 
-    models=(11_09_2023__10_45_21_iw_256_bc_40_pr_0_fr_0_b_1024_it_1_ot_3_lr_1e-05_wd_0.0_l_16_h_8_n_20.0_ros_2.0_ct_TimeControl_pm_NoMask_nm_False_om_NoMask_w_None_dh_None_c_just_human_all)
+    models=(11_15_2023__15_31_15_iw_256_bc_20_pr_0_fr_0_b_1024_it_1_ot_3_lr_4e-05_wd_0.0_l_4_h_4_n_20.0_ros_2.0_ct_SimilarityControl_pm_NoMask_nm_False_om_NoMask_w_None_dh_None_c_just_human_all)
     for model in "${models[@]}"
     do
         # learned no mask with position randomization
