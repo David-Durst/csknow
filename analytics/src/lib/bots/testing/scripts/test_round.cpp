@@ -129,7 +129,7 @@ vector<Script::Ptr> createRoundScripts(const csknow::plant_states::PlantStatesRe
 
     size_t numRounds = static_cast<size_t>(plantStatesResult.size);
 
-    size_t batchSize = 3;//100;
+    size_t batchSize = 100;
     size_t maxI = std::min(batchSize * (startSituationId + 1), numRounds);
     if (startSituationId == -1) {
         startSituationId = 0;
