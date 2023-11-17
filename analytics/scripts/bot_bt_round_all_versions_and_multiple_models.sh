@@ -17,15 +17,15 @@ get_script_dir
 
 run_csknow_rounds() {
     new_demos=()
-    for i in {0..0}#{0..13}
+    for i in {0..13}
     do
         cd ${script_dir}/../../learn_bot/
         ./scripts/deploy_latent_models_specific.sh $model 
         cd ${script_dir}/../build
         echo "most recent demo file before $model_type $i"
         new_demo=$(ls -tp /home/steam/csgo-ds/csgo/*.dem | grep -v /$ | head -1)
-        new_demo_no_path=$(basename $learned_demo)
-        echo $learned_demo
+        new_demo_no_path=$(basename $new_demo)
+        echo $new_demo
         new_demos+=($new_demo_no_path)
         ./csknow_test_bt_bot ${script_dir}/../nav /home/steam/csgo-ds/csgo/addons/sourcemod/bot-link-data ${script_dir}/../ ${script_dir}/../../learn_bot/models ${script_dir}/../../learn_bot/learn_bot/libs/saved_train_test_splits $bot_type $custom_bots n $i
         sleep 40
@@ -34,14 +34,14 @@ run_csknow_rounds() {
 
     type_str="${model_type} demos for $model:"
     echo $type_str
-    result_strs+=($type_str)
+    result_strs+=("$type_str")
     old_ifs=$IFS
     export IFS=,
-    new_demos_str="${learned_demos[*]}"
+    new_demos_str="${new_demos[*]}"
     echo $new_demos_str
-    result_strs+=($new_demos_str)
-    result_strs+=("")
     export IFS=$old_ifs
+    result_strs+=("$new_demos_str")
+    result_strs+=("")
 }
 
 
@@ -64,21 +64,21 @@ if make -j 8; then
     do
         model_type="learned"
         bot_type=r
-        bot_type=1
-        run_csknow_rounds()
+        custom_bots=1
+        run_csknow_rounds
     done
 
     # hand-crafted bots
     model_type="hand-crafted"
     bot_type=rh
-    bot_type=1
-    run_csknow_rounds()
+    custom_bots=1
+    run_csknow_rounds
 
     # default bots
-    model_type="hand-crafted"
+    model_type="default"
     bot_type=rh
-    bot_type=0
-    run_csknow_rounds()
+    custom_bots=0
+    run_csknow_rounds
 
     old_ifs=$IFS
     export IFS=$'\n'
