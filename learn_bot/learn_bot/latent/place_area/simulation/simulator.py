@@ -114,7 +114,7 @@ def step(rollout_tensor: torch.Tensor, all_similarity_tensor: torch.Tensor, pred
          player_enable_mask: PlayerEnableMask = None, fixed_pred: bool = False, convert_to_cpu: bool = True,
          save_new_pos: bool = True, rollout_tensor_grad: Optional[torch.Tensor] = None,
          pred_transformed: Optional[torch.Tensor] = None, pred_untransformed: Optional[torch.Tensor] = None,
-         compute_loss_on_step: bool = True):
+         compute_loss_on_step: bool = True, random_pred: bool = False):
     # skip rounds that are over, I know we have space, but wasteful as just going to filter out extra rows later
     # and cause problems as don't have non-computed input features (like visibility) at those time steps
     # and will crash open loop as everyone is 0
@@ -135,7 +135,7 @@ def step(rollout_tensor: torch.Tensor, all_similarity_tensor: torch.Tensor, pred
                                  p=model.num_players, t=model.num_input_time_steps, d=model.num_dim)
     similarity_tensor = all_similarity_tensor[rollout_tensor_input_indices].to(CUDA_DEVICE_STR)
     vis_tensor = all_vis_tensor[rollout_tensor_input_indices].to(CUDA_DEVICE_STR)
-    if not fixed_pred:
+    if not fixed_pred and not random_pred:
         temperature = torch.Tensor([1.]).to(CUDA_DEVICE_STR)
         pred = model(input_tensor, similarity_tensor, temperature)
         pred_prob = get_untransformed_outputs(pred)
@@ -153,10 +153,15 @@ def step(rollout_tensor: torch.Tensor, all_similarity_tensor: torch.Tensor, pred
             if pred_untransformed is not None:
                 pred_untransformed[rollout_tensor_input_indices] = pred_prob
         nested_pred_labels = get_label_outputs(pred)
-    else:
+    elif fixed_pred:
         nested_pred_labels = one_hot_max_to_index(
             rearrange(pred_tensor[rollout_tensor_input_indices], 'b (p t d) -> b p t d',
                       p=model.num_players, t=num_radial_ticks)).to(CUDA_DEVICE_STR)
+    else:
+        pred_prob = torch.zeros([input_pos_tensor.shape[0], input_pos_tensor.shape[1], model.num_output_time_steps,
+                                 num_radial_bins], device=CUDA_DEVICE_STR)
+        pred_prob[:, :, :, :] = 1 / num_radial_bins
+        nested_pred_labels = one_hot_prob_to_index(pred_prob)
     pred_labels = rearrange(nested_pred_labels, 'b p t d -> b (p t d)')
 
     # for rollout simulation, only want predictions for loss computation, no need to save last time step positions

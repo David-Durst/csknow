@@ -44,7 +44,8 @@ class PlayerMaskConfig(IntEnum):
     NN_POSITION = 8
     GROUND_TRUTH_CMD = 9
     GROUND_TRUTH_POSITION = 10
-    NUM_MASK_CONFIGS = 11
+    RANDOM_CMD = 11
+    NUM_MASK_CONFIGS = 12
 
     def __str__(self) -> str:
         if self == PlayerMaskConfig.ALL:
@@ -69,6 +70,8 @@ class PlayerMaskConfig(IntEnum):
             return "Ground Truth Command"
         if self == PlayerMaskConfig.GROUND_TRUTH_POSITION:
             return "Ground Truth Position"
+        if self == PlayerMaskConfig.RANDOM_CMD:
+            return "Random Command"
 
 
 def compute_mask_elements_per_player(loaded_model: LoadedModel) -> int:
@@ -76,7 +79,7 @@ def compute_mask_elements_per_player(loaded_model: LoadedModel) -> int:
 
 
 non_mask_configs = [PlayerMaskConfig.ALL, PlayerMaskConfig.STARTING_CMD, PlayerMaskConfig.STARTING_POSITION,
-                    PlayerMaskConfig.GROUND_TRUTH_CMD]
+                    PlayerMaskConfig.GROUND_TRUTH_CMD, PlayerMaskConfig.RANDOM_CMD]
 mask_all_configs = [PlayerMaskConfig.INTERPOLATION_ROLLOUT_POSITION, PlayerMaskConfig.INTERPOLATION_ROUND_POSITION,
                     PlayerMaskConfig.NN_POSITION, PlayerMaskConfig.GROUND_TRUTH_POSITION]
 deterministic_configs = [PlayerMaskConfig.INTERPOLATION_ROLLOUT_POSITION, PlayerMaskConfig.INTERPOLATION_ROUND_POSITION,
@@ -171,7 +174,8 @@ def delta_pos_open_rollout(loaded_model: LoadedModel, round_lengths: RoundLength
                 for step_index in range(num_steps):
                     if (step_index + 1) % num_time_steps != 0:
                         step(rollout_tensor, similarity_tensor, pred_tensor, vis_tensor, loaded_model.model,
-                             round_lengths, step_index, nav_data, player_enable_mask, fixed_pred)
+                             round_lengths, step_index, nav_data, player_enable_mask, fixed_pred,
+                             random_pred=player_mask_config == PlayerMaskConfig.RANDOM_CMD)
                     pbar.update(1)
     save_inference_model_data_with_matching_round_lengths(loaded_model, rollout_tensor, pred_tensor, round_lengths)
 
@@ -405,7 +409,8 @@ def run_analysis(loaded_model: LoadedModel):
                            PlayerMaskConfig.INTERPOLATION_ROUND_POSITION,
                            PlayerMaskConfig.NN_POSITION,
                            PlayerMaskConfig.GROUND_TRUTH_CMD,
-                           PlayerMaskConfig.GROUND_TRUTH_POSITION]
+                           PlayerMaskConfig.GROUND_TRUTH_POSITION,
+                           PlayerMaskConfig.RANDOM_CMD]
     ades_per_mask_config: List[pd.Series] = []
     fdes_per_mask_config: List[pd.Series] = []
     for i, player_mask_config in enumerate(player_mask_configs):
