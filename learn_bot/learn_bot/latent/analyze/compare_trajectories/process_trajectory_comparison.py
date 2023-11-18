@@ -42,7 +42,7 @@ def percentile_filter_series(data: pd.Series, low_pct_to_remove=0.01, high_pct_t
     q_hi = data.quantile(1. - high_pct_to_remove)
     return data[(data <= q_hi) & (data >= q_low)]
 
-dtw_cost_bins = generate_bins(0, 8000, 250)
+dtw_cost_bins = generate_bins(0, 16000, 250)
 delta_distance_bins = generate_bins(-20000, 20000, 2500)
 delta_time_bins = generate_bins(-40, 40, 5)
 
