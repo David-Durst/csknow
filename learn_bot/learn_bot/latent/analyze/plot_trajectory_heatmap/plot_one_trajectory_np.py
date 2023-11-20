@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from enum import Enum, auto
+from math import log
 from pathlib import Path
 from typing import Dict, Optional, List, Tuple
 
@@ -35,14 +36,15 @@ class ImageBuffers:
 
 
 image_to_buffers: Dict[str, ImageBuffers] = {}
+image_to_num_points: Dict[str, int] = {}
 spread_radius = 2
-fill_per_line = 1
 
 
-def plot_one_trajectory_np(loaded_model: LoadedModel, id_df: pd.DataFrame, dataset: np.ndarray,
-                           trajectory_filter_options: TrajectoryFilterOptions, title_str: str):
+def plot_one_trajectory_dataset(loaded_model: LoadedModel, id_df: pd.DataFrame, dataset: np.ndarray,
+                                trajectory_filter_options: TrajectoryFilterOptions, title_str: str):
     if title_str not in image_to_buffers:
         image_to_buffers[title_str] = ImageBuffers()
+        image_to_num_points[title_str] = 0
 
     # convert this to trajectory ids for open sim trajectories
     round_ids = id_df[round_id_column].unique()
@@ -66,8 +68,9 @@ def plot_one_trajectory_np(loaded_model: LoadedModel, id_df: pd.DataFrame, datas
             buffer = image_to_buffers[title_str].get_buffer(ct_team)
             cur_player_d2_img = Image.new("L", d2_img.size, color=0)
             cur_player_d2_drw = ImageDraw.Draw(cur_player_d2_img)
-            cur_player_d2_drw.line(xy=canvas_pos_xy, fill=fill_per_line, width=5)
+            cur_player_d2_drw.line(xy=canvas_pos_xy, fill=1, width=5)
             buffer += np.asarray(cur_player_d2_img)
+            image_to_num_points[title_str] += len(alive_round_np)
 
 
 def plot_one_image_one_team(title: str, ct_team: bool, team_color: List, saturated_team_color: List,
@@ -96,12 +99,23 @@ def plot_one_image_one_team(title: str, ct_team: bool, team_color: List, saturat
     base_img.alpha_composite(Image.fromarray(uint8_color_buffer, 'RGBA'))
 
 
+def scale_buffers_by_points(titles: List[str]):
+    for title in titles:
+        fill_amount = int(25. / log(2.2 + image_to_num_points[title] / 1300, 10))
+        ct_buffer = image_to_buffers[title].get_buffer(True)
+        ct_buffer *= fill_amount
+        t_buffer = image_to_buffers[title].get_buffer(False)
+        t_buffer *= fill_amount
+
+
 saturated_ct_color_list = [19, 2, 178, 0]
 saturated_t_color_list = [178, 69, 2, 0]
 
 
 def plot_trajectories_to_image(titles: List[str], plot_teams_separately: bool, plots_path: Path):
     title_images: List[Image.Image] = []
+
+    scale_buffers_by_points(titles)
 
     for title in titles:
         images_per_title: List[Image.Image] = []
@@ -120,7 +134,7 @@ def plot_trajectories_to_image(titles: List[str], plot_teams_separately: bool, p
 
             # image with just t
             base_t_d2_img = d2_img.copy().convert("RGBA")
-            plot_one_image_one_team(title, False, bot_t_color_list, saturated_t_color_list, base_ct_d2_img)
+            plot_one_image_one_team(title, False, bot_t_color_list, saturated_t_color_list, base_t_d2_img)
             images_per_title.append(base_t_d2_img)
             title_images.append(concat_horizontal(images_per_title))
         else:

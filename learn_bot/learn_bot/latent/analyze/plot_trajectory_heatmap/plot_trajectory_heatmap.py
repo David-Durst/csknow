@@ -10,7 +10,7 @@ from learn_bot.latent.analyze.compare_trajectories.process_trajectory_comparison
 from learn_bot.latent.analyze.compare_trajectories.run_trajectory_comparison import rollout_load_data_option
 from learn_bot.latent.analyze.comparison_column_names import similarity_plots_path
 from learn_bot.latent.analyze.plot_trajectory_heatmap.filter_trajectories import TrajectoryFilterOptions
-from learn_bot.latent.analyze.plot_trajectory_heatmap.plot_one_trajectory_np import plot_one_trajectory_np, \
+from learn_bot.latent.analyze.plot_trajectory_heatmap.plot_one_trajectory_np import plot_one_trajectory_dataset, \
     plot_trajectories_to_image
 from learn_bot.latent.load_model import load_model_file
 from learn_bot.latent.place_area.load_data import LoadDataResult
@@ -45,8 +45,8 @@ def run_one_dataset_trajectory_heatmap(use_all_human_data: bool, rollout_extensi
             loaded_model.cur_hdf5_index = i
             loaded_model.load_cur_dataset_only(include_outputs=False)
 
-            plot_one_trajectory_np(loaded_model, loaded_model.get_cur_id_df(), loaded_model.cur_dataset.X,
-                                   trajectory_filter_options, title_str)
+            plot_one_trajectory_dataset(loaded_model, loaded_model.get_cur_id_df(), loaded_model.cur_dataset.X,
+                                        trajectory_filter_options, title_str)
             pbar.update(1)
 
 
