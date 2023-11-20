@@ -6,6 +6,7 @@ from typing import Dict, Optional, List, Tuple
 import numpy as np
 import pandas as pd
 from PIL import Image
+from skimage.draw import line_aa, line
 
 from learn_bot.latent.analyze.compare_trajectories.plot_trajectories_from_comparison import concat_horizontal, \
     concat_vertical
@@ -23,8 +24,8 @@ class ImageBuffers:
     t_buffer: np.ndarray
 
     def __init__(self):
-        self.ct_buffer = np.ndarray(d2_img.size, dtype=np.intc)
-        self.t_buffer = np.ndarray(d2_img.size, dtype=np.intc)
+        self.ct_buffer = np.zeros(d2_img.size, dtype=np.intc)
+        self.t_buffer = np.zeros(d2_img.size, dtype=np.intc)
 
     def get_buffer(self, ct_team) -> np.ndarray:
         if ct_team:
@@ -33,7 +34,8 @@ class ImageBuffers:
             return self.t_buffer
 
 
-image_to_buffers: Dict[str, ImageBuffers]
+image_to_buffers: Dict[str, ImageBuffers] = {}
+spread_radius = 3
 
 
 def plot_one_trajectory_np(loaded_model: LoadedModel, id_df: pd.DataFrame, dataset: np.ndarray,
@@ -52,30 +54,58 @@ def plot_one_trajectory_np(loaded_model: LoadedModel, id_df: pd.DataFrame, datas
         for player_index, player_place_area_columns in enumerate(specific_player_place_area_columns):
             ct_team = team_strs[0] in player_place_area_columns.player_id
 
-            alive_round_np = round_np[round_np[loaded_model.model.alive_columns[player_index]] == 1]
+            alive_round_np = round_np[round_np[:, loaded_model.model.alive_columns[player_index]] == 1]
             canvas_pos_np = convert_to_canvas_coordinates(
-                alive_round_np[loaded_model.model.nested_players_pos_columns_tensor[player_index, 0:2]])
-            canvas_pos_x_np = canvas_pos_np[0].astype(np.ndarray)
-            canvas_pos_y_np = canvas_pos_np[1].astype(np.ndarray)
+                alive_round_np[:, loaded_model.model.nested_players_pos_columns_tensor[player_index, 0, 0]],
+                alive_round_np[:, loaded_model.model.nested_players_pos_columns_tensor[player_index, 0, 1]])
+            canvas_pos_x_np = canvas_pos_np[0].astype(np.intc)
+            canvas_pos_y_np = canvas_pos_np[1].astype(np.intc)
 
             buffer = image_to_buffers[title_str].get_buffer(ct_team)
 
-            for i in range(len(canvas_pos_x_np)):
-                buffer[canvas_pos_x_np[i], canvas_pos_y_np[i]] += 1
+            for i in range(len(canvas_pos_x_np) - 1):
+                #if canvas_pos_x_np[i] == 1318 and canvas_pos_y_np[i] == 1725:
+                #    print(f"{loaded_model.model.nested_players_pos_columns_tensor[i, player_index]}")
+                #buffer[(canvas_pos_x_np[i]-5):(canvas_pos_x_np[i]+5),
+                #       (canvas_pos_y_np[i]-5):(canvas_pos_y_np[i]+5)] += 1
+                rr, cc = line(canvas_pos_x_np[i], canvas_pos_y_np[i], canvas_pos_x_np[i+1], canvas_pos_y_np[i+1])
+                for j in range(len(rr)):
+                    for rx in range(-1 * spread_radius, spread_radius):
+                        for ry in range(-1 * spread_radius, spread_radius):
+                            buffer[rr[j] + rx, cc[j] + ry] += 1
+                #spread_points_set = set(spread_points)
+                #for spread_point in spread_points_set:
+                #    buffer[spread_point[0], spread_point[1]] += 1
 
 
-color_alpha = 150
-
-
-def plot_one_image_one_team(title: str, ct_team: bool, team_color: List, base_img: Image.Image):
+def plot_one_image_one_team(title: str, ct_team: bool, team_color: List, saturated_team_color: List,
+                            base_img: Image.Image):
     buffer = image_to_buffers[title].get_buffer(ct_team)
     max_value = np.max(buffer)
-    scaled_buffer = buffer * int(color_alpha / max_value)
-    colored_buffer = scaled_buffer[:, :, np.newaxis].repeat(1, 1, 4)
-    colored_buffer[:, :, 0] = team_color[0]
-    colored_buffer[:, :, 1] = team_color[1]
-    colored_buffer[:, :, 2] = team_color[2]
-    base_img.alpha_composite(Image.fromarray(colored_buffer, 'RGBA'))
+    color_buffer = buffer[:, :, np.newaxis].repeat(4, axis=2)
+    color_buffer[:, :, 0] = team_color[0]
+    color_buffer[:, :, 1] = team_color[1]
+    color_buffer[:, :, 2] = team_color[2]
+
+    # if saturate, then move to darker color to indicate
+    saturated_color_buffer_entries = color_buffer[:, :, 3] >= 255
+    if np.sum(saturated_color_buffer_entries) > 0:
+        percent_saturated = color_buffer[saturated_color_buffer_entries][:, 3] / max_value
+        full_alpha_team_color = np.asarray(team_color)
+        full_alpha_team_color[3] = 255
+        full_alpha_saturated_team_color = np.asarray(saturated_team_color)
+        full_alpha_saturated_team_color[3] = 255
+        color_buffer[saturated_color_buffer_entries] = \
+            (percent_saturated[:, np.newaxis].repeat(4, axis=1) *
+             full_alpha_saturated_team_color[np.newaxis, :].repeat(np.sum(saturated_color_buffer_entries), axis=0)) + \
+            ((1 - percent_saturated[:, np.newaxis].repeat(4, axis=1)) *
+             full_alpha_team_color[np.newaxis, :].repeat(np.sum(saturated_color_buffer_entries), axis=0))
+    uint8_color_buffer = np.uint8(np.transpose(color_buffer, axes=[1, 0, 2]))
+    base_img.alpha_composite(Image.fromarray(uint8_color_buffer, 'RGBA'))
+
+
+saturated_ct_color_list = [19, 2, 178, 0]
+saturated_t_color_list = [178, 69, 2, 0]
 
 
 def plot_trajectories_to_image(titles: List[str], plot_teams_separately: bool, plots_path: Path):
@@ -86,19 +116,19 @@ def plot_trajectories_to_image(titles: List[str], plot_teams_separately: bool, p
 
         # image with everyone
         base_both_d2_img = d2_img.copy().convert("RGBA")
-        plot_one_image_one_team(title, False, bot_t_color_list, base_both_d2_img)
-        plot_one_image_one_team(title, True, bot_ct_color_list, base_both_d2_img)
+        plot_one_image_one_team(title, True, bot_ct_color_list, saturated_ct_color_list, base_both_d2_img)
+        plot_one_image_one_team(title, False, bot_t_color_list, saturated_t_color_list, base_both_d2_img)
         images_per_title.append(base_both_d2_img)
 
         if plot_teams_separately:
             # image with just ct
             base_ct_d2_img = d2_img.copy().convert("RGBA")
-            plot_one_image_one_team(title, True, bot_ct_color_list, base_ct_d2_img)
+            plot_one_image_one_team(title, True, bot_ct_color_list, saturated_ct_color_list, base_ct_d2_img)
             images_per_title.append(base_ct_d2_img)
 
             # image with just t
             base_t_d2_img = d2_img.copy().convert("RGBA")
-            plot_one_image_one_team(title, False, bot_t_color_list, base_ct_d2_img)
+            plot_one_image_one_team(title, False, bot_t_color_list, saturated_t_color_list, base_ct_d2_img)
             images_per_title.append(base_t_d2_img)
             title_images.append(concat_horizontal(images_per_title))
         else:

@@ -72,10 +72,10 @@ class LoadedModel:
         result = result.iloc[self.dataset.data_hdf5s[self.cur_hdf5_index].id_df['id'], :]
         return result
 
-    def load_cur_dataset_only(self):
+    def load_cur_dataset_only(self, include_outputs: bool = True):
         self.cur_demo_names = self.load_cur_hdf5_demo_names()
         self.cur_dataset = LatentSubsetHDF5Dataset(self.dataset.data_hdf5s[self.cur_hdf5_index].get_all_input_data(),
-                                                   self.dataset.data_hdf5s[self.cur_hdf5_index].get_all_output_data(),
+                                                   self.dataset.data_hdf5s[self.cur_hdf5_index].get_all_output_data() if include_outputs else np.empty([1, 1]),
                                                    self.dataset.data_hdf5s[self.cur_hdf5_index].id_df)
 
     def get_cur_vis_np(self) -> np.ndarray:

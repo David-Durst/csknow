@@ -32,20 +32,22 @@ def run_one_dataset_trajectory_heatmap(use_all_human_data: bool, rollout_extensi
     # load data
     load_data_result = LoadDataResult(load_data_options)
     loaded_model = load_model_file(load_data_result)
-    hdf5_to_round_ids = get_hdf5_to_round_ids(load_data_result)[1]
+    hdf5_to_round_ids = get_hdf5_to_round_ids(load_data_result)[0]
 
     with tqdm(total=len(loaded_model.dataset.data_hdf5s), disable=False) as pbar:
         for i, hdf5_wrapper in enumerate(loaded_model.dataset.data_hdf5s):
             if use_all_human_data:
-                trajectory_filter_options = TrajectoryFilterOptions(set(hdf5_to_round_ids[hdf5_wrapper.hdf5_path]))
+                trajectory_filter_options = \
+                    TrajectoryFilterOptions(set(hdf5_to_round_ids[str(hdf5_wrapper.hdf5_path.name)]))
             else:
                 trajectory_filter_options = TrajectoryFilterOptions(None)
 
             loaded_model.cur_hdf5_index = i
-            loaded_model.load_cur_dataset_only()
+            loaded_model.load_cur_dataset_only(include_outputs=False)
 
             plot_one_trajectory_np(loaded_model, loaded_model.get_cur_id_df(), loaded_model.cur_dataset.X,
                                    trajectory_filter_options, title_str)
+            pbar.update(1)
 
 
 def run_trajectory_heatmaps():
@@ -58,7 +60,8 @@ def run_trajectory_heatmaps():
         for rollout_extension in rollout_extensions:
             run_one_dataset_trajectory_heatmap(False, rollout_extension)
 
-    plot_trajectories_to_image(human_title_str)
+    title_strs = [human_title_str] + (rollout_extensions if rollout_extensions[0] != 'invalid' else [])
+    plot_trajectories_to_image(title_strs, True, plots_path)
 
 
 if __name__ == "__main__":
