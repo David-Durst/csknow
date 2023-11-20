@@ -36,7 +36,7 @@ class ImageBuffers:
 
 image_to_buffers: Dict[str, ImageBuffers] = {}
 spread_radius = 2
-fill_per_line=10
+fill_per_line = 1
 
 
 def plot_one_trajectory_np(loaded_model: LoadedModel, id_df: pd.DataFrame, dataset: np.ndarray,
@@ -92,7 +92,7 @@ def plot_one_image_one_team(title: str, ct_team: bool, team_color: List, saturat
              full_alpha_saturated_team_color[np.newaxis, :].repeat(np.sum(saturated_color_buffer_entries), axis=0)) + \
             ((1 - percent_saturated[:, np.newaxis].repeat(4, axis=1)) *
              full_alpha_team_color[np.newaxis, :].repeat(np.sum(saturated_color_buffer_entries), axis=0))
-    uint8_color_buffer = np.uint8(color_buffer, axes=[1, 0, 2])
+    uint8_color_buffer = np.uint8(color_buffer)
     base_img.alpha_composite(Image.fromarray(uint8_color_buffer, 'RGBA'))
 
 
