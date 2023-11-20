@@ -357,12 +357,12 @@ def plot_ade_fde(player_mask_configs: List[PlayerMaskConfig], displacement_error
 
 
 mask_configs_to_plot = [PlayerMaskConfig.GROUND_TRUTH_POSITION,
-                        PlayerMaskConfig.ALL,]
-                        #PlayerMaskConfig.STARTING_CMD,
-                        #PlayerMaskConfig.STARTING_POSITION,
-                        #PlayerMaskConfig.INTERPOLATION_ROLLOUT_POSITION,
-                        ##PlayerMaskConfig.NN_POSITION,
-                        #PlayerMaskConfig.RANDOM_CMD]
+                        PlayerMaskConfig.ALL,
+                        PlayerMaskConfig.STARTING_CMD,
+                        PlayerMaskConfig.STARTING_POSITION,
+                        PlayerMaskConfig.INTERPOLATION_ROLLOUT_POSITION,
+                        PlayerMaskConfig.NN_POSITION,
+                        PlayerMaskConfig.RANDOM_CMD]
 mask_config_plot_titles = [str(mc) for mc in mask_configs_to_plot]
 
 
@@ -371,8 +371,8 @@ def run_analysis_per_mask(loaded_model: LoadedModel, player_mask_config: PlayerM
     displacement_errors = DisplacementErrors()
     mask_iterations = num_iterations if player_mask_config not in deterministic_configs else 1
     for i, hdf5_wrapper in enumerate(loaded_model.dataset.data_hdf5s):
-        if i > 1:
-            break
+        #if i > 1:
+        #    break
 
         print(f"Processing hdf5 {i} / {len(loaded_model.dataset.data_hdf5s)}: {hdf5_wrapper.hdf5_path}")
         per_iteration_displacement_errors: List[DisplacementErrors] = []
@@ -427,16 +427,16 @@ def run_analysis(loaded_model: LoadedModel):
     mask_result_latex_strs = ["Simulation Type & minSADE Mean & minSADE Std Dev & minSFDE Mean & minSFDE Std Dev \\\\",
                               "\\hline"]
     player_mask_configs = [PlayerMaskConfig.ALL,
-                           #PlayerMaskConfig.CT, PlayerMaskConfig.T,
-                           ##PlayerMaskConfig.LAST_ALIVE,
-                           #PlayerMaskConfig.STARTING_CMD,
-                           #PlayerMaskConfig.STARTING_POSITION,
-                           #PlayerMaskConfig.INTERPOLATION_ROLLOUT_POSITION,
-                           #PlayerMaskConfig.INTERPOLATION_ROUND_POSITION,
-                           ##PlayerMaskConfig.NN_POSITION,
-                           #PlayerMaskConfig.GROUND_TRUTH_CMD,
-                           PlayerMaskConfig.GROUND_TRUTH_POSITION,]
-                           #PlayerMaskConfig.RANDOM_CMD]
+                           PlayerMaskConfig.CT, PlayerMaskConfig.T,
+                           #PlayerMaskConfig.LAST_ALIVE,
+                           PlayerMaskConfig.STARTING_CMD,
+                           PlayerMaskConfig.STARTING_POSITION,
+                           PlayerMaskConfig.INTERPOLATION_ROLLOUT_POSITION,
+                           PlayerMaskConfig.INTERPOLATION_ROUND_POSITION,
+                           PlayerMaskConfig.NN_POSITION,
+                           PlayerMaskConfig.GROUND_TRUTH_CMD,
+                           PlayerMaskConfig.GROUND_TRUTH_POSITION,
+                           PlayerMaskConfig.RANDOM_CMD]
     ades_per_mask_config: List[pd.Series] = []
     fdes_per_mask_config: List[pd.Series] = []
     for i, player_mask_config in enumerate(player_mask_configs):

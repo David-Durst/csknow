@@ -123,8 +123,10 @@ def scale_buffers_by_points(titles: List[str]):
 
     for title in titles:
         ct_buffer = title_to_buffers[title].get_buffer(True)
+        #print(f'ct_buffer percentiles: f{np.percentile(ct_buffer, [50, 90, 95, 99, 99.9, 99.99, 99.999, 99.9999])}')
         ct_buffer *= scale_factor
         t_buffer = title_to_buffers[title].get_buffer(False)
+        #print(f't_buffer percentiles: f{np.percentile(ct_buffer, [50, 90, 95, 99, 99.9, 99.99, 99.999, 99.9999])}')
         t_buffer *= scale_factor
 
 
