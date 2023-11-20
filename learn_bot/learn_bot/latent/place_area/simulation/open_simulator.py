@@ -16,7 +16,8 @@ from tqdm import tqdm
 from learn_bot.engagement_aim.column_names import tick_id_column
 from learn_bot.latent.analyze.compare_trajectories.process_trajectory_comparison import plot_hist, generate_bins
 from learn_bot.latent.analyze.comparison_column_names import similarity_plots_path
-from learn_bot.latent.analyze.plot_trajectory_heatmap.filter_trajectories import default_trajectory_filter_options
+from learn_bot.latent.analyze.plot_trajectory_heatmap.filter_trajectories import default_trajectory_filter_options, \
+    TrajectoryFilterOptions
 from learn_bot.latent.analyze.plot_trajectory_heatmap.plot_one_trajectory_np import plot_one_trajectory_dataset, \
     plot_trajectories_to_image
 from learn_bot.libs.pd_printing import set_pd_print_options
@@ -207,14 +208,7 @@ class DisplacementErrors:
     player_trajectory_fdes: List[float] = field(default_factory=list)
 
 
-# compute indices in open rollout that are actually predicted
-def compare_predicted_rollout_indices(loaded_model: LoadedModel,
-                                      player_enable_mask: PlayerEnableMask,
-                                      include_ground_truth_players_in_afde: bool,
-                                      include_steps_without_actions: bool) -> DisplacementErrors:
-    id_df = loaded_model.get_cur_id_df().copy()
-    round_lengths = get_round_lengths(id_df, round_length_divisible_by=num_time_steps)
-
+def compute_trajectory_counter(id_df, round_lengths):
     # get a counter for the ground truth group for each trajectory
     # first row will be ground truth, and rest will be relative to it
     # don't need this when comparing pred/orig since subtracting from each other will implicitly remove ground truth:
@@ -228,6 +222,18 @@ def compare_predicted_rollout_indices(loaded_model: LoadedModel,
     ground_truth_tick_indicators.iloc[ground_truth_tick_indices] = 1
     # new trajectory for each ground truth starting point
     trajectory_counter = ground_truth_tick_indicators.cumsum()
+    return trajectory_counter
+
+
+# compute indices in open rollout that are actually predicted
+def compare_predicted_rollout_indices(loaded_model: LoadedModel,
+                                      player_enable_mask: PlayerEnableMask,
+                                      include_ground_truth_players_in_afde: bool,
+                                      include_steps_without_actions: bool) -> DisplacementErrors:
+    id_df = loaded_model.get_cur_id_df().copy()
+    round_lengths = get_round_lengths(id_df, round_length_divisible_by=num_time_steps)
+
+    trajectory_counter = compute_trajectory_counter(id_df, round_lengths)
 
     # use counter to compute first/last in each trajectory
     id_df[trajectory_counter_column] = trajectory_counter
@@ -385,8 +391,10 @@ def run_analysis_per_mask(loaded_model: LoadedModel, player_mask_config: PlayerM
                                                                          player_mask_config in mask_all_configs,
                                                                          player_mask_config == PlayerMaskConfig.GROUND_TRUTH_CMD)
             if iteration == 0 and player_mask_config in mask_configs_to_plot:
+                trajectory_counter = compute_trajectory_counter(loaded_model.get_cur_id_df(), round_lengths)
                 plot_one_trajectory_dataset(loaded_model, loaded_model.get_cur_id_df(),
-                                            loaded_model.cur_simulated_dataset.X, default_trajectory_filter_options,
+                                            loaded_model.cur_simulated_dataset.X,
+                                            TrajectoryFilterOptions(trajectory_counter=trajectory_counter),
                                             str(player_mask_config))
             per_iteration_displacement_errors.append(hdf5_displacement_errors)
 

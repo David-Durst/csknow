@@ -47,21 +47,25 @@ def plot_one_trajectory_dataset(loaded_model: LoadedModel, id_df: pd.DataFrame, 
         title_to_buffers[title] = ImageBuffers()
         title_to_num_points[title] = 0
 
-    # convert this to trajectory ids for open sim trajectories
-    round_ids = id_df[round_id_column].unique()
-    if trajectory_filter_options.valid_round_ids is not None:
-        round_ids = [r for r in round_ids if r in trajectory_filter_options.valid_round_ids]
+    if trajectory_filter_options.trajectory_counter is None:
+        trajectory_ids = id_df[round_id_column].unique()
+        if trajectory_filter_options.valid_round_ids is not None:
+            trajectory_ids = [r for r in trajectory_ids if r in trajectory_filter_options.valid_round_ids]
+        trajectory_id_col = id_df[round_id_column]
+    else:
+        trajectory_ids = trajectory_filter_options.trajectory_counter.unique()
+        trajectory_id_col = trajectory_filter_options.trajectory_counter
 
-    for round_id in round_ids:
-        round_np = dataset[id_df[round_id_column] == round_id]
+    for trajectory_id in trajectory_ids:
+        trajectory_np = dataset[trajectory_id_col == trajectory_id]
 
         for player_index, player_place_area_columns in enumerate(specific_player_place_area_columns):
             ct_team = team_strs[0] in player_place_area_columns.player_id
 
-            alive_round_np = round_np[round_np[:, loaded_model.model.alive_columns[player_index]] == 1]
+            alive_trajectory_np = trajectory_np[trajectory_np[:, loaded_model.model.alive_columns[player_index]] == 1]
             canvas_pos_np = convert_to_canvas_coordinates(
-                alive_round_np[:, loaded_model.model.nested_players_pos_columns_tensor[player_index, 0, 0]],
-                alive_round_np[:, loaded_model.model.nested_players_pos_columns_tensor[player_index, 0, 1]])
+                alive_trajectory_np[:, loaded_model.model.nested_players_pos_columns_tensor[player_index, 0, 0]],
+                alive_trajectory_np[:, loaded_model.model.nested_players_pos_columns_tensor[player_index, 0, 1]])
             canvas_pos_x_np = canvas_pos_np[0].astype(np.intc)
             canvas_pos_y_np = canvas_pos_np[1].astype(np.intc)
             canvas_pos_xy = list(zip(list(canvas_pos_x_np), list(canvas_pos_y_np)))
@@ -71,7 +75,7 @@ def plot_one_trajectory_dataset(loaded_model: LoadedModel, id_df: pd.DataFrame, 
             cur_player_d2_drw = ImageDraw.Draw(cur_player_d2_img)
             cur_player_d2_drw.line(xy=canvas_pos_xy, fill=1, width=5)
             buffer += np.asarray(cur_player_d2_img)
-            title_to_num_points[title] += len(alive_round_np)
+            title_to_num_points[title] += len(alive_trajectory_np)
 
 
 scale_factor = 0
@@ -111,7 +115,7 @@ def plot_one_image_one_team(title: str, ct_team: bool, team_color: List, saturat
 
 def scale_buffers_by_points(titles: List[str]):
     global scale_factor
-    
+
     max_points_per_title = 0
     for title in titles:
         max_points_per_title = max(max_points_per_title, title_to_num_points[title])
