@@ -8,3 +8,6 @@ import pandas as pd
 @dataclass
 class TrajectoryFilterOptions:
     valid_round_ids: Optional[Set[int]] = None
+
+
+default_trajectory_filter_options = TrajectoryFilterOptions()

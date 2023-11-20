@@ -15,6 +15,10 @@ from tqdm import tqdm
 
 from learn_bot.engagement_aim.column_names import tick_id_column
 from learn_bot.latent.analyze.compare_trajectories.process_trajectory_comparison import plot_hist, generate_bins
+from learn_bot.latent.analyze.comparison_column_names import similarity_plots_path
+from learn_bot.latent.analyze.plot_trajectory_heatmap.filter_trajectories import default_trajectory_filter_options
+from learn_bot.latent.analyze.plot_trajectory_heatmap.plot_one_trajectory_np import plot_one_trajectory_dataset, \
+    plot_trajectories_to_image
 from learn_bot.libs.pd_printing import set_pd_print_options
 from learn_bot.latent.engagement.column_names import round_id_column
 from learn_bot.latent.load_model import load_model_file
@@ -346,13 +350,23 @@ def plot_ade_fde(player_mask_configs: List[PlayerMaskConfig], displacement_error
         ax.set_title(str(player_mask_config) + (" minADE" if is_ade else " minFDE"))
 
 
+mask_configs_to_plot = [PlayerMaskConfig.GROUND_TRUTH_POSITION,
+                        PlayerMaskConfig.ALL,]
+                        #PlayerMaskConfig.STARTING_CMD,
+                        #PlayerMaskConfig.STARTING_POSITION,
+                        #PlayerMaskConfig.INTERPOLATION_ROLLOUT_POSITION,
+                        ##PlayerMaskConfig.NN_POSITION,
+                        #PlayerMaskConfig.RANDOM_CMD]
+mask_config_plot_titles = [str(mc) for mc in mask_configs_to_plot]
+
+
 def run_analysis_per_mask(loaded_model: LoadedModel, player_mask_config: PlayerMaskConfig) -> \
         Tuple[pd.Series, pd.Series]:
     displacement_errors = DisplacementErrors()
     mask_iterations = num_iterations if player_mask_config not in deterministic_configs else 1
     for i, hdf5_wrapper in enumerate(loaded_model.dataset.data_hdf5s):
-        #if i > 1:
-        #    break
+        if i > 1:
+            break
 
         print(f"Processing hdf5 {i} / {len(loaded_model.dataset.data_hdf5s)}: {hdf5_wrapper.hdf5_path}")
         per_iteration_displacement_errors: List[DisplacementErrors] = []
@@ -370,6 +384,10 @@ def run_analysis_per_mask(loaded_model: LoadedModel, player_mask_config: PlayerM
             hdf5_displacement_errors = compare_predicted_rollout_indices(loaded_model, player_enable_mask,
                                                                          player_mask_config in mask_all_configs,
                                                                          player_mask_config == PlayerMaskConfig.GROUND_TRUTH_CMD)
+            if iteration == 0 and player_mask_config in mask_configs_to_plot:
+                plot_one_trajectory_dataset(loaded_model, loaded_model.get_cur_id_df(),
+                                            loaded_model.cur_simulated_dataset.X, default_trajectory_filter_options,
+                                            str(player_mask_config))
             per_iteration_displacement_errors.append(hdf5_displacement_errors)
 
         per_iteration_ade: List[List[float]] = [de.player_trajectory_ades for de in per_iteration_displacement_errors]
@@ -401,16 +419,16 @@ def run_analysis(loaded_model: LoadedModel):
     mask_result_latex_strs = ["Simulation Type & minSADE Mean & minSADE Std Dev & minSFDE Mean & minSFDE Std Dev \\\\",
                               "\\hline"]
     player_mask_configs = [PlayerMaskConfig.ALL,
-                           PlayerMaskConfig.CT, PlayerMaskConfig.T,
-                           #PlayerMaskConfig.LAST_ALIVE,
-                           PlayerMaskConfig.STARTING_CMD,
-                           PlayerMaskConfig.STARTING_POSITION,
-                           PlayerMaskConfig.INTERPOLATION_ROLLOUT_POSITION,
-                           PlayerMaskConfig.INTERPOLATION_ROUND_POSITION,
-                           PlayerMaskConfig.NN_POSITION,
-                           PlayerMaskConfig.GROUND_TRUTH_CMD,
-                           PlayerMaskConfig.GROUND_TRUTH_POSITION,
-                           PlayerMaskConfig.RANDOM_CMD]
+                           #PlayerMaskConfig.CT, PlayerMaskConfig.T,
+                           ##PlayerMaskConfig.LAST_ALIVE,
+                           #PlayerMaskConfig.STARTING_CMD,
+                           #PlayerMaskConfig.STARTING_POSITION,
+                           #PlayerMaskConfig.INTERPOLATION_ROLLOUT_POSITION,
+                           #PlayerMaskConfig.INTERPOLATION_ROUND_POSITION,
+                           ##PlayerMaskConfig.NN_POSITION,
+                           #PlayerMaskConfig.GROUND_TRUTH_CMD,
+                           PlayerMaskConfig.GROUND_TRUTH_POSITION,]
+                           #PlayerMaskConfig.RANDOM_CMD]
     ades_per_mask_config: List[pd.Series] = []
     fdes_per_mask_config: List[pd.Series] = []
     for i, player_mask_config in enumerate(player_mask_configs):
@@ -426,6 +444,10 @@ def run_analysis(loaded_model: LoadedModel):
                                 f"{fdes.mean():.2f} & {fdes.std():.2f} \\\\"
         mask_result_latex_strs.append(mask_result_latex_str)
         print(mask_result_str)
+
+    plots_path = similarity_plots_path / 'simulation'
+    os.makedirs(plots_path, exist_ok=True)
+    plot_trajectories_to_image(mask_config_plot_titles, True, plots_path)
 
     plot_ade_fde(player_mask_configs, ades_per_mask_config, axs[0], True)
     plot_ade_fde(player_mask_configs, fdes_per_mask_config, axs[1], False)

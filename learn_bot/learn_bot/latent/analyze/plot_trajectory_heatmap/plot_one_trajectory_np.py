@@ -111,14 +111,17 @@ def plot_one_image_one_team(title: str, ct_team: bool, team_color: List, saturat
 
 def scale_buffers_by_points(titles: List[str]):
     global scale_factor
+    
     max_points_per_title = 0
     for title in titles:
         max_points_per_title = max(max_points_per_title, title_to_num_points[title])
     scale_factor = int(25. / log(2.2 + max_points_per_title / 1300, 10))
-    ct_buffer = title_to_buffers[title].get_buffer(True)
-    ct_buffer *= scale_factor
-    t_buffer = title_to_buffers[title].get_buffer(False)
-    t_buffer *= scale_factor
+
+    for title in titles:
+        ct_buffer = title_to_buffers[title].get_buffer(True)
+        ct_buffer *= scale_factor
+        t_buffer = title_to_buffers[title].get_buffer(False)
+        t_buffer *= scale_factor
 
 
 saturated_ct_color_list = [19, 2, 178, 0]
