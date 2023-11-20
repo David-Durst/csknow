@@ -20,14 +20,12 @@ import learn_bot.latent.vis.run_vis_checkpoint as run_vis_checkpoint
 human_title_str = 'Human'
 
 
-def run_one_dataset_trajectory_heatmap(use_all_human_data: bool, rollout_extension: str):
+def run_one_dataset_trajectory_heatmap(use_all_human_data: bool, title: str):
     if use_all_human_data:
         load_data_options = run_vis_checkpoint.load_data_options
-        title_str = human_title_str
     else:
         load_data_options = dataclasses.replace(rollout_load_data_option,
-                                                custom_rollout_extension=rollout_extension + '*')
-        title_str = rollout_extension
+                                                custom_rollout_extension=title + '*')
 
     # load data
     load_data_result = LoadDataResult(load_data_options)
@@ -46,7 +44,7 @@ def run_one_dataset_trajectory_heatmap(use_all_human_data: bool, rollout_extensi
             loaded_model.load_cur_dataset_only(include_outputs=False)
 
             plot_one_trajectory_dataset(loaded_model, loaded_model.get_cur_id_df(), loaded_model.cur_dataset.X,
-                                        trajectory_filter_options, title_str)
+                                        trajectory_filter_options, title)
             pbar.update(1)
 
 
@@ -55,7 +53,7 @@ def run_trajectory_heatmaps():
     plots_path = similarity_plots_path / rollout_extensions[0]
     os.makedirs(plots_path, exist_ok=True)
 
-    run_one_dataset_trajectory_heatmap(True, '')
+    run_one_dataset_trajectory_heatmap(True, human_title_str)
     if rollout_extensions[0] != 'invalid':
         for rollout_extension in rollout_extensions:
             run_one_dataset_trajectory_heatmap(False, rollout_extension)

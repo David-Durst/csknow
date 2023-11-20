@@ -9,6 +9,7 @@ import pandas as pd
 from PIL import Image, ImageDraw
 from skimage.draw import line_aa, line
 
+from learn_bot.latent.analyze.compare_trajectories.plot_trajectories_and_events import title_font
 from learn_bot.latent.analyze.compare_trajectories.plot_trajectories_from_comparison import concat_horizontal, \
     concat_vertical
 from learn_bot.latent.analyze.plot_trajectory_heatmap.filter_trajectories import TrajectoryFilterOptions
@@ -73,6 +74,9 @@ def plot_one_trajectory_dataset(loaded_model: LoadedModel, id_df: pd.DataFrame, 
             image_to_num_points[title_str] += len(alive_round_np)
 
 
+scale_factor = 0
+
+
 def plot_one_image_one_team(title: str, ct_team: bool, team_color: List, saturated_team_color: List,
                             base_img: Image.Image):
     buffer = image_to_buffers[title].get_buffer(ct_team)
@@ -98,14 +102,23 @@ def plot_one_image_one_team(title: str, ct_team: bool, team_color: List, saturat
     uint8_color_buffer = np.uint8(color_buffer)
     base_img.alpha_composite(Image.fromarray(uint8_color_buffer, 'RGBA'))
 
+    title_drw = ImageDraw.Draw(base_img)
+    title_text = title + f", \n Num Points Both Teams {image_to_num_points[title]} Scale Factor {scale_factor}"
+    _, _, w, h = title_drw.textbbox((0, 0), title_text, font=title_font)
+    title_drw.text(((d2_img.width - w) / 2, (d2_img.height * 0.1 - h) / 2),
+                   title_text, fill=(255, 255, 255, 255), font=title_font)
+
 
 def scale_buffers_by_points(titles: List[str]):
+    global scale_factor
+    max_points_per_title = 0
     for title in titles:
-        fill_amount = int(25. / log(2.2 + image_to_num_points[title] / 1300, 10))
-        ct_buffer = image_to_buffers[title].get_buffer(True)
-        ct_buffer *= fill_amount
-        t_buffer = image_to_buffers[title].get_buffer(False)
-        t_buffer *= fill_amount
+        max_points_per_title = max(max_points_per_title, image_to_num_points[title])
+    scale_factor = int(25. / log(2.2 + max_points_per_title / 1300, 10))
+    ct_buffer = image_to_buffers[title].get_buffer(True)
+    ct_buffer *= scale_factor
+    t_buffer = image_to_buffers[title].get_buffer(False)
+    t_buffer *= scale_factor
 
 
 saturated_ct_color_list = [19, 2, 178, 0]
