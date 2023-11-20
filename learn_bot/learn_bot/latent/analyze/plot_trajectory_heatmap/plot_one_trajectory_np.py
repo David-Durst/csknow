@@ -36,16 +36,16 @@ class ImageBuffers:
             return self.t_buffer
 
 
-image_to_buffers: Dict[str, ImageBuffers] = {}
-image_to_num_points: Dict[str, int] = {}
+title_to_buffers: Dict[str, ImageBuffers] = {}
+title_to_num_points: Dict[str, int] = {}
 spread_radius = 2
 
 
 def plot_one_trajectory_dataset(loaded_model: LoadedModel, id_df: pd.DataFrame, dataset: np.ndarray,
-                                trajectory_filter_options: TrajectoryFilterOptions, title_str: str):
-    if title_str not in image_to_buffers:
-        image_to_buffers[title_str] = ImageBuffers()
-        image_to_num_points[title_str] = 0
+                                trajectory_filter_options: TrajectoryFilterOptions, title: str):
+    if title not in title_to_buffers:
+        title_to_buffers[title] = ImageBuffers()
+        title_to_num_points[title] = 0
 
     # convert this to trajectory ids for open sim trajectories
     round_ids = id_df[round_id_column].unique()
@@ -66,12 +66,12 @@ def plot_one_trajectory_dataset(loaded_model: LoadedModel, id_df: pd.DataFrame, 
             canvas_pos_y_np = canvas_pos_np[1].astype(np.intc)
             canvas_pos_xy = list(zip(list(canvas_pos_x_np), list(canvas_pos_y_np)))
 
-            buffer = image_to_buffers[title_str].get_buffer(ct_team)
+            buffer = title_to_buffers[title].get_buffer(ct_team)
             cur_player_d2_img = Image.new("L", d2_img.size, color=0)
             cur_player_d2_drw = ImageDraw.Draw(cur_player_d2_img)
             cur_player_d2_drw.line(xy=canvas_pos_xy, fill=1, width=5)
             buffer += np.asarray(cur_player_d2_img)
-            image_to_num_points[title_str] += len(alive_round_np)
+            title_to_num_points[title] += len(alive_round_np)
 
 
 scale_factor = 0
@@ -79,7 +79,7 @@ scale_factor = 0
 
 def plot_one_image_one_team(title: str, ct_team: bool, team_color: List, saturated_team_color: List,
                             base_img: Image.Image):
-    buffer = image_to_buffers[title].get_buffer(ct_team)
+    buffer = title_to_buffers[title].get_buffer(ct_team)
     max_value = np.max(buffer)
     color_buffer = buffer[:, :, np.newaxis].repeat(4, axis=2)
     color_buffer[:, :, 0] = team_color[0]
@@ -103,7 +103,7 @@ def plot_one_image_one_team(title: str, ct_team: bool, team_color: List, saturat
     base_img.alpha_composite(Image.fromarray(uint8_color_buffer, 'RGBA'))
 
     title_drw = ImageDraw.Draw(base_img)
-    title_text = title + f", \n Num Points Both Teams {image_to_num_points[title]} Scale Factor {scale_factor}"
+    title_text = title + f", \n Num Points Both Teams {title_to_num_points[title]} Scale Factor {scale_factor}"
     _, _, w, h = title_drw.textbbox((0, 0), title_text, font=title_font)
     title_drw.text(((d2_img.width - w) / 2, (d2_img.height * 0.1 - h) / 2),
                    title_text, fill=(255, 255, 255, 255), font=title_font)
@@ -113,11 +113,11 @@ def scale_buffers_by_points(titles: List[str]):
     global scale_factor
     max_points_per_title = 0
     for title in titles:
-        max_points_per_title = max(max_points_per_title, image_to_num_points[title])
+        max_points_per_title = max(max_points_per_title, title_to_num_points[title])
     scale_factor = int(25. / log(2.2 + max_points_per_title / 1300, 10))
-    ct_buffer = image_to_buffers[title].get_buffer(True)
+    ct_buffer = title_to_buffers[title].get_buffer(True)
     ct_buffer *= scale_factor
-    t_buffer = image_to_buffers[title].get_buffer(False)
+    t_buffer = title_to_buffers[title].get_buffer(False)
     t_buffer *= scale_factor
 
 
