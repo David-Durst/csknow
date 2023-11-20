@@ -85,11 +85,18 @@ class LoadDataResult:
             self.dataset_comment = "rollout"
             hdf5_path = rollout_latent_team_hdf5_data_path
             if load_data_options.custom_rollout_extension is not None:
-                hdf5_path = hdf5_path.parent / (hdf5_path.stem + load_data_options.custom_rollout_extension +
-                                                hdf5_path.suffix)
-            rollout_data = HDF5Wrapper(hdf5_path, hdf5_id_columns)
+                if '*' in load_data_options.custom_rollout_extension:
+                    hdf5_sources += [hdf5_file for hdf5_file in
+                                     hdf5_path.glob('behaviorTreeTeamFeatureStore' +
+                                                    load_data_options.custom_rollout_extension + '.hdf5')]
+                else:
+                    hdf5_path = hdf5_path.parent / (hdf5_path.stem + load_data_options.custom_rollout_extension +
+                                                    hdf5_path.suffix)
+                    rollout_data = HDF5Wrapper(hdf5_path, hdf5_id_columns, vis_cols=vis_only_columns)
+                    hdf5_sources.append(rollout_data)
+            else:
+                raise Exception('rollout data always requires a custom extension now, not using default path')
             self.diff_train_test = False
-            hdf5_sources.append(rollout_data)
         elif load_data_options.use_synthetic_data:
             self.dataset_comment = just_test_comment
             base_data = load_hdf5_to_pd(manual_latent_team_hdf5_data_path, rows_to_get=[1])
