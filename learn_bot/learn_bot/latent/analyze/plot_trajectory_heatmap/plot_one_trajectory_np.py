@@ -69,19 +69,6 @@ def plot_one_trajectory_np(loaded_model: LoadedModel, id_df: pd.DataFrame, datas
             cur_player_d2_drw.line(xy=canvas_pos_xy, fill=fill_per_line, width=5)
             buffer += np.asarray(cur_player_d2_img)
 
-            #for i in range(len(canvas_pos_x_np) - 1):
-            #    #if canvas_pos_x_np[i] == 1318 and canvas_pos_y_np[i] == 1725:
-            #    #    print(f"{loaded_model.model.nested_players_pos_columns_tensor[i, player_index]}")
-            #    #buffer[(canvas_pos_x_np[i]-5):(canvas_pos_x_np[i]+5),
-            #    #       (canvas_pos_y_np[i]-5):(canvas_pos_y_np[i]+5)] += 1
-            #    rr, cc = line(canvas_pos_x_np[i], canvas_pos_y_np[i], canvas_pos_x_np[i+1], canvas_pos_y_np[i+1])
-            #    for j in range(len(rr)):
-            #        buffer[(rr[j] - spread_radius):(rr[j] + spread_radius),
-            #               (cc[j] - spread_radius):(cc[j] + spread_radius)] += 1
-            #    #spread_points_set = set(spread_points)
-            #    #for spread_point in spread_points_set:
-            #    #    buffer[spread_point[0], spread_point[1]] += 1
-
 
 def plot_one_image_one_team(title: str, ct_team: bool, team_color: List, saturated_team_color: List,
                             base_img: Image.Image):
