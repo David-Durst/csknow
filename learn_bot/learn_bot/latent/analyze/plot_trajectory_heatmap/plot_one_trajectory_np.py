@@ -35,7 +35,7 @@ class ImageBuffers:
 
 
 image_to_buffers: Dict[str, ImageBuffers] = {}
-spread_radius = 3
+spread_radius = 2
 
 
 def plot_one_trajectory_np(loaded_model: LoadedModel, id_df: pd.DataFrame, dataset: np.ndarray,
@@ -70,9 +70,8 @@ def plot_one_trajectory_np(loaded_model: LoadedModel, id_df: pd.DataFrame, datas
                 #       (canvas_pos_y_np[i]-5):(canvas_pos_y_np[i]+5)] += 1
                 rr, cc = line(canvas_pos_x_np[i], canvas_pos_y_np[i], canvas_pos_x_np[i+1], canvas_pos_y_np[i+1])
                 for j in range(len(rr)):
-                    for rx in range(-1 * spread_radius, spread_radius):
-                        for ry in range(-1 * spread_radius, spread_radius):
-                            buffer[rr[j] + rx, cc[j] + ry] += 1
+                    buffer[(rr[j] - spread_radius):(rr[j] + spread_radius),
+                           (cc[j] - spread_radius):(cc[j] + spread_radius)] += 1
                 #spread_points_set = set(spread_points)
                 #for spread_point in spread_points_set:
                 #    buffer[spread_point[0], spread_point[1]] += 1
