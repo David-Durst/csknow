@@ -35,13 +35,13 @@ default_trajectory_filter_options = TrajectoryFilterOptions()
 
 a_long_constraint = AABB(Vec3(1122, 700, 0), Vec3(1850, 1295, 0))
 a_cat_constraint = AABB(Vec3(200, 1300, 0), Vec3(570, 2000, 0))
-a_site_constraint = AABB(Vec3(530, 70, 0), Vec3(580, 145, 0))
+a_site_constraint = AABB(Vec3(970, 2310, 0), Vec3(1220, 2630, 0))
 a_ramp_constraint = AABB(Vec3(1270, 2290, 0), Vec3(1640, 2850, 0))
 
 mid_doors_constraint = AABB(Vec3(-600, 1670, 0), Vec3(-330, 2300, 0))
 
 b_doors_constraint = AABB(Vec3(-1300, 2050, 0), Vec3(-1030, 2740, 0))
-b_backplat_constraint = AABB(Vec3(-2150, 2450, 0), Vec3(-1720, 2450, 0))
+b_backplat_constraint = AABB(Vec3(-2150, 2450, 0), Vec3(-1720, 3180, 0))
 b_site_constraint = AABB(Vec3(-1720, 2390, 0), Vec3(-1360, 2870, 0))
 b_car_constraint = AABB(Vec3(-1755, 1600, 0), Vec3(-1375, 1960, 0))
 b_tuns_constraint = AABB(Vec3(-2190, 960, 0), Vec3(-1500, 1435, 0))
