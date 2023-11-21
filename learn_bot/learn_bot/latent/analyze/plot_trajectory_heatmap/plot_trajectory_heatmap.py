@@ -27,7 +27,7 @@ def run_one_dataset_trajectory_heatmap(use_all_human_data: bool, title: str,
         load_data_options = run_vis_checkpoint.load_data_options
     else:
         load_data_options = dataclasses.replace(rollout_load_data_option,
-                                                custom_rollout_extension=title + '*')
+                                                custom_rollout_extension='_' + title + '*')
 
     # load data
     load_data_result = LoadDataResult(load_data_options)

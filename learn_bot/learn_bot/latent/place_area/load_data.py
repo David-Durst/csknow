@@ -87,8 +87,8 @@ class LoadDataResult:
             if load_data_options.custom_rollout_extension is not None:
                 if '*' in load_data_options.custom_rollout_extension:
                     hdf5_sources += [hdf5_file for hdf5_file in
-                                     hdf5_path.glob('behaviorTreeTeamFeatureStore' +
-                                                    load_data_options.custom_rollout_extension + '.hdf5')]
+                                     hdf5_path.parent.glob('behaviorTreeTeamFeatureStore' +
+                                                           load_data_options.custom_rollout_extension + '.hdf5')]
                 else:
                     hdf5_path = hdf5_path.parent / (hdf5_path.stem + load_data_options.custom_rollout_extension +
                                                     hdf5_path.suffix)

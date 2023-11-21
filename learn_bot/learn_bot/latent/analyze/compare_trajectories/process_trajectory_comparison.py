@@ -12,6 +12,7 @@ from learn_bot.latent.engagement.column_names import round_id_column
 from learn_bot.latent.place_area.load_data import LoadDataOptions, LoadDataResult
 from learn_bot.latent.vis.vis_two import PredictedToGroundTruthDict, PredictedToGroundTruthRoundData
 from learn_bot.libs.hdf5_to_pd import load_hdf5_to_pd
+from learn_bot.libs.multi_hdf5_wrapper import train_test_split_folder_path
 from learn_bot.libs.pd_printing import set_pd_print_options
 
 
@@ -69,7 +70,7 @@ def filter_similarity_for_first_n_test_rounds(loaded_data_result: LoadDataResult
 
 def get_hdf5_to_round_ids(loaded_data_result) -> Tuple[Dict[str, List[int]], Dict[Path, List[int]]]:
     test_plant_states_path = \
-        loaded_data_result.multi_hdf5_wrapper.train_test_split_path.parent / push_only_test_plant_states_file_name
+        train_test_split_folder_path / push_only_test_plant_states_file_name
     test_start_pd = load_hdf5_to_pd(test_plant_states_path)  # .iloc[:top_n]
     # convert keys to partial keys used in similarity_df, get round ids for each hdf5
     hdf5_partial_key_to_round_ids: Dict[str, List[int]] = {}
