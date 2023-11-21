@@ -13,16 +13,20 @@ from learn_bot.latent.analyze.plot_trajectory_heatmap.filter_trajectories import
     region_constraints
 from learn_bot.latent.analyze.plot_trajectory_heatmap.plot_one_trajectory_np import plot_one_trajectory_dataset, \
     plot_trajectories_to_image, clear_title_caches
-from learn_bot.latent.load_model import load_model_file
+from learn_bot.latent.load_model import load_model_file, LoadedModel
 from learn_bot.latent.place_area.load_data import LoadDataResult
 import learn_bot.latent.vis.run_vis_checkpoint as run_vis_checkpoint
 
 
 human_title_str = 'Human'
+title_to_loaded_model: Dict[str, LoadedModel] = {}
+title_to_hdf5_to_round_ids: Dict[str, Dict[str, List[int]]] = {}
 
 
 def run_one_dataset_trajectory_heatmap(use_all_human_data: bool, title: str,
                                        base_trajectory_filter_options: TrajectoryFilterOptions):
+    print(f"{title} {str(base_trajectory_filter_options)}")
+    
     if use_all_human_data:
         load_data_options = run_vis_checkpoint.load_data_options
     else:
@@ -30,9 +34,15 @@ def run_one_dataset_trajectory_heatmap(use_all_human_data: bool, title: str,
                                                 custom_rollout_extension='_' + title + '*')
 
     # load data
-    load_data_result = LoadDataResult(load_data_options)
-    loaded_model = load_model_file(load_data_result)
-    hdf5_to_round_ids = get_hdf5_to_round_ids(load_data_result)[0]
+    if title in title_to_loaded_model:
+        loaded_model = title_to_loaded_model[title]
+        hdf5_to_round_ids = title_to_hdf5_to_round_ids[title]
+    else:
+        load_data_result = LoadDataResult(load_data_options)
+        loaded_model = load_model_file(load_data_result)
+        title_to_loaded_model[title] = loaded_model
+        hdf5_to_round_ids = get_hdf5_to_round_ids(load_data_result)[0]
+        title_to_hdf5_to_round_ids[title] = hdf5_to_round_ids
 
     with tqdm(total=len(loaded_model.dataset.data_hdf5s), disable=False) as pbar:
         for i, hdf5_wrapper in enumerate(loaded_model.dataset.data_hdf5s):
