@@ -12,10 +12,11 @@ from skimage.draw import line_aa, line
 from learn_bot.latent.analyze.compare_trajectories.plot_trajectories_and_events import title_font
 from learn_bot.latent.analyze.compare_trajectories.plot_trajectories_from_comparison import concat_horizontal, \
     concat_vertical
+from learn_bot.latent.analyze.knn.plot_min_distance_rounds import game_tick_rate
 from learn_bot.latent.analyze.plot_trajectory_heatmap.filter_trajectories import TrajectoryFilterOptions
 from learn_bot.latent.analyze.test_traces.run_trace_visualization import d2_img, convert_to_canvas_coordinates, \
     bot_ct_color_list, replay_ct_color_list, bot_t_color_list, replay_t_color_list
-from learn_bot.latent.engagement.column_names import round_id_column
+from learn_bot.latent.engagement.column_names import round_id_column, game_tick_number_column
 from learn_bot.latent.load_model import LoadedModel
 from learn_bot.latent.order.column_names import team_strs
 from learn_bot.latent.place_area.column_names import specific_player_place_area_columns
@@ -55,14 +56,40 @@ def plot_one_trajectory_dataset(loaded_model: LoadedModel, id_df: pd.DataFrame, 
     else:
         trajectory_ids = trajectory_filter_options.trajectory_counter.unique()
         trajectory_id_col = trajectory_filter_options.trajectory_counter
+        # trajectories are already short (open sim runs for 5s), no need to restrict them further
+        assert trajectory_filter_options.round_game_seconds is None
 
     for trajectory_id in trajectory_ids:
         trajectory_np = dataset[trajectory_id_col == trajectory_id]
+
+        # restrict to start of round if filtering based on time
+        if trajectory_filter_options.round_game_seconds is not None:
+            round_id_df = id_df[trajectory_id_col == trajectory_id]
+            first_game_tick_number = round_id_df[game_tick_number_column].iloc[0]
+            trajectory_np = trajectory_np[(round_id_df[game_tick_number_column] - first_game_tick_number) <=
+                                          game_tick_rate * trajectory_filter_options.round_game_seconds]
 
         for player_index, player_place_area_columns in enumerate(specific_player_place_area_columns):
             ct_team = team_strs[0] in player_place_area_columns.player_id
 
             alive_trajectory_np = trajectory_np[trajectory_np[:, loaded_model.model.alive_columns[player_index]] == 1]
+
+            # don't worry about dead players
+            if len(alive_trajectory_np) == 0:
+                continue
+
+            # require start location if filtering based on starting region
+            first_pos = (
+                alive_trajectory_np[0, loaded_model.model.nested_players_pos_columns_tensor[player_index, 0, 0]],
+                alive_trajectory_np[0, loaded_model.model.nested_players_pos_columns_tensor[player_index, 0, 1]]
+            )
+            if trajectory_filter_options.player_starts_in_region is not None and (
+                first_pos[0] < trajectory_filter_options.player_starts_in_region.min.x or
+                first_pos[0] > trajectory_filter_options.player_starts_in_region.max.x or
+                first_pos[1] < trajectory_filter_options.player_starts_in_region.min.y or
+                first_pos[1] > trajectory_filter_options.player_starts_in_region.max.y):
+                continue
+
             canvas_pos_np = convert_to_canvas_coordinates(
                 alive_trajectory_np[:, loaded_model.model.nested_players_pos_columns_tensor[player_index, 0, 0]],
                 alive_trajectory_np[:, loaded_model.model.nested_players_pos_columns_tensor[player_index, 0, 1]])
