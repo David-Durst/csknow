@@ -9,9 +9,10 @@ from tqdm import tqdm
 from learn_bot.latent.analyze.compare_trajectories.process_trajectory_comparison import get_hdf5_to_round_ids
 from learn_bot.latent.analyze.compare_trajectories.run_trajectory_comparison import rollout_load_data_option
 from learn_bot.latent.analyze.comparison_column_names import similarity_plots_path
-from learn_bot.latent.analyze.plot_trajectory_heatmap.filter_trajectories import TrajectoryFilterOptions
+from learn_bot.latent.analyze.plot_trajectory_heatmap.filter_trajectories import TrajectoryFilterOptions, \
+    region_constraints
 from learn_bot.latent.analyze.plot_trajectory_heatmap.plot_one_trajectory_np import plot_one_trajectory_dataset, \
-    plot_trajectories_to_image
+    plot_trajectories_to_image, clear_title_caches
 from learn_bot.latent.load_model import load_model_file
 from learn_bot.latent.place_area.load_data import LoadDataResult
 import learn_bot.latent.vis.run_vis_checkpoint as run_vis_checkpoint
@@ -20,7 +21,8 @@ import learn_bot.latent.vis.run_vis_checkpoint as run_vis_checkpoint
 human_title_str = 'Human'
 
 
-def run_one_dataset_trajectory_heatmap(use_all_human_data: bool, title: str):
+def run_one_dataset_trajectory_heatmap(use_all_human_data: bool, title: str,
+                                       base_trajectory_filter_options: TrajectoryFilterOptions):
     if use_all_human_data:
         load_data_options = run_vis_checkpoint.load_data_options
     else:
@@ -36,9 +38,10 @@ def run_one_dataset_trajectory_heatmap(use_all_human_data: bool, title: str):
         for i, hdf5_wrapper in enumerate(loaded_model.dataset.data_hdf5s):
             if use_all_human_data:
                 trajectory_filter_options = \
-                    TrajectoryFilterOptions(set(hdf5_to_round_ids[str(hdf5_wrapper.hdf5_path.name)]))
+                    dataclasses.replace(base_trajectory_filter_options,
+                                        valid_round_ids=set(hdf5_to_round_ids[str(hdf5_wrapper.hdf5_path.name)]))
             else:
-                trajectory_filter_options = TrajectoryFilterOptions(None)
+                trajectory_filter_options = base_trajectory_filter_options
 
             loaded_model.cur_hdf5_index = i
             loaded_model.load_cur_dataset_only(include_outputs=False)
@@ -48,18 +51,35 @@ def run_one_dataset_trajectory_heatmap(use_all_human_data: bool, title: str):
             pbar.update(1)
 
 
+def run_trajectory_heatmaps_one_filter_option(trajectory_filter_options: TrajectoryFilterOptions,
+                                              rollout_extensions: List[str], plots_path: Path):
+    clear_title_caches()
+
+    run_one_dataset_trajectory_heatmap(True, human_title_str, trajectory_filter_options)
+    if rollout_extensions[0] != 'invalid':
+        for rollout_extension in rollout_extensions:
+            run_one_dataset_trajectory_heatmap(False, rollout_extension, trajectory_filter_options)
+
+    title_strs = [human_title_str] + (rollout_extensions if rollout_extensions[0] != 'invalid' else [])
+    plot_trajectories_to_image(title_strs, True, plots_path, trajectory_filter_options)
+
+
 def run_trajectory_heatmaps():
     rollout_extensions = sys.argv[2].split(',')
     plots_path = similarity_plots_path / rollout_extensions[0]
     os.makedirs(plots_path, exist_ok=True)
 
-    run_one_dataset_trajectory_heatmap(True, human_title_str)
-    if rollout_extensions[0] != 'invalid':
-        for rollout_extension in rollout_extensions:
-            run_one_dataset_trajectory_heatmap(False, rollout_extension)
+    run_trajectory_heatmaps_one_filter_option(TrajectoryFilterOptions(),
+                                              rollout_extensions, plots_path)
 
-    title_strs = [human_title_str] + (rollout_extensions if rollout_extensions[0] != 'invalid' else [])
-    plot_trajectories_to_image(title_strs, True, plots_path)
+    for region_constraint_str, region_constraint in region_constraints.items():
+        run_trajectory_heatmaps_one_filter_option(TrajectoryFilterOptions(player_starts_in_region=region_constraint,
+                                                                          region_name=region_constraint_str),
+                                                  rollout_extensions, plots_path)
+
+    for round_game_seconds in [1, 5, 10, 20, 40]:
+        run_trajectory_heatmaps_one_filter_option(TrajectoryFilterOptions(round_game_seconds=round_game_seconds),
+                                                  rollout_extensions, plots_path)
 
 
 if __name__ == "__main__":

@@ -37,9 +37,15 @@ class ImageBuffers:
             return self.t_buffer
 
 
+spread_radius = 2
 title_to_buffers: Dict[str, ImageBuffers] = {}
 title_to_num_points: Dict[str, int] = {}
-spread_radius = 2
+
+
+def clear_title_caches():
+    global title_to_buffers, title_to_num_points
+    title_to_buffers = {}
+    title_to_num_points = {}
 
 
 def plot_one_trajectory_dataset(loaded_model: LoadedModel, id_df: pd.DataFrame, dataset: np.ndarray,
@@ -161,7 +167,8 @@ saturated_ct_color_list = [19, 2, 178, 0]
 saturated_t_color_list = [178, 69, 2, 0]
 
 
-def plot_trajectories_to_image(titles: List[str], plot_teams_separately: bool, plots_path: Path):
+def plot_trajectories_to_image(titles: List[str], plot_teams_separately: bool, plots_path: Path,
+                               trajectory_filter_options: TrajectoryFilterOptions):
     title_images: List[Image.Image] = []
 
     scale_buffers_by_points(titles)
@@ -190,7 +197,7 @@ def plot_trajectories_to_image(titles: List[str], plot_teams_separately: bool, p
             title_images.append(images_per_title[0])
 
     complete_image = concat_vertical(title_images)
-    complete_image.save(plots_path / 'complete_image.png')
+    complete_image.save(plots_path / (str(trajectory_filter_options) + '.png'))
 
 
 
