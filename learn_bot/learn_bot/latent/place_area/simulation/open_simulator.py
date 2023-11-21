@@ -453,7 +453,7 @@ def run_analysis(loaded_model: LoadedModel):
 
     plots_path = similarity_plots_path / 'simulation'
     os.makedirs(plots_path, exist_ok=True)
-    plot_trajectories_to_image(mask_config_plot_titles, True, plots_path)
+    plot_trajectories_to_image(mask_config_plot_titles, True, plots_path, default_trajectory_filter_options)
 
     plot_ade_fde(player_mask_configs, ades_per_mask_config, axs[0], True)
     plot_ade_fde(player_mask_configs, fdes_per_mask_config, axs[1], False)
