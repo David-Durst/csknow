@@ -14,7 +14,7 @@ class TrajectoryFilterOptions:
     trajectory_counter: Optional[pd.Series] = None
     player_starts_in_region: Optional[AABB] = None
     region_name: Optional[str] = None
-    round_game_seconds: Optional[int] = None
+    round_game_seconds: Optional[range] = None
 
     def __str__(self):
         compound_name = ''
@@ -25,7 +25,7 @@ class TrajectoryFilterOptions:
         if self.round_game_seconds is not None:
             if compound_name != '':
                 compound_name += '_'
-            compound_name += f'time_{self.round_game_seconds}'
+            compound_name += f'time_{self.round_game_seconds.start}-{self.round_game_seconds.stop}'
         if compound_name == '':
             compound_name = 'no_filter'
         return compound_name

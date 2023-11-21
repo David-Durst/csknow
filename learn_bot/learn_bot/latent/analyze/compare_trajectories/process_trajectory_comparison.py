@@ -7,7 +7,8 @@ import numpy as np
 from dataclasses import dataclass
 from pathlib import Path
 
-from learn_bot.latent.analyze.create_test_plant_states import hdf5_key_column, push_only_test_plant_states_file_name
+from learn_bot.latent.analyze.create_test_plant_states import hdf5_key_column, push_only_test_plant_states_file_name, \
+    save_only_test_plant_states_file_name
 from learn_bot.latent.engagement.column_names import round_id_column
 from learn_bot.latent.place_area.load_data import LoadDataOptions, LoadDataResult
 from learn_bot.latent.vis.vis_two import PredictedToGroundTruthDict, PredictedToGroundTruthRoundData
@@ -68,9 +69,10 @@ def filter_similarity_for_first_n_test_rounds(loaded_data_result: LoadDataResult
     return similarity_df[valid_hdf5_and_round_id_condition]
 
 
-def get_hdf5_to_round_ids(loaded_data_result) -> Tuple[Dict[str, List[int]], Dict[Path, List[int]]]:
+def get_hdf5_to_round_ids(loaded_data_result, push_only: bool = True) -> Tuple[Dict[str, List[int]], Dict[Path, List[int]]]:
     test_plant_states_path = \
-        train_test_split_folder_path / push_only_test_plant_states_file_name
+        train_test_split_folder_path / (push_only_test_plant_states_file_name if push_only
+                                        else save_only_test_plant_states_file_name)
     test_start_pd = load_hdf5_to_pd(test_plant_states_path)  # .iloc[:top_n]
     # convert keys to partial keys used in similarity_df, get round ids for each hdf5
     hdf5_partial_key_to_round_ids: Dict[str, List[int]] = {}

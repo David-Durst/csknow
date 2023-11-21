@@ -33,7 +33,9 @@ num_ct_alive_column = 'number CT alive'
 num_t_alive_column = 'number CT alive'
 all_test_plant_states_file_name = 'test_plant_states.hdf5'
 push_only_test_plant_states_file_name = 'push_only_test_plant_states.hdf5'
+save_only_test_plant_states_file_name = 'save_only_test_plant_states.hdf5'
 filter_for_push = True
+filter_for_save = False
 filter_for_players_alive = True
 
 def create_test_plant_states():
@@ -66,6 +68,8 @@ def create_test_plant_states():
         start_df = df[df[plant_tick_id_column] == df[tick_id_column]]
         if filter_for_push:
             start_df = start_df[start_df[get_similarity_column(0)]]
+        elif filter_for_save:
+            start_df = start_df[~start_df[get_similarity_column(0)]]
         test_start_df = start_df[~start_df[round_id_column].isin(train_test_split.train_group_ids)].copy()
         test_start_df[num_ct_alive_column] = test_start_df[ct_alive_cols].sum(axis=1)
         test_start_df[num_t_alive_column] = test_start_df[t_alive_cols].sum(axis=1)
@@ -92,6 +96,8 @@ def create_test_plant_states():
     test_plant_states_file_name = all_test_plant_states_file_name
     if filter_for_push:
         test_plant_states_file_name = push_only_test_plant_states_file_name
+    elif filter_for_save:
+        test_plant_states_file_name = save_only_test_plant_states_file_name
     test_plant_states_path = \
         load_data_result.multi_hdf5_wrapper.train_test_split_path.parent / test_plant_states_file_name
     save_pd_to_hdf5(test_plant_states_path, concat_test_start_df)

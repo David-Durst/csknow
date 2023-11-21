@@ -64,7 +64,7 @@ namespace csknow::inference_manager {
         inputs.push_back(rowPT);
         float overallPush =
                 teamSaveControlParameters.getPushModelValue(true, feature_store::DecreaseTimingOption::s5, 0);
-        vector<float> similarityArr{false/*overallPush*/};
+        vector<float> similarityArr{overallPush};
         //vector<float> similarityArr{0.f, 0.f};
         torch::Tensor similarityPt = torch::from_blob(similarityArr.data(), {1, 1}, options);
         inputs.push_back(similarityPt);

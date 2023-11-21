@@ -24,7 +24,8 @@ title_to_hdf5_to_round_ids: Dict[str, Dict[str, List[int]]] = {}
 
 
 def run_one_dataset_trajectory_heatmap(use_all_human_data: bool, title: str,
-                                       base_trajectory_filter_options: TrajectoryFilterOptions):
+                                       base_trajectory_filter_options: TrajectoryFilterOptions,
+                                       push_only_human_data: bool = True):
     print(f"{title} {str(base_trajectory_filter_options)}")
     
     if use_all_human_data:
@@ -41,7 +42,7 @@ def run_one_dataset_trajectory_heatmap(use_all_human_data: bool, title: str,
         load_data_result = LoadDataResult(load_data_options)
         loaded_model = load_model_file(load_data_result)
         title_to_loaded_model[title] = loaded_model
-        hdf5_to_round_ids = get_hdf5_to_round_ids(load_data_result)[0]
+        hdf5_to_round_ids = get_hdf5_to_round_ids(load_data_result, push_only=push_only_human_data)[0]
         title_to_hdf5_to_round_ids[title] = hdf5_to_round_ids
 
     with tqdm(total=len(loaded_model.dataset.data_hdf5s), disable=False) as pbar:
@@ -66,11 +67,15 @@ def run_trajectory_heatmaps_one_filter_option(trajectory_filter_options: Traject
     clear_title_caches()
 
     run_one_dataset_trajectory_heatmap(True, human_title_str, trajectory_filter_options)
-    if rollout_extensions[0] != 'invalid':
+    if rollout_extensions[0] == 'invalid':
+        run_one_dataset_trajectory_heatmap(True, human_title_str + ' Save', trajectory_filter_options,
+                                           push_only_human_data=False)
+    else:
         for rollout_extension in rollout_extensions:
             run_one_dataset_trajectory_heatmap(False, rollout_extension, trajectory_filter_options)
 
-    title_strs = [human_title_str] + (rollout_extensions if rollout_extensions[0] != 'invalid' else [])
+    title_strs = [human_title_str] + (rollout_extensions if rollout_extensions[0] != 'invalid'
+                                      else [human_title_str + ' Save'])
     plot_trajectories_to_image(title_strs, True, plots_path, trajectory_filter_options)
 
 
@@ -87,7 +92,7 @@ def run_trajectory_heatmaps():
                                                                           region_name=region_constraint_str),
                                                   rollout_extensions, plots_path)
 
-    for round_game_seconds in [1, 5, 10, 20, 40]:
+    for round_game_seconds in [range(0, 5), range(5, 10), range(10, 15), range(15, 20), range(20, 25), range(25, 30)]:
         run_trajectory_heatmaps_one_filter_option(TrajectoryFilterOptions(round_game_seconds=round_game_seconds),
                                                   rollout_extensions, plots_path)
 

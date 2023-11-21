@@ -72,8 +72,11 @@ def plot_one_trajectory_dataset(loaded_model: LoadedModel, id_df: pd.DataFrame, 
         if trajectory_filter_options.round_game_seconds is not None:
             round_id_df = id_df[trajectory_id_col == trajectory_id]
             first_game_tick_number = round_id_df[game_tick_number_column].iloc[0]
-            trajectory_np = trajectory_np[(round_id_df[game_tick_number_column] - first_game_tick_number) <=
-                                          game_tick_rate * trajectory_filter_options.round_game_seconds]
+            start_condition = (round_id_df[game_tick_number_column] - first_game_tick_number) >= \
+                              game_tick_rate * trajectory_filter_options.round_game_seconds.start
+            stop_condition = (round_id_df[game_tick_number_column] - first_game_tick_number) <= \
+                              game_tick_rate * trajectory_filter_options.round_game_seconds.stop
+            trajectory_np = trajectory_np[start_condition & stop_condition]
 
         for player_index, player_place_area_columns in enumerate(specific_player_place_area_columns):
             ct_team = team_strs[0] in player_place_area_columns.player_id
