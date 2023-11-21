@@ -359,8 +359,6 @@ def plot_ade_fde(player_mask_configs: List[PlayerMaskConfig], displacement_error
 mask_configs_to_plot = [PlayerMaskConfig.GROUND_TRUTH_POSITION,
                         PlayerMaskConfig.ALL,
                         PlayerMaskConfig.STARTING_CMD,
-                        PlayerMaskConfig.STARTING_POSITION,
-                        PlayerMaskConfig.INTERPOLATION_ROLLOUT_POSITION,
                         PlayerMaskConfig.NN_POSITION,
                         PlayerMaskConfig.RANDOM_CMD]
 mask_config_plot_titles = [str(mc) for mc in mask_configs_to_plot]
