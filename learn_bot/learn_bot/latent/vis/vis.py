@@ -218,6 +218,10 @@ def vis(loaded_model: LoadedModel, inference_fn: Callable[[LoadedModel], None], 
 
     def load_push_save_labels():
         push_save_round_labels.load(selected_retake_rounds_path_var.get())
+        if cur_round_id in push_save_round_labels.round_id_to_data:
+            push_save_label_var.set(int(push_save_round_labels.round_id_to_data[cur_round_id].label))
+        else:
+            push_save_label_var.set(0)
 
     def push_save_label_clicked():
         if push_save_label_var.get() == 0:

@@ -47,7 +47,7 @@ class LoadDataOptions:
     limit_manual_data_to_no_enemies_nav: bool
     # set these for similarity columns
     # set these and limit_by_similarity if want to filter all human based on small human
-    small_good_rounds: Optional[List[List[int]]] = None
+    hand_labeled_push_round_ids: Optional[List[List[int]]] = None
     similarity_dfs: Optional[List[pd.DataFrame]] = None
     # limit or add feature based on matches
     limit_by_similarity: bool = True
@@ -146,11 +146,11 @@ class LoadDataResult:
                                                    vis_cols=vis_only_columns)
         # load similarity
         if not load_data_options.use_synthetic_data and \
-                load_data_options.small_good_rounds is not None and load_data_options.similarity_dfs is not None:
+                load_data_options.hand_labeled_push_round_ids is not None and load_data_options.similarity_dfs is not None:
             for i in range(len(load_data_options.similarity_dfs)):
-                self.load_similarity_columns_and_limit_from_small_good_rounds(load_data_options.similarity_dfs[i],
-                                                                              load_data_options.small_good_rounds[i],
-                                                                              load_data_options.limit_by_similarity, i)
+                self.load_similarity_columns_and_limit_from_hand_labeled_push_rounds(
+                    load_data_options.similarity_dfs[i], load_data_options.hand_labeled_push_round_ids[i],
+                    load_data_options.limit_by_similarity, i)
         else:
             self.fill_empty_similarity_columns()
         if load_data_options.use_all_human_data and load_data_options.custom_limit_fn is not None:
@@ -176,25 +176,25 @@ class LoadDataResult:
             self.multi_hdf5_wrapper.hdf5_wrappers[i].add_extra_column(column_name,
                                                                       add_column_fns[i](self.multi_hdf5_wrapper.hdf5_wrappers[i].id_df))
 
-    def load_similarity_columns_and_limit_from_small_good_rounds(self, similarity_df: pd.DataFrame,
-                                                                 small_good_rounds: List[int],
-                                                                 limit: bool, similarity_index: int):
-        big_good_rounds: Dict[str, List[int]] = {}
+    def load_similarity_columns_and_limit_from_hand_labeled_push_rounds(self, similarity_df: pd.DataFrame,
+                                                                        hand_labeled_push_round_ids: List[int],
+                                                                        limit: bool, similarity_index: int):
+        hdf5_to_push_round_ids: Dict[str, List[int]] = {}
         best_match_similarity_df = similarity_df[(similarity_df[best_match_id_col] == 0) &
                                                  (similarity_df[metric_type_col] == b'Slope Constrained DTW')]
         for idx, row in best_match_similarity_df.iterrows():
             hdf5_filename = row[predicted_trace_batch_col].decode('utf-8')
-            if hdf5_filename not in big_good_rounds:
-                big_good_rounds[hdf5_filename] = []
-            if row[best_fit_ground_truth_round_id_col] in small_good_rounds:
-                big_good_rounds[hdf5_filename].append(row[predicted_round_id_col])
+            if hdf5_filename not in hdf5_to_push_round_ids:
+                hdf5_to_push_round_ids[hdf5_filename] = []
+            if row[best_fit_ground_truth_round_id_col] in hand_labeled_push_round_ids:
+                hdf5_to_push_round_ids[hdf5_filename].append(row[predicted_round_id_col])
 
         similarity_fns: List[Optional[SimilarityFn]] = []
         for i, hdf5_wrapper in enumerate(self.multi_hdf5_wrapper.hdf5_wrappers):
             hdf5_filename = str(hdf5_wrapper.hdf5_path.name)
-            if hdf5_filename in big_good_rounds:
+            if hdf5_filename in hdf5_to_push_round_ids:
                 # https://stackoverflow.com/questions/2295290/what-do-lambda-function-closures-capture
-                similarity_fns.append(lambda df, filename=hdf5_filename: df[round_id_column].isin(big_good_rounds[filename]))
+                similarity_fns.append(lambda df, filename=hdf5_filename: df[round_id_column].isin(hdf5_to_push_round_ids[filename]))
             else:
                 similarity_fns.append(None)
         if limit:

@@ -41,7 +41,7 @@ class PushSaveRoundLabels:
         self.round_id_to_data = {
             k: PushSaveRoundData(PushSaveLabel(v[label_str]), v[percent_push_str], v[demo_file_str],
                                  v[round_id_str], v[round_number_str])
-            for k, v in unparsed_dict
+            for k, v in unparsed_dict.items()
         }
 
     def save(self, p:Path):
