@@ -55,7 +55,6 @@ def vis(loaded_model: LoadedModel, inference_fn: Callable[[LoadedModel], None], 
 
     rounds = get_rounds_for_cur_hdf5(loaded_model)
     print(f"num rounds {len(rounds)}")
-    indices = []
     ticks = []
     game_ticks = []
     cur_round_id: int = -1
@@ -109,24 +108,23 @@ def vis(loaded_model: LoadedModel, inference_fn: Callable[[LoadedModel], None], 
             print("why empty selected_df?")
             return
         cur_tick_index = int(cur_tick_index_str)
-        cur_index = indices[cur_tick_index]
         cur_tick = ticks[cur_tick_index]
         cur_game_tick = game_ticks[cur_tick_index]
 
         hdf5_id_text_var.set(f"Predicted Cur HDF5 Id: {loaded_model.get_cur_hdf5_filename()} - {loaded_model.cur_hdf5_index} / "
                              f"{len(loaded_model.dataset.data_hdf5s) - 1}, ")
         tick_id_text_var.set("Tick ID: " + str(cur_tick))
-        data_dict = selected_df.loc[cur_index, :].to_dict()
-        pred_dict = pred_selected_df.loc[cur_index, :].to_dict()
+        data_dict = selected_df.iloc[cur_tick_index, :].to_dict()
+        pred_dict = pred_selected_df.iloc[cur_tick_index, :].to_dict()
         tick_game_id_text_var.set(f"Game Tick ID: {cur_game_tick}")
         extra_round_data_str = ""
         if get_similarity_column(0) in id_df.columns:
-            extra_round_data_str = f"similarity 0: {id_df.loc[cur_index, get_similarity_column(0)]}"
-        game_id = selected_df.loc[cur_index, game_id_column]
+            extra_round_data_str = f"similarity 0: {id_df.iloc[cur_tick_index].loc[get_similarity_column(0)]}"
+        game_id = data_dict[game_id_column]
         demo_file_text_var.set(loaded_model.cur_demo_names[game_id])
         round_id_text_var.set(f"Round ID: {int(cur_round_id)}, "
-                              f"Round Number: {selected_df.loc[cur_index, round_number_column]}, {extra_round_data_str}")
-        cur_round_number = selected_df.loc[cur_index, round_number_column]
+                              f"Round Number: {data_dict[round_number_column]}, {extra_round_data_str}")
+        cur_round_number = data_dict[round_number_column]
         other_state_text_var.set(f"Planted A {data_dict[c4_plant_a_col]}, "
                                  f"Planted B {data_dict[c4_plant_b_col]}, "
                                  f"Not Planted {data_dict[c4_not_planted_col]}, "
@@ -200,12 +198,11 @@ def vis(loaded_model: LoadedModel, inference_fn: Callable[[LoadedModel], None], 
         tick_slider_changed(cur_tick_index)
 
     def print_row_clicked():
-        cur_index = indices[cur_tick_index]
         non_delta_pos_cols = []
         for col in selected_df.columns:
             if "delta pos" not in col:
                 non_delta_pos_cols.append(col)
-        data_series = selected_df.loc[cur_index, non_delta_pos_cols]
+        data_series = selected_df.iloc[cur_tick_index].loc[non_delta_pos_cols]
         print(data_series)
 
     def toggle_distribution_clicked():
@@ -238,16 +235,16 @@ def vis(loaded_model: LoadedModel, inference_fn: Callable[[LoadedModel], None], 
 
     # state setters
     def change_round_dependent_data():
-        nonlocal selected_df, id_df, pred_selected_df, cur_round_id, indices, ticks, game_ticks
+        nonlocal selected_df, id_df, pred_selected_df, cur_round_id, ticks, game_ticks
         vis_only_df = loaded_model.get_cur_vis_df()
         make_index_column(vis_only_df)
         selected_df = loaded_model.load_round_df_from_cur_dataset(cur_round_id, vis_only_df,
                                                                   use_sim_dataset=use_sim_dataset)
-        id_df = loaded_model.get_cur_id_df()
-        pred_selected_df = loaded_model.cur_inference_df.loc[loaded_model.get_cur_id_df()[round_id_column] == cur_round_id]
+        cur_round_condition = loaded_model.get_cur_id_df()[round_id_column] == cur_round_id
+        id_df = loaded_model.get_cur_id_df().loc[cur_round_condition]
+        pred_selected_df = loaded_model.cur_inference_df.loc[cur_round_condition]
         pred_selected_df = pred_selected_df.reset_index(drop=True)
 
-        indices = selected_df.index.tolist()
         ticks = selected_df.loc[:, 'tick id'].tolist()
         game_ticks = selected_df.loc[:, 'game tick number'].tolist()
         tick_slider.configure(to=len(ticks)-1)
