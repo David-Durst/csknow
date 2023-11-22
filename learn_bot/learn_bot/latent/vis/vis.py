@@ -1,9 +1,10 @@
 from typing import Set, Callable, List
 
+from learn_bot.latent.place_area.push_save_label import PushSaveRoundLabels, PushSaveRoundData, PushSaveLabel
 from learn_bot.libs.pd_printing import set_pd_print_options
 from learn_bot.latent.place_area.column_names import *
 from learn_bot.latent.load_model import LoadedModel
-from learn_bot.latent.train_paths import default_selected_retake_rounds_path
+from learn_bot.latent.train_paths import default_selected_retake_rounds_path, default_save_push_round_labelss_path
 from learn_bot.libs.df_grouping import make_index_column
 from learn_bot.mining.area_cluster import d2_radar_path
 from learn_bot.latent.vis.draw_inference import draw_all_players, minimap_height, minimap_width, scale_down
@@ -57,34 +58,35 @@ def vis(loaded_model: LoadedModel, inference_fn: Callable[[LoadedModel], None], 
     indices = []
     ticks = []
     game_ticks = []
-    cur_round: int = -1
+    cur_round_id: int = -1
+    cur_round_number: int = -1
     cur_tick: int = -1
     cur_tick_index: int = -1
-    selected_df = loaded_model.load_round_df_from_cur_dataset(cur_round, use_sim_dataset=use_sim_dataset)
+    selected_df = loaded_model.load_round_df_from_cur_dataset(cur_round_id, use_sim_dataset=use_sim_dataset)
     pred_selected_df: pd.DataFrame = loaded_model.cur_inference_df
     id_df: pd.DataFrame = loaded_model.get_cur_id_df()
     draw_pred: bool = True
     draw_max: bool = True
-    selected_retake_rounds: Set[int] = set()
+    push_save_round_labels: PushSaveRoundLabels = PushSaveRoundLabels()
 
     set_pd_print_options()
 
     def hdf5_id_update():
-        nonlocal rounds, cur_round
+        nonlocal rounds, cur_round_id
         loaded_model.cur_hdf5_index = int(new_hdf5_id_entry.get())
         loaded_model.load_cur_dataset_only()
         inference_fn(loaded_model)
         index_cur_hdf5(loaded_model)
         rounds = get_rounds_for_cur_hdf5(loaded_model)
-        cur_round = rounds[0]
+        cur_round_id = rounds[0]
         print(f"num rounds {len(rounds)}")
         round_slider.set(0)
         round_slider.configure(to=len(rounds) - 1)
         round_slider_changed(0)
 
     def round_slider_changed(cur_round_index):
-        nonlocal cur_round
-        cur_round = rounds[int(cur_round_index)]
+        nonlocal cur_round_id
+        cur_round_id = rounds[int(cur_round_index)]
         change_round_dependent_data()
 
     def round_back_clicked():
@@ -102,7 +104,7 @@ def vis(loaded_model: LoadedModel, inference_fn: Callable[[LoadedModel], None], 
             round_slider_changed(cur_round_index)
 
     def tick_slider_changed(cur_tick_index_str):
-        nonlocal cur_tick, cur_tick_index, d2_img, d2_img_draw, img_label, draw_max
+        nonlocal cur_tick, cur_tick_index, cur_round_number, d2_img, d2_img_draw, img_label, draw_max
         if selected_df.empty:
             print("why empty selected_df?")
             return
@@ -122,8 +124,9 @@ def vis(loaded_model: LoadedModel, inference_fn: Callable[[LoadedModel], None], 
             extra_round_data_str = f"similarity 0: {id_df.loc[cur_index, get_similarity_column(0)]}"
         game_id = selected_df.loc[cur_index, game_id_column]
         demo_file_text_var.set(loaded_model.cur_demo_names[game_id])
-        round_id_text_var.set(f"Round ID: {int(cur_round)}, "
+        round_id_text_var.set(f"Round ID: {int(cur_round_id)}, "
                               f"Round Number: {selected_df.loc[cur_index, round_number_column]}, {extra_round_data_str}")
+        cur_round_number = selected_df.loc[cur_index, round_number_column]
         other_state_text_var.set(f"Planted A {data_dict[c4_plant_a_col]}, "
                                  f"Planted B {data_dict[c4_plant_b_col]}, "
                                  f"Not Planted {data_dict[c4_not_planted_col]}, "
@@ -205,7 +208,6 @@ def vis(loaded_model: LoadedModel, inference_fn: Callable[[LoadedModel], None], 
         data_series = selected_df.loc[cur_index, non_delta_pos_cols]
         print(data_series)
 
-
     def toggle_distribution_clicked():
         nonlocal draw_max
         draw_max = not draw_max
@@ -214,37 +216,33 @@ def vis(loaded_model: LoadedModel, inference_fn: Callable[[LoadedModel], None], 
     def radial_vel_time_step_slider_changed(new_radial_vel_time_step):
         tick_slider_changed(cur_tick_index)
 
-    def select_all_retake_rounds():
-        nonlocal selected_retake_rounds
-        selected_retake_rounds = set(rounds)
-        selected_retake_var.set(True)
-        with open(selected_retake_rounds_path_var.get(), "w") as f:
-            f.write(str(selected_retake_rounds) + "\n")
+    def load_push_save_labels():
+        push_save_round_labels.load(selected_retake_rounds_path_var.get())
 
-    def load_selected_retake_rounds():
-        nonlocal selected_retake_rounds
-        with open(selected_retake_rounds_path_var.get(), "r") as f:
-            selected_retake_rounds_str = f.readline().strip()
-            selected_retake_rounds = eval(selected_retake_rounds_str)
-            selected_retake_var.set(cur_round in selected_retake_rounds)
-
-    def selected_retake_clicked():
-        if selected_retake_var.get():
-            selected_retake_rounds.add(cur_round)
+    def push_save_label_clicked():
+        if push_save_label_var.get() == 0:
+            push_save_round_labels.round_id_to_data.pop(cur_round_id, None)
         else:
-            selected_retake_rounds.remove(cur_round)
-        with open(selected_retake_rounds_path_var.get(), "w") as f:
-            f.write(str(selected_retake_rounds) + "\n")
+            push_save_round_labels.round_id_to_data[cur_round_id] = PushSaveRoundData(
+                PushSaveLabel(push_save_label_var.get()),
+                tick_slider.get() / len(ticks),
+                demo_file_text_var.get(),
+                cur_round_id,
+                cur_round_number
+            )
+        #print(tick_slider.get() / len(ticks))
+        print(len(push_save_round_labels.round_id_to_data))
+        push_save_round_labels.save(selected_retake_rounds_path_var.get())
 
     # state setters
     def change_round_dependent_data():
-        nonlocal selected_df, id_df, pred_selected_df, cur_round, indices, ticks, game_ticks
+        nonlocal selected_df, id_df, pred_selected_df, cur_round_id, indices, ticks, game_ticks
         vis_only_df = loaded_model.get_cur_vis_df()
         make_index_column(vis_only_df)
-        selected_df = loaded_model.load_round_df_from_cur_dataset(cur_round, vis_only_df,
+        selected_df = loaded_model.load_round_df_from_cur_dataset(cur_round_id, vis_only_df,
                                                                   use_sim_dataset=use_sim_dataset)
         id_df = loaded_model.get_cur_id_df()
-        pred_selected_df = loaded_model.cur_inference_df.loc[loaded_model.get_cur_id_df()[round_id_column] == cur_round]
+        pred_selected_df = loaded_model.cur_inference_df.loc[loaded_model.get_cur_id_df()[round_id_column] == cur_round_id]
         pred_selected_df = pred_selected_df.reset_index(drop=True)
 
         indices = selected_df.index.tolist()
@@ -254,7 +252,10 @@ def vis(loaded_model: LoadedModel, inference_fn: Callable[[LoadedModel], None], 
         tick_slider.set(0)
         radial_vel_time_step_slider.set(0)
         tick_slider_changed(0)
-        selected_retake_var.set(cur_round in selected_retake_rounds)
+        if cur_round_id in push_save_round_labels.round_id_to_data:
+            push_save_label_var.set(int(push_save_round_labels.round_id_to_data[cur_round_id].label))
+        else:
+            push_save_label_var.set(0)
 
 
     s = ttk.Style()
@@ -375,17 +376,24 @@ def vis(loaded_model: LoadedModel, inference_fn: Callable[[LoadedModel], None], 
 
     round_label_frame = tk.Frame(window)
     round_label_frame.pack(pady=5)
-    selected_retake_rounds_path_var = tk.StringVar(value=default_selected_retake_rounds_path)
+    selected_retake_rounds_path_var = tk.StringVar(value=default_save_push_round_labelss_path)
     selected_retake_rounds_entry = tk.Entry(round_label_frame, width=50, textvariable=selected_retake_rounds_path_var)
     selected_retake_rounds_entry.pack(side="left")
-    select_all_retake_rounds_button = tk.Button(round_label_frame, text="select all retake rounds", command=select_all_retake_rounds)
-    select_all_retake_rounds_button.pack(side="left")
-    load_selected_retake_rounds_button = tk.Button(round_label_frame, text="load selected retake rounds", command=load_selected_retake_rounds)
+    load_selected_retake_rounds_button = tk.Button(round_label_frame, text="load push/save labels", command=load_push_save_labels)
     load_selected_retake_rounds_button.pack(side="left")
-    selected_retake_var = tk.BooleanVar(value=False)
-    selected_retake_checkbutton = tk.Checkbutton(round_label_frame, text='Selected Retake', variable=selected_retake_var,
-                                             onvalue=True, offvalue=False, command=selected_retake_clicked)
-    selected_retake_checkbutton.pack(side="left")
+    push_save_label_var = tk.IntVar(value=0)
+    unlabeled_round_radio = tk.Radiobutton(round_label_frame, text="unlabeled", variable=push_save_label_var,
+                                           value=0, command=push_save_label_clicked)
+    unlabeled_round_radio.pack(side="left")
+    push_round_radio = tk.Radiobutton(round_label_frame, text="push", variable=push_save_label_var,
+                                           value=1, command=push_save_label_clicked)
+    push_round_radio.pack(side="left")
+    partial_round_radio = tk.Radiobutton(round_label_frame, text="push", variable=push_save_label_var,
+                                      value=2, command=push_save_label_clicked)
+    partial_round_radio.pack(side="left")
+    save_round_radio = tk.Radiobutton(round_label_frame, text="push", variable=push_save_label_var,
+                                      value=3, command=push_save_label_clicked)
+    save_round_radio.pack(side="left")
 
     other_state_frame = tk.Frame(window)
     other_state_frame.pack(pady=5)
