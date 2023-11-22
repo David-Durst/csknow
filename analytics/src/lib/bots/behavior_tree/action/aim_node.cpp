@@ -72,7 +72,7 @@ namespace action {
         SecondOrderController & mouseController = blackboard.playerToMouseController.find(treeThinker.csgoId)->second;
         //const Order & curOrder = blackboard.strategy.getOrderForPlayer(treeThinker.csgoId);
         Action & curAction = blackboard.playerToAction[treeThinker.csgoId];
-        //Action & oldAction = blackboard.lastPlayerToAction[treeThinker.csgoId];
+        Action & oldAction = blackboard.lastPlayerToAction[treeThinker.csgoId];
         Priority & curPriority = blackboard.playerToPriority[treeThinker.csgoId];
         Path & curPath = blackboard.playerToPath[treeThinker.csgoId];
         Vec3 aimTarget;
@@ -118,6 +118,13 @@ namespace action {
             curAction.aimTargetType = AimTargetType::Waypoint;
         }
 
+        if (curPriority.targetPlayer.playerId != INVALID_ID) {
+            curAction.targetPlayerId = curPriority.targetPlayer.playerId;
+        }
+        else {
+            curAction.targetPlayerId = INVALID_ID;
+        }
+
         // save target for learned model
         csknow::engagement_aim::ClientTargetMap & clientTargetMap = blackboard.streamingManager.streamingEngagementAim
             .currentClientTargetMap;
@@ -132,12 +139,18 @@ namespace action {
         // while conversion function below uses 360-270 for -90-0
         Vec2 curViewAngle = curClient.getCurrentViewAnglesWithAimpunch();;
         Vec3 targetVector = aimTarget - curClient.getEyePosForPlayer();
-        Vec2 targetViewAngle = vectorAngles(targetVector);
+        curAction.targetViewAngle = vectorAngles(targetVector);
+        Vec2 adjustedTargetViewAngle = curAction.targetViewAngle;
 
-        targetViewAngle.makePitchNeg90To90();
+        // if aiming at a player, adjust aim for how much they move since last interval
+        if (curAction.aimTargetType == AimTargetType::Player && curAction.targetPlayerId == oldAction.targetPlayerId) {
+            adjustedTargetViewAngle = adjustedTargetViewAngle + (curAction.targetViewAngle - oldAction.targetViewAngle);
+        }
+
+        adjustedTargetViewAngle.makePitchNeg90To90();
 
         // https://stackoverflow.com/a/7428771
-        Vec2 deltaAngle = targetViewAngle - curViewAngle;
+        Vec2 deltaAngle = adjustedTargetViewAngle - curViewAngle;
         deltaAngle.makeYawNeg180To180();
 
         /*

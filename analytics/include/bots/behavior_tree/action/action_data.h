@@ -37,6 +37,8 @@ struct Action {
     int32_t shotsInBurst;
     bool keepCrouching = false;
     AimTargetType aimTargetType;
+    CSGOId targetPlayerId;
+    Vec2 targetViewAngle;
     string aimTargetTypeToString(AimTargetType type) {
         switch (type) {
             case AimTargetType::Player:
