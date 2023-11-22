@@ -386,10 +386,10 @@ def vis(loaded_model: LoadedModel, inference_fn: Callable[[LoadedModel], None], 
     push_round_radio = tk.Radiobutton(round_label_frame, text="push", variable=push_save_label_var,
                                            value=1, command=push_save_label_clicked)
     push_round_radio.pack(side="left")
-    partial_round_radio = tk.Radiobutton(round_label_frame, text="push", variable=push_save_label_var,
+    partial_round_radio = tk.Radiobutton(round_label_frame, text="partial", variable=push_save_label_var,
                                       value=2, command=push_save_label_clicked)
     partial_round_radio.pack(side="left")
-    save_round_radio = tk.Radiobutton(round_label_frame, text="push", variable=push_save_label_var,
+    save_round_radio = tk.Radiobutton(round_label_frame, text="save", variable=push_save_label_var,
                                       value=3, command=push_save_label_clicked)
     save_round_radio.pack(side="left")
 
