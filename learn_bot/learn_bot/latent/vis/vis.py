@@ -230,8 +230,6 @@ def vis(loaded_model: LoadedModel, inference_fn: Callable[[LoadedModel], None], 
                 cur_round_id,
                 cur_round_number
             )
-        #print(tick_slider.get() / len(ticks))
-        #print(len(push_save_round_labels.round_id_to_data))
         push_save_round_labels.save(selected_retake_rounds_path_var.get())
 
     # state setters
