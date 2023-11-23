@@ -226,7 +226,8 @@ namespace csknow::feature_store {
                         refKeyRetakeEvents.testStartBeforeOrDuringThisTick[i] && !refKeyRetakeEvents.testEndBeforeOrDuringThisTick[i];
                 bool nonTestCondition = refKeyRetakeEvents.enableNonTestPlantRounds && refKeyRetakeEvents.roundHasPlant[roundIndex] &&
                         refKeyRetakeEvents.plantFinishedBeforeOrDuringThisTick[i] && refKeyRetakeEvents.ctAlive[i] && refKeyRetakeEvents.tAlive[i] &&
-                        !(refKeyRetakeEvents.explosionBeforeOrDuringThisTick[i] || refKeyRetakeEvents.defusalFinishedBeforeOrDuringThisTick[i]);
+                        !(refKeyRetakeEvents.explosionBeforeOrDuringThisTick[i] || refKeyRetakeEvents.defusalFinishedBeforeOrDuringThisTick[i] ||
+                          refKeyRetakeEvents.roundEndBeforeOrDuringThisTick[i]);
                 if (testCondition || nonTestCondition) {
                     nonDecimatedValidRetakeTicks[i] = true;
                     if (i % every_nth_row != 0) {

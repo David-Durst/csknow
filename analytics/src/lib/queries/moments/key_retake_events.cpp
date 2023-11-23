@@ -14,6 +14,7 @@ namespace csknow::key_retake_events {
         plantFinishedBeforeOrDuringThisTick.resize(ticks.size, false);
         defusalFinishedBeforeOrDuringThisTick.resize(ticks.size, false);
         explosionBeforeOrDuringThisTick.resize(ticks.size, false);
+        roundEndBeforeOrDuringThisTick.resize(ticks.size, false);
         ctAlive.resize(ticks.size, false);
         tAlive.resize(ticks.size, false);
         ctAliveAfterExplosion.resize(ticks.size, false);
@@ -111,6 +112,9 @@ namespace csknow::key_retake_events {
                     }
                 }
                 explosionBeforeOrDuringThisTick[tickIndex] = foundExplosionInRound;
+
+                // round end check
+                roundEndBeforeOrDuringThisTick[tickIndex] = rounds.endTick[roundIndex] <= tickIndex;
 
                 for (const auto & [_0, _1, killIndex] :
                         ticks.killsPerTick.intervalToEvent.findOverlapping(tickIndex, tickIndex)) {
