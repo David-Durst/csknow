@@ -311,7 +311,7 @@ rollout_all_human_vs_default_config = ComparisonConfig(
     True
 )
 
-just_plot_summaries = True
+just_plot_summaries = False
 plot_trajectories = False
 
 
