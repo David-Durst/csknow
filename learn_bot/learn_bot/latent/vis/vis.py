@@ -114,8 +114,8 @@ def vis(loaded_model: LoadedModel, inference_fn: Callable[[LoadedModel], None], 
         hdf5_id_text_var.set(f"Predicted Cur HDF5 Id: {loaded_model.get_cur_hdf5_filename()} - {loaded_model.cur_hdf5_index} / "
                              f"{len(loaded_model.dataset.data_hdf5s) - 1}, ")
         tick_id_text_var.set("Tick ID: " + str(cur_tick))
-        data_dict = selected_df.iloc[cur_tick_index, :].to_dict()
-        pred_dict = pred_selected_df.iloc[cur_tick_index, :].to_dict()
+        data_dict = selected_df.iloc[[cur_tick_index], :].to_dict('records')[0]
+        pred_dict = pred_selected_df.iloc[[cur_tick_index], :].to_dict('records')[0]
         tick_game_id_text_var.set(f"Game Tick ID: {cur_game_tick}")
         extra_round_data_str = ""
         if get_similarity_column(0) in id_df.columns:

@@ -175,12 +175,12 @@ def vis_two(predicted_model: LoadedModel, ground_truth_model: LoadedModel,
             cur_similarity_tick_index = int(cur_similarity_tick_index_str)
 
             cur_predicted_index = similarity_match_index_subset_df.iloc[cur_similarity_tick_index].loc[first_matched_index_col]
-            cur_predicted_dict = predicted_selected_df.iloc[cur_predicted_index].to_dict()
+            cur_predicted_dict = predicted_selected_df.iloc[[cur_predicted_index]].to_dict('records')[0]
             cur_predicted_tick_id = cur_predicted_dict[tick_id_column]
             cur_predicted_game_tick_id = cur_predicted_dict[game_tick_number_column]
 
             cur_ground_truth_index = similarity_match_index_subset_df.iloc[cur_similarity_tick_index].loc[second_matched_index_col]
-            cur_ground_truth_dict = ground_truth_selected_df.iloc[cur_ground_truth_index].to_dict()
+            cur_ground_truth_dict = ground_truth_selected_df.iloc[[cur_ground_truth_index]].to_dict('records')[0]
             cur_ground_truth_round = cur_ground_truth_dict[round_id_column]
             cur_ground_truth_tick_id = cur_ground_truth_dict[tick_id_column]
             cur_ground_truth_game_tick_id = cur_ground_truth_dict[game_tick_number_column]

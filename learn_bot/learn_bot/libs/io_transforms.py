@@ -1096,6 +1096,8 @@ class IOColumnTransformers:
 
         if extra_cols_df is not None:
             extra_cols_df_subset = extra_cols_df_subset.reset_index(drop=True)
+            # drop extra index column, already getting it from id_df_subset
+            extra_cols_df_subset.drop('index', inplace=True, axis=1)
             return pd.concat([x_df, y_df, id_df_subset, extra_cols_df_subset], axis=1)
         else:
             return pd.concat([x_df, y_df, id_df_subset], axis=1)
