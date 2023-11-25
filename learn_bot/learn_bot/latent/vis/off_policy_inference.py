@@ -15,8 +15,7 @@ import numpy as np
 def off_policy_inference(loaded_model: LoadedModel):
     loaded_model.model.eval()
     dataloader = DataLoader(loaded_model.cur_dataset, batch_size=1024, shuffle=False)
-    result_np = np.zeros_like(loaded_model.cur_dataset.Y)
-    cur_start_row = 0
+    result_nps = []
     with torch.no_grad():
         with tqdm(total=len(dataloader), disable=False) as pbar:
             for batch, (X, Y, similarity) in enumerate(dataloader):
@@ -25,9 +24,9 @@ def off_policy_inference(loaded_model: LoadedModel):
                 pred = loaded_model.model(X, similarity, temperature)
                 pred_untransformed = \
                     rearrange(get_untransformed_outputs(pred), 'b p t d -> b (p t d)').to(CPU_DEVICE_STR)
-                result_np[cur_start_row:cur_start_row+len(Y)] = pred_untransformed.numpy()
-                cur_start_row += len(Y)
+                result_nps.append(pred_untransformed.numpy())
                 pbar.update(1)
+    result_np = np.concatenate(result_nps)
 
     loaded_model.cur_inference_df = loaded_model.column_transformers.get_untransformed_values_whole_pd(result_np, False)
 
