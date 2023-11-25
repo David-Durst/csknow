@@ -501,6 +501,12 @@ namespace csknow::multi_trajectory_similarity {
 
         std::cout << "predictedMTs size: " << predictedMTs.size() <<
             " groundTruthMTs size: " << groundTruthMTs.size() << std::endl;
+        if (validPredictedRoundIds) {
+            std::cout << "validPredictedRoundIds size " << validPredictedRoundIds.value().get().size() << std::endl;
+        }
+        if (validGroundTruthRoundIds) {
+            std::cout << "validGroundTruthRoundIds size " << validGroundTruthRoundIds.value().get().size() << std::endl;
+        }
 
         std::atomic<size_t> predictedMTsProcessed = 0;
         size_t totalSize = predictedMTs.size();//250;

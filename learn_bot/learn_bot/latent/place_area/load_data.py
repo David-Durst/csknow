@@ -5,11 +5,14 @@ from typing import List, Callable, Optional, Dict
 import pandas as pd
 
 from learn_bot.latent.analyze.comparison_column_names import predicted_trace_batch_col, \
-    best_fit_ground_truth_round_id_col, predicted_round_id_col, best_match_id_col, metric_type_col
+    best_fit_ground_truth_round_id_col, predicted_round_id_col, best_match_id_col, metric_type_col, \
+    all_human_vs_human_28_similarity_hdf5_data_path
 from learn_bot.latent.engagement.column_names import game_id_column, round_id_column
 from learn_bot.latent.place_area.column_names import hdf5_id_columns, test_success_col, get_similarity_column, \
     vis_only_columns, default_similarity_columns
 from learn_bot.latent.place_area.create_test_data import create_zeros_train_data, create_similarity_data
+from learn_bot.latent.place_area.push_save_label import PushSaveRoundLabels
+from learn_bot.latent.train_paths import default_save_push_round_labels_path
 from learn_bot.libs.hdf5_to_pd import load_hdf5_to_pd
 from learn_bot.libs.hdf5_wrapper import HDF5Wrapper, PDWrapper
 from learn_bot.libs.multi_hdf5_wrapper import MultiHDF5Wrapper, HDF5SourceOptions
@@ -47,8 +50,9 @@ class LoadDataOptions:
     limit_manual_data_to_no_enemies_nav: bool
     # set these for similarity columns
     # set these and limit_by_similarity if want to filter all human based on small human
-    hand_labeled_push_round_ids: Optional[List[List[int]]] = None
-    similarity_dfs: Optional[List[pd.DataFrame]] = None
+    load_similarity_data: bool = False
+    #hand_labeled_push_round_ids: Optional[List[List[int]]] = None
+    #similarity_dfs: Optional[List[pd.DataFrame]] = None
     # limit or add feature based on matches
     limit_by_similarity: bool = True
     limit_manual_data_to_only_enemies_no_nav: bool = False
@@ -145,11 +149,12 @@ class LoadDataResult:
                                                    train_test_split_file_name=load_data_options.train_test_split_file_name,
                                                    vis_cols=vis_only_columns)
         # load similarity
-        if not load_data_options.use_synthetic_data and \
-                load_data_options.hand_labeled_push_round_ids is not None and load_data_options.similarity_dfs is not None:
-            for i in range(len(load_data_options.similarity_dfs)):
+        if not load_data_options.use_synthetic_data and load_data_options.load_similarity_data:
+            similarity_dfs = [load_hdf5_to_pd(all_human_vs_human_28_similarity_hdf5_data_path)]
+            hand_labeled_push_round_ids = [PushSaveRoundLabels(default_save_push_round_labels_path)]
+            for i in range(len(similarity_dfs)):
                 self.load_similarity_columns_and_limit_from_hand_labeled_push_rounds(
-                    load_data_options.similarity_dfs[i], load_data_options.hand_labeled_push_round_ids[i],
+                    similarity_dfs[i], hand_labeled_push_round_ids[i],
                     load_data_options.limit_by_similarity, i)
         else:
             self.fill_empty_similarity_columns()
@@ -177,26 +182,47 @@ class LoadDataResult:
                                                                       add_column_fns[i](self.multi_hdf5_wrapper.hdf5_wrappers[i].id_df))
 
     def load_similarity_columns_and_limit_from_hand_labeled_push_rounds(self, similarity_df: pd.DataFrame,
-                                                                        hand_labeled_push_round_ids: List[int],
+                                                                        hand_labeled_push_rounds: PushSaveRoundLabels,
                                                                         limit: bool, similarity_index: int):
-        hdf5_to_push_round_ids: Dict[str, List[int]] = {}
+        similarity_col = get_similarity_column(similarity_index)
+        # build dataframe from hand-labeled round id to similarity score: 1 if push, 0 if save,
+        # float for start push and end save
+        push_round_ids_and_percents: List[Dict] = []
+        for push_round_id, push_save_round_data in hand_labeled_push_rounds.round_id_to_data.items():
+            push_round_ids_and_percents.append({
+                best_fit_ground_truth_round_id_col: push_round_id,
+                similarity_col: push_save_round_data.to_float_label()
+            })
+        push_round_ids_and_percents_df = pd.DataFrame.from_records(push_round_ids_and_percents)
+
         best_match_similarity_df = similarity_df[(similarity_df[best_match_id_col] == 0) &
-                                                 (similarity_df[metric_type_col] == b'Slope Constrained DTW')]
-        for idx, row in best_match_similarity_df.iterrows():
-            hdf5_filename = row[predicted_trace_batch_col].decode('utf-8')
-            if hdf5_filename not in hdf5_to_push_round_ids:
-                hdf5_to_push_round_ids[hdf5_filename] = []
-            if row[best_fit_ground_truth_round_id_col] in hand_labeled_push_round_ids:
-                hdf5_to_push_round_ids[hdf5_filename].append(row[predicted_round_id_col])
+                                                 (similarity_df[metric_type_col] == b'Unconstrained DTW')]
+        best_match_similarity_df = \
+            best_match_similarity_df.merge(push_round_ids_and_percents_df, how='inner', on=best_fit_ground_truth_round_id_col)
+
+        #for idx, row in best_match_similarity_df.iterrows():
+        #    hdf5_filename = row[predicted_trace_batch_col].decode('utf-8')
+        #    if hdf5_filename not in hdf5_to_push_round_ids:
+        #        hdf5_to_push_round_ids[hdf5_filename] = []
+        #    if row[best_fit_ground_truth_round_id_col] in hand_labeled_push_rounds.round_id_to_data:
+        #        hdf5_to_push_round_ids[hdf5_filename].append(row[predicted_round_id_col])
 
         similarity_fns: List[Optional[SimilarityFn]] = []
+        rounds_not_matched = 0
+        total_rounds = 0
         for i, hdf5_wrapper in enumerate(self.multi_hdf5_wrapper.hdf5_wrappers):
-            hdf5_filename = str(hdf5_wrapper.hdf5_path.name)
-            if hdf5_filename in hdf5_to_push_round_ids:
-                # https://stackoverflow.com/questions/2295290/what-do-lambda-function-closures-capture
-                similarity_fns.append(lambda df, filename=hdf5_filename: df[round_id_column].isin(hdf5_to_push_round_ids[filename]))
-            else:
-                similarity_fns.append(None)
+            hdf5_round_id_and_similarity = \
+                best_match_similarity_df[best_match_similarity_df[predicted_trace_batch_col].str.decode('utf-8') ==
+                                         str(hdf5_wrapper.hdf5_path.name)].loc[:, [predicted_round_id_col, similarity_col]]
+            hdf5_round_id_to_similarity_dict = {}
+            for _, row in hdf5_round_id_and_similarity.iterrows():
+                hdf5_round_id_to_similarity_dict[row[predicted_round_id_col]] = row[similarity_col]
+            # https://stackoverflow.com/questions/2295290/what-do-lambda-function-closures-capture
+            similarity_fns.append(lambda df, round_id_to_similarity_dict=hdf5_round_id_to_similarity_dict: df[round_id_column].map(round_id_to_similarity_dict))
+            rounds_in_hdf5_wrapper += len(hdf5_wrapper.id_df[round_id_column].unique())
+            
+            total_rounds += hdf5_round_id_and_similarity[predicted_round_id_col].unique()
+        print(f"{i} num non matched rounds: {len([r for r in tmp_round_ids if r not in tmp2_roundIds])} / {len(tmp_round_ids)}")
         if limit:
             self.limit(similarity_fns)
         self.add_column(similarity_fns, get_similarity_column(similarity_index))

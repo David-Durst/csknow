@@ -18,6 +18,14 @@ class PushSaveRoundData:
     round_id: int
     round_number: int
 
+    def to_float_label(self) -> float:
+        if self.label == PushSaveLabel.FullPush:
+            return 1.
+        elif self.label == PushSaveLabel.FullSave:
+            return 0.
+        else:
+            return self.percent_push
+
 
 label_str = 'label'
 percent_push_str = 'percent push'

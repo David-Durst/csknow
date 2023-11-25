@@ -4,7 +4,7 @@ from learn_bot.latent.place_area.push_save_label import PushSaveRoundLabels, Pus
 from learn_bot.libs.pd_printing import set_pd_print_options
 from learn_bot.latent.place_area.column_names import *
 from learn_bot.latent.load_model import LoadedModel
-from learn_bot.latent.train_paths import default_selected_retake_rounds_path, default_save_push_round_labelss_path
+from learn_bot.latent.train_paths import default_selected_retake_rounds_path, default_save_push_round_labels_path
 from learn_bot.libs.df_grouping import make_index_column
 from learn_bot.mining.area_cluster import d2_radar_path
 from learn_bot.latent.vis.draw_inference import draw_all_players, minimap_height, minimap_width, scale_down
@@ -375,7 +375,7 @@ def vis(loaded_model: LoadedModel, inference_fn: Callable[[LoadedModel], None], 
 
     round_label_frame = tk.Frame(window)
     round_label_frame.pack(pady=5)
-    selected_retake_rounds_path_var = tk.StringVar(value=default_save_push_round_labelss_path)
+    selected_retake_rounds_path_var = tk.StringVar(value=default_save_push_round_labels_path)
     selected_retake_rounds_entry = tk.Entry(round_label_frame, width=50, textvariable=selected_retake_rounds_path_var)
     selected_retake_rounds_entry.pack(side="left")
     load_selected_retake_rounds_button = tk.Button(round_label_frame, text="load push/save labels", command=load_push_save_labels)
