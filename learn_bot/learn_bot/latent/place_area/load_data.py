@@ -219,10 +219,11 @@ class LoadDataResult:
                 hdf5_round_id_to_similarity_dict[row[predicted_round_id_col]] = row[similarity_col]
             # https://stackoverflow.com/questions/2295290/what-do-lambda-function-closures-capture
             similarity_fns.append(lambda df, round_id_to_similarity_dict=hdf5_round_id_to_similarity_dict: df[round_id_column].map(round_id_to_similarity_dict))
-            rounds_in_hdf5_wrapper += len(hdf5_wrapper.id_df[round_id_column].unique())
-            
-            total_rounds += hdf5_round_id_and_similarity[predicted_round_id_col].unique()
-        print(f"{i} num non matched rounds: {len([r for r in tmp_round_ids if r not in tmp2_roundIds])} / {len(tmp_round_ids)}")
+            round_ids_in_hdf5 = hdf5_wrapper.id_df[round_id_column].unique()
+            similarity_round_ids = hdf5_round_id_and_similarity[predicted_round_id_col].unique()
+            total_rounds += len(round_ids_in_hdf5)
+            rounds_not_matched += len([r for r in round_ids_in_hdf5 if r not in similarity_round_ids])
+        print(f"num non matched rounds: {rounds_not_matched} / {total_rounds}, {rounds_not_matched / total_rounds:.2f}")
         if limit:
             self.limit(similarity_fns)
         self.add_column(similarity_fns, get_similarity_column(similarity_index))
