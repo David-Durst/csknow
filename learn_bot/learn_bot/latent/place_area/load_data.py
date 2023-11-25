@@ -208,8 +208,8 @@ class LoadDataResult:
         #        hdf5_to_push_round_ids[hdf5_filename].append(row[predicted_round_id_col])
 
         similarity_fns: List[Optional[SimilarityFn]] = []
-        rounds_not_matched = 0
         total_rounds = 0
+        num_rounds_not_matched = 0
         for i, hdf5_wrapper in enumerate(self.multi_hdf5_wrapper.hdf5_wrappers):
             hdf5_round_id_and_similarity = \
                 best_match_similarity_df[best_match_similarity_df[predicted_trace_batch_col].str.decode('utf-8') ==
@@ -217,13 +217,18 @@ class LoadDataResult:
             hdf5_round_id_to_similarity_dict = {}
             for _, row in hdf5_round_id_and_similarity.iterrows():
                 hdf5_round_id_to_similarity_dict[row[predicted_round_id_col]] = row[similarity_col]
-            # https://stackoverflow.com/questions/2295290/what-do-lambda-function-closures-capture
-            similarity_fns.append(lambda df, round_id_to_similarity_dict=hdf5_round_id_to_similarity_dict: df[round_id_column].map(round_id_to_similarity_dict))
             round_ids_in_hdf5 = hdf5_wrapper.id_df[round_id_column].unique()
             similarity_round_ids = hdf5_round_id_and_similarity[predicted_round_id_col].unique()
+            round_ids_not_matched = [r for r in round_ids_in_hdf5 if r not in similarity_round_ids]
+            print(f"{hdf5_wrapper.hdf5_path.name}: not matched round ids: {round_ids_not_matched}")
             total_rounds += len(round_ids_in_hdf5)
-            rounds_not_matched += len([r for r in round_ids_in_hdf5 if r not in similarity_round_ids])
-        print(f"num non matched rounds: {rounds_not_matched} / {total_rounds}, {rounds_not_matched / total_rounds:.2f}")
+            num_rounds_not_matched += len(round_ids_not_matched)
+            for r in round_ids_not_matched:
+                hdf5_round_id_to_similarity_dict[r] = -1.
+            # https://stackoverflow.com/questions/2295290/what-do-lambda-function-closures-capture
+            similarity_fns.append(lambda df, round_id_to_similarity_dict=hdf5_round_id_to_similarity_dict: df[round_id_column].map(round_id_to_similarity_dict))
+
+        print(f"num non matched rounds: {num_rounds_not_matched} / {total_rounds}, {num_rounds_not_matched / total_rounds:.3f}")
         if limit:
             self.limit(similarity_fns)
         self.add_column(similarity_fns, get_similarity_column(similarity_index))
