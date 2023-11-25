@@ -175,12 +175,12 @@ def vis_two(predicted_model: LoadedModel, ground_truth_model: LoadedModel,
             cur_similarity_tick_index = int(cur_similarity_tick_index_str)
 
             cur_predicted_index = similarity_match_index_subset_df.iloc[cur_similarity_tick_index].loc[first_matched_index_col]
-            cur_predicted_dict = predicted_selected_df.iloc[[cur_predicted_index]].to_dict('records')[0]
+            cur_predicted_dict = predicted_selected_df.iloc[cur_predicted_index].to_dict()
             cur_predicted_tick_id = cur_predicted_dict[tick_id_column]
             cur_predicted_game_tick_id = cur_predicted_dict[game_tick_number_column]
 
             cur_ground_truth_index = similarity_match_index_subset_df.iloc[cur_similarity_tick_index].loc[second_matched_index_col]
-            cur_ground_truth_dict = ground_truth_selected_df.iloc[[cur_ground_truth_index]].to_dict('records')[0]
+            cur_ground_truth_dict = ground_truth_selected_df.iloc[cur_ground_truth_index].to_dict()
             cur_ground_truth_round = cur_ground_truth_dict[round_id_column]
             cur_ground_truth_tick_id = cur_ground_truth_dict[tick_id_column]
             cur_ground_truth_game_tick_id = cur_ground_truth_dict[game_tick_number_column]
@@ -369,6 +369,10 @@ def vis_two(predicted_model: LoadedModel, ground_truth_model: LoadedModel,
             predicted_to_ground_truth_round_data.ground_truth_round_id, ground_truth_vis_only_df, use_sim_dataset=False)
         similarity_match_index_subset_df = \
             predicted_to_ground_truth_round_data.get_similarity_match_index_df_subset(similarity_match_index_df)
+
+        # having one object type ensures that ints are presevered when selecting a row
+        predicted_selected_df = predicted_selected_df.astype({test_success_col: 'object'})
+        ground_truth_selected_df = ground_truth_selected_df.astype({test_success_col: 'object'})
 
         tick_slider.configure(to=len(similarity_match_index_subset_df)-1)
         tick_slider.set(0)

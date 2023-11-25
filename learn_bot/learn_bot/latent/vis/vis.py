@@ -114,8 +114,8 @@ def vis(loaded_model: LoadedModel, inference_fn: Callable[[LoadedModel], None], 
         hdf5_id_text_var.set(f"Predicted Cur HDF5 Id: {loaded_model.get_cur_hdf5_filename()} - {loaded_model.cur_hdf5_index} / "
                              f"{len(loaded_model.dataset.data_hdf5s) - 1}, ")
         tick_id_text_var.set("Tick ID: " + str(cur_tick))
-        data_dict = selected_df.iloc[[cur_tick_index], :].to_dict('records')[0]
-        pred_dict = pred_selected_df.iloc[[cur_tick_index], :].to_dict('records')[0]
+        data_dict = selected_df.iloc[cur_tick_index, :].to_dict()
+        pred_dict = pred_selected_df.iloc[cur_tick_index, :].to_dict()
         tick_game_id_text_var.set(f"Game Tick ID: {cur_game_tick}")
         extra_round_data_str = ""
         if get_similarity_column(0) in id_df.columns:
@@ -240,6 +240,8 @@ def vis(loaded_model: LoadedModel, inference_fn: Callable[[LoadedModel], None], 
         make_index_column(vis_only_df)
         selected_df = loaded_model.load_round_df_from_cur_dataset(cur_round_id, vis_only_df,
                                                                   use_sim_dataset=use_sim_dataset)
+        # having one object type ensures that ints are presevered when selecting a row
+        selected_df = selected_df.astype({test_success_col: 'object'})
         cur_round_condition = loaded_model.get_cur_id_df()[round_id_column] == cur_round_id
         id_df = loaded_model.get_cur_id_df().loc[cur_round_condition]
         pred_selected_df = loaded_model.cur_inference_df.loc[cur_round_condition]
