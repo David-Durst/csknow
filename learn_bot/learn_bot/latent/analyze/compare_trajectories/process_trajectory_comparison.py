@@ -146,5 +146,9 @@ def build_predicted_to_ground_truth_dict(similarity_df: pd.DataFrame) -> Predict
             PredictedToGroundTruthRoundData(row[predicted_round_id_col], row[best_fit_ground_truth_round_id_col],
                                             row[best_fit_ground_truth_trace_batch_col].decode('utf-8'),
                                             row, agent_mapping))
+    #for _, v in predicted_to_ground_truth_dict.items():
+    #    for vk, vv in v.items():
+    #        if 'Slope Constrained DTW' in vv and len(vv['Unconstrained DTW']) == 5 and len(vv['Slope Constrained DTW']) == 1:
+    #            print('Unconstrained Match But only one Slope Constrained')
     return predicted_to_ground_truth_dict
 

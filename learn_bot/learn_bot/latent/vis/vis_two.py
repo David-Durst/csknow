@@ -88,7 +88,31 @@ def vis_two(predicted_model: LoadedModel, ground_truth_model: LoadedModel,
         rounds = list(predicted_to_ground_truth_dict[predicted_model.get_cur_hdf5_filename()].keys())
         cur_round = rounds[0]
         round_slider.set(0)
-        round_slider_changed(0)
+        metric_slider.set(0)
+        metric_slider_changed(0)
+
+    def metric_slider_changed(cur_metric_index):
+        nonlocal cur_metric_type
+        cur_metric_type = metric_types[int(cur_metric_index)]
+        round_slider_changed(round_slider.get())
+
+    def metric_back_clicked():
+        nonlocal cur_metric_type
+        cur_metric_index = int(metric_slider.get())
+        if cur_metric_index > 0:
+            cur_metric_index -= 1
+            cur_metric_type = metric_types[cur_metric_index]
+            metric_slider.set(cur_metric_index)
+            metric_slider_changed(cur_metric_index)
+
+    def metric_forward_clicked():
+        nonlocal cur_metric_type
+        cur_metric_index = int(metric_slider.get())
+        if cur_metric_index < len(metric_types) - 1:
+            cur_metric_index += 1
+            cur_metric_type = metric_types[cur_metric_index]
+            metric_slider.set(cur_metric_index)
+            metric_slider_changed(cur_metric_index)
 
     def round_slider_changed(cur_round_index):
         nonlocal cur_round, num_round_matches
@@ -118,28 +142,6 @@ def vis_two(predicted_model: LoadedModel, ground_truth_model: LoadedModel,
             round_slider.set(cur_round_index)
             round_slider_changed(cur_round_index)
 
-    def metric_slider_changed(cur_metric_index):
-        nonlocal cur_metric_type
-        cur_metric_type = metric_types[int(cur_metric_index)]
-        change_round_metric_dependent_data()
-
-    def metric_back_clicked():
-        nonlocal cur_metric_type
-        cur_metric_index = int(metric_slider.get())
-        if cur_metric_index > 0:
-            cur_metric_index -= 1
-            cur_metric_type = metric_types[cur_metric_index]
-            metric_slider.set(cur_metric_index)
-            metric_slider_changed(cur_metric_index)
-
-    def metric_forward_clicked():
-        nonlocal cur_metric_type
-        cur_metric_index = int(metric_slider.get())
-        if cur_metric_index < len(metric_types) - 1:
-            cur_metric_index += 1
-            cur_metric_type = metric_types[cur_metric_index]
-            metric_slider.set(cur_metric_index)
-            metric_slider_changed(cur_metric_index)
 
     def round_match_slider_changed(cur_round_match_index):
         nonlocal cur_round_match_id
