@@ -365,10 +365,6 @@ def compare_trajectories(config_case: int) -> Optional[TrajectoryPlots]:
     predicted_data = LoadDataResult(config.predicted_load_data_options)
     if config.limit_predicted_to_first_n_test_rounds:
         similarity_df = filter_similarity_for_first_n_test_rounds(predicted_data, similarity_df)
-    # remove this if later when updated all comparisons
-    if config_case == 5:
-        similarity_df = similarity_df[(similarity_df[predicted_round_number_col] != similarity_df[best_fit_ground_truth_round_number_col]) |
-                                      (abs(similarity_df[predicted_first_game_tick_number_col] - similarity_df[best_fit_ground_truth_first_game_tick_number_col]) > 11)]
     similarity_match_index_df = load_hdf5_to_pd(config.similarity_data_path, root_key='extra')
 
     start_similarity_plot_time = time.perf_counter()
