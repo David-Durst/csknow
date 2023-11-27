@@ -7,7 +7,8 @@ from typing import List, Dict, Optional
 import pandas as pd
 from tqdm import tqdm
 
-from learn_bot.latent.analyze.compare_trajectories.process_trajectory_comparison import get_hdf5_to_test_round_ids
+from learn_bot.latent.analyze.compare_trajectories.process_trajectory_comparison import get_hdf5_to_test_round_ids, \
+    get_hdf5_to_round_ids_fresh
 from learn_bot.latent.analyze.compare_trajectories.run_trajectory_comparison import rollout_load_data_option
 from learn_bot.latent.analyze.comparison_column_names import similarity_plots_path
 from learn_bot.latent.analyze.plot_trajectory_heatmap.filter_trajectories import TrajectoryFilterOptions, \
@@ -24,8 +25,11 @@ import learn_bot.latent.vis.run_vis_checkpoint as run_vis_checkpoint
 human_title_str = 'Human'
 title_to_loaded_model: Dict[str, LoadedModel] = {}
 title_to_hdf5_to_round_ids: Dict[str, Dict[str, List[int]]] = {}
+# I hand labeled push/save data for first hdf5 file, this will
+plot_only_first_hdf5_file_train_and_test = True
 
 
+# if push_only is true, get only pushes. if false, get saves only
 def run_one_dataset_trajectory_heatmap(use_all_human_data: bool, title: str,
                                        base_trajectory_filter_options: TrajectoryFilterOptions,
                                        push_only_human_data: bool = True):
@@ -37,7 +41,7 @@ def run_one_dataset_trajectory_heatmap(use_all_human_data: bool, title: str,
         load_data_options = dataclasses.replace(rollout_load_data_option,
                                                 custom_rollout_extension='_' + title + '*')
 
-    # load data
+    # load data, caching it so don't repeatedly load data
     if title in title_to_loaded_model:
         loaded_model = title_to_loaded_model[title]
         hdf5_to_round_ids = title_to_hdf5_to_round_ids[title]
@@ -45,11 +49,18 @@ def run_one_dataset_trajectory_heatmap(use_all_human_data: bool, title: str,
         load_data_result = LoadDataResult(load_data_options)
         loaded_model = load_model_file(load_data_result)
         title_to_loaded_model[title] = loaded_model
-        hdf5_to_round_ids = get_hdf5_to_test_round_ids(push_only=push_only_human_data)[0]
+        if plot_only_first_hdf5_file_train_and_test:
+            hdf5_to_round_ids = get_hdf5_to_round_ids_fresh(load_data_result, False,
+                                                            push_only=push_only_human_data,
+                                                            save_only=not push_only_human_data)[0]
+        else:
+            hdf5_to_round_ids = get_hdf5_to_test_round_ids(push_only=push_only_human_data)[0]
         title_to_hdf5_to_round_ids[title] = hdf5_to_round_ids
 
     with tqdm(total=len(loaded_model.dataset.data_hdf5s), disable=False) as pbar:
         for i, hdf5_wrapper in enumerate(loaded_model.dataset.data_hdf5s):
+            if plot_only_first_hdf5_file_train_and_test and i > 0:
+                break
             if use_all_human_data:
                 hdf5_key = str(hdf5_wrapper.hdf5_path.name)
                 if hdf5_key not in hdf5_to_round_ids:
@@ -86,7 +97,8 @@ def run_trajectory_heatmaps_one_filter_option(trajectory_filter_options: Traject
 
 def run_trajectory_heatmaps():
     rollout_extensions = sys.argv[2].split(',')
-    plots_path = similarity_plots_path / rollout_extensions[0]
+    plots_path = similarity_plots_path / (rollout_extensions[0] +
+                                          ("_all_first" if plot_only_first_hdf5_file_train_and_test else ""))
     os.makedirs(plots_path, exist_ok=True)
 
     run_trajectory_heatmaps_one_filter_option(TrajectoryFilterOptions(),
