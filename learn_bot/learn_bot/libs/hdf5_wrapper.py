@@ -28,6 +28,9 @@ class HDF5Wrapper:
         self.id_cols = id_cols
         if id_df is None:
             self.id_df = load_hdf5_to_pd(hdf5_path, cols_to_get=id_cols)
+            # hack to make sure that ints are preserved in usual case
+            if 'test success' in self.id_df:
+                self.id_df = self.id_df.astype({'test success': 'object'})
             make_index_column(self.id_df)
         else:
             self.id_df = id_df
