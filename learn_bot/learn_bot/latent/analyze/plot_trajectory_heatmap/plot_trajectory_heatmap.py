@@ -26,7 +26,7 @@ human_title_str = 'Human'
 title_to_loaded_model: Dict[str, LoadedModel] = {}
 title_to_hdf5_to_round_ids: Dict[str, Dict[str, List[int]]] = {}
 # I hand labeled push/save data for first hdf5 file, this will
-plot_only_first_hdf5_file_train_and_test = True
+plot_only_first_hdf5_file_train_and_test = False
 
 
 # if push_only is true, get only pushes. if false, get saves only
