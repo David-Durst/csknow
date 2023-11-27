@@ -26,6 +26,16 @@ def print_num_alive_missing(num_alive_counts: Dict[int, Dict[int, int]]):
                 print(f'missing ct {num_ct_alive}, t {num_t_alive}')
 
 
+def print_num_alive_counts(num_alive_counts: Dict[int, Dict[int, int]]):
+    print(f'_ {"  ".join([str(i) for i in range(1,6)])}')
+    for num_ct_alive in range(1, 6):
+        for num_t_alive in range(1, 6):
+            if num_t_alive == 1:
+                print(num_ct_alive, end=' ')
+            print(f'{num_alive_counts[num_ct_alive][num_t_alive]:02d}', end=' ')
+        print("")
+
+
 def compute_num_players_per_trajectory_one_hdf5_wrapper(loaded_model: LoadedModel, hdf5_wrapper: HDF5Wrapper,
                                                         hdf5_path: Path, train: bool):
     round_ids_and_row_indices = hdf5_wrapper.id_df.groupby(round_id_column, as_index=False)['id'].first()
@@ -46,10 +56,11 @@ def compute_num_players_per_trajectory_one_hdf5_wrapper(loaded_model: LoadedMode
                     num_t_alive += 1
         num_alive_options[num_ct_alive][num_t_alive] += 1
 
-        if '28' in str(hdf5_path) and train and num_ct_alive == 4 and num_t_alive == 2:
-            print(f'looking for round {row[round_id_column]}')
+        #if '28' in str(hdf5_path) and train and num_ct_alive == 4 and num_t_alive == 2:
+        #    print(f'looking for round {row[round_id_column]}')
 
     print_num_alive_missing(num_alive_options)
+    print_num_alive_counts(num_alive_options)
 
 
 def compute_num_players_per_trajectory(loaded_model: LoadedModel, load_data_result: LoadDataResult):
