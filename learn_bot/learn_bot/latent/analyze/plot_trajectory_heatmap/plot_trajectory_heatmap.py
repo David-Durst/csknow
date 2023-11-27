@@ -6,7 +6,7 @@ from typing import List, Dict, Optional
 
 from tqdm import tqdm
 
-from learn_bot.latent.analyze.compare_trajectories.process_trajectory_comparison import get_hdf5_to_round_ids
+from learn_bot.latent.analyze.compare_trajectories.process_trajectory_comparison import get_hdf5_to_test_round_ids
 from learn_bot.latent.analyze.compare_trajectories.run_trajectory_comparison import rollout_load_data_option
 from learn_bot.latent.analyze.comparison_column_names import similarity_plots_path
 from learn_bot.latent.analyze.plot_trajectory_heatmap.filter_trajectories import TrajectoryFilterOptions, \
@@ -42,15 +42,17 @@ def run_one_dataset_trajectory_heatmap(use_all_human_data: bool, title: str,
         load_data_result = LoadDataResult(load_data_options)
         loaded_model = load_model_file(load_data_result)
         title_to_loaded_model[title] = loaded_model
-        hdf5_to_round_ids = get_hdf5_to_round_ids(load_data_result, push_only=push_only_human_data)[0]
+        hdf5_to_round_ids = get_hdf5_to_test_round_ids(push_only=push_only_human_data)[0]
         title_to_hdf5_to_round_ids[title] = hdf5_to_round_ids
 
     with tqdm(total=len(loaded_model.dataset.data_hdf5s), disable=False) as pbar:
         for i, hdf5_wrapper in enumerate(loaded_model.dataset.data_hdf5s):
             if use_all_human_data:
+                hdf5_key = str(hdf5_wrapper.hdf5_path.name)
+                if hdf5_key not in hdf5_to_round_ids:
+                    continue
                 trajectory_filter_options = \
-                    dataclasses.replace(base_trajectory_filter_options,
-                                        valid_round_ids=set(hdf5_to_round_ids[str(hdf5_wrapper.hdf5_path.name)]))
+                    dataclasses.replace(base_trajectory_filter_options, valid_round_ids=set(hdf5_to_round_ids[hdf5_key]))
             else:
                 trajectory_filter_options = base_trajectory_filter_options
 

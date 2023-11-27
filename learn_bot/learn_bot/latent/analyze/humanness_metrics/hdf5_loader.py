@@ -10,7 +10,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from learn_bot.latent.analyze.compare_trajectories.process_trajectory_comparison import get_hdf5_to_round_ids
+from learn_bot.latent.analyze.compare_trajectories.process_trajectory_comparison import get_hdf5_to_test_round_ids
 from learn_bot.latent.analyze.create_test_plant_states import load_data_options
 from learn_bot.latent.analyze.humanness_metrics.column_names import *
 from learn_bot.latent.engagement.column_names import round_id_column
@@ -141,7 +141,7 @@ class HumannessMetrics:
         hdf5_to_test_round_ids: Dict[Path, List[int]] = {}
         if limit_to_test:
             load_data_result = LoadDataResult(load_data_options)
-            _, hdf5_to_test_round_ids = get_hdf5_to_round_ids(load_data_result)
+            _, hdf5_to_test_round_ids = get_hdf5_to_test_round_ids()
 
         first_file: bool = True
         for hdf5_path in hdf5_paths:

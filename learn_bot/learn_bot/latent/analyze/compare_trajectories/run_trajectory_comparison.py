@@ -285,7 +285,6 @@ rollout_all_human_vs_learned_config = ComparisonConfig(
     False,
     "rollout_all_human_vs_learned_distribution",
     "Rollout All Human vs Learned Distribution",
-    True
 )
 
 rollout_all_human_vs_handcrafted_config = ComparisonConfig(
@@ -296,7 +295,6 @@ rollout_all_human_vs_handcrafted_config = ComparisonConfig(
     False,
     "rollout_all_human_vs_handcrafted_distribution",
     "Rollout All Human vs Hand-Crafted Distribution",
-    True
 )
 
 rollout_all_human_vs_default_config = ComparisonConfig(
@@ -307,7 +305,6 @@ rollout_all_human_vs_default_config = ComparisonConfig(
     False,
     "rollout_all_human_vs_default_distribution",
     "Rollout All Human vs Default Distribution",
-    True
 )
 
 just_plot_summaries = False

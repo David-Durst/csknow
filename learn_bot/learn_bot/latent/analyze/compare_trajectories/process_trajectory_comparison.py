@@ -48,7 +48,7 @@ delta_distance_bins = generate_bins(-20000, 20000, 2500)
 delta_time_bins = generate_bins(-40, 40, 5)
 
 
-def get_hdf5_to_round_ids(loaded_data_result, push_only: bool = True) -> Tuple[Dict[str, List[int]], Dict[Path, List[int]]]:
+def get_hdf5_to_test_round_ids(push_only: bool = True) -> Tuple[Dict[str, List[int]], Dict[Path, List[int]]]:
     test_plant_states_path = \
         train_test_split_folder_path / (push_only_test_plant_states_file_name if push_only
                                         else save_only_test_plant_states_file_name)

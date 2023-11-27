@@ -68,9 +68,9 @@ def create_test_plant_states():
         df[hdf5_key_column] = str(absolute_to_relative_train_test_key(hdf5_wrapper.hdf5_path))
         start_df = df[df[plant_tick_id_column] == df[tick_id_column]]
         if filter_for_push:
-            start_df = start_df[start_df[get_similarity_column(0)]]
+            start_df = start_df[start_df[get_similarity_column(0)] > 0.5]
         elif filter_for_save:
-            start_df = start_df[~start_df[get_similarity_column(0)]]
+            start_df = start_df[start_df[get_similarity_column(0)] < 0.5]
         test_start_df = start_df[~start_df[round_id_column].isin(train_test_split.train_group_ids)].copy()
         test_start_df[num_ct_alive_column] = test_start_df[ct_alive_cols].sum(axis=1)
         test_start_df[num_t_alive_column] = test_start_df[t_alive_cols].sum(axis=1)
