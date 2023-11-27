@@ -4,6 +4,8 @@ from typing import Dict
 from learn_bot.latent.engagement.column_names import round_id_column, index_column
 from learn_bot.latent.load_model import load_model_file, LoadedModel
 from learn_bot.latent.place_area.load_data import LoadDataResult
+from learn_bot.latent.place_area.push_save_label import PushSaveRoundLabels
+from learn_bot.latent.train_paths import default_save_push_round_labels_path
 from learn_bot.latent.vis.run_vis_checkpoint import load_data_options
 from learn_bot.libs.hdf5_wrapper import HDF5Wrapper
 
@@ -68,7 +70,17 @@ def compute_num_players_per_trajectory(loaded_model: LoadedModel, load_data_resu
                                                             hdf5_path, False)
 
 
+def verify_all_trajectories_in_first_wrapper_labeled(load_data_result: LoadDataResult):
+    first_hdf5_wrapper = load_data_result.multi_hdf5_wrapper.hdf5_wrappers[0]
+    round_ids = first_hdf5_wrapper.id_df[round_id_column].unique()
+    labels = PushSaveRoundLabels(default_save_push_round_labels_path)
+    for round_id in round_ids:
+        if round_id not in labels.round_id_to_data:
+            print(f'unlabled round id {round_id}')
+
+
 if __name__ == "__main__":
     load_data_result = LoadDataResult(load_data_options)
     loaded_model = load_model_file(load_data_result)
     compute_num_players_per_trajectory(loaded_model, load_data_result)
+    verify_all_trajectories_in_first_wrapper_labeled(load_data_result)
