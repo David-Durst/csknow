@@ -8,8 +8,7 @@ from typing import Optional
 from learn_bot.latent.analyze.compare_trajectories.plot_trajectories_from_comparison import \
     plot_trajectory_comparisons, TrajectoryPlots, concat_trajectory_plots_across_player_type
 from learn_bot.latent.analyze.compare_trajectories.process_trajectory_comparison import ComparisonConfig, \
-    plot_trajectory_comparison_histograms, build_predicted_to_ground_truth_dict, \
-    filter_similarity_for_first_n_test_rounds
+    plot_trajectory_comparison_histograms, build_predicted_to_ground_truth_dict
 from learn_bot.latent.engagement.column_names import round_id_column
 from learn_bot.latent.load_model import load_model_file
 from learn_bot.latent.train_paths import train_test_split_file_name
@@ -363,8 +362,6 @@ def compare_trajectories(config_case: int) -> Optional[TrajectoryPlots]:
     similarity_df = similarity_df[similarity_df[dtw_cost_col] != 0.]
     # need to load this early for filtering
     predicted_data = LoadDataResult(config.predicted_load_data_options)
-    if config.limit_predicted_to_first_n_test_rounds:
-        similarity_df = filter_similarity_for_first_n_test_rounds(predicted_data, similarity_df)
     similarity_match_index_df = load_hdf5_to_pd(config.similarity_data_path, root_key='extra')
 
     start_similarity_plot_time = time.perf_counter()

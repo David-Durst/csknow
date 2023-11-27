@@ -26,7 +26,6 @@ class ComparisonConfig:
     limit_predicted_df_to_human_good: bool
     metric_cost_file_name: str
     metric_cost_title: str
-    limit_predicted_to_first_n_test_rounds: bool = False
 
 
 def generate_bins(min_bin_start: int, max_bin_end: int, bin_width: int) -> List[int]:
@@ -47,26 +46,6 @@ def percentile_filter_series(data: pd.Series, low_pct_to_remove=0.01, high_pct_t
 dtw_cost_bins = generate_bins(0, 16000, 250)
 delta_distance_bins = generate_bins(-20000, 20000, 2500)
 delta_time_bins = generate_bins(-40, 40, 5)
-
-
-def filter_similarity_for_first_n_test_rounds(loaded_data_result: LoadDataResult, similarity_df: pd.DataFrame,
-                                              top_n: int = 300) -> pd.DataFrame:
-    hdf5_partial_key_to_round_ids, _ = get_hdf5_to_round_ids(loaded_data_result)
-
-    # build condition on similarity df
-    # start false so can build up ors
-    valid_hdf5_and_round_id_condition = \
-        similarity_df[predicted_trace_batch_col] != similarity_df[predicted_trace_batch_col]
-    predicted_trace_batch_series = similarity_df[predicted_trace_batch_col].str.decode('utf-8')
-    for hdf5_partial_key, round_ids in hdf5_partial_key_to_round_ids.items():
-        valid_hdf5_and_round_id_condition = valid_hdf5_and_round_id_condition | \
-                                            ((predicted_trace_batch_series == hdf5_partial_key) &
-                                             (similarity_df[predicted_round_id_col].isin(round_ids)))
-        #for round_id in round_ids:
-        #    if len(similarity_df[(predicted_trace_batch_series == hdf5_partial_key) & (similarity_df[predicted_round_id_col] == round_id)]) == 0:
-        #        print('test round without match in similarity df')
-
-    return similarity_df[valid_hdf5_and_round_id_condition]
 
 
 def get_hdf5_to_round_ids(loaded_data_result, push_only: bool = True) -> Tuple[Dict[str, List[int]], Dict[Path, List[int]]]:
