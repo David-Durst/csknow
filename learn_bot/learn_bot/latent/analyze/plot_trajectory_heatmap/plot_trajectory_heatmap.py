@@ -4,6 +4,7 @@ import sys
 from pathlib import Path
 from typing import List, Dict, Optional
 
+import pandas as pd
 from tqdm import tqdm
 
 from learn_bot.latent.analyze.compare_trajectories.process_trajectory_comparison import get_hdf5_to_test_round_ids
@@ -12,7 +13,7 @@ from learn_bot.latent.analyze.comparison_column_names import similarity_plots_pa
 from learn_bot.latent.analyze.plot_trajectory_heatmap.filter_trajectories import TrajectoryFilterOptions, \
     region_constraints
 from learn_bot.latent.analyze.plot_trajectory_heatmap.plot_one_trajectory_np import plot_one_trajectory_dataset, \
-    plot_trajectories_to_image, clear_title_caches
+    plot_trajectories_to_image, clear_title_caches, get_title_to_num_points
 from learn_bot.latent.load_model import load_model_file, LoadedModel
 from learn_bot.latent.place_area.load_data import LoadDataResult
 import learn_bot.latent.vis.run_vis_checkpoint as run_vis_checkpoint
@@ -81,6 +82,11 @@ def run_trajectory_heatmaps_one_filter_option(trajectory_filter_options: Traject
     plot_trajectories_to_image(title_strs, True, plots_path, trajectory_filter_options)
 
 
+game_seconds_col = 'Game Seconds'
+data_set_title_col = 'Data Set'
+num_points_col = 'Number of Points'
+
+
 def run_trajectory_heatmaps():
     rollout_extensions = sys.argv[2].split(',')
     plots_path = similarity_plots_path / rollout_extensions[0]
@@ -94,9 +100,21 @@ def run_trajectory_heatmaps():
                                                                           region_name=region_constraint_str),
                                                   rollout_extensions, plots_path)
 
+    data_points_per_game_seconds: List[Dict] = []
+    data_set_titles = set()
     for round_game_seconds in [range(0, 5), range(5, 10), range(10, 15), range(15, 20), range(20, 25), range(25, 30)]:
         run_trajectory_heatmaps_one_filter_option(TrajectoryFilterOptions(round_game_seconds=round_game_seconds),
                                                   rollout_extensions, plots_path)
+        data_points_per_game_seconds_row = {
+            game_seconds_col: f"{round_game_seconds.start}-{round_game_seconds.stop}"
+        }
+        for data_set_title, num_points in get_title_to_num_points().items():
+            data_points_per_game_seconds_row[data_set_title] = num_points
+            data_set_titles.add(data_set_title)
+        data_points_per_game_seconds.append(data_points_per_game_seconds_row)
+    data_points_per_game_seconds_df = pd.DataFrame.from_records(data_points_per_game_seconds)
+    ax = data_points_per_game_seconds_df.plot(x=game_seconds_col, y=list(data_set_titles), kind='bar', rot=0)
+    ax.get_figure().savefig(plots_path / 'data_points_by_time.png')
 
 
 if __name__ == "__main__":

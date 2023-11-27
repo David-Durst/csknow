@@ -42,6 +42,10 @@ title_to_buffers: Dict[str, ImageBuffers] = {}
 title_to_num_points: Dict[str, int] = {}
 
 
+def get_title_to_num_points() -> Dict[str, int]:
+    return title_to_num_points
+
+
 def clear_title_caches():
     global title_to_buffers, title_to_num_points
     title_to_buffers = {}
