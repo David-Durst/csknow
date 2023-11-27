@@ -196,9 +196,12 @@ class LoadDataResult:
         push_round_ids_and_percents_df = pd.DataFrame.from_records(push_round_ids_and_percents)
 
         best_match_similarity_df = similarity_df[(similarity_df[best_match_id_col] == 0) &
-                                                 (similarity_df[metric_type_col] == b'Unconstrained DTW')]
+                                                 ((similarity_df[metric_type_col] == b'Unconstrained DTW') |
+                                                  (similarity_df[metric_type_col] == b'Slope Constrained DTW'))]
         best_match_similarity_df = \
             best_match_similarity_df.merge(push_round_ids_and_percents_df, how='inner', on=best_fit_ground_truth_round_id_col)
+        best_match_similarity_df.sort_values([predicted_trace_batch_col, predicted_round_id_col, metric_type_col],
+                                             inplace=True)
 
         #for idx, row in best_match_similarity_df.iterrows():
         #    hdf5_filename = row[predicted_trace_batch_col].decode('utf-8')
@@ -213,10 +216,14 @@ class LoadDataResult:
         for i, hdf5_wrapper in enumerate(self.multi_hdf5_wrapper.hdf5_wrappers):
             hdf5_round_id_and_similarity = \
                 best_match_similarity_df[best_match_similarity_df[predicted_trace_batch_col].str.decode('utf-8') ==
-                                         str(hdf5_wrapper.hdf5_path.name)].loc[:, [predicted_round_id_col, similarity_col]]
+                                         str(hdf5_wrapper.hdf5_path.name)].loc[:, [predicted_round_id_col, similarity_col,
+                                                                                   metric_type_col]] # for debugging
             hdf5_round_id_to_similarity_dict = {}
             for _, row in hdf5_round_id_and_similarity.iterrows():
-                hdf5_round_id_to_similarity_dict[row[predicted_round_id_col]] = row[similarity_col]
+                # since Slope constrained comes first, skip if already present to prevent overwrite
+                predicted_round_id = row[predicted_round_id_col]
+                if predicted_round_id not in hdf5_round_id_to_similarity_dict:
+                    hdf5_round_id_to_similarity_dict[predicted_round_id] = row[similarity_col]
             round_ids_in_hdf5 = hdf5_wrapper.id_df[round_id_column].unique()
             similarity_round_ids = hdf5_round_id_and_similarity[predicted_round_id_col].unique()
             round_ids_not_matched = [r for r in round_ids_in_hdf5 if r not in similarity_round_ids]
@@ -224,7 +231,7 @@ class LoadDataResult:
             total_rounds += len(round_ids_in_hdf5)
             num_rounds_not_matched += len(round_ids_not_matched)
             for r in round_ids_not_matched:
-                hdf5_round_id_to_similarity_dict[r] = -1.
+                hdf5_round_id_to_similarity_dict[r] = 0.5
             # https://stackoverflow.com/questions/2295290/what-do-lambda-function-closures-capture
             similarity_fns.append(lambda df, round_id_to_similarity_dict=hdf5_round_id_to_similarity_dict: df[round_id_column].map(round_id_to_similarity_dict))
 
