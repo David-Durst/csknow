@@ -59,7 +59,7 @@ if make -j 8; then
     # learned bots
     model_type="learned"
     result_strs=()
-    models=(11_15_2023__15_31_15_iw_256_bc_20_pr_0_fr_0_b_1024_it_1_ot_3_lr_4e-05_wd_0.0_l_4_h_4_n_20.0_ros_2.0_ct_SimilarityControl_pm_NoMask_nm_False_om_NoMask_w_None_dh_None_c_just_human_all)
+    models=(11_26_2023__22_28_22_iw_256_bc_20_pr_0_fr_0_b_1024_it_1_ot_3_lr_4e-05_wd_0.0_l_4_h_4_n_20.0_ros_2.0_ct_SimilarityControl_pm_NoMask_nm_False_om_NoMask_w_None_dh_None_c_just_human_all)
     for model in "${models[@]}"
     do
         model_type="learned"
@@ -68,17 +68,17 @@ if make -j 8; then
         run_csknow_rounds
     done
 
-    # hand-crafted bots
-    model_type="hand-crafted"
-    bot_type=rh
-    custom_bots=1
-    run_csknow_rounds
+    ## hand-crafted bots
+    #model_type="hand-crafted"
+    #bot_type=rh
+    #custom_bots=1
+    #run_csknow_rounds
 
-    # default bots
-    model_type="default"
-    bot_type=rh
-    custom_bots=0
-    run_csknow_rounds
+    ## default bots
+    #model_type="default"
+    #bot_type=rh
+    #custom_bots=0
+    #run_csknow_rounds
 
     old_ifs=$IFS
     export IFS=$'\n'
