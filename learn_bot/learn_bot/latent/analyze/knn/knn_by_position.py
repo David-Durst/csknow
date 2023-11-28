@@ -37,7 +37,8 @@ class PositionSituationParameters:
 def get_nearest_neighbors(situations: List[PositionSituationParameters], num_matches: int = 20) -> pd.DataFrame:
     load_data_result = LoadDataResult(load_data_options)
     loaded_model = load_model_file(load_data_result, load_pd=False)
-    load_data_result.multi_hdf5_wrapper.create_np_arrays(loaded_model.model.cts)
+    # don't think this is necessary, load_model_file should create np arrays
+    # load_data_result.multi_hdf5_wrapper.create_np_arrays(loaded_model.model.cts)
 
     for situation in situations:
         print(f"processing {situation.name}")

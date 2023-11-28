@@ -70,6 +70,9 @@ def update_nn_position_rollout_tensor(loaded_model: LoadedModel, round_lengths: 
             same_and_nearest_nps[1][:, alive_player_indices] = same_and_nearest_nps[1][:, player_to_full_table_id[1]]
             nn_rollout_tensor[similarity_tick_indices[point_index]:similarity_tick_indices[point_index] + num_time_steps] = \
                 torch.tensor(same_and_nearest_nps[1])
+            fill_dead_positions_with_last_alive(nn_rollout_tensor[similarity_tick_indices[point_index]:
+                                                                  similarity_tick_indices[point_index] + num_time_steps],
+                                                loaded_model)
 
             prior_ct_alive = len(ct_pos)
             prior_t_alive = len(t_pos)
@@ -82,7 +85,12 @@ def update_nn_position_rollout_tensor(loaded_model: LoadedModel, round_lengths: 
     return nn_rollout_tensor
 
 
-
+def fill_dead_positions_with_last_alive(rollout_tensor: torch.Tensor, loaded_model: LoadedModel):
+    for player_index, alive_column_index in enumerate(loaded_model.model.alive_columns):
+        pos_columns = loaded_model.model.nested_players_pos_columns_tensor[player_index, 0].tolist()
+        num_alive_ticks = int(torch.sum(rollout_tensor[:, alive_column_index]))
+        if num_alive_ticks < rollout_tensor.shape[0]:
+            rollout_tensor[num_alive_ticks:, pos_columns] = rollout_tensor[max(num_alive_ticks-1, 0), pos_columns]
 
 
 

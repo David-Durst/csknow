@@ -146,8 +146,8 @@ def build_starting_position_pred_tensor(loaded_model: LoadedModel, rollout_tenso
     return pred_tensor
 
 
-def delta_pos_open_rollout(loaded_model: LoadedModel, round_lengths: RoundLengths, player_enable_mask: PlayerEnableMask,
-                           player_mask_config: PlayerMaskConfig):
+def delta_pos_open_rollout(loaded_model: LoadedModel, all_data_loaded_model: LoadedModel, round_lengths: RoundLengths,
+                           player_enable_mask: PlayerEnableMask, player_mask_config: PlayerMaskConfig):
     rollout_tensor, similarity_tensor, vis_tensor = \
         build_rollout_similarity_vis_tensors(round_lengths, loaded_model.cur_dataset, loaded_model.get_cur_vis_np())
 
@@ -189,7 +189,7 @@ def gen_vis_wrapper_delta_pos_open_rollout(player_mask_config: PlayerMaskConfig)
     def result_func(loaded_model: LoadedModel):
         round_lengths = get_round_lengths(loaded_model.get_cur_id_df(), round_length_divisible_by=num_time_steps)
         player_enable_mask = build_player_mask(loaded_model, player_mask_config, round_lengths)
-        delta_pos_open_rollout(loaded_model, round_lengths, player_enable_mask, player_mask_config)
+        delta_pos_open_rollout(loaded_model, loaded_model, round_lengths, player_enable_mask, player_mask_config)
     return result_func
 
 
@@ -364,7 +364,8 @@ mask_configs_to_plot = [PlayerMaskConfig.GROUND_TRUTH_POSITION,
 mask_config_plot_titles = [str(mc) for mc in mask_configs_to_plot]
 
 
-def run_analysis_per_mask(loaded_model: LoadedModel, player_mask_config: PlayerMaskConfig) -> \
+def run_analysis_per_mask(loaded_model: LoadedModel, all_data_loaded_model: LoadedModel,
+                          player_mask_config: PlayerMaskConfig) -> \
         Tuple[pd.Series, pd.Series]:
     displacement_errors = DisplacementErrors()
     mask_iterations = num_iterations if player_mask_config not in deterministic_configs else 1
@@ -378,13 +379,17 @@ def run_analysis_per_mask(loaded_model: LoadedModel, player_mask_config: PlayerM
         loaded_model.cur_hdf5_index = i
         loaded_model.load_cur_dataset_only()
 
+        if player_mask_config == PlayerMaskConfig.NN_POSITION:
+            all_data_loaded_model.cur_hdf5_index = i
+            all_data_loaded_model.load_cur_dataset_only()
+
         for iteration in range(mask_iterations):
             if mask_iterations > 1:
                 print(f"iteration {iteration} / {num_iterations}")
 
             round_lengths = get_round_lengths(loaded_model.get_cur_id_df(), round_length_divisible_by=num_time_steps)
             player_enable_mask = build_player_mask(loaded_model, player_mask_config, round_lengths)
-            delta_pos_open_rollout(loaded_model, round_lengths, player_enable_mask, player_mask_config)
+            delta_pos_open_rollout(loaded_model, all_data_loaded_model, round_lengths, player_enable_mask, player_mask_config)
             hdf5_displacement_errors = compare_predicted_rollout_indices(loaded_model, player_enable_mask,
                                                                          player_mask_config in mask_all_configs,
                                                                          player_mask_config == PlayerMaskConfig.GROUND_TRUTH_CMD)
@@ -413,7 +418,7 @@ fig_length = 8
 num_metrics = 2
 
 
-def run_analysis(loaded_model: LoadedModel):
+def run_analysis(loaded_model: LoadedModel, all_data_loaded_model: LoadedModel):
     os.makedirs(simulation_plots_path, exist_ok=True)
 
     fig = plt.figure(figsize=(fig_length * PlayerMaskConfig.NUM_MASK_CONFIGS, fig_length * num_metrics),
@@ -424,22 +429,22 @@ def run_analysis(loaded_model: LoadedModel):
     mask_result_strs = []
     mask_result_latex_strs = ["Simulation Type & minSADE Mean & minSADE Std Dev & minSFDE Mean & minSFDE Std Dev \\\\",
                               "\\hline"]
-    player_mask_configs = [PlayerMaskConfig.ALL,
-                           PlayerMaskConfig.CT, PlayerMaskConfig.T,
-                           #PlayerMaskConfig.LAST_ALIVE,
-                           PlayerMaskConfig.STARTING_CMD,
-                           PlayerMaskConfig.STARTING_POSITION,
-                           PlayerMaskConfig.INTERPOLATION_ROLLOUT_POSITION,
-                           PlayerMaskConfig.INTERPOLATION_ROUND_POSITION,
-                           PlayerMaskConfig.NN_POSITION,
-                           PlayerMaskConfig.GROUND_TRUTH_CMD,
-                           PlayerMaskConfig.GROUND_TRUTH_POSITION,
-                           PlayerMaskConfig.RANDOM_CMD]
+    player_mask_configs = [#PlayerMaskConfig.ALL,
+                           #PlayerMaskConfig.CT, PlayerMaskConfig.T,
+                           ##PlayerMaskConfig.LAST_ALIVE,
+                           #PlayerMaskConfig.STARTING_CMD,
+                           #PlayerMaskConfig.STARTING_POSITION,
+                           #PlayerMaskConfig.INTERPOLATION_ROLLOUT_POSITION,
+                           #PlayerMaskConfig.INTERPOLATION_ROUND_POSITION,
+                           PlayerMaskConfig.NN_POSITION,]
+                           #PlayerMaskConfig.GROUND_TRUTH_CMD,
+                           #PlayerMaskConfig.GROUND_TRUTH_POSITION,
+                           #PlayerMaskConfig.RANDOM_CMD]
     ades_per_mask_config: List[pd.Series] = []
     fdes_per_mask_config: List[pd.Series] = []
     for i, player_mask_config in enumerate(player_mask_configs):
         print(f"Config {player_mask_config}")
-        ades, fdes = run_analysis_per_mask(loaded_model, player_mask_config)
+        ades, fdes = run_analysis_per_mask(loaded_model, all_data_loaded_model, player_mask_config)
         ades_per_mask_config.append(ades)
         fdes_per_mask_config.append(fdes)
         mask_result_str = f"{str(player_mask_config)} minADE Mean: {ades.mean():.2f}, " \
@@ -475,16 +480,6 @@ if __name__ == "__main__":
 
     load_data_options.custom_limit_fn = limit_to_every_nth_row
     load_data_result = LoadDataResult(load_data_options)
-    # if manual_data:
-    #    all_data_df = load_hdf5_to_pd(manual_latent_team_hdf5_data_path, rows_to_get=[i for i in range(20000)])
-    #    #all_data_df = all_data_df[all_data_df['test name'] == b'LearnedGooseToCatScript']
-    # elif rollout_data:
-    #    all_data_df = load_hdf5_to_pd(rollout_latent_team_hdf5_data_path)
-    # else:
-    #    all_data_df = load_hdf5_to_pd(human_latent_team_hdf5_data_path, rows_to_get=[i for i in range(20000)])
-    # all_data_df = all_data_df.copy()
-
-    # load_result = load_model_file_for_rollout(all_data_df, "delta_pos_checkpoint.pt")
 
     # named outer as uusing loaded_model in lots of parameters to functions as well
     outer_loaded_model = load_model_file(load_data_result, use_test_data_only=True)
@@ -492,7 +487,8 @@ if __name__ == "__main__":
     set_pd_print_options()
 
     if perform_analysis:
-        run_analysis(outer_loaded_model)
+        outer_all_data_loaded_model = load_model_file(load_data_result)
+        run_analysis(outer_loaded_model, outer_all_data_loaded_model)
     else:
         vis(outer_loaded_model, gen_vis_wrapper_delta_pos_open_rollout(vis_player_mask_config), " Open Loop Simulator",
             use_sim_dataset=True)
