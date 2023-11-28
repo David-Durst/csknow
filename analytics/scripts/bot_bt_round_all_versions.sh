@@ -62,7 +62,14 @@ if make -j 8; then
     models=(11_26_2023__22_28_22_iw_256_bc_20_pr_0_fr_0_b_1024_it_1_ot_3_lr_4e-05_wd_0.0_l_4_h_4_n_20.0_ros_2.0_ct_SimilarityControl_pm_NoMask_nm_False_om_NoMask_w_None_dh_None_c_just_human_all)
     for model in "${models[@]}"
     do
-        model_type="learned"
+        #/home/steam/csgo-ds/csgo/addons/sourcemod/scripting/bot-link/make_push.sh
+        #model_type="learned push"
+        #bot_type=r
+        #custom_bots=1
+        #run_csknow_rounds
+
+        /home/steam/csgo-ds/csgo/addons/sourcemod/scripting/bot-link/make_save.sh
+        model_type="learned save"
         bot_type=r
         custom_bots=1
         run_csknow_rounds

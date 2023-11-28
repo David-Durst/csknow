@@ -17,7 +17,7 @@ namespace csknow {
     struct TeamSaveControlParameters {
         bool enable = true;
         bool overallPush = true;
-        float temperature = 0.8;
+        float temperature = 0.7;
 
         std::map<CSGOId, PlayerPushSaveControlParameters> playerPushControlParameters;
 
