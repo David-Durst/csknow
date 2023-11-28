@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from enum import Enum, auto
-from math import log
+from math import log, ceil
 from pathlib import Path
 from typing import Dict, Optional, List, Tuple
 
@@ -119,12 +119,12 @@ def plot_one_trajectory_dataset(loaded_model: LoadedModel, id_df: pd.DataFrame, 
 
 
 scale_factor = 0
+max_value = 0
 
 
 def plot_one_image_one_team(title: str, ct_team: bool, team_color: List, saturated_team_color: List,
                             base_img: Image.Image):
     buffer = title_to_buffers[title].get_buffer(ct_team)
-    max_value = np.max(buffer)
     color_buffer = buffer[:, :, np.newaxis].repeat(4, axis=2)
     color_buffer[:, :, 0] = team_color[0]
     color_buffer[:, :, 1] = team_color[1]
@@ -154,20 +154,32 @@ def plot_one_image_one_team(title: str, ct_team: bool, team_color: List, saturat
 
 
 def scale_buffers_by_points(titles: List[str]):
-    global scale_factor
+    global scale_factor, max_value
 
-    max_points_per_title = 0
-    for title in titles:
-        max_points_per_title = max(max_points_per_title, title_to_num_points[title])
-    scale_factor = int(25. / log(2.2 + max_points_per_title / 1300, 10))
-
+    #max_points_per_title = 0
+    #for title in titles:
+    #    max_points_per_title = max(max_points_per_title, title_to_num_points[title])
+    #scale_factor = int(25. / log(2.2 + max_points_per_title / 1300, 10))
+    # compute scaling factor for points
+    max_99_percentile = -1
     for title in titles:
         ct_buffer = title_to_buffers[title].get_buffer(True)
+        max_99_percentile = max(max_99_percentile, np.percentile(ct_buffer, 99))
         #print(f'ct_buffer percentiles: f{np.percentile(ct_buffer, [50, 90, 95, 99, 99.9, 99.99, 99.999, 99.9999])}')
-        ct_buffer *= scale_factor
         t_buffer = title_to_buffers[title].get_buffer(False)
+        max_99_percentile = max(max_99_percentile, np.percentile(t_buffer, 99))
         #print(f't_buffer percentiles: f{np.percentile(ct_buffer, [50, 90, 95, 99, 99.9, 99.99, 99.999, 99.9999])}')
+    scale_factor = int(ceil(255 / max_99_percentile))
+
+    # compute max value for color overflow
+    max_value = -1
+    for title in titles:
+        ct_buffer = title_to_buffers[title].get_buffer(True)
+        ct_buffer *= scale_factor
+        max_value = max(max_value, np.max(ct_buffer))
+        t_buffer = title_to_buffers[title].get_buffer(False)
         t_buffer *= scale_factor
+        max_value = max(max_value, np.max(t_buffer))
 
 
 saturated_ct_color_list = [19, 2, 178, 0]
