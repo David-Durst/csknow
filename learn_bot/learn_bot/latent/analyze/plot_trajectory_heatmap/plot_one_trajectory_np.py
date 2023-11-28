@@ -277,8 +277,8 @@ def plot_trajectory_diffs_to_image(titles: List[str], diff_indices: List[int], p
     for i, title in enumerate(titles[1:]):
         images_per_title: List[Image.Image] = []
 
-        images_per_title.append(plot_diff_one_image_one_team(title, titles[i], True))
-        images_per_title.append(plot_diff_one_image_one_team(title, titles[i], False))
+        images_per_title.append(plot_diff_one_image_one_team(title, titles[diff_indices[i]], True))
+        images_per_title.append(plot_diff_one_image_one_team(title, titles[diff_indices[i]], False))
 
         title_images.append(concat_horizontal(images_per_title))
 
