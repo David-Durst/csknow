@@ -101,8 +101,10 @@ def run_trajectory_heatmaps():
     # indices for plots to diff with (first plot is human data, which all rollout extensions come after, so offset indexing by 1)
     if len(sys.argv) == 4:
         diff_indices = [int(x) for x in sys.argv[3].split(',')]
+    elif rollout_extensions[0] == 'invalid':
+        diff_indices = [0 for _ in range(len(rollout_extensions))]
     else:
-        diff_indices = [0 for _ in range(len(rollout_extensions) - 1)]
+        raise Exception('must provide diff indices if not just plotting human data')
     plots_path = similarity_plots_path / (rollout_extensions[0] +
                                           ("_all_first" if plot_only_first_hdf5_file_train_and_test else ""))
     os.makedirs(plots_path, exist_ok=True)
@@ -113,8 +115,13 @@ def run_trajectory_heatmaps():
                                               rollout_extensions, diff_indices, plots_path)
 
     for region_constraint_str, region_constraint in region_constraints.items():
+        #run_trajectory_heatmaps_one_filter_option(TrajectoryFilterOptions(player_starts_in_region=region_constraint,
+        #                                                                  region_name=region_constraint_str,
+        #                                                                  include_all_players_when_one_in_region=False),
+        #                                          rollout_extensions, diff_indices, plots_path)
         run_trajectory_heatmaps_one_filter_option(TrajectoryFilterOptions(player_starts_in_region=region_constraint,
-                                                                          region_name=region_constraint_str),
+                                                                          region_name=region_constraint_str,
+                                                                          include_all_players_when_one_in_region=True),
                                                   rollout_extensions, diff_indices, plots_path)
 
     reset_points_per_game_seconds_state()

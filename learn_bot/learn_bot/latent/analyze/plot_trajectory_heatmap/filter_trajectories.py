@@ -14,6 +14,7 @@ class TrajectoryFilterOptions:
     trajectory_counter: Optional[pd.Series] = None
     player_starts_in_region: Optional[AABB] = None
     region_name: Optional[str] = None
+    include_all_players_when_one_in_region: bool = False
     round_game_seconds: Optional[range] = None
 
     def __str__(self):
@@ -21,7 +22,8 @@ class TrajectoryFilterOptions:
         if self.trajectory_counter is not None:
             return 'split_trajectories'
         if self.player_starts_in_region is not None:
-            compound_name += self.region_name.lower().replace(' ', '_')
+            compound_name += self.region_name.lower().replace(' ', '_') + \
+                             ('_all' if self.include_all_players_when_one_in_region else '_one')
         if self.round_game_seconds is not None:
             if compound_name != '':
                 compound_name += '_'

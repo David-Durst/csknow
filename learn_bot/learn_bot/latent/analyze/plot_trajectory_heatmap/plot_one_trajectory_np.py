@@ -82,6 +82,26 @@ def plot_one_trajectory_dataset(loaded_model: LoadedModel, id_df: pd.DataFrame, 
                               game_tick_rate * trajectory_filter_options.round_game_seconds.stop
             trajectory_np = trajectory_np[start_condition & stop_condition]
 
+        # require one player in region if allowing all players when one in region
+        if trajectory_filter_options.include_all_players_when_one_in_region:
+            player_in_region = trajectory_np[:, 0] != trajectory_np[:, 0]
+            for player_index, player_place_area_columns in enumerate(specific_player_place_area_columns):
+                # require offense only, as they set the positioning for everyone else
+                ct_team = team_strs[0] in player_place_area_columns.player_id
+                if not ct_team:
+                    continue
+                player_pos_x_np = trajectory_np[:, loaded_model.model.nested_players_pos_columns_tensor[player_index, 0, 0]]
+                player_pos_y_np = trajectory_np[:, loaded_model.model.nested_players_pos_columns_tensor[player_index, 0, 1]]
+                player_in_region = player_in_region | (
+                    (trajectory_np[:, loaded_model.model.alive_columns[player_index]] > 0.5) &
+                    (player_pos_x_np >= trajectory_filter_options.player_starts_in_region.min.x) &
+                    (player_pos_x_np <= trajectory_filter_options.player_starts_in_region.max.x) &
+                    (player_pos_y_np >= trajectory_filter_options.player_starts_in_region.min.y) &
+                    (player_pos_y_np <= trajectory_filter_options.player_starts_in_region.max.y))
+        else:
+            player_in_region = trajectory_np[:, 0] == trajectory_np[:, 0]
+        trajectory_np = trajectory_np[player_in_region]
+
         for player_index, player_place_area_columns in enumerate(specific_player_place_area_columns):
             ct_team = team_strs[0] in player_place_area_columns.player_id
 
@@ -91,16 +111,17 @@ def plot_one_trajectory_dataset(loaded_model: LoadedModel, id_df: pd.DataFrame, 
             if len(alive_trajectory_np) == 0:
                 continue
 
-            # require start location if filtering based on starting region
+            # require start location if filtering based on starting region to only one player
             first_pos = (
                 alive_trajectory_np[0, loaded_model.model.nested_players_pos_columns_tensor[player_index, 0, 0]],
                 alive_trajectory_np[0, loaded_model.model.nested_players_pos_columns_tensor[player_index, 0, 1]]
             )
-            if trajectory_filter_options.player_starts_in_region is not None and (
-                first_pos[0] < trajectory_filter_options.player_starts_in_region.min.x or
-                first_pos[0] > trajectory_filter_options.player_starts_in_region.max.x or
-                first_pos[1] < trajectory_filter_options.player_starts_in_region.min.y or
-                first_pos[1] > trajectory_filter_options.player_starts_in_region.max.y):
+            if trajectory_filter_options.player_starts_in_region is not None and \
+                    not trajectory_filter_options.include_all_players_when_one_in_region and (
+                    first_pos[0] < trajectory_filter_options.player_starts_in_region.min.x or
+                    first_pos[0] > trajectory_filter_options.player_starts_in_region.max.x or
+                    first_pos[1] < trajectory_filter_options.player_starts_in_region.min.y or
+                    first_pos[1] > trajectory_filter_options.player_starts_in_region.max.y):
                 continue
 
             canvas_pos_np = convert_to_canvas_coordinates(
