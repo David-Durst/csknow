@@ -111,7 +111,7 @@ def run_trajectory_heatmaps():
 
     run_trajectory_heatmaps_one_filter_option(TrajectoryFilterOptions(),
                                               rollout_extensions, diff_indices, plots_path)
-    quit(0)
+    #quit(0)
 
     for region_constraint_str, region_constraint in region_constraints.items():
         run_trajectory_heatmaps_one_filter_option(TrajectoryFilterOptions(player_starts_in_region=region_constraint,
