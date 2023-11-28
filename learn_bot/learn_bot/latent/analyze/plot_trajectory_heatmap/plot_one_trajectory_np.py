@@ -249,17 +249,24 @@ def plot_diff_one_image_one_team(title0: str, title1: str, ct_team: bool) -> Ima
     delta_buffer = buffer0 - buffer1
 
     # split delta_buffer into two sub buffers (one positive, one negative), plot them independently
-    positive_delta_buffer = np.where(delta_buffer >= 0., delta_buffer, 0.)
-    negative_delta_buffer = np.where(delta_buffer < 0., -1. * delta_buffer, 0.)
+    positive_delta_buffer = np.where(delta_buffer >= 0, delta_buffer, 0)
+    negative_delta_buffer = np.where(delta_buffer < 0, -1 * delta_buffer, 0)
 
-    base_img = Image.new("RGBA", d2_img.size, (0, 0, 0, 0))
+    base_green_img = Image.new("RGBA", d2_img.size, (0, 0, 0, 255))
     ct_team_str = 'CT' if ct_team else 'T'
     plot_one_image_one_team(f"{title0} (Green) vs {title1} (Red) {ct_team_str}", ct_team, base_positive_color_list,
-                            saturated_positive_color_list, base_img, positive_delta_buffer)
+                            saturated_positive_color_list, base_green_img, positive_delta_buffer)
+    green_np = np.asarray(base_green_img)
+    base_red_img = Image.new("RGBA", d2_img.size, (0, 0, 0, 255))
     plot_one_image_one_team(f"{title0} (Green) vs {title1} (Red) {ct_team_str}", ct_team, base_negative_color_list,
-                            saturated_negative_color_list, base_img, negative_delta_buffer)
+                            saturated_negative_color_list, base_red_img, negative_delta_buffer)
+    red_np = np.asarray(base_red_img)
 
-    return base_img
+    combined_np = red_np + green_np
+    #base_img = d2_img.copy().convert("RGBA")
+    #base_img.alpha_composite(Image.fromarray(combined_np, 'RGBA'))
+    #return base_img
+    return Image.fromarray(combined_np, 'RGBA')
 
 
 def plot_trajectory_diffs_to_image(titles: List[str], diff_indices: List[int], plots_path: Path,
