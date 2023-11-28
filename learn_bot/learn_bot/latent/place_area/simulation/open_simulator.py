@@ -436,7 +436,7 @@ def run_analysis(loaded_model: LoadedModel, all_data_loaded_model: LoadedModel):
                            PlayerMaskConfig.STARTING_POSITION,
                            PlayerMaskConfig.INTERPOLATION_ROLLOUT_POSITION,
                            PlayerMaskConfig.INTERPOLATION_ROUND_POSITION,
-                           PlayerMaskConfig.NN_POSITION,
+                           #PlayerMaskConfig.NN_POSITION,
                            PlayerMaskConfig.GROUND_TRUTH_CMD,
                            PlayerMaskConfig.GROUND_TRUTH_POSITION,
                            PlayerMaskConfig.RANDOM_CMD]

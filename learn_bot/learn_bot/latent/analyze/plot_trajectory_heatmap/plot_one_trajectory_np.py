@@ -167,15 +167,15 @@ def scale_buffers_by_points(titles: List[str]):
     #    max_points_per_title = max(max_points_per_title, title_to_num_points[title])
     #scale_factor = int(25. / log(2.2 + max_points_per_title / 1300, 10))
     # compute scaling factor for points
-    max_99_percentile = -1
+    min_99_percentile = -1
     for title in titles:
         ct_buffer = title_to_buffers[title].get_buffer(True)
-        max_99_percentile = max(max_99_percentile, np.percentile(ct_buffer, 99))
+        min_99_percentile = min(min_99_percentile, np.percentile(ct_buffer, 99))
         #print(f'ct_buffer percentiles: f{np.percentile(ct_buffer, [50, 90, 95, 99, 99.9, 99.99, 99.999, 99.9999])}')
         t_buffer = title_to_buffers[title].get_buffer(False)
-        max_99_percentile = max(max_99_percentile, np.percentile(t_buffer, 99))
+        min_99_percentile = min(min_99_percentile, np.percentile(t_buffer, 99))
         #print(f't_buffer percentiles: f{np.percentile(ct_buffer, [50, 90, 95, 99, 99.9, 99.99, 99.999, 99.9999])}')
-    scale_factor = int(ceil(255 / max_99_percentile))
+    scale_factor = int(ceil(255 / min_99_percentile))
 
     # compute max value for color overflow
     max_value = -1
