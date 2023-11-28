@@ -123,8 +123,11 @@ max_value = 0
 
 
 def plot_one_image_one_team(title: str, ct_team: bool, team_color: List, saturated_team_color: List,
-                            base_img: Image.Image):
-    buffer = title_to_buffers[title].get_buffer(ct_team)
+                            base_img: Image.Image, custom_buffer: Optional[np.ndarray] = None):
+    if custom_buffer is None:
+        buffer = title_to_buffers[title].get_buffer(ct_team)
+    else:
+        buffer = custom_buffer
     color_buffer = buffer[:, :, np.newaxis].repeat(4, axis=2)
     color_buffer[:, :, 0] = team_color[0]
     color_buffer[:, :, 1] = team_color[1]
@@ -147,7 +150,10 @@ def plot_one_image_one_team(title: str, ct_team: bool, team_color: List, saturat
     base_img.alpha_composite(Image.fromarray(uint8_color_buffer, 'RGBA'))
 
     title_drw = ImageDraw.Draw(base_img)
-    title_text = title + f", \n Num Points Both Teams {title_to_num_points[title]} Scale Factor {scale_factor}"
+    if custom_buffer is None:
+        title_text = title + f", \n Num Points Both Teams {title_to_num_points[title]} Scale Factor {scale_factor}"
+    else:
+        title_text = title
     _, _, w, h = title_drw.textbbox((0, 0), title_text, font=title_font)
     title_drw.text(((d2_img.width - w) / 2, (d2_img.height * 0.1 - h) / 2),
                    title_text, fill=(255, 255, 255, 255), font=title_font)
@@ -219,4 +225,43 @@ def plot_trajectories_to_image(titles: List[str], plot_teams_separately: bool, p
     complete_image.save(plots_path / (str(trajectory_filter_options) + '.png'))
 
 
+base_positive_color_list = [31, 210, 93, 0]
+saturated_positive_color_list = [17, 162, 144, 0]
+base_negative_color_list = [242, 48, 48, 0]
+saturated_negative_color_list = [162, 7, 146, 0]
 
+
+def plot_diff_one_image_one_team(title0: str, title1: str, ct_team: bool) -> Image.Image:
+    buffer0 = title_to_buffers[title0].get_buffer(ct_team)
+    buffer1 = title_to_buffers[title1].get_buffer(ct_team)
+    delta_buffer = buffer0 - buffer1
+
+    # split delta_buffer into two sub buffers (one positive, one negative), plot them independently
+    positive_delta_buffer = np.where(delta_buffer >= 0., delta_buffer, 0.)
+    negative_delta_buffer = np.where(delta_buffer < 0., -1. * delta_buffer, 0.)
+
+    base_img = Image.new("RGBA", d2_img.size, (0, 0, 0, 0))
+    ct_team_str = 'CT' if ct_team else 'T'
+    plot_one_image_one_team(f"{title0} (Green) vs {title1} (Red) {ct_team_str}", ct_team, base_positive_color_list,
+                            saturated_positive_color_list, base_img, positive_delta_buffer)
+    plot_one_image_one_team(f"{title0} (Green) vs {title1} (Red) {ct_team_str}", ct_team, base_negative_color_list,
+                            saturated_negative_color_list, base_img, negative_delta_buffer)
+
+    return base_img
+
+
+def plot_trajectory_diffs_to_image(titles: List[str], diff_indices: List[int], plots_path: Path,
+                                   trajectory_filter_options: TrajectoryFilterOptions):
+    # assuming already called plot_trajectories_to_image, so already did scaling
+    title_images: List[Image.Image] = []
+
+    for i, title in enumerate(titles[1:]):
+        images_per_title: List[Image.Image] = []
+
+        images_per_title.append(plot_diff_one_image_one_team(title, titles[i], True))
+        images_per_title.append(plot_diff_one_image_one_team(title, titles[i], False))
+
+        title_images.append(concat_horizontal(images_per_title))
+
+    complete_image = concat_vertical(title_images)
+    complete_image.save(plots_path / 'diff' / (str(trajectory_filter_options) + '.png'))

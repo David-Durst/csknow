@@ -14,7 +14,7 @@ from learn_bot.latent.analyze.comparison_column_names import similarity_plots_pa
 from learn_bot.latent.analyze.plot_trajectory_heatmap.filter_trajectories import TrajectoryFilterOptions, \
     region_constraints
 from learn_bot.latent.analyze.plot_trajectory_heatmap.plot_one_trajectory_np import plot_one_trajectory_dataset, \
-    plot_trajectories_to_image, clear_title_caches, get_title_to_num_points
+    plot_trajectories_to_image, clear_title_caches, get_title_to_num_points, plot_trajectory_diffs_to_image
 from learn_bot.latent.analyze.plot_trajectory_heatmap.plot_points_per_game_seconds_bar_chart import \
     record_points_per_one_game_seconds_range, plot_points_per_game_seconds, reset_points_per_game_seconds_state
 from learn_bot.latent.load_model import load_model_file, LoadedModel
@@ -79,7 +79,7 @@ def run_one_dataset_trajectory_heatmap(use_all_human_data: bool, title: str,
 
 
 def run_trajectory_heatmaps_one_filter_option(trajectory_filter_options: TrajectoryFilterOptions,
-                                              rollout_extensions: List[str], plots_path: Path):
+                                              rollout_extensions: List[str], diff_indices: List[int], plots_path: Path):
     clear_title_caches()
 
     run_one_dataset_trajectory_heatmap(True, human_title_str, trajectory_filter_options)
@@ -93,27 +93,35 @@ def run_trajectory_heatmaps_one_filter_option(trajectory_filter_options: Traject
     title_strs = [human_title_str] + (rollout_extensions if rollout_extensions[0] != 'invalid'
                                       else [human_title_str + ' Save'])
     plot_trajectories_to_image(title_strs, True, plots_path, trajectory_filter_options)
+    plot_trajectory_diffs_to_image(title_strs, diff_indices, plots_path, trajectory_filter_options)
 
 
 def run_trajectory_heatmaps():
     rollout_extensions = sys.argv[2].split(',')
+    # indices for plots to diff with (first plot is human data, which all rollout extensions come after, so offset indexing by 1)
+    if len(sys.argv) == 4:
+        diff_indices = [int(x) for x in sys.argv[3].split(',')]
+    else:
+        diff_indices = [0 for _ in range(len(rollout_extensions) - 1)]
     plots_path = similarity_plots_path / (rollout_extensions[0] +
                                           ("_all_first" if plot_only_first_hdf5_file_train_and_test else ""))
     os.makedirs(plots_path, exist_ok=True)
 
+    os.makedirs(plots_path / 'diff', exist_ok=True)
+
     run_trajectory_heatmaps_one_filter_option(TrajectoryFilterOptions(),
-                                              rollout_extensions, plots_path)
+                                              rollout_extensions, diff_indices, plots_path)
     quit(0)
 
     for region_constraint_str, region_constraint in region_constraints.items():
         run_trajectory_heatmaps_one_filter_option(TrajectoryFilterOptions(player_starts_in_region=region_constraint,
                                                                           region_name=region_constraint_str),
-                                                  rollout_extensions, plots_path)
+                                                  rollout_extensions, diff_indices, plots_path)
 
     reset_points_per_game_seconds_state()
     for round_game_seconds in [range(0, 5), range(5, 10), range(10, 15), range(15, 20), range(20, 25), range(25, 30)]:
         run_trajectory_heatmaps_one_filter_option(TrajectoryFilterOptions(round_game_seconds=round_game_seconds),
-                                                  rollout_extensions, plots_path)
+                                                  rollout_extensions, diff_indices, plots_path)
         record_points_per_one_game_seconds_range(round_game_seconds)
     plot_points_per_game_seconds(plots_path)
 
