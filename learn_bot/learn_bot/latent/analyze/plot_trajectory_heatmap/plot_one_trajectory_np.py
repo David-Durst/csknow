@@ -167,7 +167,7 @@ def scale_buffers_by_points(titles: List[str]):
     #    max_points_per_title = max(max_points_per_title, title_to_num_points[title])
     #scale_factor = int(25. / log(2.2 + max_points_per_title / 1300, 10))
     # compute scaling factor for points
-    min_99_percentile = -1
+    min_99_percentile = 100000
     for title in titles:
         ct_buffer = title_to_buffers[title].get_buffer(True)
         min_99_percentile = min(min_99_percentile, np.percentile(ct_buffer, 99))
