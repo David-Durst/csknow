@@ -373,6 +373,7 @@ void Kills::toHDF5Inner(HighFive::File & file, HighFive::DataSetCreateProps & hd
 void Kills::fromHDF5Inner(HighFive::File & file) {
     tickId = file.getDataSet(hdf5Prefix + "tick id").read<std::vector<int64_t>>();
     killer = file.getDataSet(hdf5Prefix + "killer").read<std::vector<int64_t>>();
+    victim = file.getDataSet(hdf5Prefix + "victim").read<std::vector<int64_t>>();
     weapon = file.getDataSet(hdf5Prefix + "weapon").read<std::vector<int16_t>>();
     assister = file.getDataSet(hdf5Prefix + "assister").read<std::vector<int64_t>>();
     isHeadshot = file.getDataSet(hdf5Prefix + "is headshot").read<std::vector<bool>>();
@@ -382,9 +383,9 @@ void Kills::fromHDF5Inner(HighFive::File & file) {
 }
 
 bool operator==(const Kills & lhs, const Kills & rhs) {
-    return lhs.id == rhs.id && lhs.tickId == rhs.tickId && lhs.killer == rhs.killer && lhs.weapon == rhs.weapon &&
-        lhs.assister == rhs.assister && lhs.isHeadshot == rhs.isHeadshot && lhs.isWallbang == rhs.isWallbang &&
-        lhs.penetratedObjects == rhs.penetratedObjects;
+    return lhs.id == rhs.id && lhs.tickId == rhs.tickId && lhs.killer == rhs.killer && lhs.victim == rhs.victim &&
+        lhs.weapon == rhs.weapon && lhs.assister == rhs.assister && lhs.isHeadshot == rhs.isHeadshot &&
+        lhs.isWallbang == rhs.isWallbang && lhs.penetratedObjects == rhs.penetratedObjects;
 }
 
 void Hurt::toHDF5Inner(HighFive::File & file, HighFive::DataSetCreateProps & hdf5FlatCreateProps) {

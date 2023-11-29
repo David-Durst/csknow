@@ -57,8 +57,8 @@ class MultiHDF5Wrapper:
                                                               vis_cols=vis_cols))
                         if empty_like_first_sample_df is None:
                             empty_like_first_sample_df = pd.DataFrame().reindex_like(self.hdf5_wrappers[0].sample_df)
-                        #if len(self.hdf5_wrappers) > 0:
-                        #    break
+                        if len(self.hdf5_wrappers) > 0:
+                            break
                 elif hdf5_source.is_file() and hdf5_source.name.endswith('.hdf5'):
                     self.hdf5_wrappers.append(HDF5Wrapper(hdf5_source, id_cols, sample_df=empty_like_first_sample_df,
                                                           vis_cols=vis_cols))

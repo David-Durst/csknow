@@ -198,6 +198,9 @@ def draw_all_players(data_dict: Dict, pred_dict: Optional[Dict], im_draw: ImageD
             fire_last_5s = data_dict[player_place_area_columns.player_fire_in_last_5s]
             no_fov_enemy_visible_last_5s = data_dict[player_place_area_columns.player_no_fov_enemy_visible_in_last_5s]
             fov_enemy_visible_last_5s = data_dict[player_place_area_columns.player_fov_enemy_visible_in_last_5s]
+            #kill_next_tick = data_dict[player_place_area_columns.player_kill_next_tick]
+            #killed_next_tick = data_dict[player_place_area_columns.player_killed_next_tick]
+            #f"kill next tick {kill_next_tick}, killed next tick {killed_next_tick}, " \
             health = data_dict[player_place_area_columns.player_health]
             armor = data_dict[player_place_area_columns.player_armor]
             temporal_str = f"{player_place_area_columns.player_id_uniform_space} " \

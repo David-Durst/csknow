@@ -125,6 +125,7 @@ namespace csknow::feature_store {
             array<vector<float>, num_prior_ticks> priorNearestWorldDistanceToTeammate;
             // 0 means not shot or visible, 1 means shot cur frame or enemy currently visible
             vector<float> hurtInLast5s, fireInLast5s, noFOVEnemyVisibleInLast5s, fovEnemyVisibleInLast5s;
+            vector<bool> killNextTick, killedNextTick;
             vector<float> secondsUntilNextHitEnemy, secondsAfterPriorHitEnemy;
             vector<float> health, armor;
             // control inputs
@@ -206,8 +207,11 @@ namespace csknow::feature_store {
                                               array<ColumnPlayerData,max_enemies> & columnData,
                                               const array<NonDecimatedPlayerData, max_enemies> & nonDecimatedData,
                                               const Ticks & ticks, const TickRates & tickRates);
+        void computeKillNextTick(int64_t curTick, int64_t unmodifiedTickIndex, int64_t roundIndex,
+                                 array<ColumnPlayerData, max_enemies> & columnData,
+                                 const Ticks & ticks, const Kills & kills);
         void convertTraceNonReplayNamesToIndices(const Players & players, int64_t roundIndex, int64_t tickIndex);
-        void computeAcausalLabels(const Games & games, const Rounds & rounds, const Ticks & ticks,
+        void computeAcausalLabels(const Games & games, const Rounds & rounds, const Ticks & ticks, const Kills & kills,
                                   const Players & players, const DistanceToPlacesResult & distanceToPlacesResult,
                                   const ReachableResult & reachableResult,
                                   const nav_mesh::nav_file & navFile,

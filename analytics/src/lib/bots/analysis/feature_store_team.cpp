@@ -98,6 +98,10 @@ namespace csknow::feature_store {
             columnTData[i].fovEnemyVisibleInLast5s.resize(size, 1.);
             columnCTData[i].noFOVEnemyVisibleInLast5s.resize(size, 1.);
             columnCTData[i].fovEnemyVisibleInLast5s.resize(size, 1.);
+            columnTData[i].killNextTick.resize(size, false);
+            columnTData[i].killedNextTick.resize(size, false);
+            columnCTData[i].killNextTick.resize(size, false);
+            columnCTData[i].killedNextTick.resize(size, false);
             columnTData[i].health.resize(size, 0.);
             columnCTData[i].health.resize(size, 0.);
             columnTData[i].armor.resize(size, 0.);
@@ -345,6 +349,10 @@ namespace csknow::feature_store {
                 columnTData[i].fovEnemyVisibleInLast5s[rowIndex] = 1.;
                 columnCTData[i].noFOVEnemyVisibleInLast5s[rowIndex] = 1.;
                 columnCTData[i].fovEnemyVisibleInLast5s[rowIndex] = 1.;
+                columnTData[i].killNextTick[rowIndex] = false;
+                columnTData[i].killedNextTick[rowIndex] = false;
+                columnCTData[i].killNextTick[rowIndex] = false;
+                columnCTData[i].killedNextTick[rowIndex] = false;
                 columnTData[i].health[rowIndex] = 0.;
                 columnCTData[i].health[rowIndex] = 0.;
                 columnTData[i].armor[rowIndex] = 0.;
@@ -951,6 +959,31 @@ namespace csknow::feature_store {
         }
     }
 
+    void TeamFeatureStoreResult::computeKillNextTick(int64_t curTick, int64_t unmodifiedTickIndex, int64_t roundIndex,
+                                                     array<ColumnPlayerData, max_enemies> & columnData,
+                                                     const Ticks & ticks, const Kills & kills) {
+        int64_t nextUnmodifiedTickIndex = INVALID_ID;
+        if (curTick + 1 < static_cast<int64_t>(internalIdToTickId.size())) {
+            nextUnmodifiedTickIndex = internalIdToTickId[curTick + 1];
+        }
+
+        if (nextUnmodifiedTickIndex == INVALID_ID || roundIndex != ticks.roundId[nextUnmodifiedTickIndex]) {
+            return;
+        }
+
+        std::set<int64_t> killerIds, victimIds;
+        for (const auto & [_0, _1, killIndex] :
+                ticks.killsPerTick.intervalToEvent.findOverlapping(unmodifiedTickIndex + 1, nextUnmodifiedTickIndex)) {
+            killerIds.insert(kills.killer[killIndex]);
+            victimIds.insert(kills.victim[killIndex]);
+        }
+
+        for (size_t playerColumn = 0; playerColumn < max_enemies; playerColumn++) {
+            columnData[playerColumn].killNextTick[curTick] = killerIds.count(columnData[playerColumn].playerId[curTick]);
+            columnData[playerColumn].killedNextTick[curTick] = victimIds.count(columnData[playerColumn].playerId[curTick]);
+        }
+    }
+
     void TeamFeatureStoreResult::convertTraceNonReplayNamesToIndices(const Players & players, int64_t roundIndex,
                                                                      int64_t tickIndex) {
         // don't repeat multiple times per round, and don't do it on rounds without non-replay players
@@ -981,7 +1014,7 @@ namespace csknow::feature_store {
     }
 
     void TeamFeatureStoreResult::computeAcausalLabels(const Games & games, const Rounds & rounds,
-                                                      const Ticks & ticks,
+                                                      const Ticks & ticks, const Kills & kills,
                                                       const Players & players,
                                                       const DistanceToPlacesResult & distanceToPlacesResult,
                                                       const ReachableResult & reachableResult,
@@ -1111,6 +1144,8 @@ namespace csknow::feature_store {
                                                  columnTData, nonDecimatedTData, ticks, tickRates);
                 computeSecondsUntilAfterHitEnemy(tickIndex, unmodifiedTickIndex, roundIndex,
                                                  columnCTData, nonDecimatedCTData, ticks, tickRates);
+                computeKillNextTick(tickIndex, unmodifiedTickIndex, roundIndex, columnTData, ticks, kills);
+                computeKillNextTick(tickIndex, unmodifiedTickIndex, roundIndex, columnCTData, ticks, kills);
                 //computePlaceAreaACausalLabels(ticks, tickRates, tickIndex, ticks15sFutureTracker, columnCTData);
                 //computePlaceAreaACausalLabels(ticks, tickRates, tickIndex, ticks15sFutureTracker, columnTData);
                 /*
@@ -1269,6 +1304,10 @@ namespace csknow::feature_store {
                                    columnData[columnPlayer].noFOVEnemyVisibleInLast5s, hdf5FlatCreateProps);
                 file.createDataSet("/data/player enemy visible in last 5s fov " + columnTeam + " " + iStr,
                                    columnData[columnPlayer].fovEnemyVisibleInLast5s, hdf5FlatCreateProps);
+                file.createDataSet("/data/player kill next tick " + columnTeam + " " + iStr,
+                                   columnData[columnPlayer].killNextTick, hdf5FlatCreateProps);
+                file.createDataSet("/data/player killed next tick " + columnTeam + " " + iStr,
+                                   columnData[columnPlayer].killedNextTick, hdf5FlatCreateProps);
                 file.createDataSet("/data/player health " + columnTeam + " " + iStr,
                                    columnData[columnPlayer].health, hdf5FlatCreateProps);
                 file.createDataSet("/data/player armor " + columnTeam + " " + iStr,
