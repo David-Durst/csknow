@@ -73,8 +73,8 @@ def run_one_dataset_trajectory_heatmap(use_all_human_data: bool, title: str,
             loaded_model.cur_hdf5_index = i
             loaded_model.load_cur_dataset_only(include_outputs=False)
 
-            plot_one_trajectory_dataset(loaded_model, loaded_model.get_cur_id_df(), loaded_model.cur_dataset.X,
-                                        trajectory_filter_options, title)
+            plot_one_trajectory_dataset(loaded_model, loaded_model.get_cur_id_df(), loaded_model.get_cur_vis_df(),
+                                        loaded_model.cur_dataset.X, trajectory_filter_options, title)
             pbar.update(1)
 
 

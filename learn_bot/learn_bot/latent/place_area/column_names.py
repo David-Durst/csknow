@@ -192,7 +192,7 @@ class PlayerPlaceAreaColumns:
         return result
 
     def get_vis_only_columns(self) -> list[str]:
-        return [self.player_id, self.player_kill_next_tick, self.player_killed_next_tick,
+        return [self.player_id, #self.player_kill_next_tick, self.player_killed_next_tick,
                 self.player_weapon_id, self.player_scoped] + self.vel + self.view_angle
 
 

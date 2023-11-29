@@ -52,8 +52,8 @@ def clear_title_caches():
     title_to_num_points = {}
 
 
-def plot_one_trajectory_dataset(loaded_model: LoadedModel, id_df: pd.DataFrame, dataset: np.ndarray,
-                                trajectory_filter_options: TrajectoryFilterOptions, title: str):
+def plot_one_trajectory_dataset(loaded_model: LoadedModel, id_df: pd.DataFrame, vis_df: pd.DataFrame,
+                                dataset: np.ndarray, trajectory_filter_options: TrajectoryFilterOptions, title: str):
     if title not in title_to_buffers:
         title_to_buffers[title] = ImageBuffers()
         title_to_num_points[title] = 0
@@ -124,6 +124,11 @@ def plot_one_trajectory_dataset(loaded_model: LoadedModel, id_df: pd.DataFrame, 
                     first_pos[1] > trajectory_filter_options.player_starts_in_region.max.y):
                 continue
 
+            if trajectory_filter_options.only_kill:
+                alive_trajectory_np = alive_trajectory_np[vis_df[player_place_area_columns.player_kill_next_tick] > 0.5, :]
+            if trajectory_filter_options.only_killed:
+                alive_trajectory_np = alive_trajectory_np[vis_df[player_place_area_columns.player_killed_next_tick] > 0.5, :]
+
             canvas_pos_np = convert_to_canvas_coordinates(
                 alive_trajectory_np[:, loaded_model.model.nested_players_pos_columns_tensor[player_index, 0, 0]],
                 alive_trajectory_np[:, loaded_model.model.nested_players_pos_columns_tensor[player_index, 0, 1]])
@@ -132,10 +137,14 @@ def plot_one_trajectory_dataset(loaded_model: LoadedModel, id_df: pd.DataFrame, 
             canvas_pos_xy = list(zip(list(canvas_pos_x_np), list(canvas_pos_y_np)))
 
             buffer = title_to_buffers[title].get_buffer(ct_team)
-            cur_player_d2_img = Image.new("L", d2_img.size, color=0)
-            cur_player_d2_drw = ImageDraw.Draw(cur_player_d2_img)
-            cur_player_d2_drw.line(xy=canvas_pos_xy, fill=1, width=5)
-            buffer += np.asarray(cur_player_d2_img)
+            if trajectory_filter_options.only_kill or trajectory_filter_options.only_killed:
+                for pos_xy in canvas_pos_xy:
+                    buffer[pos_xy[0], pos_xy[1]] += 1
+            else:
+                cur_player_d2_img = Image.new("L", d2_img.size, color=0)
+                cur_player_d2_drw = ImageDraw.Draw(cur_player_d2_img)
+                cur_player_d2_drw.line(xy=canvas_pos_xy, fill=1, width=5)
+                buffer += np.asarray(cur_player_d2_img)
             title_to_num_points[title] += len(alive_trajectory_np)
 
 

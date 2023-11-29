@@ -16,6 +16,8 @@ class TrajectoryFilterOptions:
     region_name: Optional[str] = None
     include_all_players_when_one_in_region: bool = False
     round_game_seconds: Optional[range] = None
+    only_kill: bool = False
+    only_killed: bool = False
 
     def __str__(self):
         compound_name = ''
