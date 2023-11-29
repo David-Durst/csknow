@@ -115,10 +115,10 @@ def run_trajectory_heatmaps():
                                               rollout_extensions, diff_indices, plots_path)
 
     for region_constraint_str, region_constraint in region_constraints.items():
-        #run_trajectory_heatmaps_one_filter_option(TrajectoryFilterOptions(player_starts_in_region=region_constraint,
-        #                                                                  region_name=region_constraint_str,
-        #                                                                  include_all_players_when_one_in_region=False),
-        #                                          rollout_extensions, diff_indices, plots_path)
+        run_trajectory_heatmaps_one_filter_option(TrajectoryFilterOptions(player_starts_in_region=region_constraint,
+                                                                          region_name=region_constraint_str,
+                                                                          include_all_players_when_one_in_region=False),
+                                                  rollout_extensions, diff_indices, plots_path)
         run_trajectory_heatmaps_one_filter_option(TrajectoryFilterOptions(player_starts_in_region=region_constraint,
                                                                           region_name=region_constraint_str,
                                                                           include_all_players_when_one_in_region=True),
@@ -134,3 +134,6 @@ def run_trajectory_heatmaps():
 
 if __name__ == "__main__":
     run_trajectory_heatmaps()
+    if sys.argv[2] == 'invalid':
+        plot_only_first_hdf5_file_train_and_test = True
+        run_trajectory_heatmaps()
