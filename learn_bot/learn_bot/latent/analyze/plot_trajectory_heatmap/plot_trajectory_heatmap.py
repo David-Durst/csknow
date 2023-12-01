@@ -25,14 +25,14 @@ import learn_bot.latent.vis.run_vis_checkpoint as run_vis_checkpoint
 human_title_str = 'Human'
 title_to_loaded_model: Dict[str, LoadedModel] = {}
 title_to_hdf5_to_round_ids: Dict[str, Dict[str, List[int]]] = {}
-# I hand labeled push/save data for first hdf5 file, this will
-plot_only_first_hdf5_file_train_and_test = False
 
 
 # if push_only is true, get only pushes. if false, get saves only
 def run_one_dataset_trajectory_heatmap(use_all_human_data: bool, title: str,
                                        base_trajectory_filter_options: TrajectoryFilterOptions,
-                                       push_only_human_data: bool = True):
+                                       push_only_human_data: bool = True,
+                                       # limit to hand labeled push/save data for first hdf5 file
+                                       plot_only_first_hdf5_file_train_and_test: bool = False):
     print(f"{title} {str(base_trajectory_filter_options)}")
     
     if use_all_human_data:
@@ -79,13 +79,16 @@ def run_one_dataset_trajectory_heatmap(use_all_human_data: bool, title: str,
 
 
 def run_trajectory_heatmaps_one_filter_option(trajectory_filter_options: TrajectoryFilterOptions,
-                                              rollout_extensions: List[str], diff_indices: List[int], plots_path: Path):
+                                              rollout_extensions: List[str], diff_indices: List[int], plots_path: Path,
+                                              plot_only_first_hdf5_file_train_and_test: bool):
     clear_title_caches()
 
-    run_one_dataset_trajectory_heatmap(True, human_title_str, trajectory_filter_options)
+    run_one_dataset_trajectory_heatmap(True, human_title_str, trajectory_filter_options,
+                                       plot_only_first_hdf5_file_train_and_test=plot_only_first_hdf5_file_train_and_test)
     if rollout_extensions[0] == 'invalid':
         run_one_dataset_trajectory_heatmap(True, human_title_str + ' Save', trajectory_filter_options,
-                                           push_only_human_data=False)
+                                           push_only_human_data=False,
+                                           plot_only_first_hdf5_file_train_and_test=plot_only_first_hdf5_file_train_and_test)
     else:
         for rollout_extension in rollout_extensions:
             run_one_dataset_trajectory_heatmap(False, rollout_extension, trajectory_filter_options)
@@ -96,7 +99,7 @@ def run_trajectory_heatmaps_one_filter_option(trajectory_filter_options: Traject
     plot_trajectory_diffs_to_image(title_strs, diff_indices, plots_path, trajectory_filter_options)
 
 
-def run_trajectory_heatmaps():
+def run_trajectory_heatmaps(plot_only_first_hdf5_file_train_and_test: bool):
     rollout_extensions = sys.argv[2].split(',')
     # indices for plots to diff with (first plot is human data, which all rollout extensions come after, so offset indexing by 1)
     if len(sys.argv) == 4:
@@ -112,28 +115,33 @@ def run_trajectory_heatmaps():
     os.makedirs(plots_path / 'diff', exist_ok=True)
 
     run_trajectory_heatmaps_one_filter_option(TrajectoryFilterOptions(),
-                                              rollout_extensions, diff_indices, plots_path)
+                                              rollout_extensions, diff_indices, plots_path,
+                                              plot_only_first_hdf5_file_train_and_test)
 
     for region_constraint_str, region_constraint in region_constraints.items():
         run_trajectory_heatmaps_one_filter_option(TrajectoryFilterOptions(player_starts_in_region=region_constraint,
                                                                           region_name=region_constraint_str,
                                                                           include_all_players_when_one_in_region=False),
-                                                  rollout_extensions, diff_indices, plots_path)
+                                                  rollout_extensions, diff_indices, plots_path,
+                                                  plot_only_first_hdf5_file_train_and_test)
         run_trajectory_heatmaps_one_filter_option(TrajectoryFilterOptions(player_starts_in_region=region_constraint,
                                                                           region_name=region_constraint_str,
                                                                           include_all_players_when_one_in_region=True),
-                                                  rollout_extensions, diff_indices, plots_path)
+                                                  rollout_extensions, diff_indices, plots_path,
+                                                  plot_only_first_hdf5_file_train_and_test)
 
     reset_points_per_game_seconds_state()
     for round_game_seconds in [range(0, 5), range(5, 10), range(10, 15), range(15, 20), range(20, 25), range(25, 30)]:
         run_trajectory_heatmaps_one_filter_option(TrajectoryFilterOptions(round_game_seconds=round_game_seconds),
-                                                  rollout_extensions, diff_indices, plots_path)
+                                                  rollout_extensions, diff_indices, plots_path,
+                                                  plot_only_first_hdf5_file_train_and_test)
         record_points_per_one_game_seconds_range(round_game_seconds)
     plot_points_per_game_seconds(plots_path)
 
 
 if __name__ == "__main__":
-    run_trajectory_heatmaps()
+    run_trajectory_heatmaps(False)
     if sys.argv[2] == 'invalid':
-        plot_only_first_hdf5_file_train_and_test = True
-        run_trajectory_heatmaps()
+        title_to_loaded_model = {}
+        title_to_hdf5_to_round_ids = {}
+        run_trajectory_heatmaps(True)
