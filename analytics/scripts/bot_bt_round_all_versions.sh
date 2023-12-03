@@ -17,7 +17,7 @@ get_script_dir
 
 run_csknow_rounds() {
     new_demos=()
-    for i in {0..13}
+    for i in {0..14}
     do
         cd ${script_dir}/../../learn_bot/
         ./scripts/deploy_latent_models_specific.sh $model 
@@ -62,11 +62,11 @@ if make -j 8; then
     models=(11_26_2023__22_28_22_iw_256_bc_20_pr_0_fr_0_b_1024_it_1_ot_3_lr_4e-05_wd_0.0_l_4_h_4_n_20.0_ros_2.0_ct_SimilarityControl_pm_NoMask_nm_False_om_NoMask_w_None_dh_None_c_just_human_all)
     for model in "${models[@]}"
     do
-        #/home/steam/csgo-ds/csgo/addons/sourcemod/scripting/bot-link/make_push.sh
-        #model_type="learned push"
-        #bot_type=r
-        #custom_bots=1
-        #run_csknow_rounds
+        /home/steam/csgo-ds/csgo/addons/sourcemod/scripting/bot-link/make_push.sh
+        model_type="learned push"
+        bot_type=r
+        custom_bots=1
+        run_csknow_rounds
 
         /home/steam/csgo-ds/csgo/addons/sourcemod/scripting/bot-link/make_save.sh
         model_type="learned save"
@@ -75,17 +75,17 @@ if make -j 8; then
         run_csknow_rounds
     done
 
-    ## hand-crafted bots
-    #model_type="hand-crafted"
-    #bot_type=rh
-    #custom_bots=1
-    #run_csknow_rounds
+    # hand-crafted bots
+    model_type="hand-crafted"
+    bot_type=rh
+    custom_bots=1
+    run_csknow_rounds
 
-    ## default bots
-    #model_type="default"
-    #bot_type=rh
-    #custom_bots=0
-    #run_csknow_rounds
+    # default bots
+    model_type="default"
+    bot_type=rh
+    custom_bots=0
+    run_csknow_rounds
 
     old_ifs=$IFS
     export IFS=$'\n'
