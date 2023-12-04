@@ -302,7 +302,7 @@ int main(int argc, char * argv[]) {
     std::cout << "team feature store time " << behaviorTreeLatentEventsTime.count() << std::endl;
 
     std::cout << "processing team feature store" << std::endl;
-    teamFeatureStoreResult.computeAcausalLabels(games, filteredRounds, ticks, kills, players, d2DistanceToPlacesResult,
+    teamFeatureStoreResult.computeAcausalLabels(games, filteredRounds, ticks, kills, weaponFire, players, d2DistanceToPlacesResult,
                                                 d2ReachableResult, map_navs.at("de_dust2"), keyRetakeEvents);
     std::cout << "size: " << teamFeatureStoreResult.size << std::endl;
 
