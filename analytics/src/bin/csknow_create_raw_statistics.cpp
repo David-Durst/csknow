@@ -118,6 +118,7 @@ int main(int argc, char * argv[]) {
     QueryPlayerAtTick queryPlayerAtTick(filteredRounds, ticks, playerAtTick);
 
     int64_t numGames = games.size;
+    int64_t numRounds = filteredRounds.size;
     int64_t numTicks = 0, numShots = 0, numKills = 0;
     for (int64_t roundIndex = 0; roundIndex < filteredRounds.size; roundIndex++) {
         int64_t gameId = filteredRounds.gameId[roundIndex];
@@ -143,7 +144,7 @@ int main(int argc, char * argv[]) {
 
     std::ofstream fsStatistics;
     fsStatistics.open(outputDir + "/all_statistics.csv", std::fstream::app);
-    fsStatistics << dataPath << "," << numGames << "," << numTicks << "," << numShots << "," << numKills << std::endl;
+    fsStatistics << dataPath << "," << numGames << "," << numRounds << "," << numTicks << "," << numShots << "," << numKills << std::endl;
     std::ofstream fsPlayers;
     fsPlayers.open(outputDir + "/all_players.csv", std::fstream::app);
     for (int64_t i = 1; i < players.size; i++) {

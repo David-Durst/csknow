@@ -14,7 +14,7 @@ get_script_dir () {
 }
 get_script_dir
 
-echo "data path,num games,num ticks,num shots,num kills" > ${script_dir}/../all_train_outputs/all_statistics.csv
+echo "data path,num games,num rounds,num ticks,num shots,num kills" > ${script_dir}/../all_train_outputs/all_statistics.csv
 echo "player name" > ${script_dir}/../all_train_outputs/all_players.csv
 
 mkdir -p ${script_dir}/../build
