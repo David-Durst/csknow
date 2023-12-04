@@ -102,6 +102,8 @@ namespace csknow::feature_store {
             columnTData[i].killedNextTick.resize(size, false);
             columnCTData[i].killNextTick.resize(size, false);
             columnCTData[i].killedNextTick.resize(size, false);
+            columnTData[i].shotsCurTick.resize(size, 0);
+            columnCTData[i].shotsCurTick.resize(size, 0);
             columnTData[i].health.resize(size, 0.);
             columnCTData[i].health.resize(size, 0.);
             columnTData[i].armor.resize(size, 0.);
@@ -353,6 +355,8 @@ namespace csknow::feature_store {
                 columnTData[i].killedNextTick[rowIndex] = false;
                 columnCTData[i].killNextTick[rowIndex] = false;
                 columnCTData[i].killedNextTick[rowIndex] = false;
+                columnTData[i].shotsCurTick[rowIndex] = 0;
+                columnCTData[i].shotsCurTick[rowIndex] = 0;
                 columnTData[i].health[rowIndex] = 0.;
                 columnCTData[i].health[rowIndex] = 0.;
                 columnTData[i].armor[rowIndex] = 0.;
@@ -984,6 +988,36 @@ namespace csknow::feature_store {
         }
     }
 
+    void TeamFeatureStoreResult::computeShotsCurTick(int64_t curTick, int64_t unmodifiedTickIndex, int64_t roundIndex,
+                                                     array<ColumnPlayerData, max_enemies> & columnData,
+                                                     const Ticks & ticks, const WeaponFire & weaponFire) {
+        int64_t nextUnmodifiedTickIndex = INVALID_ID;
+        if (curTick + 1 < static_cast<int64_t>(internalIdToTickId.size())) {
+            nextUnmodifiedTickIndex = internalIdToTickId[curTick + 1];
+        }
+
+        if (nextUnmodifiedTickIndex == INVALID_ID || roundIndex != ticks.roundId[nextUnmodifiedTickIndex]) {
+            return;
+        }
+
+        std::map<int64_t, int> playerToShots;
+        for (const auto & [_0, _1, fireIndex] :
+                ticks.weaponFirePerTick.intervalToEvent.findOverlapping(unmodifiedTickIndex, nextUnmodifiedTickIndex - 1)) {
+            int64_t shooterId = weaponFire.shooter[fireIndex];
+            if (!playerToShots.count(shooterId)) {
+                playerToShots[shooterId] = 0;
+            }
+            playerToShots[shooterId]++;
+        }
+
+        for (size_t playerColumn = 0; playerColumn < max_enemies; playerColumn++) {
+            int64_t playerId = columnData[playerColumn].playerId[curTick];
+            if (playerToShots.count(playerId)) {
+                columnData[playerColumn].shotsCurTick[curTick] = playerToShots[playerId];
+            }
+        }
+    }
+
     void TeamFeatureStoreResult::convertTraceNonReplayNamesToIndices(const Players & players, int64_t roundIndex,
                                                                      int64_t tickIndex) {
         // don't repeat multiple times per round, and don't do it on rounds without non-replay players
@@ -1015,6 +1049,7 @@ namespace csknow::feature_store {
 
     void TeamFeatureStoreResult::computeAcausalLabels(const Games & games, const Rounds & rounds,
                                                       const Ticks & ticks, const Kills & kills,
+                                                      const WeaponFire & weaponFire,
                                                       const Players & players,
                                                       const DistanceToPlacesResult & distanceToPlacesResult,
                                                       const ReachableResult & reachableResult,
@@ -1025,6 +1060,7 @@ namespace csknow::feature_store {
         roundTestIndex = keyRetakeEvents.roundTestIndex;
         roundNumTests = keyRetakeEvents.roundNumTests;
         perTraceData = keyRetakeEvents.perTraceData;
+        playerNames = players.name;
         std::atomic<int64_t> roundsProcessed = 0;
         /*
         for (size_t i = 0; i < columnTData[4].distributionNearestAOrders15s[0].size(); i++) {
@@ -1146,6 +1182,8 @@ namespace csknow::feature_store {
                                                  columnCTData, nonDecimatedCTData, ticks, tickRates);
                 computeKillNextTick(tickIndex, unmodifiedTickIndex, roundIndex, columnTData, ticks, kills);
                 computeKillNextTick(tickIndex, unmodifiedTickIndex, roundIndex, columnCTData, ticks, kills);
+                computeShotsCurTick(tickIndex, unmodifiedTickIndex, roundIndex, columnTData, ticks, weaponFire);
+                computeShotsCurTick(tickIndex, unmodifiedTickIndex, roundIndex, columnCTData, ticks, weaponFire);
                 //computePlaceAreaACausalLabels(ticks, tickRates, tickIndex, ticks15sFutureTracker, columnCTData);
                 //computePlaceAreaACausalLabels(ticks, tickRates, tickIndex, ticks15sFutureTracker, columnTData);
                 /*
@@ -1219,6 +1257,7 @@ namespace csknow::feature_store {
         }
         file.createDataSet("/extra/trace one non replay team", perTraceData.oneNonReplayTeam, hdf5FlatCreateProps);
         file.createDataSet("/extra/trace one non replay bot", perTraceData.oneNonReplayBot, hdf5FlatCreateProps);
+        file.createDataSet("/extra/player names", playerNames, hdf5FlatCreateProps);
 
         file.createDataSet("/data/game id", gameId, hdf5FlatCreateProps);
         file.createDataSet("/data/round id", roundId, hdf5FlatCreateProps);
@@ -1308,6 +1347,8 @@ namespace csknow::feature_store {
                                    columnData[columnPlayer].killNextTick, hdf5FlatCreateProps);
                 file.createDataSet("/data/player killed next tick " + columnTeam + " " + iStr,
                                    columnData[columnPlayer].killedNextTick, hdf5FlatCreateProps);
+                file.createDataSet("/data/player shots cur tick " + columnTeam + " " + iStr,
+                                   columnData[columnPlayer].shotsCurTick, hdf5FlatCreateProps);
                 file.createDataSet("/data/player health " + columnTeam + " " + iStr,
                                    columnData[columnPlayer].health, hdf5FlatCreateProps);
                 file.createDataSet("/data/player armor " + columnTeam + " " + iStr,

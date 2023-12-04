@@ -126,6 +126,7 @@ namespace csknow::feature_store {
             // 0 means not shot or visible, 1 means shot cur frame or enemy currently visible
             vector<float> hurtInLast5s, fireInLast5s, noFOVEnemyVisibleInLast5s, fovEnemyVisibleInLast5s;
             vector<bool> killNextTick, killedNextTick;
+            vector<int> shotsCurTick;
             vector<float> secondsUntilNextHitEnemy, secondsAfterPriorHitEnemy;
             vector<float> health, armor;
             // control inputs
@@ -157,6 +158,7 @@ namespace csknow::feature_store {
         }
         vector<string> allColumnDataTeam = {"CT", "T"};
         string ctTeamStr = allColumnDataTeam[0], tTeamStr = allColumnDataTeam[1];
+        vector<string> playerNames;
 
 
         void setOrders(const std::vector<csknow::orders::QueryOrder> & orders);
@@ -210,8 +212,12 @@ namespace csknow::feature_store {
         void computeKillNextTick(int64_t curTick, int64_t unmodifiedTickIndex, int64_t roundIndex,
                                  array<ColumnPlayerData, max_enemies> & columnData,
                                  const Ticks & ticks, const Kills & kills);
+        void computeShotsCurTick(int64_t curTick, int64_t unmodifiedTickIndex, int64_t roundIndex,
+                                 array<ColumnPlayerData, max_enemies> & columnData,
+                                 const Ticks & ticks, const WeaponFire & weaponFire);
         void convertTraceNonReplayNamesToIndices(const Players & players, int64_t roundIndex, int64_t tickIndex);
         void computeAcausalLabels(const Games & games, const Rounds & rounds, const Ticks & ticks, const Kills & kills,
+                                  const WeaponFire & weaponFire,
                                   const Players & players, const DistanceToPlacesResult & distanceToPlacesResult,
                                   const ReachableResult & reachableResult,
                                   const nav_mesh::nav_file & navFile,
