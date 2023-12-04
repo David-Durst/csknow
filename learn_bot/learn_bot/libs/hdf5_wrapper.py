@@ -39,10 +39,7 @@ class HDF5Wrapper:
         else:
             self.sample_df = sample_df
         self.vis_cols = vis_cols
-        if vis_cols is not None:
-            self.vis_np = load_hdf5_to_np_array(hdf5_path, cols_to_get=vis_cols, cast_to_float=True)
-        else:
-            self.vis_np = None
+        self.vis_np = None
 
     def limit(self, selector_df: pd.Series):
         self.id_df = self.id_df[selector_df]
@@ -98,8 +95,20 @@ class HDF5Wrapper:
         return HDF5Wrapper.output_data[self.hdf5_path][self.id_df['id']]
 
     def get_vis_data(self) -> np.ndarray:
-        if self.vis_np is None:
+        if self.vis_cols is None:
             raise Exception("calling get_vis_data without loading vis data")
+
+        vis_mmap_path = (self.hdf5_path.parent / ('vis_mmap_' + self.hdf5_path.name)).with_suffix('.npy')
+
+        hdf5_timestamp = os.path.getmtime(self.hdf5_path)
+        vis_timestamp = os.path.getmtime(vis_mmap_path) if vis_mmap_path.is_file() else None
+
+        if vis_timestamp is None or vis_timestamp < hdf5_timestamp:
+            vis_np = load_hdf5_to_np_array(self.hdf5_path, cols_to_get=self.vis_cols, cast_to_float=True)
+            np.save(str(vis_mmap_path), vis_np, allow_pickle=False)
+
+        if self.vis_np is None:
+            self.vis_np = np.load(str(vis_mmap_path), mmap_mode='r')
         return self.vis_np[self.id_df['id']]
 
 

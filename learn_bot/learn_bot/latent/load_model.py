@@ -90,6 +90,9 @@ class LoadedModel:
     def get_round_test_names(self) -> np.ndarray:
         return load_hdf5_extra_column(self.dataset.data_hdf5s[self.cur_hdf5_index].hdf5_path, 'round test name').astype('U')
 
+    def load_cur_hdf5_player_names(self) -> np.ndarray:
+        return load_hdf5_extra_column(self.dataset.data_hdf5s[self.cur_hdf5_index].hdf5_path, 'player names').astype('U')
+
     def get_cur_id_df(self) -> pd.DataFrame:
         return self.dataset.data_hdf5s[self.cur_hdf5_index].id_df
 

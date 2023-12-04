@@ -98,6 +98,7 @@ class PlayerPlaceAreaColumns:
         self.player_fov_enemy_visible_in_last_5s = get_player_fov_enemy_visible_in_last_5s_columns(player_index, team_str)
         self.player_kill_next_tick = get_player_kill_next_tick_columns(player_index, team_str)
         self.player_killed_next_tick = get_player_killed_next_tick_columns(player_index, team_str)
+        self.player_shots_cur_tick = get_player_shots_cur_tick_columns(player_index, team_str)
         self.player_health = get_player_health_columns(player_index, team_str)
         self.player_armor = get_player_armor_columns(player_index, team_str)
         self.decrease_distance_to_c4_5s = f"player decrease distance to c4 over 5s {team_str} {player_index}"
@@ -192,7 +193,7 @@ class PlayerPlaceAreaColumns:
         return result
 
     def get_vis_only_columns(self) -> list[str]:
-        return [self.player_id, #self.player_kill_next_tick, self.player_killed_next_tick,
+        return [self.player_id, self.player_kill_next_tick, self.player_killed_next_tick, self.player_shots_cur_tick,
                 self.player_weapon_id, self.player_scoped] + self.vel + self.view_angle
 
 

@@ -105,6 +105,9 @@ def get_player_kill_next_tick_columns(player_index: int, team_str: str) -> str:
 def get_player_killed_next_tick_columns(player_index: int, team_str: str) -> str:
     return "player killed next tick " + team_str + " " + str(player_index)
 
+def get_player_shots_cur_tick_columns(player_index: int, team_str: str) -> str:
+    return "player shots cur tick " + team_str + " " + str(player_index)
+
 def get_player_health_columns(player_index: int, team_str: str, history_index: int = 0) -> str:
     return "player health " + team_str + " " + str(player_index) + \
         ("" if history_index == 0 else " t-" + str(history_index))
