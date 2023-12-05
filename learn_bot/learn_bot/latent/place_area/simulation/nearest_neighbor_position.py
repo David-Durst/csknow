@@ -2,6 +2,7 @@ import time
 from typing import List, Optional
 
 import torch
+from einops import rearrange
 from tqdm import tqdm
 
 from learn_bot.latent.analyze.knn.knn_by_position import get_nearest_neighbors_one_situation, CachedNNData
@@ -41,12 +42,15 @@ def update_nn_position_rollout_tensor(loaded_model: LoadedModel, round_lengths: 
             #    continue
 
             alive_player_indices: List[int] = []
+            dead_player_indices: List[int] = []
             ct_pos: List[Vec3] = []
             t_pos: List[Vec3] = []
 
             # get the pos for all the alive players in the point
+            x_pos_columns = []
             for player_index, alive_column_index in enumerate(loaded_model.model.alive_columns):
                 pos_columns = loaded_model.model.nested_players_pos_columns_tensor[player_index, 0].tolist()
+                x_pos_columns.append(pos_columns[0])
                 if points_for_nn_tensor[point_index, alive_column_index] == 1:
                     alive_player_indices.append(player_index)
                     pos = Vec3(
@@ -58,6 +62,8 @@ def update_nn_position_rollout_tensor(loaded_model: LoadedModel, round_lengths: 
                         ct_pos.append(pos)
                     else:
                         t_pos.append(pos)
+                else:
+                    dead_player_indices.append(player_index)
 
             if prior_ct_alive != len(ct_pos) or prior_t_alive != len(t_pos):
                 cached_nn_data = CachedNNData()
@@ -67,12 +73,19 @@ def update_nn_position_rollout_tensor(loaded_model: LoadedModel, round_lengths: 
                 get_nearest_neighbors_one_situation(ct_pos, t_pos, 2, loaded_model, '', 0, False, False,
                                                     num_time_steps, cached_nn_data)
             # sort columns and then insert
-            same_and_nearest_nps[1][:, alive_player_indices] = same_and_nearest_nps[1][:, player_to_full_table_id[1]]
+            # make sure to get dead players columns too, nearest neighbor matching only worries abouve alive
+            unused_full_table_id = [i for i in range(len(loaded_model.model.alive_columns)) if i not in player_to_full_table_id[1]]
+            player_and_unused_full_table_id = player_to_full_table_id[1].tolist() + unused_full_table_id
+            alive_and_dead_pos_columns = rearrange(loaded_model.model.nested_players_pos_columns_tensor[alive_player_indices + dead_player_indices, 0], 'p d -> (p d)').tolist()
+            player_and_unused_to_full_table_pos_columns = rearrange(loaded_model.model.nested_players_pos_columns_tensor[player_and_unused_full_table_id, 0], 'p d -> (p d)').tolist()
+            unmodified_point = points_for_nn_tensor[point_index].clone()
+            # index 1 as skipping first match, first match is first match is input pos
+            same_and_nearest_nps[1][:, alive_and_dead_pos_columns] = same_and_nearest_nps[1][:, player_and_unused_to_full_table_pos_columns]
             nn_rollout_tensor[similarity_tick_indices[point_index]:similarity_tick_indices[point_index] + num_time_steps] = \
                 torch.tensor(same_and_nearest_nps[1])
-            fill_dead_positions_with_last_alive(nn_rollout_tensor[similarity_tick_indices[point_index]:
-                                                                  similarity_tick_indices[point_index] + num_time_steps],
-                                                loaded_model)
+            #fill_dead_positions_with_last_alive(nn_rollout_tensor[similarity_tick_indices[point_index]:
+            #                                                      similarity_tick_indices[point_index] + num_time_steps],
+            #                                    loaded_model)
 
             prior_ct_alive = len(ct_pos)
             prior_t_alive = len(t_pos)

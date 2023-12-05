@@ -396,6 +396,7 @@ def run_analysis_per_mask(loaded_model: LoadedModel, all_data_loaded_model: Load
             if iteration == 0 and player_mask_config in mask_configs_to_plot:
                 trajectory_counter = compute_trajectory_counter(loaded_model.get_cur_id_df(), round_lengths)
                 plot_one_trajectory_dataset(loaded_model, loaded_model.get_cur_id_df(),
+                                            loaded_model.get_cur_vis_df(),
                                             loaded_model.cur_simulated_dataset.X,
                                             TrajectoryFilterOptions(trajectory_counter=trajectory_counter),
                                             str(player_mask_config))
@@ -436,7 +437,7 @@ def run_analysis(loaded_model: LoadedModel, all_data_loaded_model: LoadedModel):
                            PlayerMaskConfig.STARTING_POSITION,
                            PlayerMaskConfig.INTERPOLATION_ROLLOUT_POSITION,
                            PlayerMaskConfig.INTERPOLATION_ROUND_POSITION,
-                           #PlayerMaskConfig.NN_POSITION,
+                           PlayerMaskConfig.NN_POSITION,
                            PlayerMaskConfig.GROUND_TRUTH_CMD,
                            PlayerMaskConfig.GROUND_TRUTH_POSITION,
                            PlayerMaskConfig.RANDOM_CMD]

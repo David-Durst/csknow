@@ -68,6 +68,8 @@ def get_nearest_neighbors_one_situation(ct_pos: List[Vec3], t_pos: List[Vec3], n
     players_pos = ct_pos + t_pos
 
     start_mappings_time = time.time()
+    # map from player in ct_pos + t_pos to all different sortings (different column indices)
+    # COLUMN INDICES ARE DIFFERENT ORDERS OF THE ALIVE PLAYERS
     player_to_column_mappings = generate_all_player_to_column_mappings(num_ct_alive, num_t_alive)
     mappings_time = time.time() - start_mappings_time
 
@@ -114,6 +116,8 @@ def get_nearest_neighbors_one_situation(ct_pos: List[Vec3], t_pos: List[Vec3], n
         min_manhattan_distance_per_row = np.zeros(alive_pos_np.shape[0])
         min_manhattan_distance_per_row[:] = math.inf
         target_full_table_id_per_row = np.zeros(alive_pos_np.shape[0], dtype=np.int32)
+        # map from input player index (ct_pos and t_pos) to entry in full table with most similar player
+        # number of columnes equal to num_ct_alive + num_t_alive, values between 0 and 9
         player_to_full_table_id_per_row = np.zeros_like(full_table_id_np)
         for player_to_column_mapping in player_to_column_mappings:
             # sum distance per player for this mapping
@@ -135,9 +139,10 @@ def get_nearest_neighbors_one_situation(ct_pos: List[Vec3], t_pos: List[Vec3], n
             # since looking at all players, use global alignment
             euclidean_condition_repeated = (mapping_euclidean_distance < min_euclidean_distance_per_row) \
                 [:, np.newaxis].repeat(player_to_full_table_id_per_row.shape[1], 1)
-            # do column_indices mapping as column_index maps list entry index p for player p to column index c,
-            # and then full_table_id_np[:, column_indices] maps that c in just alive np to full np index f
-            # so first player alive p has index f at end for entry in full matrix
+            # WHY USE column_indicies AS INDEX?
+            # column_index maps input player (in ct_pos + t_pos) p for player p to column index c (aka different orderings of alive players in ct_pos + t_pos),
+            # and then full_table_id_np[:, column_indices] maps that c'th alive player to full np index f
+            # so at end of combined mapping: alive player p maps to f in full matrix
             player_to_full_table_id_per_row = np.where(euclidean_condition_repeated,
                                                        full_table_id_np[:, column_indices], player_to_full_table_id_per_row)
             min_euclidean_distance_per_row = np.where(mapping_euclidean_distance < min_euclidean_distance_per_row,
