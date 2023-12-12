@@ -239,6 +239,7 @@ def plot_trajectories_to_image(titles: List[str], plot_teams_separately: bool, p
     title_images: List[Image.Image] = []
 
     scale_buffers_by_points(titles)
+    print(f"max pixel value after scaling before clamp to 255 {max_value}")
 
     for title in titles:
         images_per_title: List[Image.Image] = []

@@ -356,12 +356,11 @@ def plot_ade_fde(player_mask_configs: List[PlayerMaskConfig], displacement_error
         ax.set_title(str(player_mask_config) + (" minADE" if is_ade else " minFDE"))
 
 
-mask_configs_to_plot = [PlayerMaskConfig.GROUND_TRUTH_POSITION,
-                        PlayerMaskConfig.ALL,
-                        PlayerMaskConfig.STARTING_CMD,
-                        PlayerMaskConfig.NN_POSITION,
-                        PlayerMaskConfig.RANDOM_CMD]
-mask_config_plot_titles = [str(mc) for mc in mask_configs_to_plot]
+possible_mask_configs_to_plot = [PlayerMaskConfig.GROUND_TRUTH_POSITION,
+                                 PlayerMaskConfig.ALL,
+                                 PlayerMaskConfig.STARTING_CMD,
+                                 PlayerMaskConfig.NN_POSITION,
+                                 PlayerMaskConfig.RANDOM_CMD]
 
 
 def run_analysis_per_mask(loaded_model: LoadedModel, all_data_loaded_model: LoadedModel,
@@ -393,7 +392,7 @@ def run_analysis_per_mask(loaded_model: LoadedModel, all_data_loaded_model: Load
             hdf5_displacement_errors = compare_predicted_rollout_indices(loaded_model, player_enable_mask,
                                                                          player_mask_config in mask_all_configs,
                                                                          player_mask_config == PlayerMaskConfig.GROUND_TRUTH_CMD)
-            if iteration == 0 and player_mask_config in mask_configs_to_plot:
+            if iteration == 0 and player_mask_config in possible_mask_configs_to_plot:
                 trajectory_counter = compute_trajectory_counter(loaded_model.get_cur_id_df(), round_lengths)
                 plot_one_trajectory_dataset(loaded_model, loaded_model.get_cur_id_df(),
                                             loaded_model.get_cur_vis_df(),
@@ -459,6 +458,8 @@ def run_analysis(loaded_model: LoadedModel, all_data_loaded_model: LoadedModel):
 
     plots_path = similarity_plots_path / 'simulation'
     os.makedirs(plots_path, exist_ok=True)
+    # compute here so only plot subset of configs in this run
+    mask_config_plot_titles = [str(mc) for mc in possible_mask_configs_to_plot if mc in player_mask_configs]
     plot_trajectories_to_image(mask_config_plot_titles, True, plots_path, default_trajectory_filter_options)
 
     plot_ade_fde(player_mask_configs, ades_per_mask_config, axs[0], True)
