@@ -13,8 +13,8 @@ namespace csknow::compute_nav_area {
         // add half so get center of each area grid
         // no need for z since doing 2d compare
         curPriority.targetPos = curClient.getFootPosForPlayer() + Vec3{
-                static_cast<double>(modelNavData.deltaXVal)/* * csknow::feature_store::delta_pos_grid_cell_dim)*/,
-                static_cast<double>(modelNavData.deltaYVal)/* * csknow::feature_store::delta_pos_grid_cell_dim)*/,
+                static_cast<double>(modelNavData.deltaXVal),
+                static_cast<double>(modelNavData.deltaYVal),
                 modelNavData.deltaZVal > 1 ? MAX_JUMP_HEIGHT : 0.
         };
 
