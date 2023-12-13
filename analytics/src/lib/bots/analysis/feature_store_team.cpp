@@ -1110,12 +1110,12 @@ namespace csknow::feature_store {
 
                 bothSidesTicksNextFutureTracker.enqueue(tickIndex);
                 while (bothSidesTicksNextFutureTracker.getCurSize() > 1 &&
-                       secondsBetweenTicks(ticks, tickRates, internalIdToTickId[tickIndex], internalIdToTickId[bothSidesTicksNextFutureTracker.fromOldest(1)]) > 0.12) {
+                       secondsBetweenTicks(ticks, tickRates, internalIdToTickId[tickIndex], internalIdToTickId[bothSidesTicksNextFutureTracker.fromOldest(1)]) > 0.25) {
                     bothSidesTicksNextFutureTracker.dequeue();
                 }
                 bothSidesTicksSecondNextFutureTracker.enqueue(tickIndex);
                 while (bothSidesTicksSecondNextFutureTracker.getCurSize() > 1 &&
-                       secondsBetweenTicks(ticks, tickRates, internalIdToTickId[tickIndex], internalIdToTickId[bothSidesTicksSecondNextFutureTracker.fromOldest(1)]) > 0.25) {
+                       secondsBetweenTicks(ticks, tickRates, internalIdToTickId[tickIndex], internalIdToTickId[bothSidesTicksSecondNextFutureTracker.fromOldest(1)]) > 0.5) {
                     bothSidesTicksSecondNextFutureTracker.dequeue();
                 }
                 bothSidesTicks5sFutureTracker.enqueue(tickIndex);
