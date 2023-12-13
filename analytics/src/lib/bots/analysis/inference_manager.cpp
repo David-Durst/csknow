@@ -80,6 +80,7 @@ namespace csknow::inference_manager {
         }
     }
 
+    //std::chrono::time_point<std::chrono::system_clock> lastInferenceTime;
     void InferenceManager::runInferences() {
         if (!valid) {
             //inferenceSeconds = 0;
@@ -120,6 +121,9 @@ namespace csknow::inference_manager {
         //runAggressionInference(clients);
         ranDeltaPosInferenceThisTick = false;
         if (overallModelToRun == 0) {
+            //std::chrono::duration<double> inferenceTime = start - lastInferenceTime;
+            //std::cout << "times between inferences " << inferenceTime.count() << std::endl;
+            //lastInferenceTime = start;
             runDeltaPosInference();
             ranDeltaPosInference = true;
             ranDeltaPosInferenceThisTick = true;

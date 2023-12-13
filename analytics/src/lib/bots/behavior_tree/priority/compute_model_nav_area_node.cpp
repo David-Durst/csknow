@@ -79,6 +79,7 @@ namespace csknow::compute_nav_area {
         modelNavData.unmodifiedTargetPos = curPriority.targetPos;
     }
 
+    //std::chrono::time_point<std::chrono::system_clock> lastInferenceTime;
     NodeState ComputeModelNavAreaNode::exec(const ServerState &state, TreeThinker &treeThinker) {
         const ServerState::Client & curClient = state.getClient(treeThinker.csgoId);
 
@@ -146,12 +147,17 @@ namespace csknow::compute_nav_area {
             bool timeForNewDeltaPos = blackboard.inferenceManager.ranDeltaPosInferenceThisTick || wasInEngagement;
             if (blackboard.playerToLastProbDeltaPosAssignment.find(treeThinker.csgoId) ==
                 blackboard.playerToLastProbDeltaPosAssignment.end() || timeForNewDeltaPos) {
+                std::cout << "invalidating player to last prob delta pos assignment" << std::endl;
                 blackboard.playerToLastProbDeltaPosAssignment[treeThinker.csgoId] =
                         {Vec3{INVALID_ID, INVALID_ID, INVALID_ID}, 0, 0, false, false, false};
             }
             PriorityDeltaPosAssignment & lastProbDeltaPosAssignment =
                     blackboard.playerToLastProbDeltaPosAssignment[treeThinker.csgoId];
             if (!lastProbDeltaPosAssignment.valid) {
+                //auto start = std::chrono::system_clock::now();
+                //std::chrono::duration<double> inferenceTime = start - lastInferenceTime;
+                //std::cout << "treeThinker " << treeThinker.csgoId << "times between inferences " << inferenceTime.count() << std::endl;
+                //lastInferenceTime = start;
                 computeDeltaPosProbabilistic(state, curPriority, treeThinker.csgoId, modelNavData);
                 lastProbDeltaPosAssignment = {curPriority.targetPos, curPriority.targetAreaId, modelNavData.radialVelIndex,
                                               curPriority.moveOptions.walk, curPriority.moveOptions.crouch, true};
