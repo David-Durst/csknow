@@ -34,7 +34,7 @@ namespace csknow::compute_nav_area {
     constexpr int num_blend_points = 11;
 
     void ComputeModelNavAreaNode::checkClearPathToTargetPos(const ServerState::Client & curClient,
-                                                            Priority & curPriority) {
+                                                            Priority & curPriority, const ModelNavData &) {
         AreaId lastAreaId = INVALID_ID;
         // for each sample, verify that can walk from prior sample to next one
         // 1. base case - in the same nav mesh as in the prior one
@@ -67,12 +67,14 @@ namespace csknow::compute_nav_area {
             int64_t lastAreaIndex = blackboard.mapMeshResult.areaToInternalId[lastAreaId];
             int64_t curAreaIndex = blackboard.mapMeshResult.areaToInternalId[curAreaId];
             bool connectedNavAreas = false;
+            //if (modelNavData.deltaZVal != 1) {
             for (const auto & conId : blackboard.mapMeshResult.connectionAreaIds[lastAreaIndex]) {
                 if (conId == curAreaId) {
                     connectedNavAreas = true;
                     break;
                 }
             }
+            //}
 
             // check if nav areas touching
             AABB lastAreaRegion = blackboard.mapMeshResult.coordinate[lastAreaIndex];
@@ -189,7 +191,7 @@ namespace csknow::compute_nav_area {
             curPriority.numConsecutiveLearnedPathOverrides++;
             invalidDest++;
         }
-        checkClearPathToTargetPos(curClient, curPriority);
+        checkClearPathToTargetPos(curClient, curPriority, modelNavData);
         modelNavData.unmodifiedTargetPos = curPriority.targetPos;
         //std::cout << validDest / (static_cast<float>(invalidDest + validDest)) << std::endl;
     }
