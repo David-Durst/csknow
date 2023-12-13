@@ -18,7 +18,7 @@ namespace csknow {
         public:
             ComputeModelNavAreaNode(Blackboard & blackboard, bool inEngagePath) :
                 Node(blackboard, "ComputeModelNavAreaNode"), inEngagePath(inEngagePath) { };
-            Vec3 tryDeltaPosTargetPos(const ServerState & state, const ServerState::Client & curClient,
+            void tryDeltaPosTargetPos(const ServerState & state, const ServerState::Client & curClient,
                                       Priority & curPriority, ModelNavData & modelNavData);
             void checkClearPathToTargetPos(const ServerState::Client & curClient, Priority & curPriority);
             void computeDeltaPosProbabilistic(const ServerState & state, Priority & curPriority, CSGOId csgoId,

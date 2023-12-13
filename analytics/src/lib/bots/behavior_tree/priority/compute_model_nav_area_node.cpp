@@ -9,7 +9,7 @@
 namespace csknow::compute_nav_area {
     constexpr double max_place_distance_seconds = 5.;
 
-    Vec3 ComputeModelNavAreaNode::tryDeltaPosTargetPos(const ServerState & state, const ServerState::Client & curClient,
+    void ComputeModelNavAreaNode::tryDeltaPosTargetPos(const ServerState & state, const ServerState::Client & curClient,
                                                        Priority &curPriority, ModelNavData &modelNavData) {
         // add half so get center of each area grid
         // no need for z since doing 2d compare
@@ -19,6 +19,11 @@ namespace csknow::compute_nav_area {
                 modelNavData.deltaZVal > 1 ? MAX_JUMP_HEIGHT : 0.
         };
 
+        curPriority.targetAreaId = blackboard.navFile.get_nearest_area_by_position(vec3Conv(curPriority.targetPos)).get_id();
+        if (blackboard.removedAreas.find(curPriority.targetAreaId) != blackboard.removedAreas.end()) {
+            curPriority.targetAreaId = blackboard.removedAreaAlternatives[curPriority.targetAreaId];
+        }
+        /*
         // if not jumping or falling, get nearest in 3d
         size_t navAboveBelowIndex = blackboard.navAboveBelow.posToIndex(curPriority.targetPos);
         if (modelNavData.deltaZVal == 1 || !blackboard.navAboveBelow.foundBelow[navAboveBelowIndex]) {
@@ -28,6 +33,7 @@ namespace csknow::compute_nav_area {
         else {
             curPriority.targetAreaId = blackboard.navAboveBelow.areaBelow[navAboveBelowIndex];
         }
+         */
 
         /*
         curPriority.targetPos = Vec3{-2182.96875, 2191.69189453125, 1.5059620141983032} + Vec3{
@@ -59,7 +65,6 @@ namespace csknow::compute_nav_area {
         else {
             curPriority.targetAreaId = flatArea.get_id();
         }
-         */
 
         Vec3 desiredPos = curPriority.targetPos;
 
@@ -76,10 +81,8 @@ namespace csknow::compute_nav_area {
                         .get_nearest_area_by_position(vec3Conv(state.getC4Pos())).get_id();
             }
         }
+         */
 
-        if (blackboard.removedAreas.find(curPriority.targetAreaId) != blackboard.removedAreas.end()) {
-            curPriority.targetAreaId = blackboard.removedAreaAlternatives[curPriority.targetAreaId];
-        }
         // if same next place and not at old next area, keep using that area
         /*
         if (blackboard.playerToModelNavData.find(csgoId) != blackboard.playerToModelNavData.end()) {
@@ -102,7 +105,6 @@ namespace csknow::compute_nav_area {
          */
 
         modelNavData.nextArea = curPriority.targetAreaId;
-        return desiredPos;
     }
 
     // 11 blend points as first one will be starting point. want 10 points over entire length
