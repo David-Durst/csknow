@@ -21,6 +21,8 @@ namespace csknow::inference_manager {
 
     constexpr size_t batch_size_per_model = 1;
     constexpr size_t max_track_ticks = 20;
+    constexpr int ticks_per_inference = 32;
+    constexpr int ticks_per_seconds = 128;
 
     struct ClientInferenceData {
         bool validData;
@@ -31,10 +33,11 @@ namespace csknow::inference_manager {
     };
 
     class InferenceManager {
-        bool ranDeltaPosInference = false, ranCombatDeltaPosInference = false;
-        void runDeltaPosInference(bool combatModule);
+        bool ranDeltaPosInference = false;
+        void runDeltaPosInference();
         int overallModelToRun = 0;
     public:
+        bool ranDeltaPosInferenceThisTick = false;
         bool valid;
         double inferenceSeconds;
         torch::TensorOptions options = torch::TensorOptions().dtype(at::kFloat);

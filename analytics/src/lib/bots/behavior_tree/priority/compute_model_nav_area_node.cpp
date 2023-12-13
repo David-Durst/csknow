@@ -220,55 +220,59 @@ namespace csknow::compute_nav_area {
         //if (curPriority.directPathToLearnedTargetPos) {
         //    checkClearPathToTargetPos(curClient, curPriority);
         //}
-        if (!curPriority.directPathToLearnedTargetPos || curPriority.directPathToLearnedTargetPos.value() ||
-            curPriority.numConsecutiveLearnedPathOverrides > 2) {
-            curPriority.numConsecutiveLearnedPathOverrides = 0;
-            size_t deltaPosOption = 0;
-            // / *
-            bool setDeltaPosOption = false;
-            double probSample = blackboard.aggressionDis(blackboard.gen);
-            double weightSoFar = 0.;
-            modelNavData.deltaPosProbs.clear();
-            for (size_t i = 0; i < probabilities.size(); i++) {
-                weightSoFar += probabilities[i];
-                modelNavData.deltaPosProbs.push_back(probabilities[i]);
-                if (probSample < weightSoFar && !setDeltaPosOption) {
-                    deltaPosOption = i;
-                    setDeltaPosOption = true;
-                }
+        //if (!curPriority.directPathToLearnedTargetPos || curPriority.directPathToLearnedTargetPos.value() ||
+        //    curPriority.numConsecutiveLearnedPathOverrides > 2) {
+        //    curPriority.numConsecutiveLearnedPathOverrides = 0;
+        size_t deltaPosOption = 0;
+        // / *
+        bool setDeltaPosOption = false;
+        double probSample = blackboard.aggressionDis(blackboard.gen);
+        double weightSoFar = 0.;
+        modelNavData.deltaPosProbs.clear();
+        for (size_t i = 0; i < probabilities.size(); i++) {
+            weightSoFar += probabilities[i];
+            modelNavData.deltaPosProbs.push_back(probabilities[i]);
+            if (probSample < weightSoFar && !setDeltaPosOption) {
+                deltaPosOption = i;
+                setDeltaPosOption = true;
             }
-            // * /
-            /*
-            double maxProb = -1.;
-            modelNavData.deltaPosProbs.clear();
-            for (size_t i = 0; i < probabilities.size(); i++) {
-                modelNavData.deltaPosProbs.push_back(probabilities[i]);
-                if (probabilities[i] > maxProb) {
-                    deltaPosOption = i;
-                    maxProb = probabilities[i];
-                }
+        }
+        // * /
+        /*
+        double maxProb = -1.;
+        modelNavData.deltaPosProbs.clear();
+        for (size_t i = 0; i < probabilities.size(); i++) {
+            modelNavData.deltaPosProbs.push_back(probabilities[i]);
+            if (probabilities[i] > maxProb) {
+                deltaPosOption = i;
+                maxProb = probabilities[i];
             }
-            */
-            modelNavData.radialVelIndex = deltaPosOption;
-            /*
-            if (modelNavData.radialVelIndex == 64 || modelNavData.radialVelIndex == 67 || modelNavData.radialVelIndex == 70 || modelNavData.radialVelIndex == 73 || modelNavData.radialVelIndex == 76 || modelNavData.radialVelIndex == 79 || modelNavData.radialVelIndex == 82) {
-                std::cout << "hi" << std::endl;
-            }
-             */
-            csknow::weapon_speed::MovementStatus movementStatus(static_cast<EngineWeaponId>(curClient.currentWeaponId),
-                                                                curClient.isScoped, modelNavData.radialVelIndex);
-            modelNavData.deltaXVal = movementStatus.vel.x;
-            modelNavData.deltaYVal = movementStatus.vel.y;
-            modelNavData.deltaZVal = movementStatus.zBin;
-            curPriority.moveOptions.walk = movementStatus.statureOption == weapon_speed::StatureOptions::Walking;
-            curPriority.moveOptions.crouch = movementStatus.statureOption == weapon_speed::StatureOptions::Ducking;
+        }
+        */
+        modelNavData.radialVelIndex = deltaPosOption;
+        /*
+        if (modelNavData.radialVelIndex == 64 || modelNavData.radialVelIndex == 67 || modelNavData.radialVelIndex == 70 || modelNavData.radialVelIndex == 73 || modelNavData.radialVelIndex == 76 || modelNavData.radialVelIndex == 79 || modelNavData.radialVelIndex == 82) {
+            std::cout << "hi" << std::endl;
+        }
+         */
+        csknow::weapon_speed::MovementStatus movementStatus(static_cast<EngineWeaponId>(curClient.currentWeaponId),
+                                                            curClient.isScoped, modelNavData.radialVelIndex);
+        Vec3 scaledVel = movementStatus.getScaledVel(1.
+                //static_cast<float>(inference_manager::ticks_per_inference) /
+                //static_cast<float>(inference_manager::ticks_per_seconds)
+        );
+        modelNavData.deltaXVal = scaledVel.x;
+        modelNavData.deltaYVal = scaledVel.y;
+        modelNavData.deltaZVal = movementStatus.zBin;
+        curPriority.moveOptions.walk = movementStatus.statureOption == weapon_speed::StatureOptions::Walking;
+        curPriority.moveOptions.crouch = movementStatus.statureOption == weapon_speed::StatureOptions::Ducking;
 
-            tryDeltaPosTargetPos(state, curClient, curPriority, modelNavData);
-        }
-        else {
-            curPriority.numConsecutiveLearnedPathOverrides++;
-        }
-        checkClearPathToTargetPos(curClient, curPriority);
+        tryDeltaPosTargetPos(state, curClient, curPriority, modelNavData);
+        //}
+        //else {
+        //    curPriority.numConsecutiveLearnedPathOverrides++;
+        //}
+        //checkClearPathToTargetPos(curClient, curPriority);
 
         /*
         // this triggers is in b and model never seen defuse (so trying to go away) but c4 active so go wrong way
@@ -384,14 +388,7 @@ namespace csknow::compute_nav_area {
 
             modelNavData.deltaPosMode = true;
             // update area
-            if (blackboard.playerToTicksSinceLastProbDeltaPosAssignment.find(treeThinker.csgoId) ==
-                blackboard.playerToTicksSinceLastProbDeltaPosAssignment.end()) {
-                blackboard.playerToTicksSinceLastProbDeltaPosAssignment[treeThinker.csgoId] = newDeltaPosTicks;
-            }
-            blackboard.playerToTicksSinceLastProbDeltaPosAssignment[treeThinker.csgoId]++;
-            bool timeForNewDeltaPos =
-                    blackboard.playerToTicksSinceLastProbDeltaPosAssignment.at(treeThinker.csgoId) >= newDeltaPosTicks ||
-                    wasInEngagement;
+            bool timeForNewDeltaPos = blackboard.inferenceManager.ranDeltaPosInferenceThisTick || wasInEngagement;
             if (blackboard.playerToLastProbDeltaPosAssignment.find(treeThinker.csgoId) ==
                 blackboard.playerToLastProbDeltaPosAssignment.end() || timeForNewDeltaPos) {
                 blackboard.playerToLastProbDeltaPosAssignment[treeThinker.csgoId] =
@@ -403,7 +400,6 @@ namespace csknow::compute_nav_area {
                 computeDeltaPosProbabilistic(state, curPriority, treeThinker.csgoId, modelNavData);
                 lastProbDeltaPosAssignment = {curPriority.targetPos, curPriority.targetAreaId, modelNavData.radialVelIndex,
                                               curPriority.moveOptions.walk, curPriority.moveOptions.crouch, true};
-                blackboard.playerToTicksSinceLastProbDeltaPosAssignment[treeThinker.csgoId] = 0;
                 lastProbDeltaPosAssignment.valid = true;
             }
             else {

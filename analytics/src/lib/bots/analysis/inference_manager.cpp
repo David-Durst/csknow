@@ -56,7 +56,7 @@ namespace csknow::inference_manager {
                                                                                         teamSaveControlParameters);
     }
 
-    void InferenceManager::runDeltaPosInference(bool combatModule) {
+    void InferenceManager::runDeltaPosInference() {
         std::vector<torch::jit::IValue> inputs;
         torch::Tensor rowPT = torch::from_blob(deltaPosValues.rowCPP.data(),
                                                {1, static_cast<long>(deltaPosValues.rowCPP.size())},
@@ -72,21 +72,11 @@ namespace csknow::inference_manager {
         torch::Tensor temperaturePt = torch::from_blob(temperatureArr.data(), {1, 1}, options);
         inputs.push_back(temperaturePt);
 
-        if (combatModule) {
-            at::Tensor output = combatDeltaPosModule.forward(inputs).toTuple()->elements()[1].toTensor();
+        at::Tensor output = deltaPosModule.forward(inputs).toTuple()->elements()[1].toTensor();
 
-            for (auto & [csgoId, inferenceData] : playerToInferenceData) {
-                playerToInferenceData[csgoId].combatDeltaPosProbabilities =
-                        extractFeatureStoreDeltaPosResults(output, deltaPosValues, csgoId, inferenceData.team);
-            }
-        }
-        else {
-            at::Tensor output = deltaPosModule.forward(inputs).toTuple()->elements()[1].toTensor();
-
-            for (auto & [csgoId, inferenceData] : playerToInferenceData) {
-                playerToInferenceData[csgoId].deltaPosProbabilities =
-                        extractFeatureStoreDeltaPosResults(output, deltaPosValues, csgoId, inferenceData.team);
-            }
+        for (auto & [csgoId, inferenceData] : playerToInferenceData) {
+            playerToInferenceData[csgoId].deltaPosProbabilities =
+                    extractFeatureStoreDeltaPosResults(output, deltaPosValues, csgoId, inferenceData.team);
         }
     }
 
@@ -128,15 +118,13 @@ namespace csknow::inference_manager {
         auto start = std::chrono::system_clock::now();
         //runEngagementInference(clients);
         //runAggressionInference(clients);
+        ranDeltaPosInferenceThisTick = false;
         if (overallModelToRun == 0) {
-            runDeltaPosInference(false);
+            runDeltaPosInference();
             ranDeltaPosInference = true;
+            ranDeltaPosInferenceThisTick = true;
         }
-        if (overallModelToRun == 4) {
-            //runDeltaPosInference(true);
-            ranCombatDeltaPosInference = true;
-        }
-        overallModelToRun = (overallModelToRun + 1) % 16;
+        overallModelToRun = (overallModelToRun + 1) % ticks_per_inference;
         auto end = std::chrono::system_clock::now();
         std::chrono::duration<double> inferenceTime = end - start;
         double tmpInferenceSeconds = inferenceTime.count();
@@ -146,7 +134,7 @@ namespace csknow::inference_manager {
     }
 
     bool InferenceManager::haveValidData() const {
-        return ranDeltaPosInference && ranCombatDeltaPosInference;
+        return ranDeltaPosInference;
         /*
         if (!ranOrderInference || !ranPlaceInference || !ranAreaInference || !ranDeltaPosInference) {
             return false;

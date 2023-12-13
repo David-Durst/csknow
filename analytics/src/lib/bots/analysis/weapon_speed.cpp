@@ -258,6 +258,10 @@ namespace csknow::weapon_speed {
         }
     }
 
+    Vec3 MovementStatus::getScaledVel(double pctSecond) {
+        return vel * pctSecond;
+    }
+
     int velocityToDir(Vec3 vel) {
         double velAngle = glm::degrees(std::atan2(vel.y, vel.x));
         // make velAngle always positive

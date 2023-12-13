@@ -111,10 +111,7 @@ namespace movement {
             }
         }
 
-        bool newDeltaPosDestination =
-                blackboard.playerToTicksSinceLastProbDeltaPosAssignment.find(curClient.csgoId) !=
-                blackboard.playerToTicksSinceLastProbDeltaPosAssignment.end() &&
-                blackboard.playerToTicksSinceLastProbDeltaPosAssignment[curClient.csgoId] == 0;
+        bool newDeltaPosDestination = blackboard.inferenceManager.ranDeltaPosInferenceThisTick;
 
         // if have a path and haven't changed source or target nav area id and not stuck.
         // If so, do nothing (except increment waypoint if necessary)

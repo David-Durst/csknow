@@ -42,6 +42,7 @@ namespace csknow::weapon_speed {
         MovementStatus(EngineWeaponId engineWeaponId, bool scoped, int radialMovementBin);
 
         int toRadialMovementBin() const;
+        Vec3 getScaledVel(double pctSecond);
     };
     int velocityToDir(Vec3 vel);
 
