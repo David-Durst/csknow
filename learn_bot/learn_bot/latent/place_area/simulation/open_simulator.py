@@ -429,7 +429,7 @@ def run_analysis(loaded_model: LoadedModel, all_data_loaded_model: LoadedModel):
     mask_result_strs = []
     mask_result_latex_strs = ["Simulation Type & minSADE Mean & minSADE Std Dev & minSFDE Mean & minSFDE Std Dev \\\\",
                               "\\hline"]
-    player_mask_configs = [#PlayerMaskConfig.ALL,
+    player_mask_configs = [PlayerMaskConfig.ALL,
                            #PlayerMaskConfig.CT, PlayerMaskConfig.T,
                            ##PlayerMaskConfig.LAST_ALIVE,
                            #PlayerMaskConfig.STARTING_CMD,
