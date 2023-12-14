@@ -78,7 +78,7 @@ def update_nn_position_rollout_tensor(loaded_model: LoadedModel, round_lengths: 
                                                     num_time_steps, cached_nn_data)
             # usually index 1 as skipping first match, first match is first match is input pos
             # but if end of round, not 5 seconds to match, then may not include it and may need first entry as that's best match and not the same
-            if l2_distances[0] == 0.:
+            if l2_distances.iloc[0] == 0.:
                 nearest_np = same_and_nearest_nps[1].copy()
             else:
                 nearest_np = same_and_nearest_nps[0].copy()
