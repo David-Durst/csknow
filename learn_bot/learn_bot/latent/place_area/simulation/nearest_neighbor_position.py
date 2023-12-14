@@ -38,6 +38,10 @@ def update_nn_position_rollout_tensor(loaded_model: LoadedModel, round_lengths: 
     start_time = time.time()
     with tqdm(total=points_for_nn_tensor.shape[0], disable=False) as pbar:
         for point_index in range(points_for_nn_tensor.shape[0]):
+            if point_index == 8:#11:
+                print(point_index)
+                tick_index = similarity_tick_indices[point_index]
+                print(loaded_model.get_cur_id_df().iloc[tick_index])
             #if point_index != 12:
             #    continue
 
@@ -69,11 +73,16 @@ def update_nn_position_rollout_tensor(loaded_model: LoadedModel, round_lengths: 
                 cached_nn_data = CachedNNData()
             #print(f"point index {point_index}, round id {similarity_round_ids[point_index]}, num ct {len(ct_pos)}, num t {len(t_pos)}")
             # 2 as 1 should be this, second should be second best
-            same_and_nearest_nps, player_to_full_table_id, cached_nn_data = \
+            same_and_nearest_nps, player_to_full_table_id, l2_distances, cached_nn_data = \
                 get_nearest_neighbors_one_situation(ct_pos, t_pos, 2, loaded_model, '', 0, False, False,
                                                     num_time_steps, cached_nn_data)
-            # index 1 as skipping first match, first match is first match is input pos
-            nearest_np = same_and_nearest_nps[1]
+            # usually index 1 as skipping first match, first match is first match is input pos
+            # but if end of round, not 5 seconds to match, then may not include it and may need first entry as that's best match and not the same
+            if l2_distances[0] == 0.:
+                nearest_np = same_and_nearest_nps[1].copy()
+            else:
+                nearest_np = same_and_nearest_nps[0].copy()
+            orig_order_nearest_np = nearest_np.copy()
             # sort columns and then insert
             # make sure to get dead players columns too, nearest neighbor matching only worries abouve alive
             unused_full_table_id = [i for i in range(len(loaded_model.model.alive_columns)) if i not in player_to_full_table_id[1]]
@@ -84,15 +93,22 @@ def update_nn_position_rollout_tensor(loaded_model: LoadedModel, round_lengths: 
             player_and_unused_to_full_table_alive_columns = [loaded_model.model.alive_columns[i] for i in player_and_unused_full_table_id]
             #unmodified_point = points_for_nn_tensor[point_index].clone()
             nearest_np[:, alive_and_dead_pos_columns] = nearest_np[:, player_and_unused_to_full_table_pos_columns]
-            #nearest_np[:, alive_and_dead_alive_columns] = nearest_np[:, player_and_unused_to_full_table_alive_columns]
+            nearest_np[:, alive_and_dead_alive_columns] = nearest_np[:, player_and_unused_to_full_table_alive_columns]
+            nearest_tensor = torch.tensor(nearest_np, dtype=nn_rollout_tensor.dtype)
+            nn_rollout_tensor[similarity_tick_indices[point_index]:similarity_tick_indices[point_index] + num_time_steps, alive_and_dead_pos_columns] = \
+                nearest_tensor[:, alive_and_dead_pos_columns]
             #check_for_alive_with_dead_positions(nn_rollout_tensor[similarity_tick_indices[point_index]:
             #                                                      similarity_tick_indices[point_index] + num_time_steps],
-            #                                    torch.Tensor(nearest_np),
+            #                                    nn_rollout_tensor[similarity_tick_indices[point_index]:
+            #                                                      similarity_tick_indices[point_index] + num_time_steps],
             #                                    loaded_model)
-            nn_rollout_tensor[similarity_tick_indices[point_index]:similarity_tick_indices[point_index] + num_time_steps, alive_and_dead_pos_columns] = \
-                torch.tensor(nearest_np, dtype=nn_rollout_tensor.dtype)[:, alive_and_dead_pos_columns]
             fill_dead_positions_with_last_alive(nn_rollout_tensor[similarity_tick_indices[point_index]:
                                                                   similarity_tick_indices[point_index] + num_time_steps],
+                                                nearest_tensor,
+                                                loaded_model)
+            check_for_alive_with_dead_positions(nn_rollout_tensor[similarity_tick_indices[point_index]:
+                                                                  similarity_tick_indices[point_index] + num_time_steps],
+                                                nearest_tensor,
                                                 loaded_model)
 
             prior_ct_alive = len(ct_pos)
@@ -111,17 +127,22 @@ def check_for_alive_with_dead_positions(orig_rollout_tensor: torch.Tensor, updat
     for player_index, alive_column_index in enumerate(loaded_model.model.alive_columns):
         pos_columns = loaded_model.model.nested_players_pos_columns_tensor[player_index, 0].tolist()
         alive_column = orig_rollout_tensor[:, alive_column_index]
-        dead_pos_alive = (alive_column > 0) & (updated_rollout_tensor[:, pos_columns[0]] == 0.) & (updated_rollout_tensor[:, pos_columns[1]] == 0.)
+        updated_alive_column = updated_rollout_tensor[:, alive_column_index]
+        dead_pos_alive = (alive_column > 0) & (orig_rollout_tensor[:, pos_columns[0]] == 0.) & (orig_rollout_tensor[:, pos_columns[1]] == 0.)
         if sum(dead_pos_alive) > 0:
-            num_dead_while_orig_alive += sum(dead_pos_alive)
+            num_dead_while_orig_alive = sum(dead_pos_alive)
             print(f"num dead while orig alive {num_dead_while_orig_alive}")
 
-def fill_dead_positions_with_last_alive(rollout_tensor: torch.Tensor, loaded_model: LoadedModel):
+def fill_dead_positions_with_last_alive(orig_rollout_tensor: torch.Tensor, updated_rollout_tensor: torch.Tensor, loaded_model: LoadedModel):
     for player_index, alive_column_index in enumerate(loaded_model.model.alive_columns):
         pos_columns = loaded_model.model.nested_players_pos_columns_tensor[player_index, 0].tolist()
-        num_alive_ticks = int(torch.sum(rollout_tensor[:, alive_column_index]))
-        if num_alive_ticks < rollout_tensor.shape[0]:
-            rollout_tensor[num_alive_ticks:, pos_columns] = rollout_tensor[max(num_alive_ticks-1, 0), pos_columns]
+        # these are orig alive ticks, not nearest neighrbor alive ticks, so will miss 0's
+        num_orig_alive_ticks = int(torch.sum(orig_rollout_tensor[:, alive_column_index]))
+        num_updated_alive_ticks = int(torch.sum(updated_rollout_tensor[:, alive_column_index]))
+        if num_orig_alive_ticks > num_updated_alive_ticks:
+            orig_rollout_tensor[num_updated_alive_ticks:num_orig_alive_ticks, pos_columns] = orig_rollout_tensor[num_updated_alive_ticks-1, pos_columns]
+        #if num_alive_ticks < rollout_tensor.shape[0]:
+        #    rollout_tensor[num_alive_ticks:, pos_columns] = rollout_tensor[max(num_alive_ticks-1, 0), pos_columns]
 
 
 

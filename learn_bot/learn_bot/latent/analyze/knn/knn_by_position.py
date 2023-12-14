@@ -60,7 +60,7 @@ def get_nearest_neighbors_one_situation(ct_pos: List[Vec3], t_pos: List[Vec3], n
                                         loaded_model: LoadedModel, situation_name: str, target_player_index: int,
                                         plot: bool, push_only: bool, num_future_ticks: Optional[int],
                                         cached_nn_data: Optional[CachedNNData] = None,
-                                        decimation: Optional[int] = None) -> Tuple[List[np.ndarray], np.ndarray, CachedNNData]:
+                                        decimation: Optional[int] = None) -> Tuple[List[np.ndarray], np.ndarray, pd.Series, CachedNNData]:
     start = time.time()
     num_ct_alive = len(ct_pos)
     num_t_alive = len(t_pos)
@@ -230,7 +230,7 @@ def get_nearest_neighbors_one_situation(ct_pos: List[Vec3], t_pos: List[Vec3], n
         collect_time = time.time() - start_collect_time
         end = time.time()
         #print(f"total time {end - start}, mappings time {mappings_time}, data time {data_time}, math time {math_time}, pd time {pd_time}, collect time {collect_time}")
-        return result, sorted_player_to_full_table, cached_nn_data
+        return result, sorted_player_to_full_table, min_distance_rounds_df[l2_distance_col], cached_nn_data
 
 
 attack_a_spawn_t_long = PositionSituationParameters(
