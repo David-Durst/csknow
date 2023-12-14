@@ -19,10 +19,15 @@ def update_nn_position_rollout_tensor(loaded_model: LoadedModel, round_lengths: 
     nn_rollout_tensor = ground_truth_rollout_tensor.clone().detach()
 
     # the tick indices to check similarity on, rest will be copied from these positions
-    similarity_tick_indices = [round_lengths.round_id_to_list_id[round_id] * round_lengths.max_length_per_round + tick_index
-                               for round_id, round_tick_range in round_lengths.round_to_tick_ids.items()
-                               for tick_index in range(len(round_tick_range))
-                               if tick_index % num_time_steps == 0]
+    similarity_rollout_indices = [round_lengths.round_id_to_list_id[round_id] * round_lengths.max_length_per_round + tick_index
+                                  for round_id, round_tick_range in round_lengths.round_to_tick_ids.items()
+                                  for tick_index in range(len(round_tick_range))
+                                  if tick_index % num_time_steps == 0]
+
+    similarity_tick_indices = [tick_index
+                               for round_id, round_subset_tick_range in round_lengths.round_to_subset_tick_indices.items()
+                               for i, tick_index in enumerate(round_subset_tick_range)
+                               if i % num_time_steps == 0]
 
     similarity_round_ids = [round_id
                             for round_id, round_tick_range in round_lengths.round_to_tick_ids.items()
@@ -30,7 +35,7 @@ def update_nn_position_rollout_tensor(loaded_model: LoadedModel, round_lengths: 
                             if tick_index % num_time_steps == 0]
 
 
-    points_for_nn_tensor = ground_truth_rollout_tensor[similarity_tick_indices]
+    points_for_nn_tensor = ground_truth_rollout_tensor[similarity_rollout_indices]
     cached_nn_data = CachedNNData()
     prior_ct_alive = 0
     prior_t_alive = 0
@@ -39,9 +44,11 @@ def update_nn_position_rollout_tensor(loaded_model: LoadedModel, round_lengths: 
     with tqdm(total=points_for_nn_tensor.shape[0], disable=False) as pbar:
         for point_index in range(points_for_nn_tensor.shape[0]):
             print(point_index)
-            if point_index in range(8, 12):
-                tick_index = similarity_tick_indices[point_index]
-                print(loaded_model.get_cur_id_df().iloc[tick_index])
+            #if point_index in range(8, 12):
+            #    tick_index = similarity_tick_indices[point_index]
+            #    print(loaded_model.get_cur_id_df().iloc[tick_index])
+            if point_index == 11:
+                print("hi")
             #if point_index != 12:
             #    continue
 
@@ -75,7 +82,8 @@ def update_nn_position_rollout_tensor(loaded_model: LoadedModel, round_lengths: 
             # 2 as 1 should be this, second should be second best
             same_and_nearest_nps, player_to_full_table_id, l2_distances, cached_nn_data = \
                 get_nearest_neighbors_one_situation(ct_pos, t_pos, 2, loaded_model, '', 0, False, False,
-                                                    num_time_steps, cached_nn_data)
+                                                    num_time_steps, cached_nn_data, limit_matches_by_time_left=True)
+
             # usually index 1 as skipping first match, first match is first match is input pos
             # but if end of round, not 5 seconds to match, then may not include it and may need first entry as that's best match and not the same
             if l2_distances.iloc[0] == 0.:
@@ -87,8 +95,11 @@ def update_nn_position_rollout_tensor(loaded_model: LoadedModel, round_lengths: 
                 nearest_np = same_and_nearest_nps[0].copy()
                 selected_player_to_full_table_id = player_to_full_table_id[0]
             orig_order_nearest_np = nearest_np.copy()
+
             # sort columns and then insert
             # make sure to get dead players columns too, nearest neighbor matching only worries abouve alive
+            # player means alive players used in mapping to full table, unused entries in full table are dead players
+            # not included in mapping (since dead)
             unused_full_table_id = [i for i in range(len(loaded_model.model.alive_columns)) if i not in selected_player_to_full_table_id]
             player_and_unused_full_table_id = selected_player_to_full_table_id.tolist() + unused_full_table_id
             alive_and_dead_pos_columns = rearrange(loaded_model.model.nested_players_pos_columns_tensor[alive_player_indices + dead_player_indices, 0], 'p d -> (p d)').tolist()
@@ -96,22 +107,31 @@ def update_nn_position_rollout_tensor(loaded_model: LoadedModel, round_lengths: 
             player_and_unused_to_full_table_pos_columns = rearrange(loaded_model.model.nested_players_pos_columns_tensor[player_and_unused_full_table_id, 0], 'p d -> (p d)').tolist()
             player_and_unused_to_full_table_alive_columns = [loaded_model.model.alive_columns[i] for i in player_and_unused_full_table_id]
             #unmodified_point = points_for_nn_tensor[point_index].clone()
+
             nearest_np[:, alive_and_dead_pos_columns] = nearest_np[:, player_and_unused_to_full_table_pos_columns]
             nearest_np[:, alive_and_dead_alive_columns] = nearest_np[:, player_and_unused_to_full_table_alive_columns]
+
             nearest_tensor = torch.tensor(nearest_np, dtype=nn_rollout_tensor.dtype)
-            nn_rollout_tensor[similarity_tick_indices[point_index]:similarity_tick_indices[point_index] + num_time_steps, alive_and_dead_pos_columns] = \
+            # if not a full length in round
+            if nearest_tensor.shape[0] < num_time_steps:
+                full_nearest_tensor = torch.zeros([num_time_steps, nearest_tensor.shape[1]], dtype=nearest_tensor.dtype)
+                full_nearest_tensor[:nearest_tensor.shape[0]] = nearest_tensor
+                nearest_tensor = full_nearest_tensor
+
+            nn_rollout_tensor[similarity_rollout_indices[point_index]:similarity_rollout_indices[point_index] + num_time_steps, alive_and_dead_pos_columns] = \
                 nearest_tensor[:, alive_and_dead_pos_columns]
-            #check_for_alive_with_dead_positions(nn_rollout_tensor[similarity_tick_indices[point_index]:
-            #                                                      similarity_tick_indices[point_index] + num_time_steps],
-            #                                    nn_rollout_tensor[similarity_tick_indices[point_index]:
-            #                                                      similarity_tick_indices[point_index] + num_time_steps],
+
+            #check_for_alive_with_dead_positions(nn_rollout_tensor[similarity_rollout_indices[point_index]:
+            #                                                      similarity_rollout_indices[point_index] + num_time_steps],
+            #                                    nn_rollout_tensor[similarity_rollout_indices[point_index]:
+            #                                                      similarity_rollout_indices[point_index] + num_time_steps],
             #                                    loaded_model)
-            fill_dead_positions_with_last_alive(nn_rollout_tensor[similarity_tick_indices[point_index]:
-                                                                  similarity_tick_indices[point_index] + num_time_steps],
+            fill_dead_positions_with_last_alive(nn_rollout_tensor[similarity_rollout_indices[point_index]:
+                                                                  similarity_rollout_indices[point_index] + num_time_steps],
                                                 nearest_tensor,
                                                 loaded_model)
-            check_for_alive_with_dead_positions(nn_rollout_tensor[similarity_tick_indices[point_index]:
-                                                                  similarity_tick_indices[point_index] + num_time_steps],
+            check_for_alive_with_dead_positions(nn_rollout_tensor[similarity_rollout_indices[point_index]:
+                                                                  similarity_rollout_indices[point_index] + num_time_steps],
                                                 nearest_tensor,
                                                 loaded_model)
 

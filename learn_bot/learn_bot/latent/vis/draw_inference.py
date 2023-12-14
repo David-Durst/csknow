@@ -30,8 +30,8 @@ _minimap_scale = 4.4 * 1024 / _minimap_height
 
 def scale_down():
     global _minimap_width, _minimap_height, _minimap_scale
-    _minimap_width = 1300
-    _minimap_height = 1300
+    _minimap_width = 900#1300
+    _minimap_height = 900#1300
     _minimap_scale = 4.4 * 1024 / _minimap_height
 
 

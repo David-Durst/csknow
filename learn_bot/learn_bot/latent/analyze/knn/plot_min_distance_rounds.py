@@ -51,7 +51,9 @@ max_future_seconds = 10
 def collect_plot_plot_min_distance_rounds(loaded_model: LoadedModel, min_distance_rounds_df: pd.DataFrame, test_name: str,
                                           restrict_future: Optional[bool], num_matches: int, plot: bool,
                                           num_future_ticks: Optional[int]) -> List[np.ndarray]:
-    min_distance_nps: List[np.ndarray] = []
+    # can't just append to this lsit, order of hdf5's might not match order in which they are used,
+    # need to sort list by order of appearing in min_distance_rounds_df
+    min_distance_nps: List[np.ndarray] = [None for i in range(len(min_distance_rounds_df))]
     min_distance_pos_dfs: List[pd.DataFrame] = []
     target_full_table_ids: List[int] = []
     for i, hdf5_wrapper in enumerate(loaded_model.dataset.data_hdf5s):
@@ -73,7 +75,7 @@ def collect_plot_plot_min_distance_rounds(loaded_model: LoadedModel, min_distanc
             min_distance_id_df = hdf5_wrapper.id_df[min_distance_condition]
             # need to use condtiion, not ids, might have filtered down based on id or test/train split
             min_distance_np = hdf5_wrapper.get_all_input_data()[min_distance_condition]
-            min_distance_nps.append(min_distance_np)
+            min_distance_nps[round_row.name] = min_distance_np
             min_distance_pos_dfs.append(all_np_to_pos_alive_df(min_distance_np, min_distance_id_df, i, loaded_model))
             target_full_table_ids.append(round_row[target_full_table_id_col])
 

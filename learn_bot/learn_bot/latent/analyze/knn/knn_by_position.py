@@ -60,7 +60,8 @@ def get_nearest_neighbors_one_situation(ct_pos: List[Vec3], t_pos: List[Vec3], n
                                         loaded_model: LoadedModel, situation_name: str, target_player_index: int,
                                         plot: bool, push_only: bool, num_future_ticks: Optional[int],
                                         cached_nn_data: Optional[CachedNNData] = None,
-                                        decimation: Optional[int] = None) -> Tuple[List[np.ndarray], np.ndarray, pd.Series, CachedNNData]:
+                                        decimation: Optional[int] = None,
+                                        limit_matches_by_time_left = True) -> Tuple[List[np.ndarray], np.ndarray, pd.Series, CachedNNData]:
     start = time.time()
     num_ct_alive = len(ct_pos)
     num_t_alive = len(t_pos)
@@ -179,6 +180,7 @@ def get_nearest_neighbors_one_situation(ct_pos: List[Vec3], t_pos: List[Vec3], n
                 .rename({game_tick_number_column: max_game_tick_number_column}, axis=1)
             id_with_distance_max_tick = id_with_distance_df.merge(round_and_max_game_tick_number, how="left",
                                                                   on=round_id_column)
+            id_with_distance_max_tick.index = id_with_distance_df.index
             id_with_distance_time_limited_tick = \
                 id_with_distance_max_tick[(id_with_distance_max_tick[max_game_tick_number_column] -
                                            id_with_distance_max_tick[game_tick_number_column]) > game_tick_rate * 5]
@@ -188,12 +190,17 @@ def get_nearest_neighbors_one_situation(ct_pos: List[Vec3], t_pos: List[Vec3], n
                 .rename({index_column: max_index_column}, axis=1)
             id_with_distance_max_tick = id_with_distance_df.merge(round_and_max_index_number, how="left",
                                                                   on=round_id_column)
+            id_with_distance_max_tick.index = id_with_distance_df.index
             id_with_distance_time_limited_tick = \
                 id_with_distance_max_tick[(id_with_distance_max_tick[max_index_column] -
                                            id_with_distance_max_tick[index_column]) > num_future_ticks]
         # sort by distance within round, then take first row to get best match
-        id_sorted_by_round_distance_df = \
-            id_with_distance_time_limited_tick.sort_values([round_id_column, l2_distance_col])
+        if limit_matches_by_time_left:
+            id_sorted_by_round_distance_df = \
+                id_with_distance_time_limited_tick.sort_values([round_id_column, l2_distance_col])
+        else:
+            id_sorted_by_round_distance_df = \
+                id_with_distance_df.sort_values([round_id_column, l2_distance_col])
         min_distance_per_round_df = id_sorted_by_round_distance_df.groupby(round_id_column, as_index=False) \
             .first().sort_values(l2_distance_col).iloc[:num_matches]
         min_distance_rounds_per_hdf5.append(min_distance_per_round_df)
@@ -214,6 +221,7 @@ def get_nearest_neighbors_one_situation(ct_pos: List[Vec3], t_pos: List[Vec3], n
     unsorted_min_distance_rounds_df[player_to_full_table_counter_col] = range(unsorted_player_to_full_table.shape[0])
 
     min_distance_rounds_df = unsorted_min_distance_rounds_df.sort_values(l2_distance_col).iloc[:num_matches]
+    min_distance_rounds_df.reset_index(inplace=True, drop=True)
     sorted_player_to_full_table = \
         unsorted_player_to_full_table[min_distance_rounds_df[player_to_full_table_counter_col]]
     #print(f"round id: {min_distance_rounds_df['round id'].iloc[0]}, hdf5 id: {min_distance_rounds_df['hdf5 id'].iloc[0]}")
