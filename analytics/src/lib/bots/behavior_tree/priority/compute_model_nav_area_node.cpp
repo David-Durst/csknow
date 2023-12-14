@@ -143,7 +143,7 @@ namespace csknow::compute_nav_area {
         vector<float> probabilities = deltaPosProbabilities.radialVelProbabilities;
         const ServerState::Client & curClient = state.getClient(csgoId);
 
-        if (!curPriority.directPathToLearnedTargetPos || curPriority.directPathToLearnedTargetPos.value() ||
+        if (true || !curPriority.directPathToLearnedTargetPos || curPriority.directPathToLearnedTargetPos.value() ||
             curPriority.numConsecutiveLearnedPathOverrides > 2) {
             curPriority.numConsecutiveLearnedPathOverrides = 0;
             size_t deltaPosOption = 0;
@@ -174,15 +174,17 @@ namespace csknow::compute_nav_area {
             modelNavData.radialVelIndex = deltaPosOption;
             csknow::weapon_speed::MovementStatus movementStatus(static_cast<EngineWeaponId>(curClient.currentWeaponId),
                                                                 curClient.isScoped, modelNavData.radialVelIndex);
-            Vec3 scaledVel = movementStatus.getScaledVel(1.
-                    //static_cast<float>(inference_manager::ticks_per_inference) /
-                    //static_cast<float>(inference_manager::ticks_per_seconds)
+            Vec3 scaledVel = movementStatus.getScaledVel(//1.
+                    static_cast<float>(inference_manager::ticks_per_inference) /
+                    static_cast<float>(inference_manager::ticks_per_seconds)
             );
             modelNavData.deltaXVal = scaledVel.x;
             modelNavData.deltaYVal = scaledVel.y;
             modelNavData.deltaZVal = movementStatus.zBin;
             curPriority.moveOptions.walk = movementStatus.statureOption == weapon_speed::StatureOptions::Walking;
             curPriority.moveOptions.crouch = movementStatus.statureOption == weapon_speed::StatureOptions::Ducking;
+            curPriority.learnedJump = movementStatus.jumping;
+            curPriority.learnedStop = !movementStatus.moving;
 
             computeDeltaPosTargetPos(curClient, curPriority, modelNavData);
             validDest++;

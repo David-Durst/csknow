@@ -54,7 +54,9 @@ namespace action {
 
                 Vec2 deltaViewAngle = targetViewAngle - curViewAngle;
                 deltaViewAngle.makeYawNeg180To180();
-                if (blackboard.isPlayerDefuser(curClient.csgoId) || computeMagnitude(finalVector) > WIDTH/2) {
+                if (blackboard.isPlayerDefuser(curClient.csgoId) ||
+                    (!curPriority.learnedTargetPos && computeMagnitude(finalVector) > WIDTH/2) ||
+                    (curPriority.learnedTargetPos && !curPriority.learnedStop)) {
                     moveInDir(curAction, deltaViewAngle);
                 }
 
@@ -73,10 +75,15 @@ namespace action {
                 }
                  */
 
+                bool handCraftedJump = blackboard.navFile.get_point_to_area_distance_2d(vec3Conv(curPos), dstArea) < 40. &&
+                                       dstArea.get_min_corner().z > curPos.z + MAX_OBSTACLE_SIZE;
+
                 // can't compare current nav area to target nav area as current nav area max z different from current pos z
                 // (see d2 slope to A site)
-                if (blackboard.navFile.get_point_to_area_distance_2d(vec3Conv(curPos), dstArea) < 40. &&
-                    dstArea.get_min_corner().z > curPos.z + MAX_OBSTACLE_SIZE) {
+                if (curPriority.learnedTargetPos && curPriority.learnedJump) {
+                    curAction.setButton(IN_JUMP, true);
+                }
+                else if (!curPriority.learnedTargetPos && handCraftedJump) {
                     // make sure moving into target in 2d
                     // check if aiming at enemy anywhere
                     /*
