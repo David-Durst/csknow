@@ -18,10 +18,6 @@ namespace csknow {
         public:
             ComputeModelNavAreaNode(Blackboard & blackboard, bool inEngagePath) :
                 Node(blackboard, "ComputeModelNavAreaNode"), inEngagePath(inEngagePath) { };
-            void computeDeltaPosTargetPos(const ServerState::Client & curClient,
-                                          Priority & curPriority, ModelNavData & modelNavData);
-            void checkClearPathToTargetPos(const ServerState::Client & curClient, Priority & curPriority,
-                                           const ModelNavData & modelNavData);
             void computeDeltaPosProbabilistic(const ServerState & state, Priority & curPriority, CSGOId csgoId,
                                               ModelNavData & modelNavData);
             virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override;

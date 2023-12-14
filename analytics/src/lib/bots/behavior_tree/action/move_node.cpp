@@ -23,6 +23,8 @@ namespace action {
         curAction.setButton(IN_MOVERIGHT, dir.x >= -170. && dir.x <= -10.);
     }
 
+    //int64_t numNonLearned = 0;
+
     NodeState MovementTaskNode::exec(const ServerState &state, TreeThinker &treeThinker) {
         Path & curPath = blackboard.playerToPath[treeThinker.csgoId];
         Action & curAction = blackboard.playerToAction[treeThinker.csgoId];
@@ -55,6 +57,11 @@ namespace action {
                     curAction.setButton(IN_JUMP, true);
                 }
             }
+
+            // regardless if moving, check for crouching
+            curAction.setButton(IN_WALK, curPriority.moveOptions.walk);
+            // always crouch when airborne to get to max area
+            curAction.setButton(IN_DUCK, curPriority.moveOptions.crouch || curClient.isAirborne);
         }
         else if (!curPriority.learnedTargetPos && curPath.pathCallSucceeded) {
 
@@ -147,7 +154,7 @@ namespace action {
             curAction.setButton(IN_WALK, curPriority.moveOptions.walk);
             // always crouch when airborne to get to max area
             curAction.setButton(IN_DUCK, curPriority.moveOptions.crouch || curClient.isAirborne);
-
+            //std::cout << "non learned " << numNonLearned++ << std::endl;
         }
         // do nothing if there was an error
         else {
@@ -157,6 +164,7 @@ namespace action {
             curAction.setButton(IN_MOVERIGHT, false);
             curAction.inputAngleX = 0;
             curAction.inputAngleY = 0;
+            //std::cout << "non learned " << numNonLearned++ << std::endl;
         }
 
         if (blackboard.playerToModelNavData.count(curClient.csgoId) > 0) {

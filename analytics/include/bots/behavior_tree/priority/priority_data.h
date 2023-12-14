@@ -74,7 +74,6 @@ struct Priority {
     bool learnedTargetPos;
     std::optional<csknow::weapon_speed::MovementStatus> learnedMovementStatus;
     std::optional<bool> directPathToLearnedTargetPos;
-    int numConsecutiveLearnedPathOverrides;
     TargetPlayer targetPlayer;
     NonDangerAimAreaType nonDangerAimAreaType;
     std::optional<AreaId> nonDangerAimArea;

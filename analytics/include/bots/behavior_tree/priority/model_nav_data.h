@@ -17,7 +17,6 @@ struct ModelNavData {
     float deltaXVal, deltaYVal;
     std::optional<AreaId> disabledArea;
     // this is a target pos that doesn't need to be modified to match the world
-    Vec3 unmodifiedTargetPos;
     vector<string> orderPlaceOptions;
     vector<float> orderPlaceProbs;
     string curPlace;
