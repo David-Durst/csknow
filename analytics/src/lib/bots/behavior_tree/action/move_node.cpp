@@ -34,9 +34,12 @@ namespace action {
         if (curPath.pathCallSucceeded) {
 
             // don't move if move is set to false on priority
-            if (!curPriority.moveOptions.move) {
+            if (!curPriority.learnedTargetPos && !curPriority.moveOptions.move) {
                 stop(curAction);
                 // add counter strafing later
+            }
+            else if (curPriority.learnedTargetPos && curPriority.learnedStop) {
+                stop(curAction);
             }
             else {
                 Vec2 curViewAngle = curClient.getCurrentViewAnglesWithAimpunch();
@@ -56,7 +59,7 @@ namespace action {
                 deltaViewAngle.makeYawNeg180To180();
                 if (blackboard.isPlayerDefuser(curClient.csgoId) ||
                     (!curPriority.learnedTargetPos && computeMagnitude(finalVector) > WIDTH/2) ||
-                    (curPriority.learnedTargetPos && !curPriority.learnedStop)) {
+                    curPriority.learnedTargetPos) {
                     moveInDir(curAction, deltaViewAngle);
                 }
 
