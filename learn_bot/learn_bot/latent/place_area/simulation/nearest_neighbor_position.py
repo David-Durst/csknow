@@ -39,7 +39,7 @@ def update_nn_position_rollout_tensor(loaded_model: LoadedModel, round_lengths: 
     with tqdm(total=points_for_nn_tensor.shape[0], disable=False) as pbar:
         for point_index in range(points_for_nn_tensor.shape[0]):
             print(point_index)
-            if point_index == 11:
+            if point_index in range(8, 12):
                 tick_index = similarity_tick_indices[point_index]
                 print(loaded_model.get_cur_id_df().iloc[tick_index])
             #if point_index != 12:
@@ -81,7 +81,7 @@ def update_nn_position_rollout_tensor(loaded_model: LoadedModel, round_lengths: 
             if l2_distances.iloc[0] == 0.:
                 print('found nearest')
                 nearest_np = same_and_nearest_nps[1].copy()
-                selected_player_to_fulL_table_id = player_to_full_table_id[1]
+                selected_player_to_full_table_id = player_to_full_table_id[1]
             else:
                 print('didnt find nearest')
                 nearest_np = same_and_nearest_nps[0].copy()
