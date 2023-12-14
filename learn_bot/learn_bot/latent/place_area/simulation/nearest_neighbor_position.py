@@ -43,12 +43,12 @@ def update_nn_position_rollout_tensor(loaded_model: LoadedModel, round_lengths: 
     start_time = time.time()
     with tqdm(total=points_for_nn_tensor.shape[0], disable=False) as pbar:
         for point_index in range(points_for_nn_tensor.shape[0]):
-            print(point_index)
+            #print(point_index)
             #if point_index in range(8, 12):
             #    tick_index = similarity_tick_indices[point_index]
             #    print(loaded_model.get_cur_id_df().iloc[tick_index])
-            if point_index == 11:
-                print("hi")
+            #if point_index == 11:
+            #    print("hi")
             #if point_index != 12:
             #    continue
 
@@ -82,12 +82,12 @@ def update_nn_position_rollout_tensor(loaded_model: LoadedModel, round_lengths: 
             # 2 as 1 should be this, second should be second best
             same_and_nearest_nps, player_to_full_table_id, l2_distances, cached_nn_data = \
                 get_nearest_neighbors_one_situation(ct_pos, t_pos, 2, loaded_model, '', 0, False, False,
-                                                    num_time_steps, cached_nn_data, limit_matches_by_time_left=True)
+                                                    num_time_steps, cached_nn_data, limit_matches_by_time_left=False)
 
             # usually index 1 as skipping first match, first match is first match is input pos
             # but if end of round, not 5 seconds to match, then may not include it and may need first entry as that's best match and not the same
             if l2_distances.iloc[0] == 0.:
-                print('found nearest')
+                #print('found nearest')
                 nearest_np = same_and_nearest_nps[1].copy()
                 selected_player_to_full_table_id = player_to_full_table_id[1]
             else:
