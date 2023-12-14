@@ -118,9 +118,9 @@ namespace csknow::compute_nav_area {
 
             modelNavData.deltaPosMode = true;
             // update area
-            bool timeForNewDeltaPos = blackboard.inferenceManager.ranDeltaPosInferenceThisTick || wasInEngagement;
             if (blackboard.playerToLastProbDeltaPosAssignment.find(treeThinker.csgoId) ==
-                blackboard.playerToLastProbDeltaPosAssignment.end() || timeForNewDeltaPos) {
+                blackboard.playerToLastProbDeltaPosAssignment.end() ||
+                blackboard.inferenceManager.ranDeltaPosInferenceThisTick) {
                 //std::cout << "invalidating player to last prob delta pos assignment" << std::endl;
                 blackboard.playerToLastProbDeltaPosAssignment[treeThinker.csgoId] =
                         {{}, Vec3{INVALID_ID, INVALID_ID, INVALID_ID}, 0, 0, false, false, false};
