@@ -38,8 +38,8 @@ def update_nn_position_rollout_tensor(loaded_model: LoadedModel, round_lengths: 
     start_time = time.time()
     with tqdm(total=points_for_nn_tensor.shape[0], disable=False) as pbar:
         for point_index in range(points_for_nn_tensor.shape[0]):
-            if point_index == 8:#11:
-                print(point_index)
+            print(point_index)
+            if point_index == 11:
                 tick_index = similarity_tick_indices[point_index]
                 print(loaded_model.get_cur_id_df().iloc[tick_index])
             #if point_index != 12:
@@ -79,14 +79,18 @@ def update_nn_position_rollout_tensor(loaded_model: LoadedModel, round_lengths: 
             # usually index 1 as skipping first match, first match is first match is input pos
             # but if end of round, not 5 seconds to match, then may not include it and may need first entry as that's best match and not the same
             if l2_distances.iloc[0] == 0.:
+                print('found nearest')
                 nearest_np = same_and_nearest_nps[1].copy()
+                selected_player_to_fulL_table_id = player_to_full_table_id[1]
             else:
+                print('didnt find nearest')
                 nearest_np = same_and_nearest_nps[0].copy()
+                selected_player_to_full_table_id = player_to_full_table_id[0]
             orig_order_nearest_np = nearest_np.copy()
             # sort columns and then insert
             # make sure to get dead players columns too, nearest neighbor matching only worries abouve alive
-            unused_full_table_id = [i for i in range(len(loaded_model.model.alive_columns)) if i not in player_to_full_table_id[1]]
-            player_and_unused_full_table_id = player_to_full_table_id[1].tolist() + unused_full_table_id
+            unused_full_table_id = [i for i in range(len(loaded_model.model.alive_columns)) if i not in selected_player_to_full_table_id]
+            player_and_unused_full_table_id = selected_player_to_full_table_id.tolist() + unused_full_table_id
             alive_and_dead_pos_columns = rearrange(loaded_model.model.nested_players_pos_columns_tensor[alive_player_indices + dead_player_indices, 0], 'p d -> (p d)').tolist()
             alive_and_dead_alive_columns = [loaded_model.model.alive_columns[i] for i in alive_player_indices + dead_player_indices]
             player_and_unused_to_full_table_pos_columns = rearrange(loaded_model.model.nested_players_pos_columns_tensor[player_and_unused_full_table_id, 0], 'p d -> (p d)').tolist()
