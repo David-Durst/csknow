@@ -38,15 +38,24 @@ namespace action {
                 stop(curAction);
                 // add counter strafing later
             }
-            else if (curPriority.learnedTargetPos && curPriority.learnedStop) {
+            else if (curPriority.learnedTargetPos && !curPriority.learnedMovementStatus.value().moving) {
                 stop(curAction);
             }
             else {
                 Vec2 curViewAngle = curClient.getCurrentViewAnglesWithAimpunch();
                 // if learned model, just run it's output, otherwise look at path
-                Vec3 targetVector = curPriority.targetPos - curClient.getFootPosForPlayer();
-                if (!curPriority.learnedTargetPos ||
-                    !(curPriority.directPathToLearnedTargetPos && curPriority.directPathToLearnedTargetPos.value())) {
+                Vec3 targetVector;
+                if (curPriority.learnedTargetPos) {
+                    Vec3 targetPos = curClient.getFootPosForPlayer() + Vec3{
+                            static_cast<double>(curPriority.learnedMovementStatus.value().vel.x),
+                            static_cast<double>(curPriority.learnedMovementStatus.value().vel.y),
+                            0.
+                    };
+                    targetVector = targetPos - curClient.getFootPosForPlayer();
+                }
+                //if (!curPriority.learnedTargetPos ||
+                //    !(curPriority.directPathToLearnedTargetPos && curPriority.directPathToLearnedTargetPos.value())) {
+                else {
                     targetVector = curPath.waypoints[curPath.curWaypoint].pos - curClient.getFootPosForPlayer();
                 }
                 Vec3 finalVector = curPath.waypoints.back().pos - curClient.getFootPosForPlayer();
@@ -83,7 +92,7 @@ namespace action {
 
                 // can't compare current nav area to target nav area as current nav area max z different from current pos z
                 // (see d2 slope to A site)
-                if (curPriority.learnedTargetPos && curPriority.learnedJump) {
+                if (curPriority.learnedTargetPos && curPriority.learnedMovementStatus.value().jumping) {
                     curAction.setButton(IN_JUMP, true);
                 }
                 else if (!curPriority.learnedTargetPos && handCraftedJump) {

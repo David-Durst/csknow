@@ -174,19 +174,11 @@ namespace csknow::compute_nav_area {
             modelNavData.radialVelIndex = deltaPosOption;
             csknow::weapon_speed::MovementStatus movementStatus(static_cast<EngineWeaponId>(curClient.currentWeaponId),
                                                                 curClient.isScoped, modelNavData.radialVelIndex);
-            Vec3 scaledVel = movementStatus.getScaledVel(//1.
-                    static_cast<float>(inference_manager::ticks_per_inference) /
-                    static_cast<float>(inference_manager::ticks_per_seconds)
-            );
-            modelNavData.deltaXVal = scaledVel.x;
-            modelNavData.deltaYVal = scaledVel.y;
-            modelNavData.deltaZVal = movementStatus.zBin;
             curPriority.moveOptions.walk = movementStatus.statureOption == weapon_speed::StatureOptions::Walking;
             curPriority.moveOptions.crouch = movementStatus.statureOption == weapon_speed::StatureOptions::Ducking;
-            curPriority.learnedJump = movementStatus.jumping;
-            curPriority.learnedStop = !movementStatus.moving;
+            curPriority.learnedMovementStatus = movementStatus;
 
-            computeDeltaPosTargetPos(curClient, curPriority, modelNavData);
+            //computeDeltaPosTargetPos(curClient, curPriority, modelNavData);
             validDest++;
         }
         else {
@@ -223,8 +215,6 @@ namespace csknow::compute_nav_area {
             return playerNodeState[treeThinker.csgoId];
         }
 
-        curPriority.learnedTargetPos = true;
-
         const nav_mesh::nav_area & curArea = blackboard.navFile.get_nearest_area_by_position(
             vec3Conv(state.getClient(treeThinker.csgoId).getFootPosForPlayer()));
         AreaId curAreaId = curArea.get_id();
@@ -255,10 +245,13 @@ namespace csknow::compute_nav_area {
         if (blackboard.inferenceManager.playerToInferenceData.find(treeThinker.csgoId) ==
             blackboard.inferenceManager.playerToInferenceData.end() ||
             !blackboard.inferenceManager.playerToInferenceData.at(treeThinker.csgoId).validData) {
+            curPriority.learnedTargetPos = false;
             curPriority.targetPos = state.getClient(treeThinker.csgoId).getFootPosForPlayer();
             curPriority.targetAreaId = curAreaId;
         }
         else {
+            curPriority.learnedTargetPos = true;
+
             ModelNavData & modelNavData = blackboard.playerToModelNavData[treeThinker.csgoId];
 
             modelNavData.deltaPosMode = true;
@@ -268,7 +261,7 @@ namespace csknow::compute_nav_area {
                 blackboard.playerToLastProbDeltaPosAssignment.end() || timeForNewDeltaPos) {
                 //std::cout << "invalidating player to last prob delta pos assignment" << std::endl;
                 blackboard.playerToLastProbDeltaPosAssignment[treeThinker.csgoId] =
-                        {Vec3{INVALID_ID, INVALID_ID, INVALID_ID}, 0, 0, false, false, false};
+                        {{}, Vec3{INVALID_ID, INVALID_ID, INVALID_ID}, 0, 0, false, false, false};
             }
             PriorityDeltaPosAssignment & lastProbDeltaPosAssignment =
                     blackboard.playerToLastProbDeltaPosAssignment[treeThinker.csgoId];
@@ -278,11 +271,13 @@ namespace csknow::compute_nav_area {
                 //std::cout << "treeThinker " << treeThinker.csgoId << "times between inferences " << inferenceTime.count() << std::endl;
                 //lastInferenceTime = start;
                 computeDeltaPosProbabilistic(state, curPriority, treeThinker.csgoId, modelNavData);
-                lastProbDeltaPosAssignment = {curPriority.targetPos, curPriority.targetAreaId, modelNavData.radialVelIndex,
+                lastProbDeltaPosAssignment = {curPriority.learnedMovementStatus, curPriority.targetPos,
+                                              curPriority.targetAreaId, modelNavData.radialVelIndex,
                                               curPriority.moveOptions.walk, curPriority.moveOptions.crouch, true};
                 lastProbDeltaPosAssignment.valid = true;
             }
             else {
+                curPriority.learnedMovementStatus = lastProbDeltaPosAssignment.learnedMovementStatus;
                 curPriority.targetPos = lastProbDeltaPosAssignment.targetPos;
                 curPriority.targetAreaId = lastProbDeltaPosAssignment.targetAreaId;
                 curPriority.moveOptions.walk = lastProbDeltaPosAssignment.walk;

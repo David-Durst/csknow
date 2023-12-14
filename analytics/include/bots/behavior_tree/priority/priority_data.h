@@ -8,6 +8,7 @@
 #include <queries/query.h>
 #include "geometryNavConversions.h"
 #include "bots/load_save_bot_data.h"
+#include "bots/analysis/weapon_speed.h"
 
 struct PriorityPlaceAssignment {
     PlaceIndex nextPlace;
@@ -21,6 +22,7 @@ struct PriorityAreaAssignment {
 };
 
 struct PriorityDeltaPosAssignment {
+    std::optional<csknow::weapon_speed::MovementStatus> learnedMovementStatus;
     Vec3 targetPos;
     AreaId targetAreaId;
     int64_t radialVelIndex;
@@ -70,8 +72,7 @@ struct Priority {
     uint32_t targetAreaId;
     Vec3 targetPos;
     bool learnedTargetPos;
-    bool learnedJump;
-    bool learnedStop;
+    std::optional<csknow::weapon_speed::MovementStatus> learnedMovementStatus;
     std::optional<bool> directPathToLearnedTargetPos;
     int numConsecutiveLearnedPathOverrides;
     TargetPlayer targetPlayer;
