@@ -31,15 +31,37 @@ namespace action {
         Vec3 curPos = curClient.getFootPosForPlayer();
         //const nav_mesh::nav_area & curArea = blackboard.navFile.get_nearest_area_by_position(vec3Conv(curPos));
 
-        if (curPath.pathCallSucceeded) {
+        if (curPriority.learnedTargetPos) {
+            if (!curPriority.learnedMovementStatus.value().moving) {
+                stop(curAction);
+            }
+            else {
+                Vec2 curViewAngle = curClient.getCurrentViewAnglesWithAimpunch();
+                Vec3 targetPos = curClient.getFootPosForPlayer() + Vec3{
+                        static_cast<double>(curPriority.learnedMovementStatus.value().vel.x),
+                        static_cast<double>(curPriority.learnedMovementStatus.value().vel.y),
+                        0.
+                };
+                curPriority.targetPos = targetPos;
+                Vec3 targetVector = targetPos - curClient.getFootPosForPlayer();
+
+                Vec2 targetViewAngle = vectorAngles(targetVector);
+                targetViewAngle.makePitchNeg90To90();
+
+                Vec2 deltaViewAngle = targetViewAngle - curViewAngle;
+                deltaViewAngle.makeYawNeg180To180();
+                moveInDir(curAction, deltaViewAngle);
+                if (curPriority.learnedMovementStatus.value().jumping) {
+                    curAction.setButton(IN_JUMP, true);
+                }
+            }
+        }
+        else if (!curPriority.learnedTargetPos && curPath.pathCallSucceeded) {
 
             // don't move if move is set to false on priority
             if (!curPriority.learnedTargetPos && !curPriority.moveOptions.move) {
                 stop(curAction);
                 // add counter strafing later
-            }
-            else if (curPriority.learnedTargetPos && !curPriority.learnedMovementStatus.value().moving) {
-                stop(curAction);
             }
             else {
                 Vec2 curViewAngle = curClient.getCurrentViewAnglesWithAimpunch();
@@ -92,10 +114,7 @@ namespace action {
 
                 // can't compare current nav area to target nav area as current nav area max z different from current pos z
                 // (see d2 slope to A site)
-                if (curPriority.learnedTargetPos && curPriority.learnedMovementStatus.value().jumping) {
-                    curAction.setButton(IN_JUMP, true);
-                }
-                else if (!curPriority.learnedTargetPos && handCraftedJump) {
+                if (!curPriority.learnedTargetPos && handCraftedJump) {
                     // make sure moving into target in 2d
                     // check if aiming at enemy anywhere
                     /*

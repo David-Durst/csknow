@@ -21,7 +21,7 @@ namespace csknow::inference_manager {
 
     constexpr size_t batch_size_per_model = 1;
     constexpr size_t max_track_ticks = 20;
-    constexpr int ticks_per_inference = 32;
+    constexpr int ticks_per_inference = 16;
     constexpr int ticks_per_seconds = 128;
 
     struct ClientInferenceData {
