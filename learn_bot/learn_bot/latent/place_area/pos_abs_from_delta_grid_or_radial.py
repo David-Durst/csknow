@@ -41,6 +41,8 @@ class NavData:
 
         num_y_steps = int(ceil((self.nav_region.max.y - self.nav_region.min.y) / nav_step_size))
         num_z_steps = int(ceil((self.nav_region.max.z - self.nav_region.min.z) / nav_step_size))
+        # records number of steps in matrix per 1 step in this dimension: x is outer, so 1 steps in x is a full step in all y and z
+        # then 1 step in y is all full step in z, and finally 1 step in z is just 1 step
         self.num_steps = torch.tensor([[[num_y_steps * num_z_steps, num_z_steps, 1]]]).to(device_str).long()
         self.nav_grid_base = torch.tensor([[[self.nav_region.min.x, self.nav_region.min.y, self.nav_region.min.z]]]).to(device_str)
 
@@ -179,7 +181,9 @@ def compute_new_pos(input_pos_tensor: torch.Tensor, vis_tensor: torch.Tensor, pr
                                                                   max=nav_data.nav_region.max.z)
 
     # compute z pos
+    # number of steps in each dimension
     nav_grid_steps = torch.floor((output_pos_tensor - nav_data.nav_grid_base) / nav_step_size).long()
+    # convert steps per dimension to linear index, and flatten since index_select accepts 1d array
     nav_grid_index = rearrange(torch.sum(nav_data.num_steps * nav_grid_steps, dim=-1), 'b p -> (b p)')
     nav_above_below_per_player = rearrange(torch.index_select(nav_data.nav_above_below, 0, nav_grid_index),
                                            '(b p) o -> b p o', p=len(specific_player_place_area_columns))
