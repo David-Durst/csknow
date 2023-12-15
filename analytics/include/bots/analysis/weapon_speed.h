@@ -22,7 +22,7 @@ namespace csknow::weapon_speed {
     constexpr double airwalk_speed = 30.;
     constexpr int num_directions = 16;
     constexpr double direction_angle_range = 360. / num_directions;
-    constexpr int num_z_axis_layers = 3;
+    constexpr int num_z_axis_layers = 2;
     // add 1 for not moving bin
     constexpr int num_radial_bins_per_z_axis = num_directions * enumAsInt(StatureOptions::NUM_STATURE_OPTIONS);
     constexpr int num_radial_bins = 1 + num_z_axis_layers * num_radial_bins_per_z_axis;
@@ -34,11 +34,11 @@ namespace csknow::weapon_speed {
     struct MovementStatus {
         Vec3 vel;
         StatureOptions statureOption;
-        bool moving, jumping, falling;
+        bool moving, jumping;
         int dir, zBin;
 
         MovementStatus(EngineWeaponId engineWeaponId, Vec3 curVel, Vec3 nextVel, StatureOptions statureOption,
-                       bool scoped, bool airborne, bool jumping, bool falling);
+                       bool scoped, bool airborne, bool jumping);
         MovementStatus(EngineWeaponId engineWeaponId, bool scoped, int radialMovementBin);
 
         int toRadialMovementBin() const;

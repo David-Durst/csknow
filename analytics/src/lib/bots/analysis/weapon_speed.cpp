@@ -174,8 +174,8 @@ namespace csknow::weapon_speed {
 
 
     MovementStatus::MovementStatus(EngineWeaponId engineWeaponId, Vec3 curVel, Vec3 nextVel, StatureOptions statureOption,
-                                   bool scoped, bool airborne, bool jumping, bool falling) : vel(curVel),
-                                   statureOption(statureOption), jumping(jumping), falling(falling) {
+                                   bool scoped, bool airborne, bool jumping) : vel(curVel),
+                                   statureOption(statureOption), jumping(jumping) {
         double weaponMaxSpeed = engineWeaponIdToMaxSpeed(engineWeaponId, statureOption, scoped);
         // check if within threshold of moving or not moving. otherwise look ad delta in vel
         double movingSpeedThreshold = weaponMaxSpeed * speed_threshold;
@@ -198,35 +198,30 @@ namespace csknow::weapon_speed {
             dir = 0;
         }
         if (!moving) {
-            zBin = 1;
-        }
-        else if (jumping) {
-            zBin = 2;
-        }
-        else if (falling) {
             zBin = 0;
         }
-        else {
+        else if (jumping) {
             zBin = 1;
+        }
+        else {
+            zBin = 0;
         }
     }
 
     MovementStatus::MovementStatus(EngineWeaponId engineWeaponId, bool scoped, int radialMovementBin) {
         if (radialMovementBin == 0) {
             vel = {0., 0., 0.};
-            zBin = 1;
+            zBin = 0;
             statureOption = StatureOptions::Standing;
             moving = false;
             dir = 0;
             jumping = false;
-            falling = false;
         }
         else {
             int movementBin3D = radialMovementBin - 1;
             zBin = movementBin3D / num_radial_bins_per_z_axis;
             moving = true;
-            jumping = zBin == 2;
-            falling = zBin == 0;
+            jumping = zBin == 1;
             int dirStatureRadialIndex = movementBin3D % num_radial_bins_per_z_axis;
             dir = dirStatureRadialIndex / enumAsInt(StatureOptions::NUM_STATURE_OPTIONS);
             statureOption =
@@ -246,13 +241,7 @@ namespace csknow::weapon_speed {
             return 0;
         }
         else {
-            int zAxisIndex = 1;
-            if (jumping) {
-                zAxisIndex = 2;
-            }
-            else if (falling) {
-                 zAxisIndex = 0;
-            }
+            int zAxisIndex = jumping ? 1 : 0;
             return 1 + zAxisIndex * num_directions * enumAsInt(StatureOptions::NUM_STATURE_OPTIONS) +
                 dir * enumAsInt(StatureOptions::NUM_STATURE_OPTIONS) + enumAsInt(statureOption);
         }

@@ -228,8 +228,8 @@ def scale_buffers_by_points(titles: List[str]):
         t_buffer = title_to_buffers[title].get_buffer(False)
         t_buffer *= scale_factor
         max_value = max(max_value, np.max(t_buffer))
-        print(f"{title} ct max value {np.max(ct_buffer)}, argmax {np.unravel_index(ct_buffer.argmax(), ct_buffer.shape)}")
-        print(f"{title} t max value {np.max(t_buffer)}, argmax {np.unravel_index(t_buffer.argmax(), t_buffer.shape)}")
+        #print(f"{title} ct max value {np.max(ct_buffer)}, argmax {np.unravel_index(ct_buffer.argmax(), ct_buffer.shape)}")
+        #print(f"{title} t max value {np.max(t_buffer)}, argmax {np.unravel_index(t_buffer.argmax(), t_buffer.shape)}")
 
 
 saturated_ct_color_list = [19, 2, 178, 0]
@@ -241,7 +241,7 @@ def plot_trajectories_to_image(titles: List[str], plot_teams_separately: bool, p
     title_images: List[Image.Image] = []
 
     scale_buffers_by_points(titles)
-    print(f"max pixel value after scaling before clamp to 255 {max_value}")
+    #print(f"max pixel value after scaling before clamp to 255 {max_value}")
 
     for title in titles:
         images_per_title: List[Image.Image] = []

@@ -702,16 +702,12 @@ namespace csknow::feature_store {
                 continue;
             }
 
-            bool jumping = false, falling = false;
+            bool jumping = false;
             for (int64_t i = 0; i < futureTracker.getCurSize(); i++) {
                 if (columnData[playerColumn].velocity[futureTracker.fromNewest(i)].z > 10.) {
                     jumping = true;
                 }
-                if (columnData[playerColumn].velocity[futureTracker.fromNewest(i)].z < -10.) {
-                    falling = true;
-                }
             }
-            falling = falling && !jumping;
 
             if (futureTickIndex < curTick) {
                 std::cout << "delta pos acausal future tick in past" << std::endl;
@@ -750,7 +746,7 @@ namespace csknow::feature_store {
                                                         statureOption,
                                                         columnData[playerColumn].scoped[curTick],
                                                         columnData[playerColumn].airborne[futureTickIndex],
-                                                        jumping, falling);
+                                                        jumping);
             columnData[playerColumn].radialVel[movementStatus.toRadialMovementBin()][curTick] = true;
         }
     }
