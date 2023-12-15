@@ -100,11 +100,12 @@ namespace communicate {
                     continue;
                 }
 
-                // sort cover edges by distance to player closest enem
+                // sort cover edges by possibility of enemy being there, then if chcked recently, and finally distance to mass of enemies
                 std::sort(coverEdges.begin(), coverEdges.end(),
                           [](const CoverEdge & a, const CoverEdge & b) {
-                    return (!a.checkedRecently && b.checkedRecently) ||
-                        (a.checkedRecently == b.checkedRecently && a.minTimeToEnemy < b.minTimeToEnemy);
+                    return (a.minTimeToEnemy < b.minTimeToEnemy) ||
+                        (a.minTimeToEnemy == b.minTimeToEnemy && !a.checkedRecently && b.checkedRecently) ||
+                        (a.minTimeToEnemy == b.minTimeToEnemy && a.checkedRecently == b.checkedRecently && a.distance < b.distance);
                 });
 
                 // find first non-assigned cover edge
