@@ -138,9 +138,10 @@ namespace communicate {
                 Ray playerRay = getEyeCoordinatesForPlayerGivenEyeHeight(client.getEyePosForPlayer(), client.getCurrentViewAngles());
                 bool updateCheckTime = intersectP(dangerAABB, playerRay);
 
-                // count all areas within distance to assigned one as also assigned
+                // count all areas within distance to assigned one and also visible to player as also assigned
                 for (size_t dstAreaIndex = 0; dstAreaIndex < blackboard.navFile.m_areas.size(); dstAreaIndex++) {
-                    if (blackboard.reachability.getDistance(srcAreaIndex, dstAreaIndex) < WATCHED_DISTANCE) {
+                    if (blackboard.reachability.getDistance(srcAreaIndex, dstAreaIndex) < WATCHED_DISTANCE &&
+                        blackboard.visPoints.isVisibleAreaId(curArea.get_id(), blackboard.navFile.m_areas[dstAreaIndex].get_id())) {
                         if (updateCheckTime) {
                             dangerAreaLastCheckTime[dstAreaIndex] = state.loadTime;
                         }
