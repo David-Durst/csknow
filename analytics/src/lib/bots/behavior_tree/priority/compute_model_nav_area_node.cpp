@@ -80,7 +80,7 @@ namespace csknow::compute_nav_area {
         const nav_mesh::nav_area & curArea = blackboard.navFile.get_nearest_area_by_position(
             vec3Conv(state.getClient(treeThinker.csgoId).getFootPosForPlayer()));
         AreaId curAreaId = curArea.get_id();
-        const Order & curOrder = blackboard.strategy.getOrderForPlayer(treeThinker.csgoId);
+        //const Order & curOrder = blackboard.strategy.getOrderForPlayer(treeThinker.csgoId);
 
         /*
         if (state.getClient(treeThinker.csgoId).team == ENGINE_TEAM_T) {
@@ -146,6 +146,7 @@ namespace csknow::compute_nav_area {
                 curPriority.moveOptions.crouch = lastProbDeltaPosAssignment.crouch;
             }
 
+            /*
             curPriority.nonDangerAimAreaType = NonDangerAimAreaType::Path;
             if (curClient.team == ENGINE_TEAM_T) {
                 if (curOrder.playerToHoldIndex.count(curClient.csgoId) > 0) {
@@ -157,6 +158,7 @@ namespace csknow::compute_nav_area {
                     }
                 }
             }
+             */
             // if in the target area (and not moving to c4), don't move
             /*
             if ((!blackboard.isPlayerDefuser(treeThinker.csgoId) || state.c4IsDefused) && curAreaId == curPriority.targetAreaId) {
