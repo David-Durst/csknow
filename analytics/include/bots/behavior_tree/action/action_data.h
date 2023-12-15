@@ -22,6 +22,7 @@ enum class AimTargetType {
     HoldNonDangerArea,
     DangerArea,
     PathNonDangerArea,
+    MovementDirection,
     Waypoint
 };
 
@@ -38,6 +39,7 @@ struct Action {
     bool keepCrouching = false;
     AimTargetType aimTargetType;
     CSGOId targetPlayerId;
+    Vec3 aimTarget;
     Vec2 targetViewAngle;
     string aimTargetTypeToString(AimTargetType type) {
         switch (type) {

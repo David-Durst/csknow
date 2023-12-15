@@ -75,7 +75,6 @@ namespace action {
         Action & oldAction = blackboard.lastPlayerToAction[treeThinker.csgoId];
         Priority & curPriority = blackboard.playerToPriority[treeThinker.csgoId];
         Path & curPath = blackboard.playerToPath[treeThinker.csgoId];
-        Vec3 aimTarget;
         uint32_t curArea = blackboard.navFile.get_nearest_area_by_position(vec3Conv(curClient.getFootPosForPlayer())).get_id();
         string curPlace = blackboard.navFile.get_place(blackboard.navFile.get_area_by_id_fast(curArea).m_place);
         uint32_t c4Area = blackboard.navFile.get_nearest_area_by_position(vec3Conv(state.getC4Pos())).get_id();
@@ -89,32 +88,44 @@ namespace action {
         // aim at target player if one exists, or aim at danger location, otherwise the next way point
         // this should handle c4 as end of path will be c4
         if (curPriority.targetPlayer.playerId != INVALID_ID) {
-            aimTarget = curPriority.targetPlayer.eyePos;
+            curAction.aimTarget = curPriority.targetPlayer.eyePos;
             curAction.aimTargetType = AimTargetType::Player;
         }
         else if (blackboard.isPlayerDefuser(treeThinker.csgoId) && curPlace == c4Place) {
-            aimTarget = state.getC4Pos();
+            curAction.aimTarget = state.getC4Pos();
             curAction.aimTargetType = AimTargetType::C4;
         }
         else if (curPriority.nonDangerAimArea && curPriority.nonDangerAimAreaType == NonDangerAimAreaType::Hold && !curPriority.learnedTargetPos) {
-            aimTarget = vec3tConv(blackboard.navFile.get_area_by_id_fast(curPriority.nonDangerAimArea.value()).get_center());
-            aimTarget.z += EYE_HEIGHT;
+            curAction.aimTarget = vec3tConv(blackboard.navFile.get_area_by_id_fast(curPriority.nonDangerAimArea.value()).get_center());
+            curAction.aimTarget.z += EYE_HEIGHT;
             curAction.aimTargetType = AimTargetType::HoldNonDangerArea;
         }
         else if (blackboard.playerToDangerAreaId.find(treeThinker.csgoId) != blackboard.playerToDangerAreaId.end()) {
-            aimTarget = vec3tConv(blackboard.navFile.get_area_by_id_fast(blackboard.playerToDangerAreaId[treeThinker.csgoId]).get_center());
-            aimTarget.z += EYE_HEIGHT;
+            curAction.aimTarget = vec3tConv(blackboard.navFile.get_area_by_id_fast(blackboard.playerToDangerAreaId[treeThinker.csgoId]).get_center());
+            curAction.aimTarget.z += EYE_HEIGHT;
             curAction.aimTargetType = AimTargetType::DangerArea;
         }
-        else if (curPriority.nonDangerAimArea && (curPriority.nonDangerAimAreaType == NonDangerAimAreaType::Path ||
-                 curPriority.nonDangerAimAreaType == NonDangerAimAreaType::Learned)) {
-            aimTarget = vec3tConv(blackboard.navFile.get_area_by_id_fast(curPriority.nonDangerAimArea.value()).get_center());
-            aimTarget.z += EYE_HEIGHT;
+        else if (curPriority.learnedTargetPos) {
+            if (curPriority.learnedMovementStatus.value().moving) {
+                curAction.aimTarget = curClient.getFootPosForPlayer() + Vec3{
+                        static_cast<double>(curPriority.learnedMovementStatus.value().vel.x),
+                        static_cast<double>(curPriority.learnedMovementStatus.value().vel.y),
+                        EYE_HEIGHT
+                };
+            }
+            else {
+                curAction.aimTarget = oldAction.aimTarget;
+            }
+            curAction.aimTargetType = AimTargetType::MovementDirection;
+        }
+        else if (curPriority.nonDangerAimArea && curPriority.nonDangerAimAreaType == NonDangerAimAreaType::Path) {
+            curAction.aimTarget = vec3tConv(blackboard.navFile.get_area_by_id_fast(curPriority.nonDangerAimArea.value()).get_center());
+            curAction.aimTarget.z += EYE_HEIGHT;
             curAction.aimTargetType = AimTargetType::PathNonDangerArea;
         }
         else {
-            aimTarget = curPath.waypoints[curPath.curWaypoint].pos;
-            aimTarget.z += EYE_HEIGHT;
+            curAction.aimTarget = curPath.waypoints[curPath.curWaypoint].pos;
+            curAction.aimTarget.z += EYE_HEIGHT;
             curAction.aimTargetType = AimTargetType::Waypoint;
         }
 
@@ -132,13 +143,13 @@ namespace action {
             clientTargetMap[curClient.csgoId] = {curPriority.targetPlayer.playerId, {0., 0., 0.}};
         }
         else {
-            clientTargetMap[curClient.csgoId] = {INVALID_ID, aimTarget};
+            clientTargetMap[curClient.csgoId] = {INVALID_ID, curAction.aimTarget};
         }
 
         // don't need to change pitch here because engine stores pitch in -90 to 90 (I think)
         // while conversion function below uses 360-270 for -90-0
         Vec2 curViewAngle = curClient.getCurrentViewAnglesWithAimpunch();;
-        Vec3 targetVector = aimTarget - curClient.getEyePosForPlayer();
+        Vec3 targetVector = curAction.aimTarget - curClient.getEyePosForPlayer();
         curAction.targetViewAngle = vectorAngles(targetVector);
         Vec2 adjustedTargetViewAngle = curAction.targetViewAngle;
 
