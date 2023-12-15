@@ -109,11 +109,13 @@ int main(int argc, char * argv[]) {
             make_unique<HoldBSitePushScript>(state),
             make_unique<HoldBSiteBaitScript>(state)
             make_unique<AimAndKillWithinTimeCheck>(state),
+             */
             make_unique<CTEngageSpacingScript>(state),
             make_unique<PushBaitGooseToCatScript>(state),
             make_unique<PushWaitForBaitGooseToCatScript>(state),
             make_unique<PushMultipleBaitGooseToCatScript>(state),
             make_unique<PushLurkBaitASiteScript>(state),
+                    /*
             make_unique<PushATwoOrdersScript>(state),
             make_unique<PushTwoBDoorsScript>(state),
             make_unique<PushThreeBScript>(state)
@@ -125,10 +127,11 @@ int main(int argc, char * argv[]) {
             make_unique<SpawnPossibleNavAreasCheck>(state),
             make_unique<DiffusionPossibleNavAreasCheck>(state),
             make_unique<VisibilityPossibleNavAreasCheck>(state),
+             */
             make_unique<DangerOnePlayerCheck>(state),
             make_unique<DangerTwoPlayerCheck>(state)
-              */
-            make_unique<SayScript>(state)
+
+            //make_unique<SayScript>(state)
     ), false);
     ScriptsRunner scenarioRunner(variable_aim_test::makeBotTests(), false, 0);
     ScriptsRunner humanScenarioRunner(variable_aim_test::makeHumanTests(), false, 1);

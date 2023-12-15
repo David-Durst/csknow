@@ -81,12 +81,13 @@ namespace communicate {
                                     minDistance = std::min(minDistance, newDistance);
                                 }
                                 // if there are no enemies or none nearby, then no need to worry about cover edges
-                                if (sumDistance != 0. && secondsAwayAtMaxSpeed(minDistance) < 1.0) {
+                                // ACTUALLY, allow all, will just sort by min distance so get best cover edge
+                                //if (sumDistance != 0. && secondsAwayAtMaxSpeed(minDistance) < 1.0) {
                                     coverEdges.push_back({i, blackboard.navFile.m_areas[i].get_id(), sumDistance,
                                                           secondsAwayAtMaxSpeed(minDistance),
                                                           state.getSecondsBetweenTimes(dangerAreaLastCheckTime[i], state.loadTime) < RECENTLY_CHECKED_SECONDS});
                                     boolCoverEdges.set(i, true);
-                                }
+                                //}
                                 break;
                             }
                         }
@@ -99,11 +100,11 @@ namespace communicate {
                     continue;
                 }
 
-                // sort cover edges by distance to player (nearest first)
+                // sort cover edges by distance to player closest enem
                 std::sort(coverEdges.begin(), coverEdges.end(),
                           [](const CoverEdge & a, const CoverEdge & b) {
                     return (!a.checkedRecently && b.checkedRecently) ||
-                        (a.checkedRecently == b.checkedRecently && a.distance < b.distance);
+                        (a.checkedRecently == b.checkedRecently && a.minTimeToEnemy < b.minTimeToEnemy);
                 });
 
                 // find first non-assigned cover edge
