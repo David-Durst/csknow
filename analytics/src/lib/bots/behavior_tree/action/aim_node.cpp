@@ -105,6 +105,12 @@ namespace action {
             curAction.aimTarget.z += EYE_HEIGHT;
             curAction.aimTargetType = AimTargetType::DangerArea;
         }
+        else if (curPriority.nonDangerAimArea && curPriority.nonDangerAimAreaType == NonDangerAimAreaType::Hold && curPriority.learnedTargetPos) {
+            curAction.aimTarget = vec3tConv(blackboard.navFile.get_area_by_id_fast(curPriority.nonDangerAimArea.value()).get_center());
+            curAction.aimTarget.z += EYE_HEIGHT;
+            curAction.aimTargetType = AimTargetType::HoldNonDangerArea;
+        }
+        /*
         else if (curPriority.learnedTargetPos) {
             if (curPriority.learnedMovementStatus.value().moving) {
                 curAction.aimTarget = curClient.getFootPosForPlayer() + Vec3{
@@ -118,6 +124,7 @@ namespace action {
             }
             curAction.aimTargetType = AimTargetType::MovementDirection;
         }
+         */
         else if (curPriority.nonDangerAimArea && curPriority.nonDangerAimAreaType == NonDangerAimAreaType::Path) {
             curAction.aimTarget = vec3tConv(blackboard.navFile.get_area_by_id_fast(curPriority.nonDangerAimArea.value()).get_center());
             curAction.aimTarget.z += EYE_HEIGHT;

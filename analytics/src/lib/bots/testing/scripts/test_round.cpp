@@ -138,7 +138,7 @@ vector<Script::Ptr> createRoundScripts(const csknow::plant_states::PlantStatesRe
     for (size_t i = batchSize * startSituationId; i < maxI; i++) {
         // 0 - push in to b from mid with enemy in b site
         // 4 - attacking a from cat and spawn
-        result.push_back(make_unique<RoundScript>(plantStatesResult, /*i*//*0*/4/*8*//*12*//*205*/, maxI, gen, dis,
+        result.push_back(make_unique<RoundScript>(plantStatesResult, i/*0*//*4*//*8*//*12*//*205*/, maxI, gen, dis,
                                                   std::nullopt, "RoundScript", std::nullopt, std::nullopt));
     }
     if (quitAtEnd) {
@@ -298,9 +298,15 @@ vector<Script::Ptr> createPrebakedRoundScripts(const nav_mesh::nav_file & navFil
         // attack a from spawn, need to eliminate t hiding extendedA
         addRow(plantStatesResult, {1241., 2586., 127.});
         plantStatesResult.ctPlayerStates[0].alive.back() = true;
-        //1409.643066 951.790649 55.921726;setang 1.749142 89.289635
-        plantStatesResult.ctPlayerStates[0].pos.back() = {1409.643066, 951.790649, 55.921726}; //{1430.616699, 1816.052490, -10.300033};
-        plantStatesResult.ctPlayerStates[0].viewAngle.back() = {89.289635, 1.749142}; //{112.955604, -4.299486};
+        // enable to get a simpler path straight through long rather than from spawn
+        if (false) {
+            plantStatesResult.ctPlayerStates[0].pos.back() = {1409.643066, 951.790649, 55.921726};
+            plantStatesResult.ctPlayerStates[0].viewAngle.back() = {89.289635, 1.749142};
+        }
+        else {
+            plantStatesResult.ctPlayerStates[0].pos.back() = {1430.616699, 1816.052490, -10.300033};
+            plantStatesResult.ctPlayerStates[0].viewAngle.back() = {112.955604, -4.299486};
+        }
         plantStatesResult.tPlayerStates[0].alive.back() = true;
         plantStatesResult.tPlayerStates[0].pos.back() = {563.968750, 2759.416259, 97.259826};
         plantStatesResult.tPlayerStates[0].viewAngle.back() = {-45.278255, 1.510083};
