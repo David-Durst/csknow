@@ -281,10 +281,8 @@ def draw_all_players(data_dict: Dict, pred_dict: Optional[Dict], im_draw: ImageD
                     else:
                         clamped_prob = max(0.5, min(1., prob))
                         if xy_coord_to_max_prob_z_index[xy_coord] == 0:
-                            color = (0, 0, int(255 * clamped_prob), 255)
-                        if xy_coord_to_max_prob_z_index[xy_coord] == 1:
                             color = (0, int(255 * clamped_prob), 0, 255)
-                        elif xy_coord_to_max_prob_z_index[xy_coord] == 2:
+                        elif xy_coord_to_max_prob_z_index[xy_coord] == 1:
                             color = (0, int(255 * clamped_prob), int(255 * clamped_prob), 255)
                     xy_coord_to_sum_coord[xy_coord].draw_vis(im_draw, False, color)
     return result

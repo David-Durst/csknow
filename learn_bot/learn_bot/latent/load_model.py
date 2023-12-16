@@ -135,7 +135,7 @@ def load_model_file(loaded_data: LoadDataResult, use_test_data_only: bool = Fals
                                                hyperparameter_options.layers, hyperparameter_options.heads,
                                                hyperparameter_options.control_type,
                                                hyperparameter_options.player_mask_type,
-                                               hyperparameter_options.non_pos_mask)
+                                               hyperparameter_options.mask_partial_info)
     model.load_state_dict(model_file['model_state_dict'])
     model.to(CUDA_DEVICE_STR)
 
