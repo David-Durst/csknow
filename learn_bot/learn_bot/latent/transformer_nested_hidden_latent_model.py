@@ -117,13 +117,15 @@ class TransformerNestedHiddenLatentModel(nn.Module):
         self.players_nearest_crosshair_to_enemy_columns = \
             rearrange(nested_players_nearest_crosshair_to_enemy_columns_tensor[:, 0:num_input_time_steps],
                       'p t -> (p t)', p=self.num_players, t=num_input_time_steps).tolist()
+        self.players_seconds_to_hit_enemy = \
+            range_list_to_index_list(cts.get_name_ranges(True, True, contained_str="player seconds"))
         self.players_visibility = \
             range_list_to_index_list(cts.get_name_ranges(True, True, contained_str="player enemy visible"))
 
         self.players_all_temporal_columns = all_players_pos_columns + all_players_nearest_crosshair_to_enemy_columns
         self.players_non_temporal_columns = flatten_list([
             [player_column for player_column in player_columns
-             if player_column not in self.players_all_temporal_columns]
+             if player_column not in (self.players_all_temporal_columns + self.players_seconds_to_hit_enemy)]
             for player_columns in players_columns
         ])
         self.num_similarity_columns = default_similarity_columns
@@ -258,11 +260,7 @@ class TransformerNestedHiddenLatentModel(nn.Module):
                                     repeat=self.num_output_time_steps)
             x_crosshair_temporal = repeat(x_crosshair, 'b p 1 d -> b p repeat d',
                                     repeat=self.num_output_time_steps)
-        if self.mask_non_pos:
-            x_gathered = torch.cat([x_pos_temporal, x_crosshair_temporal,
-                                    torch.zeros_like(x_non_pos_temporal)], -1)
-        else:
-            x_gathered = torch.cat([x_pos_temporal, x_crosshair_temporal, x_non_pos_temporal], -1)
+        x_gathered = torch.cat([x_pos_temporal, x_crosshair_temporal, x_non_pos_temporal], -1)
         #x_gathered = torch.cat([x_pos_encoded, x_vel_scaled, x_non_pos], -1)
         x_embedded = self.embedding_model(x_gathered)
 

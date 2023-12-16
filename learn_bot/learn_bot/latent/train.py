@@ -170,20 +170,12 @@ def train(train_type: TrainType, multi_hdf5_wrapper: MultiHDF5Wrapper,
         column_transformers = IOColumnTransformers(place_area_input_column_types, radial_vel_output_column_types,
                                                    multi_hdf5_wrapper.train_hdf5_wrappers[0].sample_df)
         # plus 1 on future ticks to include present tick
-        if True:
-            model = TransformerNestedHiddenLatentModel(column_transformers, hyperparameter_options.internal_width,
-                                                       2 * max_enemies, hyperparameter_options.num_input_time_steps,
-                                                       hyperparameter_options.layers, hyperparameter_options.heads,
-                                                       hyperparameter_options.control_type,
-                                                       hyperparameter_options.player_mask_type,
-                                                       hyperparameter_options.non_pos_mask)
-        else:
-            model = TransformerNestedHiddenLatentModel_10_17(column_transformers, hyperparameter_options.internal_width,
-                                                             2 * max_enemies, hyperparameter_options.num_input_time_steps,
-                                                             hyperparameter_options.layers, hyperparameter_options.heads,
-                                                             hyperparameter_options.control_type,
-                                                             hyperparameter_options.player_mask_type,
-                                                             hyperparameter_options.non_pos_mask)
+        model = TransformerNestedHiddenLatentModel(column_transformers, hyperparameter_options.internal_width,
+                                                   2 * max_enemies, hyperparameter_options.num_input_time_steps,
+                                                   hyperparameter_options.layers, hyperparameter_options.heads,
+                                                   hyperparameter_options.control_type,
+                                                   hyperparameter_options.player_mask_type,
+                                                   hyperparameter_options.mask_partial_info)
         if load_model_path:
             model_file = torch.load(load_model_path)
             model.load_state_dict(model_file['model_state_dict'])

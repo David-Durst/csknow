@@ -165,7 +165,10 @@ class PlayerPlaceAreaColumns:
                              [self.nearest_crosshair_distance_to_enemy], self.prior_nearest_crosshair_distance_to_enemy,
                              [self.player_hurt_in_last_5s], [self.player_fire_in_last_5s],
                              [self.player_no_fov_enemy_visible_in_last_5s], [self.player_fov_enemy_visible_in_last_5s],
-                             [self.player_health], [self.player_armor]])
+                             [self.player_health], [self.player_armor],
+                             # not used as model inputs, but used in training to filter to engagements/non engagmenets
+                             # for output mask
+                             [self.seconds_after_prior_hit_enemy], [self.seconds_until_next_hit_enemy]])
         #return flatten_list([self.pos])
         #return flatten_list([self.aligned_pos])
 
@@ -192,9 +195,8 @@ class PlayerPlaceAreaColumns:
         return result
 
     def get_vis_only_columns(self) -> list[str]:
-        return [self.player_id, self.player_kill_next_tick, self.player_killed_next_tick,
-                self.seconds_after_prior_hit_enemy, self.seconds_until_next_hit_enemy,
-                self.player_shots_cur_tick, self.player_weapon_id, self.player_scoped] + self.vel + self.view_angle
+        return [self.player_id, self.player_kill_next_tick, self.player_killed_next_tick, self.player_shots_cur_tick,
+                self.player_weapon_id, self.player_scoped] + self.vel + self.view_angle
 
 
 specific_player_place_area_columns: list[PlayerPlaceAreaColumns] = \
