@@ -32,12 +32,12 @@ class NavData:
     nav_region: AABB
     num_steps: torch.Tensor
     nav_grid_base: torch.Tensor
-    nav_above_below: torch.Tensor
+    nav_below_or_in: torch.Tensor
 
     def __init__(self, device_str):
         self.nav_region = nav_region_to_aabb(load_hdf5_extra_to_list(nav_above_below_hdf5_data_path)[0])
         nav_above_below_df = load_hdf5_to_pd(nav_above_below_hdf5_data_path)
-        self.nav_above_below = torch.Tensor(nav_above_below_df[['z nearest', 'z below']].to_numpy()).to(device_str)
+        self.nav_below_or_in = torch.Tensor(nav_above_below_df['z below or in'].to_numpy()).to(device_str)
 
         num_y_steps = int(ceil((self.nav_region.max.y - self.nav_region.min.y) / nav_step_size))
         num_z_steps = int(ceil((self.nav_region.max.z - self.nav_region.min.z) / nav_step_size))
@@ -170,7 +170,7 @@ def compute_new_pos(input_pos_tensor: torch.Tensor, vis_tensor: torch.Tensor, pr
     next_scaled_pos_change = rearrange(scaled_pos_change, 'b (p t) d -> b p t d',
                                        p=len(specific_player_place_area_columns), t=num_radial_ticks)[:, :, 0, :]
     next_z_jump_index = rearrange(z_jump_index, 'b (p t) -> b p t',
-                                       p=len(specific_player_place_area_columns), t=num_radial_ticks)[:, :, 0]
+                                  p=len(specific_player_place_area_columns), t=num_radial_ticks)[:, :, 0]
     output_pos_tensor = input_pos_tensor[:, :, 0, :] + next_scaled_pos_change
     output_pos_tensor[:, :, 2] += torch.where(next_z_jump_index == 2., max_jump_height, 0.)
     output_pos_tensor[:, :, 0] = output_pos_tensor[:, :, 0].clamp(min=nav_data.nav_region.min.x,
@@ -185,10 +185,9 @@ def compute_new_pos(input_pos_tensor: torch.Tensor, vis_tensor: torch.Tensor, pr
     nav_grid_steps = torch.floor((output_pos_tensor - nav_data.nav_grid_base) / nav_step_size).long()
     # convert steps per dimension to linear index, and flatten since index_select accepts 1d array
     nav_grid_index = rearrange(torch.sum(nav_data.num_steps * nav_grid_steps, dim=-1), 'b p -> (b p)')
-    nav_above_below_per_player = rearrange(torch.index_select(nav_data.nav_above_below, 0, nav_grid_index),
-                                           '(b p) o -> b p o', p=len(specific_player_place_area_columns))
-    output_pos_tensor[:, :, 2] = torch.where(next_z_jump_index == 1,
-                                             nav_above_below_per_player[:, :, 0], nav_above_below_per_player[:, :, 1])
+    nav_below_or_in_per_player = rearrange(torch.index_select(nav_data.nav_below_or_in, 0, nav_grid_index),
+                                           '(b p) -> b p', p=len(specific_player_place_area_columns))
+    output_pos_tensor[:, :, 2] = nav_below_or_in_per_player
     output_and_history_pos_tensor = torch.roll(input_pos_tensor, 1, 2)
     output_and_history_pos_tensor[:, :, 0, :] = output_pos_tensor
     return output_and_history_pos_tensor
