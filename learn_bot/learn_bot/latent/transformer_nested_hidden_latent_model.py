@@ -171,8 +171,8 @@ class TransformerNestedHiddenLatentModel(nn.Module):
         self.spatial_positional_encoder, self.spatial_positional_encoder_out_dim = get_embedder()
         self.columns_per_player = (len(self.players_non_temporal_columns) // self.num_players) + \
                                   self.num_similarity_columns + \
-                                  self.spatial_positional_encoder_out_dim * num_input_time_steps + \
-                                  num_input_time_steps # for the nearest_crosshair_to_enemy_columns
+                                  self.spatial_positional_encoder_out_dim + \
+                                  1 # for the nearest_crosshair_to_enemy_columns
 
         # positional encoding library doesn't play well with torchscript, so I'll just make the
         # encoding matrices upfront and add them during inference
