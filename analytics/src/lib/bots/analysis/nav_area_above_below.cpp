@@ -145,7 +145,6 @@ namespace csknow::nav_area_above_below {
             }
             save(filePath);
         }
-        exit(0);
     }
 
     void NavAreaAboveBelow::save(const std::string &filePath) {

@@ -1046,6 +1046,7 @@ namespace csknow::feature_store {
     void TeamFeatureStoreResult::computeAcausalLabels(const Games & games, const Rounds & rounds,
                                                       const Ticks & ticks, const Kills & kills,
                                                       const WeaponFire & weaponFire,
+                                                      const Grenades & grenades, const GrenadeTrajectories & grenadeTrajectories,
                                                       const Players & players,
                                                       const DistanceToPlacesResult & distanceToPlacesResult,
                                                       const ReachableResult & reachableResult,
@@ -1057,6 +1058,17 @@ namespace csknow::feature_store {
         roundNumTests = keyRetakeEvents.roundNumTests;
         perTraceData = keyRetakeEvents.perTraceData;
         playerNames = players.name;
+        grenadeThrower = grenades.thrower;
+        grenadeType = grenades.grenadeType;
+        grenadeThrowTick = grenades.throwTick;
+        grenadeActiveTick = grenades.activeTick;
+        grenadeExpiredTick = grenades.expiredTick;
+        grenadeDestroyTick = grenades.destroyTick;
+        trajectoryGrenadeId = grenadeTrajectories.grenadeId;
+        trajectoryIdPerGrenade = grenadeTrajectories.idPerGrenade;
+        grenadeTrajectoryPosX = grenadeTrajectories.posX;
+        grenadeTrajectoryPosY = grenadeTrajectories.posY;
+        grenadeTrajectoryPosZ = grenadeTrajectories.posZ;
         std::atomic<int64_t> roundsProcessed = 0;
         /*
         for (size_t i = 0; i < columnTData[4].distributionNearestAOrders15s[0].size(); i++) {
@@ -1106,12 +1118,12 @@ namespace csknow::feature_store {
 
                 bothSidesTicksNextFutureTracker.enqueue(tickIndex);
                 while (bothSidesTicksNextFutureTracker.getCurSize() > 1 &&
-                       secondsBetweenTicks(ticks, tickRates, internalIdToTickId[tickIndex], internalIdToTickId[bothSidesTicksNextFutureTracker.fromOldest(1)]) > 0.25) {
+                       secondsBetweenTicks(ticks, tickRates, internalIdToTickId[tickIndex], internalIdToTickId[bothSidesTicksNextFutureTracker.fromOldest(1)]) > 0.125) {
                     bothSidesTicksNextFutureTracker.dequeue();
                 }
                 bothSidesTicksSecondNextFutureTracker.enqueue(tickIndex);
                 while (bothSidesTicksSecondNextFutureTracker.getCurSize() > 1 &&
-                       secondsBetweenTicks(ticks, tickRates, internalIdToTickId[tickIndex], internalIdToTickId[bothSidesTicksSecondNextFutureTracker.fromOldest(1)]) > 0.5) {
+                       secondsBetweenTicks(ticks, tickRates, internalIdToTickId[tickIndex], internalIdToTickId[bothSidesTicksSecondNextFutureTracker.fromOldest(1)]) > 0.25) {
                     bothSidesTicksSecondNextFutureTracker.dequeue();
                 }
                 bothSidesTicks5sFutureTracker.enqueue(tickIndex);
@@ -1254,6 +1266,17 @@ namespace csknow::feature_store {
         file.createDataSet("/extra/trace one non replay team", perTraceData.oneNonReplayTeam, hdf5FlatCreateProps);
         file.createDataSet("/extra/trace one non replay bot", perTraceData.oneNonReplayBot, hdf5FlatCreateProps);
         file.createDataSet("/extra/player names", playerNames, hdf5FlatCreateProps);
+        file.createDataSet("/extra/grenade thrower", grenadeThrower, hdf5FlatCreateProps);
+        file.createDataSet("/extra/grenade type", grenadeType, hdf5FlatCreateProps);
+        file.createDataSet("/extra/grenade throw tick", grenadeThrowTick, hdf5FlatCreateProps);
+        file.createDataSet("/extra/grenade active tick", grenadeActiveTick, hdf5FlatCreateProps);
+        file.createDataSet("/extra/grenade expired tick", grenadeExpiredTick, hdf5FlatCreateProps);
+        file.createDataSet("/extra/grenade destroy tick", grenadeDestroyTick, hdf5FlatCreateProps);
+        file.createDataSet("/extra/trajectory grenade id", trajectoryGrenadeId, hdf5FlatCreateProps);
+        file.createDataSet("/extra/trajectory id per grenade", trajectoryIdPerGrenade, hdf5FlatCreateProps);
+        file.createDataSet("/extra/grenade trajectory pos x", grenadeTrajectoryPosX, hdf5FlatCreateProps);
+        file.createDataSet("/extra/grenade trajectory pos y", grenadeTrajectoryPosY, hdf5FlatCreateProps);
+        file.createDataSet("/extra/grenade trajectory pos z", grenadeTrajectoryPosZ, hdf5FlatCreateProps);
 
         file.createDataSet("/data/game id", gameId, hdf5FlatCreateProps);
         file.createDataSet("/data/round id", roundId, hdf5FlatCreateProps);

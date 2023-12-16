@@ -103,6 +103,16 @@ namespace csknow::feature_store {
         vector<float> c4DistanceToASite, c4DistanceToBSite;
         //array<vector<float>, num_orders_per_site> c4DistanceToNearestAOrderNavArea, c4DistanceToNearestBOrderNavArea;
 
+        vector<int64_t> grenadeThrower;
+        vector<int16_t> grenadeType;
+        vector<int64_t> grenadeThrowTick;
+        vector<int64_t> grenadeActiveTick;
+        vector<int64_t> grenadeExpiredTick;
+        vector<int64_t> grenadeDestroyTick;
+        vector<int64_t> trajectoryGrenadeId;
+        vector<int32_t> trajectoryIdPerGrenade;
+        vector<double> grenadeTrajectoryPosX, grenadeTrajectoryPosY, grenadeTrajectoryPosZ;
+
         struct ColumnPlayerData {
             vector<int64_t> playerId;
             // inputs
@@ -218,6 +228,7 @@ namespace csknow::feature_store {
         void convertTraceNonReplayNamesToIndices(const Players & players, int64_t roundIndex, int64_t tickIndex);
         void computeAcausalLabels(const Games & games, const Rounds & rounds, const Ticks & ticks, const Kills & kills,
                                   const WeaponFire & weaponFire,
+                                  const Grenades & grenades, const GrenadeTrajectories & grenadeTrajectories,
                                   const Players & players, const DistanceToPlacesResult & distanceToPlacesResult,
                                   const ReachableResult & reachableResult,
                                   const nav_mesh::nav_file & navFile,

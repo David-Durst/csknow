@@ -172,7 +172,7 @@ def compute_new_pos(input_pos_tensor: torch.Tensor, vis_tensor: torch.Tensor, pr
     next_z_jump_index = rearrange(z_jump_index, 'b (p t) -> b p t',
                                   p=len(specific_player_place_area_columns), t=num_radial_ticks)[:, :, 0]
     output_pos_tensor = input_pos_tensor[:, :, 0, :] + next_scaled_pos_change
-    output_pos_tensor[:, :, 2] += torch.where(next_z_jump_index == 2., max_jump_height, 0.)
+    output_pos_tensor[:, :, 2] += torch.where(next_z_jump_index == 1., max_jump_height, 0.)
     output_pos_tensor[:, :, 0] = output_pos_tensor[:, :, 0].clamp(min=nav_data.nav_region.min.x,
                                                                   max=nav_data.nav_region.max.x)
     output_pos_tensor[:, :, 1] = output_pos_tensor[:, :, 1].clamp(min=nav_data.nav_region.min.y,

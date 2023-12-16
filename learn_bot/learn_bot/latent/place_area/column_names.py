@@ -26,7 +26,7 @@ ducking_modifier = 0.34
 airwalk_speed = 30.
 num_directions = 16
 direction_angle_range = 360. / num_directions
-num_z_axis_layers = 3
+num_z_axis_layers = 2
 num_radial_bins_per_z_axis = num_directions * StatureOptions.NUM_STATURE_OPTIONS.value
 num_radial_bins = 1 + num_z_axis_layers * num_radial_bins_per_z_axis
 
