@@ -75,17 +75,15 @@ class ControlType(Enum):
 class TransformerNestedHiddenLatentModel(nn.Module):
     internal_width: int
     cts: IOColumnTransformers
-    output_layers: List[nn.Module]
-    latent_to_distributions: Callable
     noise_var: float
 
     def __init__(self, cts: IOColumnTransformers, internal_width: int, num_players: int, num_input_time_steps: int,
                  num_layers: int, num_heads: int, control_type: ControlType, player_mask_type: PlayerMaskType,
-                 mask_non_pos: bool):
+                 mask_partial_info: bool):
         super(TransformerNestedHiddenLatentModel, self).__init__()
         self.cts = cts
         self.internal_width = internal_width
-        self.mask_non_pos = mask_non_pos
+        self.mask_partial_info = mask_partial_info
         # transformed/transformed doesn't matter since no angles and all categorical variables are
         # "distirbution" type meaning pre one hot encoded
         all_c4_columns_ranges = range_list_to_index_list(cts.get_name_ranges(True, True, contained_str="c4"))
@@ -119,18 +117,19 @@ class TransformerNestedHiddenLatentModel(nn.Module):
         self.players_nearest_crosshair_to_enemy_columns = \
             rearrange(nested_players_nearest_crosshair_to_enemy_columns_tensor[:, 0:num_input_time_steps],
                       'p t -> (p t)', p=self.num_players, t=num_input_time_steps).tolist()
-        self.players_seconds_to_hit_enemy = \
-            range_list_to_index_list(cts.get_name_ranges(True, True, contained_str="player seconds"))
+        self.players_visibility = \
+            range_list_to_index_list(cts.get_name_ranges(True, True, contained_str="player enemy visible"))
 
         self.players_all_temporal_columns = all_players_pos_columns + all_players_nearest_crosshair_to_enemy_columns
         self.players_non_temporal_columns = flatten_list([
             [player_column for player_column in player_columns
-             if player_column not in (self.players_all_temporal_columns + self.players_seconds_to_hit_enemy)]
+             if player_column not in self.players_all_temporal_columns]
             for player_columns in players_columns
         ])
         self.num_similarity_columns = default_similarity_columns
         self.num_input_time_steps = num_input_time_steps
         self.num_output_time_steps = num_radial_ticks
+        assert self.num_input_time_steps == 1 or self.num_input_time_steps == self.num_output_time_steps
         self.control_type = control_type
         self.time_control_columns = get_columns_by_str(cts, "player decrease distance to c4")
 
@@ -230,6 +229,8 @@ class TransformerNestedHiddenLatentModel(nn.Module):
         x = x_in.clone()
         if self.control_type != ControlType.TimeControl:
             x[:, self.time_control_columns] = 0.
+        if self.mask_partial_info:
+            x[:, self.players_visibility] = 0.
         # legacy, so that if hand in too many similarity columns, still use them
         similarity = similarity_in[:, self.num_similarity_columns * -1:].clone()
         if self.control_type != ControlType.SimilarityControl:
@@ -237,29 +238,36 @@ class TransformerNestedHiddenLatentModel(nn.Module):
         x_pos = rearrange(x[:, self.players_pos_columns], "b (p t d) -> b p t d", p=self.num_players,
                           t=self.num_input_time_steps, d=self.num_dim)
         x_pos_encoded = self.encode_pos(x_pos)
-        x_pos_encoded_per_player = rearrange(x_pos_encoded, "b p t d -> b p (t d)", p=self.num_players,
-                                             t=self.num_input_time_steps)
-        x_crosshair = rearrange(x[:, self.players_nearest_crosshair_to_enemy_columns], "b (p t) -> b p t",
+        x_crosshair = rearrange(x[:, self.players_nearest_crosshair_to_enemy_columns], "b (p t) -> b p t 1",
                                 p=self.num_players, t=self.num_input_time_steps)
 
         x_non_pos_without_similarity = \
-            rearrange(x[:, self.players_non_temporal_columns], "b (p d) -> b p d", p=self.num_players)
-        similarity_expanded = rearrange(similarity, '(b p) d -> b p d', p=1) \
-            .repeat([1, self.num_players, 1])
+            rearrange(x[:, self.players_non_temporal_columns], "b (p t d) -> b p t d",
+                      p=self.num_players, t=1)
+        similarity_expanded = rearrange(similarity, '(b p t) d -> b p t d', p=1, t=1) \
+            .repeat([1, self.num_players, 1, 1])
         x_non_pos = torch.concat([x_non_pos_without_similarity, similarity_expanded], dim=-1)
-        if self.mask_non_pos:
-            x_gathered = torch.cat([x_pos_encoded_per_player, torch.zeros_like(x_crosshair),
-                                    torch.zeros_like(x_non_pos)], -1)
+
+        # extend in temporal (if necessary) and embed individual tokens
+        x_non_pos_temporal = repeat(x_non_pos, 'b p 1 d -> b p repeat d', repeat=self.num_output_time_steps)
+        if self.num_input_time_steps == self.num_output_time_steps:
+            x_pos_temporal = x_pos_encoded
+            x_crosshair_temporal = x_crosshair
         else:
-            x_gathered = torch.cat([x_pos_encoded_per_player, x_crosshair, x_non_pos], -1)
+            x_pos_temporal = repeat(x_pos_encoded, 'b p 1 d -> b p repeat d',
+                                    repeat=self.num_output_time_steps)
+            x_crosshair_temporal = repeat(x_crosshair, 'b p 1 d -> b p repeat d',
+                                    repeat=self.num_output_time_steps)
+        if self.mask_non_pos:
+            x_gathered = torch.cat([x_pos_temporal, x_crosshair_temporal,
+                                    torch.zeros_like(x_non_pos_temporal)], -1)
+        else:
+            x_gathered = torch.cat([x_pos_temporal, x_crosshair_temporal, x_non_pos_temporal], -1)
         #x_gathered = torch.cat([x_pos_encoded, x_vel_scaled, x_non_pos], -1)
         x_embedded = self.embedding_model(x_gathered)
-        x_embedded_nested = rearrange(x_embedded, 'b p d -> b p 1 d')
-        x_embedded_nested_temporal = repeat(x_embedded_nested, 'b p 1 d -> b p repeat d',
-                                            repeat=self.num_output_time_steps)
 
         # add temporal enocding to separate tokens
-        x_batch_player_flattened = rearrange(x_embedded_nested_temporal, "b p t d -> (b p) t d")
+        x_batch_player_flattened = rearrange(x_embedded, "b p t d -> (b p) t d")
         batch_temporal_positional_encoding = self.temporal_positional_encoding.repeat([x.shape[0], 1, 1]) \
             .to(x.device.type)
         x_batch_player_flattened_temporal_with_encoding = x_batch_player_flattened + batch_temporal_positional_encoding
