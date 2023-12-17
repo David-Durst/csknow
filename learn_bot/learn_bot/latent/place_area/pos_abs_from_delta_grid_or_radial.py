@@ -91,7 +91,7 @@ def get_delta_pos_from_radial(pred_labels: torch.Tensor, vis_tensor: Optional[to
                               weapon_scoped_to_max_speed: Optional[torch.Tensor]) -> DeltaPosWithZIndex:
     not_moving = pred_labels == 0.
     moving_pred_labels = pred_labels - 1.
-    not_moving_z_index = torch.ones_like(moving_pred_labels)
+    not_moving_z_index = torch.zeros_like(moving_pred_labels)
     # if not moving, then z jump index is 0
     z_jump_index = torch.where(not_moving, not_moving_z_index,
                                torch.floor(moving_pred_labels / num_radial_bins_per_z_axis))
