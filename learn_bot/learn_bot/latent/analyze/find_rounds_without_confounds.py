@@ -9,8 +9,9 @@ from learn_bot.latent.analyze.create_test_plant_states import hdf5_key_column
 from learn_bot.latent.engagement.column_names import tick_id_column, round_id_column, game_id_column, \
     round_number_column, game_tick_number_column
 from learn_bot.latent.load_model import load_model_file
+from learn_bot.latent.order.column_names import team_strs
 from learn_bot.latent.place_area.column_names import grenade_columns, grenade_throw_tick_col, grenade_active_tick_col, \
-    grenade_expired_tick_col, grenade_destroy_tick_col
+    grenade_expired_tick_col, grenade_destroy_tick_col, specific_player_place_area_columns
 from learn_bot.latent.place_area.load_data import LoadDataResult
 from learn_bot.latent.vis.run_vis_checkpoint import load_data_options
 from learn_bot.libs.df_grouping import make_index_column
@@ -21,9 +22,24 @@ num_ticks_column = 'num ticks'
 plant_state_index_column = 'plant state index'
 start_game_tick_length_column = 'start game tick'
 game_tick_length_column = 'game tick length'
+num_ct_alive_column = 'num ct alive'
+num_t_alive_column = 'num t alive'
 
 min_round_seconds = 5
 game_tick_rate = 128
+
+def add_num_alive_columns(df: pd.DataFrame):
+    ct_alive_cols = []
+    t_alive_cols = []
+    for player_place_area_columns in specific_player_place_area_columns:
+        if team_strs[0] in player_place_area_columns.alive:
+            ct_alive_cols.append(player_place_area_columns.alive)
+        else:
+            t_alive_cols.append(player_place_area_columns.alive)
+
+    df[num_ct_alive_column] = df[ct_alive_cols].sum(axis=1)
+    df[num_t_alive_column] = df[t_alive_cols].sum(axis=1)
+
 
 def find_rounds_without_confounds():
     load_data_result = LoadDataResult(load_data_options)
@@ -67,7 +83,6 @@ def find_rounds_without_confounds():
                 round_id_column: 'first',
                 round_number_column: 'first',
                 game_tick_number_column: ['first', 'last'],
-                tick_id_column: 'count'
             })
 
             for _, round_row in push_no_grenade_round_summaries_df.iterrows():
@@ -80,7 +95,6 @@ def find_rounds_without_confounds():
                     start_game_tick_length_column: round_row[game_tick_number_column]['first'],
                     game_tick_length_column: round_row[game_tick_number_column]['last'] -
                                              round_row[game_tick_number_column]['first'] + 1,
-                    num_ticks_column: round_row[tick_id_column]['count']
                 })
 
             pbar.update(1)
@@ -88,7 +102,9 @@ def find_rounds_without_confounds():
     result_df = pd.DataFrame.from_records(push_no_grenade_round_dicts)
     result_df = result_df[result_df[game_tick_length_column] > min_round_seconds * game_tick_rate]
     print(len(result_df))
-    plant_states_index_hdf5_df = test_plant_states_pd.loc[:, [plant_state_index_column, round_id_column, hdf5_key_column]]
+    add_num_alive_columns(test_plant_states_pd)
+    plant_states_index_hdf5_df = test_plant_states_pd.loc[:, [hdf5_key_column, round_id_column,
+                                                              plant_state_index_column, num_ct_alive_column, num_t_alive_column]]
     result_with_plant_state_index_df = result_df.merge(plant_states_index_hdf5_df, on=[hdf5_key_column, round_id_column])
     print(len(result_with_plant_state_index_df))
     sampled_result_df = result_with_plant_state_index_df.sample(frac=1, random_state=42).iloc[0:10]
