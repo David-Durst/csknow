@@ -7,7 +7,8 @@ from learn_bot.latent.analyze.compare_trajectories.process_trajectory_comparison
 from learn_bot.latent.engagement.column_names import tick_id_column, round_id_column, game_id_column, \
     round_number_column, game_tick_number_column
 from learn_bot.latent.load_model import load_model_file
-from learn_bot.latent.place_area.column_names import grenade_columns, grenade_throw_tick_col
+from learn_bot.latent.place_area.column_names import grenade_columns, grenade_throw_tick_col, grenade_active_tick_col, \
+    grenade_expired_tick_col, grenade_destroy_tick_col
 from learn_bot.latent.place_area.load_data import LoadDataResult
 from learn_bot.latent.vis.run_vis_checkpoint import load_data_options
 from learn_bot.libs.pd_printing import set_pd_print_options
@@ -37,8 +38,14 @@ def find_rounds_without_confounds():
 
             grenades_df = loaded_model.get_cur_extra_df(grenade_columns)
             throw_tick_ids = grenades_df[grenade_throw_tick_col].unique()
+            active_tick_ids = grenades_df[grenade_active_tick_col].unique()
+            expired_tick_ids = grenades_df[grenade_expired_tick_col].unique()
+            destroy_tick_ids = grenades_df[grenade_destroy_tick_col].unique()
 
-            grenade_id_df = id_df[id_df[tick_id_column].isin(throw_tick_ids)]
+            grenade_id_df = id_df[(id_df[tick_id_column].isin(throw_tick_ids)) |
+                                  (id_df[tick_id_column].isin(active_tick_ids)) |
+                                  (id_df[tick_id_column].isin(expired_tick_ids)) |
+                                  (id_df[tick_id_column].isin(destroy_tick_ids))]
             grenade_rounds = grenade_id_df[round_id_column].unique()
             push_no_grenade_all_ticks_in_rounds_id_df = id_df[~id_df[round_id_column].isin(grenade_rounds) &
                                                               id_df[round_id_column].isin(push_round_ids)]
