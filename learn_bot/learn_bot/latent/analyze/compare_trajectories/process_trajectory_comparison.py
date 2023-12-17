@@ -49,6 +49,15 @@ delta_distance_bins = generate_bins(-20000, 20000, 2500)
 delta_time_bins = generate_bins(-40, 40, 5)
 
 
+def get_test_plant_states_pd(push_only: bool = True) -> pd.DataFrame:
+    test_plant_states_path = \
+        train_test_split_folder_path / (push_only_test_plant_states_file_name if push_only
+                                        else save_only_test_plant_states_file_name)
+    test_start_pd = load_hdf5_to_pd(test_plant_states_path)
+    test_start_pd[hdf5_key_column] = test_start_pd[hdf5_key_column].str.decode('utf-8')
+    return test_start_pd
+
+
 def get_hdf5_to_test_round_ids(push_only: bool = True) -> Tuple[Dict[str, List[int]], Dict[Path, List[int]]]:
     test_plant_states_path = \
         train_test_split_folder_path / (push_only_test_plant_states_file_name if push_only

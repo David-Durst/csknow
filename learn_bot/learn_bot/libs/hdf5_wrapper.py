@@ -41,6 +41,9 @@ class HDF5Wrapper:
         self.vis_cols = vis_cols
         self.vis_np = None
 
+    def get_hdf5_path_with_parent_folder(self) -> Path:
+        return Path(self.hdf5_path.parent.name) / self.hdf5_path.name
+
     def limit(self, selector_df: pd.Series):
         self.id_df = self.id_df[selector_df]
         make_index_column(self.id_df)
