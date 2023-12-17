@@ -9,7 +9,7 @@ from learn_bot.latent.analyze.create_test_plant_states import hdf5_key_column
 from learn_bot.latent.engagement.column_names import tick_id_column, round_id_column, game_id_column, \
     round_number_column, game_tick_number_column
 from learn_bot.latent.load_model import load_model_file
-from learn_bot.latent.order.column_names import team_strs
+from learn_bot.latent.order.column_names import team_strs, c4_pos_cols
 from learn_bot.latent.place_area.column_names import grenade_columns, grenade_throw_tick_col, grenade_active_tick_col, \
     grenade_expired_tick_col, grenade_destroy_tick_col, specific_player_place_area_columns
 from learn_bot.latent.place_area.load_data import LoadDataResult
@@ -104,11 +104,38 @@ def find_rounds_without_confounds():
     print(len(result_df))
     add_num_alive_columns(test_plant_states_pd)
     plant_states_index_hdf5_df = test_plant_states_pd.loc[:, [hdf5_key_column, round_id_column,
-                                                              plant_state_index_column, num_ct_alive_column, num_t_alive_column]]
+                                                              plant_state_index_column, num_ct_alive_column, num_t_alive_column,
+                                                              c4_pos_cols[0]]]
     result_with_plant_state_index_df = result_df.merge(plant_states_index_hdf5_df, on=[hdf5_key_column, round_id_column])
     print(len(result_with_plant_state_index_df))
-    sampled_result_df = result_with_plant_state_index_df.sample(frac=1, random_state=42).iloc[0:10]
-    print(sampled_result_df)
+    randomized_result_df = result_with_plant_state_index_df.sample(frac=1, random_state=42)
+    a_four_ct = randomized_result_df[(randomized_result_df[num_ct_alive_column] == 4) &
+                                     (randomized_result_df[c4_pos_cols[0]] > 0)].iloc[[0]]
+    b_four_ct = randomized_result_df[(randomized_result_df[num_ct_alive_column] == 4) &
+                                     (randomized_result_df[c4_pos_cols[0]] < 0)].iloc[[0]]
+    a_three_ct_three_t = randomized_result_df[(randomized_result_df[num_ct_alive_column] == 3) &
+                                              (randomized_result_df[num_t_alive_column] == 3) &
+                                              (randomized_result_df[c4_pos_cols[0]] > 0)].iloc[[0]]
+    b_three_ct_three_t = randomized_result_df[(randomized_result_df[num_ct_alive_column] == 3) &
+                                              (randomized_result_df[num_t_alive_column] == 3) &
+                                              (randomized_result_df[c4_pos_cols[0]] < 0)].iloc[[0]]
+    a_two_ct_one_t = randomized_result_df[(randomized_result_df[num_ct_alive_column] == 2) &
+                                          (randomized_result_df[num_t_alive_column] == 1) &
+                                          (randomized_result_df[c4_pos_cols[0]] > 0)].iloc[[0]]
+    b_two_ct_one_t = randomized_result_df[(randomized_result_df[num_ct_alive_column] == 2) &
+                                          (randomized_result_df[num_t_alive_column] == 1) &
+                                          (randomized_result_df[c4_pos_cols[0]] < 0)].iloc[[0]]
+    a_one_ct_two_t = randomized_result_df[(randomized_result_df[num_ct_alive_column] == 1) &
+                                          (randomized_result_df[num_t_alive_column] == 2) &
+                                          (randomized_result_df[c4_pos_cols[0]] > 0)].iloc[[0]]
+    b_one_ct_two_t = randomized_result_df[(randomized_result_df[num_ct_alive_column] == 1) &
+                                          (randomized_result_df[num_t_alive_column] == 2) &
+                                          (randomized_result_df[c4_pos_cols[0]] < 0)].iloc[[0]]
+    selected_result_df = pd.concat([a_four_ct, b_four_ct,
+                                    a_three_ct_three_t, b_three_ct_three_t,
+                                    a_two_ct_one_t, b_two_ct_one_t,
+                                    a_one_ct_two_t, b_one_ct_two_t])
+    print(selected_result_df)
 
 
 if __name__ == "__main__":
