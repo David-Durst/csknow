@@ -58,14 +58,20 @@ IntervalIndex buildIntervalIndex(const vector<std::reference_wrapper<const vecto
         // collect all primary key entries that are in range the foreign keys
         int64_t minPrimaryIndex = std::numeric_limits<int64_t>::max(),
             maxPrimaryIndex = std::numeric_limits<int64_t>::max() * -1;
+        // don't save events that lack a valid index, otherwise will save wildly large min/small max, creating
+        // huge interval to search and thus making index slow
+        bool haveValidIndex = false;
         for (size_t col = 0; col < foreignKeyCols.size(); col++) {
             if (foreignKeyCols[col].get()[foreignIndex] > INVALID_ID) {
+                haveValidIndex = true;
                 minPrimaryIndex = std::min(minPrimaryIndex, foreignKeyCols[col].get()[foreignIndex]);
                 maxPrimaryIndex = std::max(maxPrimaryIndex, foreignKeyCols[col].get()[foreignIndex]);
             }
         }
-        eventIntervals.push_back({minPrimaryIndex, maxPrimaryIndex, foreignIndex});
-        eventToInterval[foreignIndex] = {minPrimaryIndex, maxPrimaryIndex};
+        if (haveValidIndex) {
+            eventIntervals.push_back({minPrimaryIndex, maxPrimaryIndex, foreignIndex});
+            eventToInterval[foreignIndex] = {minPrimaryIndex, maxPrimaryIndex};
+        }
     }
     return {IntervalTree{std::move(eventIntervals)}, std::move(eventToInterval)};
 }
@@ -95,7 +101,7 @@ void buildIndexes(Equipment & equipment [[maybe_unused]], GameTypes & gameTypes 
     ticks.grenadesThrowPerTick = buildIntervalIndex({grenades.throwTick}, grenades.size);
     ticks.grenadesActivePerTick = buildIntervalIndex({grenades.activeTick}, grenades.size);
     ticks.grenadesExpiredPerTick = buildIntervalIndex({grenades.expiredTick}, grenades.size);
-    ticks.grenadesActivePerTick = buildIntervalIndex({grenades.activeTick}, grenades.size);
+    ticks.grenadesDestroyedPerTick = buildIntervalIndex({grenades.destroyTick}, grenades.size);
     ticks.flashedPerTick = buildIntervalIndex({flashed.tickId}, flashed.size);
     ticks.plantsPerTick = buildIntervalIndex({plants.startTick, plants.endTick}, plants.size);
     ticks.plantsStartPerTick = buildIntervalIndex({plants.startTick}, plants.size);
