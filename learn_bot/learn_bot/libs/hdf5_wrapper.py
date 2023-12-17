@@ -111,6 +111,9 @@ class HDF5Wrapper:
             self.vis_np = np.load(str(vis_mmap_path), mmap_mode='r')
         return self.vis_np[self.id_df['id']]
 
+    def get_extra_df(self, cols: List[str]) -> pd.DataFrame:
+        load_hdf5_to_pd(self.hdf5_path, cols_to_get=cols)
+
 
 def load_hdf5_to_np_array(hdf5_path: Path, cols_to_get: List[str], cast_to_float: bool) -> np.ndarray:
     # get data as numpy arrays and column names

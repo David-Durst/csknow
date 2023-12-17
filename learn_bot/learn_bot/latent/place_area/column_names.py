@@ -235,6 +235,23 @@ vis_only_columns: list[str] = c4_pos_cols + \
                                             player_place_area_columns in specific_player_place_area_columns])
 vis_columns_names_to_index: Dict[str, int] = {s: i for i, s in enumerate(vis_only_columns)}
 
+grenade_thrower_col = "grenade thrower"
+grenade_type_col = "grenade type"
+grenade_throw_tick_col = "grenade throw tick"
+grenade_active_tick_col = "grenade active tick"
+grenade_expired_tick_col = "grenade expired tick"
+grenade_destroy_tick_col = "grenade destroy tick"
+grenade_columns: List[str] = [grenade_thrower_col, grenade_type_col, grenade_throw_tick_col,
+                              grenade_active_tick_col, grenade_expired_tick_col, grenade_destroy_tick_col]
+
+trajectory_grenade_id_col = "trajectory grenade id"
+trajectory_id_per_grenade_col = "trajectory id per grenade"
+grenade_trajectory_pos_x = "grenade trajectory pos x"
+grenade_trajectory_pos_y = "grenade trajectory pos y"
+grenade_trajectory_pos_z = "grenade trajectory pos z"
+grenade_trajectory_columns: List[str] = [trajectory_grenade_id_col, trajectory_id_per_grenade_col,
+                                         grenade_trajectory_pos_x, grenade_trajectory_pos_y, grenade_trajectory_pos_z]
+
 
 def get_base_similarity_column() -> str:
     return 'similarity'

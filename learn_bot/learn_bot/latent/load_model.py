@@ -96,6 +96,9 @@ class LoadedModel:
     def get_cur_id_df(self) -> pd.DataFrame:
         return self.dataset.data_hdf5s[self.cur_hdf5_index].id_df
 
+    def get_cur_extra_df(self, cols: list[str]) -> pd.DataFrame:
+        return self.dataset.data_hdf5s[self.cur_hdf5_index].get_extra_df(cols)
+
     def get_cur_hdf5_filename(self) -> str:
         return str(self.dataset.data_hdf5s[self.cur_hdf5_index].hdf5_path.name)
 

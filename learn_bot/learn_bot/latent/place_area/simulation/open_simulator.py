@@ -392,7 +392,7 @@ def run_analysis_per_mask(loaded_model: LoadedModel, all_data_loaded_model: Load
             hdf5_displacement_errors = compare_predicted_rollout_indices(loaded_model, player_enable_mask,
                                                                          player_mask_config in mask_all_configs,
                                                                          player_mask_config == PlayerMaskConfig.GROUND_TRUTH_CMD)
-            if False and iteration == 0 and player_mask_config in possible_mask_configs_to_plot:
+            if iteration == 0 and player_mask_config in possible_mask_configs_to_plot:
                 trajectory_counter = compute_trajectory_counter(loaded_model.get_cur_id_df(), round_lengths)
                 plot_one_trajectory_dataset(loaded_model, loaded_model.get_cur_id_df(),
                                             loaded_model.get_cur_vis_df(),
@@ -430,16 +430,16 @@ def run_analysis(loaded_model: LoadedModel, all_data_loaded_model: LoadedModel):
     mask_result_latex_strs = ["Simulation Type & minSADE Mean & minSADE Std Dev & minSFDE Mean & minSFDE Std Dev \\\\",
                               "\\hline"]
     player_mask_configs = [PlayerMaskConfig.ALL,
-                           #PlayerMaskConfig.CT, PlayerMaskConfig.T,
-                           ##PlayerMaskConfig.LAST_ALIVE,
-                           #PlayerMaskConfig.STARTING_CMD,
-                           #PlayerMaskConfig.STARTING_POSITION,
-                           #PlayerMaskConfig.INTERPOLATION_ROLLOUT_POSITION,
-                           #PlayerMaskConfig.INTERPOLATION_ROUND_POSITION,
-                           #PlayerMaskConfig.NN_POSITION,
-                           PlayerMaskConfig.GROUND_TRUTH_CMD,]
-                           #PlayerMaskConfig.GROUND_TRUTH_POSITION,
-                           #PlayerMaskConfig.RANDOM_CMD]
+                           PlayerMaskConfig.CT, PlayerMaskConfig.T,
+                           #PlayerMaskConfig.LAST_ALIVE,
+                           PlayerMaskConfig.STARTING_CMD,
+                           PlayerMaskConfig.STARTING_POSITION,
+                           PlayerMaskConfig.INTERPOLATION_ROLLOUT_POSITION,
+                           PlayerMaskConfig.INTERPOLATION_ROUND_POSITION,
+                           PlayerMaskConfig.NN_POSITION,
+                           PlayerMaskConfig.GROUND_TRUTH_CMD,
+                           PlayerMaskConfig.GROUND_TRUTH_POSITION,
+                           PlayerMaskConfig.RANDOM_CMD]
     ades_per_mask_config: List[pd.Series] = []
     fdes_per_mask_config: List[pd.Series] = []
     for i, player_mask_config in enumerate(player_mask_configs):
