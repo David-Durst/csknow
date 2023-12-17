@@ -67,6 +67,8 @@ def find_rounds_without_confounds():
                     num_ticks_column: round_row[tick_id_column]
                 })
 
+            # TODO: merge this with push rounds so I know where to get bot examples
+
             pbar.update(1)
 
     result_df = pd.DataFrame.from_records(push_no_grenade_round_dicts)
