@@ -301,10 +301,15 @@ int main(int argc, char * argv[]) {
     std::chrono::duration<double> behaviorTreeLatentEventsTime = teamFeatureStoreTimeEnd - teamFeatureStoreTimeStart;
     std::cout << "team feature store time " << behaviorTreeLatentEventsTime.count() << std::endl;
 
-    std::cout << "processing team feature store" << std::endl;
-    teamFeatureStoreResult.computeAcausalLabels(games, filteredRounds, ticks, kills, weaponFire, grenades, grenadeTrajectories,
+    std::cout << "processing team feature store acausal labels" << std::endl;
+    auto acausalLabelsTimeStart = std::chrono::system_clock::now();
+    teamFeatureStoreResult.computeAcausalLabels(games, filteredRounds, ticks, kills, hurt, weaponFire,
+                                                grenades, grenadeTrajectories,
                                                 players, d2DistanceToPlacesResult,
                                                 d2ReachableResult, map_navs.at("de_dust2"), keyRetakeEvents);
+    auto acausalLabelsTimeEnd = std::chrono::system_clock::now();
+    std::chrono::duration<double> acasualLabelsTime = acausalLabelsTimeEnd - acausalLabelsTimeStart;
+    std::cout << "acausal labels time " << acasualLabelsTime.count() << std::endl;
     std::cout << "size: " << teamFeatureStoreResult.size << std::endl;
 
     std::cout << "processing humanness metrics" << std::endl;

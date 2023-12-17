@@ -103,6 +103,7 @@ namespace csknow::feature_store {
         vector<float> c4DistanceToASite, c4DistanceToBSite;
         //array<vector<float>, num_orders_per_site> c4DistanceToNearestAOrderNavArea, c4DistanceToNearestBOrderNavArea;
 
+        vector<int64_t> unfilteredGrenadeId;
         vector<int64_t> grenadeThrower;
         vector<int16_t> grenadeType;
         vector<int64_t> grenadeThrowTick;
@@ -135,7 +136,7 @@ namespace csknow::feature_store {
             array<vector<float>, num_prior_ticks> priorNearestWorldDistanceToTeammate;
             // 0 means not shot or visible, 1 means shot cur frame or enemy currently visible
             vector<float> hurtInLast5s, fireInLast5s, noFOVEnemyVisibleInLast5s, fovEnemyVisibleInLast5s;
-            vector<bool> killNextTick, killedNextTick;
+            vector<bool> hurtNextTick, killNextTick, killedNextTick;
             vector<int> shotsCurTick;
             vector<float> secondsUntilNextHitEnemy, secondsAfterPriorHitEnemy;
             vector<float> health, armor;
@@ -219,15 +220,18 @@ namespace csknow::feature_store {
                                               array<ColumnPlayerData,max_enemies> & columnData,
                                               const array<NonDecimatedPlayerData, max_enemies> & nonDecimatedData,
                                               const Ticks & ticks, const TickRates & tickRates);
-        void computeKillNextTick(int64_t curTick, int64_t unmodifiedTickIndex, int64_t roundIndex,
+        void computeHurtKillNextTick(int64_t curTick, int64_t unmodifiedTickIndex, int64_t roundIndex,
                                  array<ColumnPlayerData, max_enemies> & columnData,
-                                 const Ticks & ticks, const Kills & kills);
+                                 const Ticks & ticks, const Hurt & hurt, const Kills & kills);
         void computeShotsCurTick(int64_t curTick, int64_t unmodifiedTickIndex, int64_t roundIndex,
                                  array<ColumnPlayerData, max_enemies> & columnData,
                                  const Ticks & ticks, const WeaponFire & weaponFire);
+        void computeGrenadeCurTick(int64_t curTick, int64_t unmodifiedTickIndex, int64_t roundIndex,
+                                   const Ticks & ticks, const Grenades & grenades,
+                                   map<int64_t, int64_t> & grenadeIdToFilteredGrenadeId);
         void convertTraceNonReplayNamesToIndices(const Players & players, int64_t roundIndex, int64_t tickIndex);
         void computeAcausalLabels(const Games & games, const Rounds & rounds, const Ticks & ticks, const Kills & kills,
-                                  const WeaponFire & weaponFire,
+                                  const Hurt & hurt, const WeaponFire & weaponFire,
                                   const Grenades & grenades, const GrenadeTrajectories & grenadeTrajectories,
                                   const Players & players, const DistanceToPlacesResult & distanceToPlacesResult,
                                   const ReachableResult & reachableResult,

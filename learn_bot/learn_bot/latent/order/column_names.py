@@ -99,6 +99,9 @@ def get_player_fov_enemy_visible_in_last_5s_columns(player_index: int, team_str:
     return "player enemy visible in last 5s fov " + team_str + " " + str(player_index) + \
         ("" if history_index == 0 else " t-" + str(history_index))
 
+def get_player_hurt_next_tick_columns(player_index: int, team_str: str) -> str:
+    return "player hurt next tick " + team_str + " " + str(player_index)
+
 def get_player_kill_next_tick_columns(player_index: int, team_str: str) -> str:
     return "player kill next tick " + team_str + " " + str(player_index)
 

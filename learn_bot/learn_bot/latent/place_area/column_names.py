@@ -96,6 +96,7 @@ class PlayerPlaceAreaColumns:
         self.player_fire_in_last_5s = get_player_fire_in_last_5s_columns(player_index, team_str)
         self.player_no_fov_enemy_visible_in_last_5s = get_player_no_fov_enemy_visible_in_last_5s_columns(player_index, team_str)
         self.player_fov_enemy_visible_in_last_5s = get_player_fov_enemy_visible_in_last_5s_columns(player_index, team_str)
+        self.player_hurt_next_tick = get_player_hurt_next_tick_columns(player_index, team_str)
         self.player_kill_next_tick = get_player_kill_next_tick_columns(player_index, team_str)
         self.player_killed_next_tick = get_player_killed_next_tick_columns(player_index, team_str)
         self.player_shots_cur_tick = get_player_shots_cur_tick_columns(player_index, team_str)
@@ -195,8 +196,8 @@ class PlayerPlaceAreaColumns:
         return result
 
     def get_vis_only_columns(self) -> list[str]:
-        return [self.player_id, self.player_kill_next_tick, self.player_killed_next_tick, self.player_shots_cur_tick,
-                self.player_weapon_id, self.player_scoped] + self.vel + self.view_angle
+        return [self.player_id, self.player_hurt_next_tick, self.player_kill_next_tick, self.player_killed_next_tick,
+                self.player_shots_cur_tick, self.player_weapon_id, self.player_scoped] + self.vel + self.view_angle
 
 
 specific_player_place_area_columns: list[PlayerPlaceAreaColumns] = \
@@ -235,13 +236,14 @@ vis_only_columns: list[str] = c4_pos_cols + \
                                             player_place_area_columns in specific_player_place_area_columns])
 vis_columns_names_to_index: Dict[str, int] = {s: i for i, s in enumerate(vis_only_columns)}
 
+unfiltered_grenade_id_col = "unfiltered grenade id"
 grenade_thrower_col = "grenade thrower"
 grenade_type_col = "grenade type"
 grenade_throw_tick_col = "grenade throw tick"
 grenade_active_tick_col = "grenade active tick"
 grenade_expired_tick_col = "grenade expired tick"
 grenade_destroy_tick_col = "grenade destroy tick"
-grenade_columns: List[str] = [grenade_thrower_col, grenade_type_col, grenade_throw_tick_col,
+grenade_columns: List[str] = [unfiltered_grenade_id_col, grenade_thrower_col, grenade_type_col, grenade_throw_tick_col,
                               grenade_active_tick_col, grenade_expired_tick_col, grenade_destroy_tick_col]
 
 trajectory_grenade_id_col = "trajectory grenade id"

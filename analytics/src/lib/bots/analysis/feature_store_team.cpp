@@ -98,8 +98,10 @@ namespace csknow::feature_store {
             columnTData[i].fovEnemyVisibleInLast5s.resize(size, 1.);
             columnCTData[i].noFOVEnemyVisibleInLast5s.resize(size, 1.);
             columnCTData[i].fovEnemyVisibleInLast5s.resize(size, 1.);
+            columnTData[i].hurtNextTick.resize(size, false);
             columnTData[i].killNextTick.resize(size, false);
             columnTData[i].killedNextTick.resize(size, false);
+            columnCTData[i].hurtNextTick.resize(size, false);
             columnCTData[i].killNextTick.resize(size, false);
             columnCTData[i].killedNextTick.resize(size, false);
             columnTData[i].shotsCurTick.resize(size, 0);
@@ -351,8 +353,10 @@ namespace csknow::feature_store {
                 columnTData[i].fovEnemyVisibleInLast5s[rowIndex] = 1.;
                 columnCTData[i].noFOVEnemyVisibleInLast5s[rowIndex] = 1.;
                 columnCTData[i].fovEnemyVisibleInLast5s[rowIndex] = 1.;
+                columnTData[i].hurtNextTick[rowIndex] = false;
                 columnTData[i].killNextTick[rowIndex] = false;
                 columnTData[i].killedNextTick[rowIndex] = false;
+                columnCTData[i].hurtNextTick[rowIndex] = false;
                 columnCTData[i].killNextTick[rowIndex] = false;
                 columnCTData[i].killedNextTick[rowIndex] = false;
                 columnTData[i].shotsCurTick[rowIndex] = 0;
@@ -959,9 +963,9 @@ namespace csknow::feature_store {
         }
     }
 
-    void TeamFeatureStoreResult::computeKillNextTick(int64_t curTick, int64_t unmodifiedTickIndex, int64_t roundIndex,
+    void TeamFeatureStoreResult::computeHurtKillNextTick(int64_t curTick, int64_t unmodifiedTickIndex, int64_t roundIndex,
                                                      array<ColumnPlayerData, max_enemies> & columnData,
-                                                     const Ticks & ticks, const Kills & kills) {
+                                                     const Ticks & ticks, const Hurt & hurt, const Kills & kills) {
         int64_t nextUnmodifiedTickIndex = INVALID_ID;
         if (curTick + 1 < static_cast<int64_t>(internalIdToTickId.size())) {
             nextUnmodifiedTickIndex = internalIdToTickId[curTick + 1];
@@ -971,16 +975,23 @@ namespace csknow::feature_store {
             return;
         }
 
-        std::set<int64_t> killerIds, victimIds;
+        std::set<int64_t> hurtVictimIds;
+        for (const auto & [_0, _1, hurtIndex] :
+                ticks.hurtPerTick.intervalToEvent.findOverlapping(unmodifiedTickIndex + 1, nextUnmodifiedTickIndex)) {
+            hurtVictimIds.insert(hurt.victim[hurtIndex]);
+        }
+
+        std::set<int64_t> killerIds, killVictimIds;
         for (const auto & [_0, _1, killIndex] :
                 ticks.killsPerTick.intervalToEvent.findOverlapping(unmodifiedTickIndex + 1, nextUnmodifiedTickIndex)) {
             killerIds.insert(kills.killer[killIndex]);
-            victimIds.insert(kills.victim[killIndex]);
+            killVictimIds.insert(kills.victim[killIndex]);
         }
 
         for (size_t playerColumn = 0; playerColumn < max_enemies; playerColumn++) {
+            columnData[playerColumn].hurtNextTick[curTick] = hurtVictimIds.count(columnData[playerColumn].playerId[curTick]);
             columnData[playerColumn].killNextTick[curTick] = killerIds.count(columnData[playerColumn].playerId[curTick]);
-            columnData[playerColumn].killedNextTick[curTick] = victimIds.count(columnData[playerColumn].playerId[curTick]);
+            columnData[playerColumn].killedNextTick[curTick] = killVictimIds.count(columnData[playerColumn].playerId[curTick]);
         }
     }
 
@@ -1011,6 +1022,75 @@ namespace csknow::feature_store {
             if (playerToShots.count(playerId)) {
                 columnData[playerColumn].shotsCurTick[curTick] = playerToShots[playerId];
             }
+        }
+    }
+
+    void TeamFeatureStoreResult::computeGrenadeCurTick(int64_t curTick, int64_t unmodifiedTickIndex, int64_t roundIndex,
+                                                       const Ticks & ticks, const Grenades & grenades,
+                                                       map<int64_t, int64_t> & grenadeIdToFilteredGrenadeId) {
+        int64_t nextUnmodifiedTickIndex = INVALID_ID;
+        if (curTick + 1 < static_cast<int64_t>(internalIdToTickId.size())) {
+            nextUnmodifiedTickIndex = internalIdToTickId[curTick + 1];
+        }
+
+        if (nextUnmodifiedTickIndex == INVALID_ID || roundIndex != ticks.roundId[nextUnmodifiedTickIndex]) {
+            return;
+        }
+
+        std::set<int64_t> throwPerTick, activePerTick, expiredPerTick, destroyPerTick;
+        std::set<int64_t> anyEventPerTick;
+        for (const auto & [_0, _1, throwIndex] :
+                ticks.grenadesThrowPerTick.intervalToEvent.findOverlapping(unmodifiedTickIndex, nextUnmodifiedTickIndex - 1)) {
+            throwPerTick.insert(throwIndex);
+            anyEventPerTick.insert(throwIndex);
+        }
+        for (const auto & [_0, _1, activeIndex] :
+                ticks.grenadesActivePerTick.intervalToEvent.findOverlapping(unmodifiedTickIndex, nextUnmodifiedTickIndex - 1)) {
+            activePerTick.insert(activeIndex);
+            anyEventPerTick.insert(activeIndex);
+        }
+        for (const auto & [_0, _1, expiredIndex] :
+                ticks.grenadesExpiredPerTick.intervalToEvent.findOverlapping(unmodifiedTickIndex, nextUnmodifiedTickIndex - 1)) {
+            expiredPerTick.insert(expiredIndex);
+            anyEventPerTick.insert(expiredIndex);
+        }
+        for (const auto & [_0, _1, destroyIndex] :
+                ticks.grenadesDestroyedPerTick.intervalToEvent.findOverlapping(unmodifiedTickIndex, nextUnmodifiedTickIndex - 1)) {
+            destroyPerTick.insert(destroyIndex);
+            anyEventPerTick.insert(destroyIndex);
+        }
+
+        // make sure that grenade id is tracked before saving it in outputs
+        for (const auto & grenadeId : anyEventPerTick) {
+            if (!grenadeIdToFilteredGrenadeId.count(grenadeId)) {
+                grenadeIdToFilteredGrenadeId[grenadeId] = grenadeThrower.size();
+                unfilteredGrenadeId.push_back(grenadeId);
+                grenadeThrower.push_back(INVALID_ID);
+                grenadeType.push_back(INVALID_ID);
+                grenadeThrowTick.push_back(INVALID_ID);
+                grenadeActiveTick.push_back(INVALID_ID);
+                grenadeExpiredTick.push_back(INVALID_ID);
+                grenadeDestroyTick.push_back(INVALID_ID);
+            }
+        }
+
+        for (const auto & grenadeId : throwPerTick) {
+            int64_t filteredGrenadeId = grenadeIdToFilteredGrenadeId[grenadeId];
+            grenadeThrower[filteredGrenadeId] = grenades.thrower[grenadeId];
+            grenadeType[filteredGrenadeId] = grenades.grenadeType[grenadeId];
+            grenadeThrowTick[filteredGrenadeId] = curTick;
+        }
+        for (const auto & grenadeId : activePerTick) {
+            int64_t filteredGrenadeId = grenadeIdToFilteredGrenadeId[grenadeId];
+            grenadeActiveTick[filteredGrenadeId] = curTick;
+        }
+        for (const auto & grenadeId : expiredPerTick) {
+            int64_t filteredGrenadeId = grenadeIdToFilteredGrenadeId[grenadeId];
+            grenadeExpiredTick[filteredGrenadeId] = curTick;
+        }
+        for (const auto & grenadeId : destroyPerTick) {
+            int64_t filteredGrenadeId = grenadeIdToFilteredGrenadeId[grenadeId];
+            grenadeDestroyTick[filteredGrenadeId] = curTick;
         }
     }
 
@@ -1045,7 +1125,7 @@ namespace csknow::feature_store {
 
     void TeamFeatureStoreResult::computeAcausalLabels(const Games & games, const Rounds & rounds,
                                                       const Ticks & ticks, const Kills & kills,
-                                                      const WeaponFire & weaponFire,
+                                                      const Hurt & hurt, const WeaponFire & weaponFire,
                                                       const Grenades & grenades, const GrenadeTrajectories & grenadeTrajectories,
                                                       const Players & players,
                                                       const DistanceToPlacesResult & distanceToPlacesResult,
@@ -1058,12 +1138,6 @@ namespace csknow::feature_store {
         roundNumTests = keyRetakeEvents.roundNumTests;
         perTraceData = keyRetakeEvents.perTraceData;
         playerNames = players.name;
-        grenadeThrower = grenades.thrower;
-        grenadeType = grenades.grenadeType;
-        grenadeThrowTick = grenades.throwTick;
-        grenadeActiveTick = grenades.activeTick;
-        grenadeExpiredTick = grenades.expiredTick;
-        grenadeDestroyTick = grenades.destroyTick;
         trajectoryGrenadeId = grenadeTrajectories.grenadeId;
         trajectoryIdPerGrenade = grenadeTrajectories.idPerGrenade;
         grenadeTrajectoryPosX = grenadeTrajectories.posX;
@@ -1092,6 +1166,8 @@ namespace csknow::feature_store {
                                       distanceToPlacesResult.placeNameToIndex.at("UpperTunnel")};
         set<PlaceIndex> ctAClosePlaces{distanceToPlacesResult.placeNameToIndex.at("BombsiteA")};
         set<PlaceIndex> ctBClosePlaces{distanceToPlacesResult.placeNameToIndex.at("BombsiteB")};
+
+        map<int64_t, int64_t> grenadeIdToFilteredGrenadeId;
 
 //#pragma omp parallel for
         for (int64_t roundIndex = 0; roundIndex < rounds.size; roundIndex++) {
@@ -1188,8 +1264,8 @@ namespace csknow::feature_store {
                                                  columnTData, nonDecimatedTData, ticks, tickRates);
                 computeSecondsUntilAfterHitEnemy(tickIndex, unmodifiedTickIndex, roundIndex,
                                                  columnCTData, nonDecimatedCTData, ticks, tickRates);
-                computeKillNextTick(tickIndex, unmodifiedTickIndex, roundIndex, columnTData, ticks, kills);
-                computeKillNextTick(tickIndex, unmodifiedTickIndex, roundIndex, columnCTData, ticks, kills);
+                computeHurtKillNextTick(tickIndex, unmodifiedTickIndex, roundIndex, columnTData, ticks, hurt, kills);
+                computeHurtKillNextTick(tickIndex, unmodifiedTickIndex, roundIndex, columnCTData, ticks, hurt, kills);
                 computeShotsCurTick(tickIndex, unmodifiedTickIndex, roundIndex, columnTData, ticks, weaponFire);
                 computeShotsCurTick(tickIndex, unmodifiedTickIndex, roundIndex, columnCTData, ticks, weaponFire);
                 //computePlaceAreaACausalLabels(ticks, tickRates, tickIndex, ticks15sFutureTracker, columnCTData);
@@ -1237,6 +1313,9 @@ namespace csknow::feature_store {
 
                 removePartialACausalLabels(tickIndex, columnCTData);
                 removePartialACausalLabels(tickIndex, columnTData);
+
+                computeGrenadeCurTick(tickIndex, unmodifiedTickIndex, roundIndex, ticks, grenades,
+                                      grenadeIdToFilteredGrenadeId);
             }
             roundsProcessed++;
             printProgress(roundsProcessed, rounds.size);
@@ -1266,6 +1345,7 @@ namespace csknow::feature_store {
         file.createDataSet("/extra/trace one non replay team", perTraceData.oneNonReplayTeam, hdf5FlatCreateProps);
         file.createDataSet("/extra/trace one non replay bot", perTraceData.oneNonReplayBot, hdf5FlatCreateProps);
         file.createDataSet("/extra/player names", playerNames, hdf5FlatCreateProps);
+        file.createDataSet("/extra/unfiltered grenade id", unfilteredGrenadeId, hdf5FlatCreateProps);
         file.createDataSet("/extra/grenade thrower", grenadeThrower, hdf5FlatCreateProps);
         file.createDataSet("/extra/grenade type", grenadeType, hdf5FlatCreateProps);
         file.createDataSet("/extra/grenade throw tick", grenadeThrowTick, hdf5FlatCreateProps);
@@ -1362,6 +1442,8 @@ namespace csknow::feature_store {
                                    columnData[columnPlayer].noFOVEnemyVisibleInLast5s, hdf5FlatCreateProps);
                 file.createDataSet("/data/player enemy visible in last 5s fov " + columnTeam + " " + iStr,
                                    columnData[columnPlayer].fovEnemyVisibleInLast5s, hdf5FlatCreateProps);
+                file.createDataSet("/data/player hurt next tick " + columnTeam + " " + iStr,
+                                   columnData[columnPlayer].hurtNextTick, hdf5FlatCreateProps);
                 file.createDataSet("/data/player kill next tick " + columnTeam + " " + iStr,
                                    columnData[columnPlayer].killNextTick, hdf5FlatCreateProps);
                 file.createDataSet("/data/player killed next tick " + columnTeam + " " + iStr,
