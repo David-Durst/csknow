@@ -112,7 +112,7 @@ class HDF5Wrapper:
         return self.vis_np[self.id_df['id']]
 
     def get_extra_df(self, cols: List[str]) -> pd.DataFrame:
-        load_hdf5_to_pd(self.hdf5_path, cols_to_get=cols)
+        return load_hdf5_to_pd(self.hdf5_path, cols_to_get=cols, root_key='extra')
 
 
 def load_hdf5_to_np_array(hdf5_path: Path, cols_to_get: List[str], cast_to_float: bool) -> np.ndarray:
