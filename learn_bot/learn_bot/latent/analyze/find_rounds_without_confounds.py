@@ -136,6 +136,9 @@ def find_rounds_without_confounds():
                                     a_two_ct_one_t, b_two_ct_one_t,
                                     a_one_ct_two_t, b_one_ct_two_t])
     print(selected_result_df)
+    print(selected_result_df.to_csv())
+    print("cp " + " ".join(selected_result_df[demo_file_column].tolist()) +
+          " ~/.local/share/Steam/steamapps/common/Counter-Strike\\ Global\\ Offensive/csgo/")
 
 
 if __name__ == "__main__":
