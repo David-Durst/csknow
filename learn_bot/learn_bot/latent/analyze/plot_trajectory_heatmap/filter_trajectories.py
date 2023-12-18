@@ -11,6 +11,7 @@ from learn_bot.libs.vec import Vec3
 @dataclass
 class TrajectoryFilterOptions:
     valid_round_ids: Optional[Set[int]] = None
+    # used in open sim to split trajectories within round (as reset after 5s) and don't want jump in discontinuity
     trajectory_counter: Optional[pd.Series] = None
     player_starts_in_region: Optional[AABB] = None
     region_name: Optional[str] = None
@@ -18,11 +19,12 @@ class TrajectoryFilterOptions:
     round_game_seconds: Optional[range] = None
     only_kill: bool = False
     only_killed: bool = False
+    only_shots: bool = False
+    compute_lifetimes: bool = False
+    compute_speeds: bool = False
 
     def __str__(self):
         compound_name = ''
-        if self.trajectory_counter is not None:
-            return 'split_trajectories'
         if self.player_starts_in_region is not None:
             compound_name += self.region_name.lower().replace(' ', '_') + \
                              ('_all' if self.include_all_players_when_one_in_region else '_one')
@@ -30,6 +32,18 @@ class TrajectoryFilterOptions:
             if compound_name != '':
                 compound_name += '_'
             compound_name += f'time_{self.round_game_seconds.start}-{self.round_game_seconds.stop}'
+        if self.only_kill:
+            if compound_name != '':
+                compound_name += '_'
+            compound_name += f'only_kill'
+        if self.only_killed:
+            if compound_name != '':
+                compound_name += '_'
+            compound_name += f'only_killed'
+        if self.only_shots:
+            if compound_name != '':
+                compound_name += '_'
+            compound_name += f'only_shots'
         if compound_name == '':
             compound_name = 'no_filter'
         return compound_name

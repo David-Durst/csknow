@@ -40,16 +40,28 @@ class ImageBuffers:
 spread_radius = 2
 title_to_buffers: Dict[str, ImageBuffers] = {}
 title_to_num_points: Dict[str, int] = {}
+title_to_lifetimes: Dict[str, List[float]] = {}
+title_to_speeds: Dict[str, List[float]]
 
 
 def get_title_to_num_points() -> Dict[str, int]:
     return title_to_num_points
 
 
+def get_title_to_lifetimes() -> Dict[str, List[float]]:
+    return title_to_lifetimes
+
+
+def get_title_to_speeds() -> Dict[str, List[float]]:
+    return title_to_speeds
+
+
 def clear_title_caches():
-    global title_to_buffers, title_to_num_points
+    global title_to_buffers, title_to_num_points, title_to_lifetimes, title_to_speeds
     title_to_buffers = {}
     title_to_num_points = {}
+    title_to_lifetimes = {}
+    title_to_speeds = {}
 
 
 def plot_one_trajectory_dataset(loaded_model: LoadedModel, id_df: pd.DataFrame, vis_df: pd.DataFrame,
@@ -71,14 +83,15 @@ def plot_one_trajectory_dataset(loaded_model: LoadedModel, id_df: pd.DataFrame, 
 
     for trajectory_id in trajectory_ids:
         trajectory_np = dataset[trajectory_id_col == trajectory_id]
+        trajectory_id_df = id_df[trajectory_id_col == trajectory_id]
+        trajectory_vis_df = vis_df[trajectory_id_col == trajectory_id]
+        first_game_tick_number = trajectory_id_df[game_tick_number_column].iloc[0]
 
         # restrict to start of round if filtering based on time
         if trajectory_filter_options.round_game_seconds is not None:
-            round_id_df = id_df[trajectory_id_col == trajectory_id]
-            first_game_tick_number = round_id_df[game_tick_number_column].iloc[0]
-            start_condition = (round_id_df[game_tick_number_column] - first_game_tick_number) >= \
+            start_condition = (trajectory_id_df[game_tick_number_column] - first_game_tick_number) >= \
                               game_tick_rate * trajectory_filter_options.round_game_seconds.start
-            stop_condition = (round_id_df[game_tick_number_column] - first_game_tick_number) <= \
+            stop_condition = (trajectory_id_df[game_tick_number_column] - first_game_tick_number) <= \
                               game_tick_rate * trajectory_filter_options.round_game_seconds.stop
             trajectory_np = trajectory_np[start_condition & stop_condition]
 
@@ -102,10 +115,22 @@ def plot_one_trajectory_dataset(loaded_model: LoadedModel, id_df: pd.DataFrame, 
             player_in_region = trajectory_np[:, 0] == trajectory_np[:, 0]
         trajectory_np = trajectory_np[player_in_region]
 
+        if (trajectory_filter_options.only_kill or trajectory_filter_options.only_killed or
+            trajectory_filter_options.only_shots) and \
+                (trajectory_filter_options.round_game_seconds is not None or
+                 trajectory_filter_options.include_all_players_when_one_in_region):
+            raise Exception("can't filter by game seconds or player in region and only key events like kill/killed/shot")
+        if (trajectory_filter_options.compute_lifetimes or trajectory_filter_options.compute_speeds) and \
+                (trajectory_filter_options.round_game_seconds is not None or
+                 trajectory_filter_options.include_all_players_when_one_in_region):
+            raise Exception("can't filter by game seconds or player in region and compute lifetimes or speeds")
+
         for player_index, player_place_area_columns in enumerate(specific_player_place_area_columns):
             ct_team = team_strs[0] in player_place_area_columns.player_id
 
-            alive_trajectory_np = trajectory_np[trajectory_np[:, loaded_model.model.alive_columns[player_index]] == 1]
+            alive_constraint = trajectory_np[:, loaded_model.model.alive_columns[player_index]] == 1
+            alive_trajectory_np = trajectory_np[alive_constraint]
+            alive_trajectory_vis_df = trajectory_vis_df[alive_constraint]
 
             # don't worry about dead players
             if len(alive_trajectory_np) == 0:
@@ -124,10 +149,25 @@ def plot_one_trajectory_dataset(loaded_model: LoadedModel, id_df: pd.DataFrame, 
                     first_pos[1] > trajectory_filter_options.player_starts_in_region.max.y):
                 continue
 
+            if trajectory_filter_options.only_kill + trajectory_filter_options.only_killed + \
+                    trajectory_filter_options.only_shots > 1:
+                raise Exception("can only filter for one type of key event at a time")
             if trajectory_filter_options.only_kill:
-                alive_trajectory_np = alive_trajectory_np[vis_df[player_place_area_columns.player_kill_next_tick] > 0.5, :]
-            if trajectory_filter_options.only_killed:
-                alive_trajectory_np = alive_trajectory_np[vis_df[player_place_area_columns.player_killed_next_tick] > 0.5, :]
+                event_constraint = alive_trajectory_vis_df[player_place_area_columns.player_kill_next_tick] > 0.5
+            elif trajectory_filter_options.only_killed:
+                event_constraint = alive_trajectory_vis_df[player_place_area_columns.player_killed_next_tick] > 0.5
+            elif trajectory_filter_options.only_shots:
+                event_constraint = alive_trajectory_vis_df[player_place_area_columns.player_shots_cur_tick] > 0.5
+            else:
+                event_constraint = None
+            if event_constraint is not None:
+                alive_trajectory_np = alive_trajectory_np[event_constraint]
+                alive_trajectory_vis_df = alive_trajectory_vis_df[event_constraint]
+            if trajectory_filter_options.compute_lifetimes and \
+                    (trajectory_filter_options.only_kill or trajectory_filter_options.only_killed or
+                     trajectory_filter_options.only_shots):
+                raise Exception("can't filter to kill/killed/shot events and compute lifetimes")
+
 
             canvas_pos_np = convert_to_canvas_coordinates(
                 alive_trajectory_np[:, loaded_model.model.nested_players_pos_columns_tensor[player_index, 0, 0]],
@@ -146,6 +186,17 @@ def plot_one_trajectory_dataset(loaded_model: LoadedModel, id_df: pd.DataFrame, 
                 cur_player_d2_drw.line(xy=canvas_pos_xy, fill=1, width=5)
                 buffer += np.asarray(cur_player_d2_img)
             title_to_num_points[title] += len(alive_trajectory_np)
+            if trajectory_filter_options.compute_lifetimes:
+                if title not in title_to_lifetimes:
+                    title_to_lifetimes[title] = []
+                lifetime_in_game_ticks = trajectory_id_df[game_tick_number_column].iloc[len(alive_trajectory_np) - 1] - \
+                    first_game_tick_number
+                title_to_lifetimes[title].append(lifetime_in_game_ticks / game_tick_rate)
+            if trajectory_filter_options.compute_speeds:
+                if title not in title_to_speeds:
+                    title_to_speeds[title] = []
+                speeds = (alive_trajectory_vis_df[player_place_area_columns.vel] ** 2.).sum(axis=1) ** 0.5
+                title_to_lifetimes[title] += speeds.tolist()
 
 
 scale_factor = 0
