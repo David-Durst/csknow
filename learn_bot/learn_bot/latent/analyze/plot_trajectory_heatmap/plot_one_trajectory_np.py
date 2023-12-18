@@ -205,7 +205,9 @@ def plot_one_trajectory_dataset(loaded_model: LoadedModel, id_df: pd.DataFrame, 
             if trajectory_filter_options.compute_speeds:
                 if title not in title_to_speeds:
                     title_to_speeds[title] = []
-                speeds = (alive_trajectory_vis_df[player_place_area_columns.vel] ** 2.).sum(axis=1) ** 0.5
+                # z speed is out of our control, only use x and y
+                # z isn't tracked when running up a hill, its about jumping speed, which isn't part of wasd speed
+                speeds = (alive_trajectory_vis_df[player_place_area_columns.vel[0:2]] ** 2.).sum(axis=1) ** 0.5
                 title_to_speeds[title] += speeds.tolist()
 
 

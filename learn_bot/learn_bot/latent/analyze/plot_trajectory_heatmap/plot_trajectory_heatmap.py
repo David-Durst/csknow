@@ -119,6 +119,7 @@ def run_trajectory_heatmaps(plot_only_first_hdf5_file_train_and_test: bool):
     run_trajectory_heatmaps_one_filter_option(TrajectoryFilterOptions(compute_speeds=True, compute_lifetimes=True),
                                               rollout_extensions, diff_indices, plots_path,
                                               plot_only_first_hdf5_file_train_and_test)
+    quit(0)
 
     # plot distributions during key events
     run_trajectory_heatmaps_one_filter_option(TrajectoryFilterOptions(compute_speeds=True, only_kill=True),
@@ -160,4 +161,4 @@ if __name__ == "__main__":
     if sys.argv[2] == 'invalid':
         title_to_loaded_model = {}
         title_to_hdf5_to_round_ids = {}
-        run_trajectory_heatmaps(True)
+        #run_trajectory_heatmaps(True)

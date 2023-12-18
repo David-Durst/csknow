@@ -13,7 +13,7 @@ from learn_bot.latent.analyze.plot_trajectory_heatmap.plot_one_trajectory_np imp
 fig_length = 6
 
 
-def plot_one_metric(title_to_values: Dict[str, List[float]], title: str, smallest_max: float,
+def plot_one_metric(title_to_values: Dict[str, List[float]], title: str, bin_width: int, smallest_max: float,
                     plot_file_path: Path):
     num_titles = len(title_to_values.keys())
     fig = plt.figure(figsize=(fig_length * num_titles, fig_length), constrained_layout=True)
@@ -25,7 +25,7 @@ def plot_one_metric(title_to_values: Dict[str, List[float]], title: str, smalles
     for title, values in title_to_values.items():
         max_observed = max(max_observed, max(values))
 
-    bins = generate_bins(0, int(ceil(max_observed)), 50)
+    bins = generate_bins(0, int(ceil(max_observed)), bin_width)
     ax_index = 0
     for title, values in title_to_values.items():
         plot_hist(axs[ax_index, 0], pd.Series(values), bins)
@@ -37,8 +37,10 @@ def plot_one_metric(title_to_values: Dict[str, List[float]], title: str, smalles
 
 def plot_metrics(trajectory_filter_options: TrajectoryFilterOptions, plots_path: Path):
     if trajectory_filter_options.compute_speeds:
-        plot_one_metric(get_title_to_speeds(), 'Speed', 250.,
+        # airstrafing can get you above normal weapon max speed
+        plot_one_metric(get_title_to_speeds(), 'Speed', 25, 250.,
                         plots_path / ('speeds_' + str(trajectory_filter_options) + '.png'))
     if trajectory_filter_options.compute_lifetimes:
-        plot_one_metric(get_title_to_lifetimes(), 'Lifetimes', 40.,
+        # small timing mismatch can get 41 seconds on bomb timer
+        plot_one_metric(get_title_to_lifetimes(), 'Lifetimes', 5, 40.,
                         plots_path / ('lifetimes_' + str(trajectory_filter_options) + '.png'))
