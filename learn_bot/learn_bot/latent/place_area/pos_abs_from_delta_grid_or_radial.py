@@ -113,6 +113,7 @@ def get_delta_pos_from_radial(pred_labels: torch.Tensor, vis_tensor: Optional[to
         flattened_scoped_index = rearrange(
             repeat(vis_tensor[:, scoped_cols], 'b p -> b (p t)', t=num_radial_ticks).int(),
             'b pt -> (b pt)', pt=player_time_steps)
+        # mul weapon index by 2 as inner dimension is scoped, and 2 options for scoping (scoped or unscoped)
         flattened_max_speed_per_weapon_scoped = torch.index_select(
             weapon_scoped_to_max_speed, 0, 2 * flattened_weapon_id_index + flattened_scoped_index)
         flattened_max_speed_per_stature_weapon_scoped = \

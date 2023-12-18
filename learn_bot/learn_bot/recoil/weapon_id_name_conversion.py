@@ -1,5 +1,8 @@
 from typing import Dict
 
+# WARNING: THESE ARE DEPRECATED, WEAPON IDs FROM PARSER, NOT ENGINE, look at latent.place_area.simulation.constants
+# for the better values from the engine and the weapon velocities
+
 weapon_name_to_id: Dict[str, int] = {
     "EqUnknown": 0,
 

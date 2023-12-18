@@ -6,6 +6,7 @@ from typing import Dict, Optional, List, Tuple
 
 import numpy as np
 import pandas as pd
+import torch
 from PIL import Image, ImageDraw
 from skimage.draw import line_aa, line
 
@@ -20,6 +21,7 @@ from learn_bot.latent.engagement.column_names import round_id_column, game_tick_
 from learn_bot.latent.load_model import LoadedModel
 from learn_bot.latent.order.column_names import team_strs
 from learn_bot.latent.place_area.column_names import specific_player_place_area_columns
+from learn_bot.libs.io_transforms import CPU_DEVICE_STR
 
 
 class ImageBuffers:
@@ -80,6 +82,8 @@ def plot_one_trajectory_dataset(loaded_model: LoadedModel, id_df: pd.DataFrame, 
         trajectory_id_col = trajectory_filter_options.trajectory_counter
         # trajectories are already short (open sim runs for 5s), no need to restrict them further
         assert trajectory_filter_options.round_game_seconds is None
+
+    weapon_scoped_to_max_speed = loaded_model.model.weapon_scoped_to_max_speed_tensor_gpu.to(CPU_DEVICE_STR)
 
     for trajectory_id in trajectory_ids:
         trajectory_np = dataset[trajectory_id_col == trajectory_id]
@@ -208,7 +212,16 @@ def plot_one_trajectory_dataset(loaded_model: LoadedModel, id_df: pd.DataFrame, 
                 # z speed is out of our control, only use x and y
                 # z isn't tracked when running up a hill, its about jumping speed, which isn't part of wasd speed
                 speeds = (alive_trajectory_vis_df[player_place_area_columns.vel[0:2]] ** 2.).sum(axis=1) ** 0.5
-                title_to_speeds[title] += speeds.tolist()
+                weapon_id_index = alive_trajectory_vis_df[player_place_area_columns.player_weapon_id]
+                scoped_index = alive_trajectory_vis_df[player_place_area_columns.player_scoped]
+                weapon_id_and_scoped_index = torch.tensor((weapon_id_index * 2 + scoped_index).astype('int').values)
+                # mul weapon index by 2 as inner dimension is scoped, and 2 options for scoping (scoped or unscoped)
+                max_speed_per_weapon_and_scoped = \
+                    torch.index_select(weapon_scoped_to_max_speed, 0, weapon_id_and_scoped_index)
+                scaled_speeds = speeds.values / max_speed_per_weapon_and_scoped.numpy()
+                # found 1.3% are over max speed, just clip them to avoid annoyances
+                clipped_scaled_speeds = np.clip(scaled_speeds, 0., 1.)
+                title_to_speeds[title] += clipped_scaled_speeds.tolist()
 
 
 scale_factor = 0
