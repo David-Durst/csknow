@@ -13,6 +13,7 @@ from learn_bot.latent.analyze.compare_trajectories.run_trajectory_comparison imp
 from learn_bot.latent.analyze.comparison_column_names import similarity_plots_path
 from learn_bot.latent.analyze.plot_trajectory_heatmap.filter_trajectories import TrajectoryFilterOptions, \
     region_constraints
+from learn_bot.latent.analyze.plot_trajectory_heatmap.plot_metrics import plot_metrics
 from learn_bot.latent.analyze.plot_trajectory_heatmap.plot_one_trajectory_np import plot_one_trajectory_dataset, \
     plot_trajectories_to_image, clear_title_caches, get_title_to_num_points, plot_trajectory_diffs_to_image
 from learn_bot.latent.analyze.plot_trajectory_heatmap.plot_points_per_game_seconds_bar_chart import \
@@ -97,6 +98,7 @@ def run_trajectory_heatmaps_one_filter_option(trajectory_filter_options: Traject
                                       else [human_title_str + ' Save'])
     plot_trajectories_to_image(title_strs, True, plots_path, trajectory_filter_options)
     plot_trajectory_diffs_to_image(title_strs, diff_indices, plots_path, trajectory_filter_options)
+    plot_metrics(trajectory_filter_options, plots_path)
 
 
 def run_trajectory_heatmaps(plot_only_first_hdf5_file_train_and_test: bool):

@@ -196,7 +196,7 @@ def plot_one_trajectory_dataset(loaded_model: LoadedModel, id_df: pd.DataFrame, 
                 if title not in title_to_speeds:
                     title_to_speeds[title] = []
                 speeds = (alive_trajectory_vis_df[player_place_area_columns.vel] ** 2.).sum(axis=1) ** 0.5
-                title_to_lifetimes[title] += speeds.tolist()
+                title_to_speeds[title] += speeds.tolist()
 
 
 scale_factor = 0
