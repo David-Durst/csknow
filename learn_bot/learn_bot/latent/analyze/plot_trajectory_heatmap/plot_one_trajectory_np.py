@@ -120,21 +120,31 @@ def plot_one_trajectory_dataset(loaded_model: LoadedModel, id_df: pd.DataFrame, 
                 (trajectory_filter_options.round_game_seconds is not None or
                  trajectory_filter_options.include_all_players_when_one_in_region):
             raise Exception("can't filter by game seconds or player in region and only key events like kill/killed/shot")
+        filtering_key_events = trajectory_filter_options.only_kill or trajectory_filter_options.only_killed or \
+                               trajectory_filter_options.only_shots
         if (trajectory_filter_options.compute_lifetimes or trajectory_filter_options.compute_speeds) and \
                 (trajectory_filter_options.round_game_seconds is not None or
                  trajectory_filter_options.include_all_players_when_one_in_region):
             raise Exception("can't filter by game seconds or player in region and compute lifetimes or speeds")
+        computing_metrics = trajectory_filter_options.compute_lifetimes or trajectory_filter_options.compute_speeds
 
         for player_index, player_place_area_columns in enumerate(specific_player_place_area_columns):
             ct_team = team_strs[0] in player_place_area_columns.player_id
 
             alive_constraint = trajectory_np[:, loaded_model.model.alive_columns[player_index]] == 1
-            alive_trajectory_np = trajectory_np[alive_constraint]
-            alive_trajectory_vis_df = trajectory_vis_df[alive_constraint]
 
             # don't worry about dead players
-            if len(alive_trajectory_np) == 0:
+            if sum(alive_constraint) == 0:
                 continue
+
+            alive_trajectory_np = trajectory_np[alive_constraint]
+            # only using vis_df to compute speed and filter for key events, so don't filter it if not computing metrics
+            # or filtering for key events, otherwise will have length mismatch as other types of filters (like area
+            # and time) will make trajectory_np have different length
+            if computing_metrics or filtering_key_events:
+                alive_trajectory_vis_df = trajectory_vis_df[alive_constraint]
+            else:
+                alive_trajectory_vis_df = None
 
             # require start location if filtering based on starting region to only one player
             first_pos = (
