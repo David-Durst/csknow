@@ -26,8 +26,9 @@ def plot_one_metric(title_to_values: Dict[str, List[float]], title: str, bin_wid
         max_observed = max(max_observed, max(values))
 
     if bin_width < 1.:
-        num_bins = int(ceil(max_observed / 0.1))
-        bins = [i * 0.1 for i in range(num_bins)]
+        num_bins = int(ceil(max_observed / bin_width))
+        # add 1 as need left edge of every bin and right edge of last bin
+        bins = [i * bin_width for i in range(num_bins + 1)]
     else:
         bins = generate_bins(0, int(ceil(max_observed)), bin_width)
     ax_index = 0
