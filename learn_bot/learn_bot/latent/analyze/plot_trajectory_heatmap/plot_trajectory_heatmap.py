@@ -121,20 +121,20 @@ def run_trajectory_heatmaps(plot_only_first_hdf5_file_train_and_test: bool):
     #                                          plot_only_first_hdf5_file_train_and_test)
 
     # plot distributions during key events
-    run_trajectory_heatmaps_one_filter_option(TrajectoryFilterOptions(compute_speeds=True, only_kill=True),
-                                              rollout_extensions, diff_indices, plots_path,
-                                              plot_only_first_hdf5_file_train_and_test)
+    #run_trajectory_heatmaps_one_filter_option(TrajectoryFilterOptions(compute_speeds=True, only_kill=True),
+    #                                          rollout_extensions, diff_indices, plots_path,
+    #                                          plot_only_first_hdf5_file_train_and_test)
 
 
-    run_trajectory_heatmaps_one_filter_option(TrajectoryFilterOptions(compute_speeds=True, only_killed=True),
-                                              rollout_extensions, diff_indices, plots_path,
-                                              plot_only_first_hdf5_file_train_and_test)
+    #run_trajectory_heatmaps_one_filter_option(TrajectoryFilterOptions(compute_speeds=True, only_killed=True),
+    #                                          rollout_extensions, diff_indices, plots_path,
+    #                                          plot_only_first_hdf5_file_train_and_test)
 
-    quit(0)
 
     run_trajectory_heatmaps_one_filter_option(TrajectoryFilterOptions(compute_speeds=True, only_shots=True),
                                               rollout_extensions, diff_indices, plots_path,
                                               plot_only_first_hdf5_file_train_and_test)
+    quit(0)
     return
 
     for region_constraint_str, region_constraint in region_constraints.items():

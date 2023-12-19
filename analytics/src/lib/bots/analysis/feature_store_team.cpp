@@ -989,6 +989,11 @@ namespace csknow::feature_store {
         }
 
         for (size_t playerColumn = 0; playerColumn < max_enemies; playerColumn++) {
+            // don't record kills/deaths of players who are already dead
+            // on suicides, killer is INVALID_ID so everyone dead gets the kill
+            if (columnData[playerColumn].playerId[curTick] == INVALID_ID) {
+                continue;
+            }
             columnData[playerColumn].hurtNextTick[curTick] = hurtVictimIds.count(columnData[playerColumn].playerId[curTick]);
             columnData[playerColumn].killNextTick[curTick] = killerIds.count(columnData[playerColumn].playerId[curTick]);
             columnData[playerColumn].killedNextTick[curTick] = killVictimIds.count(columnData[playerColumn].playerId[curTick]);

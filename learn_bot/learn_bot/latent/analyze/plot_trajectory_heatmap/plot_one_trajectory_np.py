@@ -45,7 +45,6 @@ title_to_num_points: Dict[str, int] = {}
 title_to_lifetimes: Dict[str, List[float]] = {}
 title_to_speeds: Dict[str, List[float]] = {}
 title_to_key_events: Dict[str, int] = {}
-title_to_unfiltered_key_events: Dict[str, int] = {}
 
 
 def get_title_to_num_points() -> Dict[str, int]:
@@ -67,7 +66,6 @@ def clear_title_caches():
     title_to_lifetimes = {}
     title_to_speeds = {}
     title_to_key_events = {}
-    title_to_unfiltered_key_events = {}
 
 
 # data validation function, making sure I didn't miss any kill/killed/shots events
@@ -79,13 +77,15 @@ def compute_overall_key_event_indices(vis_df: pd.DataFrame,
         event_constraint = None
         if trajectory_filter_options.only_kill:
             event_constraint = vis_df[player_place_area_columns.player_kill_next_tick] > 0.5
+            num_key_events += int(vis_df[player_place_area_columns.player_kill_next_tick].sum())
         elif trajectory_filter_options.only_killed:
             event_constraint = vis_df[player_place_area_columns.player_killed_next_tick] > 0.5
+            num_key_events += int(vis_df[player_place_area_columns.player_killed_next_tick].sum())
         elif trajectory_filter_options.only_shots:
             event_constraint = vis_df[player_place_area_columns.player_shots_cur_tick] > 0.5
+            num_key_events += int(vis_df[player_place_area_columns.player_shots_cur_tick].sum())
         if event_constraint is not None:
             key_event_indices.update(vis_df[event_constraint].index.tolist())
-            num_key_events += sum(event_constraint)
     return key_event_indices, num_key_events
 
 
@@ -95,11 +95,11 @@ def plot_one_trajectory_dataset(loaded_model: LoadedModel, id_df: pd.DataFrame, 
         title_to_buffers[title] = ImageBuffers()
         title_to_num_points[title] = 0
 
-    complete_key_event_indices, num_complete_event_indices = \
+    complete_key_event_indices, num_key_events = \
         compute_overall_key_event_indices(vis_df, trajectory_filter_options)
-    if title not in title_to_unfiltered_key_events:
-        title_to_unfiltered_key_events[title] = 0
-    title_to_unfiltered_key_events[title] += num_complete_event_indices
+    if title not in title_to_key_events:
+        title_to_key_events[title] = 0
+    title_to_key_events[title] += num_key_events
     partial_key_event_indices = set()
 
     if trajectory_filter_options.trajectory_counter is None:
@@ -198,17 +198,22 @@ def plot_one_trajectory_dataset(loaded_model: LoadedModel, id_df: pd.DataFrame, 
                     trajectory_filter_options.only_shots > 1:
                 raise Exception("can only filter for one type of key event at a time")
             if trajectory_filter_options.only_kill:
-                event_constraint = alive_trajectory_vis_df[player_place_area_columns.player_kill_next_tick] > 0.5
+                event_series = alive_trajectory_vis_df[player_place_area_columns.player_kill_next_tick]
             elif trajectory_filter_options.only_killed:
-                event_constraint = alive_trajectory_vis_df[player_place_area_columns.player_killed_next_tick] > 0.5
+                event_series = alive_trajectory_vis_df[player_place_area_columns.player_killed_next_tick]
             elif trajectory_filter_options.only_shots:
-                event_constraint = alive_trajectory_vis_df[player_place_area_columns.player_shots_cur_tick] > 0.5
+                event_series = alive_trajectory_vis_df[player_place_area_columns.player_shots_cur_tick]
             else:
-                event_constraint = None
-            if event_constraint is not None:
+                event_series = None
+            # multiple shots can occur in the same tick,
+            # so need to recover number of events per tick when event happened
+            num_events_per_tick_with_event = None
+            if event_series is not None:
+                event_constraint = event_series > 0.5
                 alive_trajectory_np = alive_trajectory_np[event_constraint]
                 alive_trajectory_vis_df = alive_trajectory_vis_df[event_constraint]
                 partial_key_event_indices.update(alive_trajectory_vis_df.index.tolist())
+                num_events_per_tick_with_event = event_series[event_constraint].tolist()
             if trajectory_filter_options.compute_lifetimes and \
                     (trajectory_filter_options.only_kill or trajectory_filter_options.only_killed or
                      trajectory_filter_options.only_shots):
@@ -224,11 +229,8 @@ def plot_one_trajectory_dataset(loaded_model: LoadedModel, id_df: pd.DataFrame, 
 
             buffer = title_to_buffers[title].get_buffer(ct_team)
             if trajectory_filter_options.only_kill or trajectory_filter_options.only_killed or trajectory_filter_options.only_shots:
-                for pos_xy in canvas_pos_xy:
-                    buffer[pos_xy[0], pos_xy[1]] += 1
-                    if title not in title_to_key_events:
-                        title_to_key_events[title] = 0
-                    title_to_key_events[title] += 1
+                for i, pos_xy in enumerate(canvas_pos_xy):
+                    buffer[pos_xy[0], pos_xy[1]] += num_events_per_tick_with_event[i]
             else:
                 cur_player_d2_img = Image.new("L", d2_img.size, color=0)
                 cur_player_d2_drw = ImageDraw.Draw(cur_player_d2_img)
@@ -315,8 +317,10 @@ def plot_one_image_one_team(title: str, ct_team: bool, team_color: List, saturat
 def scale_buffers_by_points(titles: List[str]):
     global scale_factor, max_value
 
+    ct_buffer = title_to_buffers['Human'].get_buffer(True)
+    t_buffer = title_to_buffers['Human'].get_buffer(False)
     print(title_to_key_events['Human'])
-    print(title_to_unfiltered_key_events['Human'])
+    print(ct_buffer.sum() + t_buffer.sum())
     quit(0)
     max_points_per_title = 0
     for title in titles:

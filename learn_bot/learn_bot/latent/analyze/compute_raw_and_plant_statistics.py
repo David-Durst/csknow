@@ -69,7 +69,11 @@ def compute_plant_statistics():
                 num_killeds_when_already_dead = \
                     sum((vis_df[player_player_area_columns.player_killed_next_tick] > 0.5) & (player_alive < 0.5))
                 if num_killeds_when_already_dead > 0:
-                    print('killed when already dead')
+                    print(f'killed when already dead {num_killeds_when_already_dead}')
+                num_kills_when_already_dead = \
+                    sum((vis_df[player_player_area_columns.player_kill_next_tick] > 0.5) & (player_alive < 0.5))
+                if num_kills_when_already_dead > 0:
+                    print(f'kill when already dead {num_kills_when_already_dead}')
 
             unique_player_ids = set(player_ids)
             # first name is invalid, so take names after that, just how I structured names array
@@ -86,5 +90,5 @@ def compute_plant_statistics():
 
 
 if __name__ == "__main__":
-    compute_raw_statistics()
+    #compute_raw_statistics()
     compute_plant_statistics()
