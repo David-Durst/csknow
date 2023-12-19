@@ -44,6 +44,7 @@ def compute_plant_statistics():
     num_ticks = 0
     num_shots = 0
     num_kills = 0
+    num_killeds = 0
     with tqdm(total=len(loaded_model.dataset.data_hdf5s), disable=False) as pbar:
         for i in range(len(loaded_model.dataset.data_hdf5s)):
             loaded_model.cur_hdf5_index = i
@@ -57,12 +58,18 @@ def compute_plant_statistics():
 
             vis_df = loaded_model.get_cur_vis_df()
             player_ids: List[int] = []
-            for player_player_area_columns in specific_player_place_area_columns:
+            for player_index, player_player_area_columns in enumerate(specific_player_place_area_columns):
                 all_player_id = vis_df[player_player_area_columns.player_id].astype('int32')
                 valid_player_id = all_player_id[all_player_id >= 0]
                 player_ids += valid_player_id.unique().tolist()
                 num_shots += int(vis_df[player_player_area_columns.player_shots_cur_tick].sum())
-                num_kills += int(vis_df[player_player_area_columns.player_killed_next_tick].sum())
+                num_kills += int(vis_df[player_player_area_columns.player_kill_next_tick].sum())
+                num_killeds += int(vis_df[player_player_area_columns.player_killed_next_tick].sum())
+                player_alive = loaded_model.cur_dataset.X[:, loaded_model.model.alive_columns[player_index]]
+                num_killeds_when_already_dead = \
+                    sum((vis_df[player_player_area_columns.player_killed_next_tick] > 0.5) & (player_alive < 0.5))
+                if num_killeds_when_already_dead > 0:
+                    print('killed when already dead')
 
             unique_player_ids = set(player_ids)
             # first name is invalid, so take names after that, just how I structured names array
@@ -75,7 +82,7 @@ def compute_plant_statistics():
     players_set = set(players_list)
 
     print(f'num players {len(players_set)}, num games {num_games}, num rounds {num_rounds}, '
-          f'num ticks {num_ticks}, num hours {num_hours}, num shots {num_shots}, num kills {num_kills}')
+          f'num ticks {num_ticks}, num hours {num_hours}, num shots {num_shots}, num kills {num_kills}, num killeds {num_killeds}')
 
 
 if __name__ == "__main__":
