@@ -18,7 +18,7 @@ def plot_one_metric(title_to_values: Dict[str, List[float]], metric_title: str,
                     x_label: str,
                     plot_file_path: Path):
     num_titles = len(title_to_values.keys())
-    fig = plt.figure(figsize=(fig_length * num_titles, fig_length), constrained_layout=True)
+    fig = plt.figure(figsize=(fig_length, fig_length * num_titles), constrained_layout=True)
     axs = fig.subplots(num_titles, 1, squeeze=False)
 
     # get the max value for histogram (if bigger than smaller max), min wil be 0 always
