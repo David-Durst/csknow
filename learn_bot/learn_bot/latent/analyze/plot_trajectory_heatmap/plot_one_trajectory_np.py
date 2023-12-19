@@ -205,7 +205,9 @@ def plot_one_trajectory_dataset(loaded_model: LoadedModel, id_df: pd.DataFrame, 
                     title_to_lifetimes[title] = []
                 lifetime_in_game_ticks = trajectory_id_df[game_tick_number_column].iloc[len(alive_trajectory_np) - 1] - \
                     first_game_tick_number
-                title_to_lifetimes[title].append(lifetime_in_game_ticks / game_tick_rate)
+                # sometimes if 41 seconds due to alignment issues, just make it 40 in those cases to handle
+                # weird counting issues
+                title_to_lifetimes[title].append(min(lifetime_in_game_ticks / game_tick_rate, 40.))
             if trajectory_filter_options.compute_speeds:
                 if title not in title_to_speeds:
                     title_to_speeds[title] = []
