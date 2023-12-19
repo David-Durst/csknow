@@ -95,18 +95,12 @@ def plot_one_trajectory_dataset(loaded_model: LoadedModel, id_df: pd.DataFrame, 
         title_to_buffers[title] = ImageBuffers()
         title_to_num_points[title] = 0
 
-    complete_key_event_indices, num_key_events = \
-        compute_overall_key_event_indices(vis_df, trajectory_filter_options)
-    if title not in title_to_key_events:
-        title_to_key_events[title] = 0
-    title_to_key_events[title] += num_key_events
-    partial_key_event_indices = set()
-
     if trajectory_filter_options.trajectory_counter is None:
         trajectory_ids = id_df[round_id_column].unique()
         if trajectory_filter_options.valid_round_ids is not None:
-            #trajectory_ids = [r for r in trajectory_ids if r in trajectory_filter_options.valid_round_ids]
-            trajectory_ids = id_df[round_id_column].unique().tolist()
+            trajectory_ids = [r for r in trajectory_ids if r in trajectory_filter_options.valid_round_ids]
+            # for exploring with all data, not just test push/save rounds like above
+            #trajectory_ids = id_df[round_id_column].unique().tolist()
         trajectory_id_col = id_df[round_id_column]
     else:
         trajectory_ids = trajectory_filter_options.trajectory_counter.unique()
@@ -115,6 +109,16 @@ def plot_one_trajectory_dataset(loaded_model: LoadedModel, id_df: pd.DataFrame, 
         assert trajectory_filter_options.round_game_seconds is None
 
     weapon_scoped_to_max_speed = loaded_model.model.weapon_scoped_to_max_speed_tensor_gpu.to(CPU_DEVICE_STR)
+
+    # compute key events before any filtering/spltting by trajectory to ensure logic is correct
+    # overall - look at entire df, per trajectory - compute by looking at each trajectory per player after alive filter
+    overall_key_event_indices, overall_num_key_events = \
+        compute_overall_key_event_indices(vis_df, trajectory_filter_options)
+    if title not in title_to_key_events:
+        title_to_key_events[title] = 0
+    title_to_key_events[title] += overall_num_key_events
+    per_trajectory_key_event_indices = set()
+    per_trajectory_num_key_events = 0
 
     for trajectory_id in trajectory_ids:
         trajectory_np = dataset[trajectory_id_col == trajectory_id]
@@ -212,7 +216,7 @@ def plot_one_trajectory_dataset(loaded_model: LoadedModel, id_df: pd.DataFrame, 
                 event_constraint = event_series > 0.5
                 alive_trajectory_np = alive_trajectory_np[event_constraint]
                 alive_trajectory_vis_df = alive_trajectory_vis_df[event_constraint]
-                partial_key_event_indices.update(alive_trajectory_vis_df.index.tolist())
+                per_trajectory_key_event_indices.update(alive_trajectory_vis_df.index.tolist())
                 num_events_per_tick_with_event = event_series[event_constraint].tolist()
             if trajectory_filter_options.compute_lifetimes and \
                     (trajectory_filter_options.only_kill or trajectory_filter_options.only_killed or
@@ -231,6 +235,7 @@ def plot_one_trajectory_dataset(loaded_model: LoadedModel, id_df: pd.DataFrame, 
             if trajectory_filter_options.only_kill or trajectory_filter_options.only_killed or trajectory_filter_options.only_shots:
                 for i, pos_xy in enumerate(canvas_pos_xy):
                     buffer[pos_xy[0], pos_xy[1]] += num_events_per_tick_with_event[i]
+                    per_trajectory_num_key_events += num_events_per_tick_with_event[i]
             else:
                 cur_player_d2_img = Image.new("L", d2_img.size, color=0)
                 cur_player_d2_drw = ImageDraw.Draw(cur_player_d2_img)
@@ -261,16 +266,24 @@ def plot_one_trajectory_dataset(loaded_model: LoadedModel, id_df: pd.DataFrame, 
                 # found 1.3% are over max speed, just clip them to avoid annoyances
                 clipped_scaled_speeds = np.clip(scaled_speeds, 0., 1.)
                 title_to_speeds[title] += clipped_scaled_speeds.tolist()
+
+    # verify that got all key events
     if trajectory_filter_options.only_kill or trajectory_filter_options.only_killed or \
             trajectory_filter_options.only_shots:
-        partial_indices_not_in_complete = partial_key_event_indices.difference(complete_key_event_indices)
-        if not len(partial_indices_not_in_complete) == 0:
-            print(f"How is partial getting extra indices {partial_indices_not_in_complete}")
-        complete_indices_not_in_partial = complete_key_event_indices.difference(partial_key_event_indices)
-        if not len(complete_indices_not_in_partial) == 0:
+        per_trajectory_indices_not_in_overall = per_trajectory_key_event_indices.difference(overall_key_event_indices)
+        if not len(per_trajectory_indices_not_in_overall) == 0:
+            print(f"How is per trajectory getting extra indices {per_trajectory_indices_not_in_overall}")
+        overall_indices_not_in_per_trajectory = overall_key_event_indices.difference(per_trajectory_key_event_indices)
+        if not len(overall_indices_not_in_per_trajectory) == 0:
+            print("overall has more indices")
             print(loaded_model.cur_hdf5_index)
-            print(id_df.loc[list(complete_indices_not_in_partial)])
-            print(id_df.loc[list(complete_indices_not_in_partial)].iloc[0])
+            print(id_df.loc[list(overall_indices_not_in_per_trajectory)])
+            print(id_df.loc[list(overall_indices_not_in_per_trajectory)].iloc[0])
+        if overall_num_key_events != per_trajectory_num_key_events:
+            print("overall has more events")
+            print(loaded_model.cur_hdf5_index)
+            print(overall_num_key_events)
+            print(per_trajectory_num_key_events)
 
 
 scale_factor = 0
@@ -317,11 +330,6 @@ def plot_one_image_one_team(title: str, ct_team: bool, team_color: List, saturat
 def scale_buffers_by_points(titles: List[str]):
     global scale_factor, max_value
 
-    ct_buffer = title_to_buffers['Human'].get_buffer(True)
-    t_buffer = title_to_buffers['Human'].get_buffer(False)
-    print(title_to_key_events['Human'])
-    print(ct_buffer.sum() + t_buffer.sum())
-    quit(0)
     max_points_per_title = 0
     for title in titles:
         max_points_per_title = max(max_points_per_title, title_to_num_points[title])

@@ -90,5 +90,5 @@ def compute_plant_statistics():
 
 
 if __name__ == "__main__":
-    #compute_raw_statistics()
+    compute_raw_statistics()
     compute_plant_statistics()
