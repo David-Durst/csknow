@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from enum import Enum, auto
 from math import log, ceil
 from pathlib import Path
-from typing import Dict, Optional, List, Tuple
+from typing import Dict, Optional, List, Tuple, Set
 
 import numpy as np
 import pandas as pd
@@ -43,7 +43,9 @@ spread_radius = 2
 title_to_buffers: Dict[str, ImageBuffers] = {}
 title_to_num_points: Dict[str, int] = {}
 title_to_lifetimes: Dict[str, List[float]] = {}
-title_to_speeds: Dict[str, List[float]]
+title_to_speeds: Dict[str, List[float]] = {}
+title_to_key_events: Dict[str, int] = {}
+title_to_unfiltered_key_events: Dict[str, int] = {}
 
 
 def get_title_to_num_points() -> Dict[str, int]:
@@ -59,11 +61,32 @@ def get_title_to_speeds() -> Dict[str, List[float]]:
 
 
 def clear_title_caches():
-    global title_to_buffers, title_to_num_points, title_to_lifetimes, title_to_speeds
+    global title_to_buffers, title_to_num_points, title_to_lifetimes, title_to_speeds, title_to_key_events
     title_to_buffers = {}
     title_to_num_points = {}
     title_to_lifetimes = {}
     title_to_speeds = {}
+    title_to_key_events = {}
+    title_to_unfiltered_key_events = {}
+
+
+# data validation function, making sure I didn't miss any kill/killed/shots events
+def compute_overall_key_event_indices(vis_df: pd.DataFrame,
+                                      trajectory_filter_options: TrajectoryFilterOptions) -> Tuple[Set[int], int]:
+    key_event_indices = set()
+    num_key_events = 0
+    for player_index, player_place_area_columns in enumerate(specific_player_place_area_columns):
+        event_constraint = None
+        if trajectory_filter_options.only_kill:
+            event_constraint = vis_df[player_place_area_columns.player_kill_next_tick] > 0.5
+        elif trajectory_filter_options.only_killed:
+            event_constraint = vis_df[player_place_area_columns.player_killed_next_tick] > 0.5
+        elif trajectory_filter_options.only_shots:
+            event_constraint = vis_df[player_place_area_columns.player_shots_cur_tick] > 0.5
+        if event_constraint is not None:
+            key_event_indices.update(vis_df[event_constraint].index.tolist())
+            num_key_events += sum(event_constraint)
+    return key_event_indices, num_key_events
 
 
 def plot_one_trajectory_dataset(loaded_model: LoadedModel, id_df: pd.DataFrame, vis_df: pd.DataFrame,
@@ -72,10 +95,18 @@ def plot_one_trajectory_dataset(loaded_model: LoadedModel, id_df: pd.DataFrame, 
         title_to_buffers[title] = ImageBuffers()
         title_to_num_points[title] = 0
 
+    complete_key_event_indices, num_complete_event_indices = \
+        compute_overall_key_event_indices(vis_df, trajectory_filter_options)
+    if title not in title_to_unfiltered_key_events:
+        title_to_unfiltered_key_events[title] = 0
+    title_to_unfiltered_key_events[title] += num_complete_event_indices
+    partial_key_event_indices = set()
+
     if trajectory_filter_options.trajectory_counter is None:
         trajectory_ids = id_df[round_id_column].unique()
         if trajectory_filter_options.valid_round_ids is not None:
-            trajectory_ids = [r for r in trajectory_ids if r in trajectory_filter_options.valid_round_ids]
+            #trajectory_ids = [r for r in trajectory_ids if r in trajectory_filter_options.valid_round_ids]
+            trajectory_ids = id_df[round_id_column].unique().tolist()
         trajectory_id_col = id_df[round_id_column]
     else:
         trajectory_ids = trajectory_filter_options.trajectory_counter.unique()
@@ -177,6 +208,7 @@ def plot_one_trajectory_dataset(loaded_model: LoadedModel, id_df: pd.DataFrame, 
             if event_constraint is not None:
                 alive_trajectory_np = alive_trajectory_np[event_constraint]
                 alive_trajectory_vis_df = alive_trajectory_vis_df[event_constraint]
+                partial_key_event_indices.update(alive_trajectory_vis_df.index.tolist())
             if trajectory_filter_options.compute_lifetimes and \
                     (trajectory_filter_options.only_kill or trajectory_filter_options.only_killed or
                      trajectory_filter_options.only_shots):
@@ -191,9 +223,12 @@ def plot_one_trajectory_dataset(loaded_model: LoadedModel, id_df: pd.DataFrame, 
             canvas_pos_xy = list(zip(list(canvas_pos_x_np), list(canvas_pos_y_np)))
 
             buffer = title_to_buffers[title].get_buffer(ct_team)
-            if trajectory_filter_options.only_kill or trajectory_filter_options.only_killed:
+            if trajectory_filter_options.only_kill or trajectory_filter_options.only_killed or trajectory_filter_options.only_shots:
                 for pos_xy in canvas_pos_xy:
                     buffer[pos_xy[0], pos_xy[1]] += 1
+                    if title not in title_to_key_events:
+                        title_to_key_events[title] = 0
+                    title_to_key_events[title] += 1
             else:
                 cur_player_d2_img = Image.new("L", d2_img.size, color=0)
                 cur_player_d2_drw = ImageDraw.Draw(cur_player_d2_img)
@@ -224,6 +259,16 @@ def plot_one_trajectory_dataset(loaded_model: LoadedModel, id_df: pd.DataFrame, 
                 # found 1.3% are over max speed, just clip them to avoid annoyances
                 clipped_scaled_speeds = np.clip(scaled_speeds, 0., 1.)
                 title_to_speeds[title] += clipped_scaled_speeds.tolist()
+    if trajectory_filter_options.only_kill or trajectory_filter_options.only_killed or \
+            trajectory_filter_options.only_shots:
+        partial_indices_not_in_complete = partial_key_event_indices.difference(complete_key_event_indices)
+        if not len(partial_indices_not_in_complete) == 0:
+            print(f"How is partial getting extra indices {partial_indices_not_in_complete}")
+        complete_indices_not_in_partial = complete_key_event_indices.difference(partial_key_event_indices)
+        if not len(complete_indices_not_in_partial) == 0:
+            print(loaded_model.cur_hdf5_index)
+            print(id_df.loc[list(complete_indices_not_in_partial)])
+            print(id_df.loc[list(complete_indices_not_in_partial)].iloc[0])
 
 
 scale_factor = 0
@@ -270,6 +315,9 @@ def plot_one_image_one_team(title: str, ct_team: bool, team_color: List, saturat
 def scale_buffers_by_points(titles: List[str]):
     global scale_factor, max_value
 
+    print(title_to_key_events['Human'])
+    print(title_to_unfiltered_key_events['Human'])
+    quit(0)
     max_points_per_title = 0
     for title in titles:
         max_points_per_title = max(max_points_per_title, title_to_num_points[title])
