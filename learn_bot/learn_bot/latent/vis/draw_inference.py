@@ -13,6 +13,7 @@ from learn_bot.latent.place_area.pos_abs_from_delta_grid_or_radial import delta_
     delta_pos_grid_cell_dim, delta_pos_grid_num_xy_cells_per_z_change, max_speed_per_second
 from learn_bot.latent.place_area.column_names import specific_player_place_area_columns, num_radial_bins, \
     num_radial_bins_per_z_axis, StatureOptions, direction_angle_range
+from learn_bot.latent.place_area.simulation.constants import EngineWeaponId
 from learn_bot.latent.transformer_nested_hidden_latent_model import stature_to_speed_list
 from learn_bot.mining.area_cluster import Vec3
 
@@ -198,8 +199,10 @@ def draw_all_players(data_dict: Dict, pred_dict: Optional[Dict], im_draw: ImageD
             fire_last_5s = data_dict[player_place_area_columns.player_fire_in_last_5s]
             no_fov_enemy_visible_last_5s = data_dict[player_place_area_columns.player_no_fov_enemy_visible_in_last_5s]
             fov_enemy_visible_last_5s = data_dict[player_place_area_columns.player_fov_enemy_visible_in_last_5s]
-            #kill_next_tick = data_dict[player_place_area_columns.player_kill_next_tick]
-            #killed_next_tick = data_dict[player_place_area_columns.player_killed_next_tick]
+            kill_next_tick = data_dict[player_place_area_columns.player_kill_next_tick]
+            killed_next_tick = data_dict[player_place_area_columns.player_killed_next_tick]
+            shots_cur_tick = data_dict[player_place_area_columns.player_shots_cur_tick]
+            weapon_id = data_dict[player_place_area_columns.player_weapon_id]
             #f"kill next tick {kill_next_tick}, killed next tick {killed_next_tick}, " \
             health = data_dict[player_place_area_columns.player_health]
             armor = data_dict[player_place_area_columns.player_armor]
@@ -219,7 +222,9 @@ def draw_all_players(data_dict: Dict, pred_dict: Optional[Dict], im_draw: ImageD
                                    player_text=player_to_text[player_index] if player_index in player_to_text else None,
                                    view_angle=data_dict[player_place_area_columns.view_angle[0]])
                 result.status += f"{player_place_area_columns.player_id} pos {pos_coord.coords}, " \
-                                 f"vel {vel_per_player}, health {health:3.2f}, armor {armor:3.2f}\n"
+                                 f"vel {vel_per_player}, health {health:3.2f}, armor {armor:3.2f}, " \
+                                 f"weapon {str(EngineWeaponId(weapon_id))}, " \
+                                 f"k/d/s {kill_next_tick}/{killed_next_tick}/{shots_cur_tick}\n"
                 continue
             elif draw_max:
                 pos_coord.draw_vis(im_draw, True)
