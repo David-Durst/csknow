@@ -23,6 +23,7 @@ class TrajectoryFilterOptions:
     only_shots: bool = False
     compute_lifetimes: bool = False
     compute_speeds: bool = False
+    compute_shots_per_kill: bool = False
 
     def __str__(self):
         compound_name = ''

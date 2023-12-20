@@ -406,6 +406,11 @@ def plot_trajectories_to_image(titles: List[str], plot_teams_separately: bool, p
 
     scale_buffers_by_points(titles)
     #print(f"max pixel value after scaling before clamp to 255 {max_value}")
+    if debug_event_counting:
+        print(title_to_key_events["Human"])
+        print(len(title_to_team_to_key_event_pos["Human"][True][0]) +
+              len(title_to_team_to_key_event_pos["Human"][True][1]))
+        quit(0)
 
     for title in titles:
         images_per_title: List[Image.Image] = []
