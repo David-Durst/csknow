@@ -9,7 +9,7 @@ from matplotlib import pyplot as plt
 from learn_bot.latent.analyze.compare_trajectories.process_trajectory_comparison import plot_hist, generate_bins
 from learn_bot.latent.analyze.plot_trajectory_heatmap.filter_trajectories import TrajectoryFilterOptions
 from learn_bot.latent.analyze.plot_trajectory_heatmap.build_heatmap_plots import get_title_to_speeds, \
-    get_title_to_lifetimes, get_title_to_shots_and_kills, kills_column, shots_column
+    get_title_to_lifetimes, get_title_to_shots_per_kill
 
 fig_length = 6
 
@@ -44,27 +44,6 @@ def plot_one_metric_histograms(title_to_values: Dict[str, List[float]], metric_t
     plt.savefig(plot_file_path)
 
 
-def plot_one_metric_bars(title_to_event_a_and_event_b: Dict[str, List[Dict[str, int]]], metric_title: str,
-                         x_label: str, y_label: str, x_column_name: str, base_y_column_name: str,
-                         plot_file_path: Path):
-    # build a dataframe with average y value per x value for each title
-    avg_y_per_x_dfs: List[pd.DataFrame] = {}
-    title_y_column_names: List[str] = []
-    for title, event_a_and_event_b_list in title_to_event_a_and_event_b.items():
-        ungrouped_df = pd.DataFrame.from_records(event_a_and_event_b_list)
-        title_y_column_names.append(f"{title} {base_y_column_name}")
-        ungrouped_df.rename({base_y_column_name: title_y_column_names[-1]}, inplace=True)
-        avg_y_per_x_dfs.append(ungrouped_df.groupby(x_column_name, as_index=False).mean())
-    avg_y_per_x_df = pd.merge(avg_y_per_x_dfs, on=x_column_name)
-
-    # plot the different columns
-    ax = avg_y_per_x_df.plot(x=x_column_name, y=list(title_y_column_names), kind='bar', rot=0)
-    ax.set_title(metric_title)
-    ax.set_xlabel(x_label)
-    ax.set_ylabel(y_label)
-    ax.get_figure().savefig(plot_file_path)
-
-
 def plot_metrics(trajectory_filter_options: TrajectoryFilterOptions, plots_path: Path):
     if trajectory_filter_options.compute_speeds:
         # airstrafing can get you above normal weapon max speed
@@ -75,6 +54,5 @@ def plot_metrics(trajectory_filter_options: TrajectoryFilterOptions, plots_path:
         plot_one_metric_histograms(get_title_to_lifetimes(), 'Lifetimes', 5, 40., 'Lifetime Length (s)',
                                    plots_path / ('lifetimes_' + str(trajectory_filter_options) + '.png'))
     if trajectory_filter_options.compute_shots_per_kill:
-        plot_one_metric_bars(get_title_to_shots_and_kills(), 'Shots Per Kill',
-                             'Kills in Round', 'Avg Shots in Round', kills_column, shots_column,
-                             plots_path / ('shots_per_kill_' + str(trajectory_filter_options) + '.png'))
+        plot_one_metric_histograms(get_title_to_shots_per_kill(), 'Shots Per Kill', 1, 30., 'Shots Per Kill',
+                                   plots_path / ('shots_per_kill_' + str(trajectory_filter_options) + '.png'))

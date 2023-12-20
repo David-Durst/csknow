@@ -43,14 +43,10 @@ title_to_buffers: Dict[str, ImageBuffers] = {}
 title_to_num_points: Dict[str, int] = {}
 title_to_lifetimes: Dict[str, List[float]] = {}
 title_to_speeds: Dict[str, List[float]] = {}
-title_to_shots_per_kill: Dict[str, List[Dict[str, int]]] = {}
+title_to_shots_per_kill: Dict[str, List[float]] = {}
 title_to_key_events: Dict[str, int] = {}
 title_to_team_to_pos_dict = Dict[str, Dict[bool, Tuple[List[float], List[float]]]]
 title_to_team_to_key_event_pos: title_to_team_to_pos_dict = {}
-
-# column names for shots and kills dicts (and df when plotting histogram)
-shots_column = 'shots'
-kills_column = 'kills'
 
 
 def get_title_to_num_points() -> Dict[str, int]:
@@ -65,8 +61,8 @@ def get_title_to_speeds() -> Dict[str, List[float]]:
     return title_to_speeds
 
 
-def get_title_to_shots_and_kills() -> Dict[str, List[Dict[str, int]]]:
-    return title_to_shots_and_kills
+def get_title_to_shots_per_kill() -> Dict[str, List[float]]:
+    return title_to_shots_per_kill
 
 
 def get_title_to_team_to_key_event_pos() -> title_to_team_to_pos_dict:
@@ -74,12 +70,13 @@ def get_title_to_team_to_key_event_pos() -> title_to_team_to_pos_dict:
 
 
 def clear_title_caches():
-    global title_to_buffers, title_to_num_points, title_to_lifetimes, title_to_speeds, title_to_key_events, \
-        title_to_team_to_key_event_pos
+    global title_to_buffers, title_to_num_points, title_to_lifetimes, title_to_speeds, title_to_shots_per_kill, \
+        title_to_key_events, title_to_team_to_key_event_pos
     title_to_buffers = {}
     title_to_num_points = {}
     title_to_lifetimes = {}
     title_to_speeds = {}
+    title_to_shots_per_kill = {}
     title_to_key_events = {}
     title_to_team_to_key_event_pos = {}
 
@@ -183,7 +180,7 @@ def plot_one_trajectory_dataset(loaded_model: LoadedModel, id_df: pd.DataFrame, 
         if trajectory_filter_options.computing_metrics() and \
                 (trajectory_filter_options.round_game_seconds is not None or
                  trajectory_filter_options.include_all_players_when_one_in_region):
-            raise Exception("can't filter by game seconds or player in region and compute lifetimes or speeds")
+            raise Exception("can't filter by game seconds or player in region and compute metrics")
 
         for player_index, player_place_area_columns in enumerate(specific_player_place_area_columns):
             ct_team = team_strs[0] in player_place_area_columns.player_id
@@ -296,11 +293,13 @@ def plot_one_trajectory_dataset(loaded_model: LoadedModel, id_df: pd.DataFrame, 
                 clipped_scaled_speeds = np.clip(scaled_speeds, 0., 1.)
                 title_to_speeds[title] += clipped_scaled_speeds.tolist()
             if trajectory_filter_options.compute_shots_per_kill:
-                if title not in title_to_shots_and_kills:
-                    title_to_shots_and_kills[title] = []
-                num_shots = int(alive_trajectory_vis_df[player_place_area_columns.player_shots_cur_tick].sum())
-                num_kills = int(alive_trajectory_vis_df[player_place_area_columns.player_kill_next_tick].sum())
-                title_to_shots_and_kills[title].append({num_shots: num_shots, kills_column: num_kills})
+                if title not in title_to_shots_per_kill:
+                    title_to_shots_per_kill[title] = []
+                num_shots = alive_trajectory_vis_df[player_place_area_columns.player_shots_cur_tick].sum()
+                num_kills = alive_trajectory_vis_df[player_place_area_columns.player_kill_next_tick].sum()
+                # metric undefined if player fails to score a kill
+                if num_kills > 0:
+                    title_to_shots_per_kill[title].append(num_shots / num_kills)
 
 
     # verify that got all key events
