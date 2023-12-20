@@ -8,7 +8,7 @@ from matplotlib import pyplot as plt
 
 from learn_bot.latent.analyze.compare_trajectories.process_trajectory_comparison import plot_hist, generate_bins
 from learn_bot.latent.analyze.plot_trajectory_heatmap.filter_trajectories import TrajectoryFilterOptions
-from learn_bot.latent.analyze.plot_trajectory_heatmap.plot_one_trajectory_np import get_title_to_speeds, get_title_to_lifetimes
+from learn_bot.latent.analyze.plot_trajectory_heatmap.build_heatmap_plots import get_title_to_speeds, get_title_to_lifetimes
 
 fig_length = 6
 

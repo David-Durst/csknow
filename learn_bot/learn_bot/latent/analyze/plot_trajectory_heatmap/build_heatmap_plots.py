@@ -41,10 +41,13 @@ class ImageBuffers:
 
 spread_radius = 2
 title_to_buffers: Dict[str, ImageBuffers] = {}
+title_to_: Dict[str, ImageBuffers] = {}
 title_to_num_points: Dict[str, int] = {}
 title_to_lifetimes: Dict[str, List[float]] = {}
 title_to_speeds: Dict[str, List[float]] = {}
 title_to_key_events: Dict[str, int] = {}
+title_to_team_to_pos_dict = Dict[str, Dict[bool, Tuple[List[float], List[float]]]]
+title_to_team_to_key_event_pos: title_to_team_to_pos_dict = {}
 
 
 def get_title_to_num_points() -> Dict[str, int]:
@@ -59,13 +62,19 @@ def get_title_to_speeds() -> Dict[str, List[float]]:
     return title_to_speeds
 
 
+def get_title_to_team_to_key_event_pos() -> title_to_team_to_pos_dict:
+    return title_to_team_to_key_event_pos
+
+
 def clear_title_caches():
-    global title_to_buffers, title_to_num_points, title_to_lifetimes, title_to_speeds, title_to_key_events
+    global title_to_buffers, title_to_num_points, title_to_lifetimes, title_to_speeds, title_to_key_events, \
+        title_to_team_to_key_event_pos
     title_to_buffers = {}
     title_to_num_points = {}
     title_to_lifetimes = {}
     title_to_speeds = {}
     title_to_key_events = {}
+    title_to_team_to_key_event_pos = {}
 
 
 # data validation function, making sure I didn't miss any kill/killed/shots events
@@ -159,8 +168,7 @@ def plot_one_trajectory_dataset(loaded_model: LoadedModel, id_df: pd.DataFrame, 
                 (trajectory_filter_options.round_game_seconds is not None or
                  trajectory_filter_options.include_all_players_when_one_in_region):
             raise Exception("can't filter by game seconds or player in region and only key events like kill/killed/shot")
-        filtering_key_events = trajectory_filter_options.only_kill or trajectory_filter_options.only_killed or \
-                               trajectory_filter_options.only_shots
+        filtering_key_events = trajectory_filter_options.filtering_key_events()
         if (trajectory_filter_options.compute_lifetimes or trajectory_filter_options.compute_speeds) and \
                 (trajectory_filter_options.round_game_seconds is not None or
                  trajectory_filter_options.include_all_players_when_one_in_region):
@@ -223,10 +231,9 @@ def plot_one_trajectory_dataset(loaded_model: LoadedModel, id_df: pd.DataFrame, 
                      trajectory_filter_options.only_shots):
                 raise Exception("can't filter to kill/killed/shot events and compute lifetimes")
 
-
-            canvas_pos_np = convert_to_canvas_coordinates(
-                alive_trajectory_np[:, loaded_model.model.nested_players_pos_columns_tensor[player_index, 0, 0]],
-                alive_trajectory_np[:, loaded_model.model.nested_players_pos_columns_tensor[player_index, 0, 1]])
+            x_pos = alive_trajectory_np[:, loaded_model.model.nested_players_pos_columns_tensor[player_index, 0, 0]]
+            y_pos = alive_trajectory_np[:, loaded_model.model.nested_players_pos_columns_tensor[player_index, 0, 1]]
+            canvas_pos_np = convert_to_canvas_coordinates(x_pos, y_pos)
             canvas_pos_x_np = canvas_pos_np[0].astype(np.intc)
             canvas_pos_y_np = canvas_pos_np[1].astype(np.intc)
             canvas_pos_xy = list(zip(list(canvas_pos_x_np), list(canvas_pos_y_np)))
@@ -234,8 +241,12 @@ def plot_one_trajectory_dataset(loaded_model: LoadedModel, id_df: pd.DataFrame, 
             buffer = title_to_buffers[title].get_buffer(ct_team)
             if trajectory_filter_options.only_kill or trajectory_filter_options.only_killed or trajectory_filter_options.only_shots:
                 for i, pos_xy in enumerate(canvas_pos_xy):
-                    buffer[pos_xy[0], pos_xy[1]] += num_events_per_tick_with_event[i]
+                    #buffer[pos_xy[0], pos_xy[1]] += num_events_per_tick_with_event[i]
                     per_trajectory_num_key_events += num_events_per_tick_with_event[i]
+                    if ct_team not in title_to_team_to_key_event_pos[title]:
+                        title_to_team_to_key_event_pos[title][ct_team] = ([], [])
+                    title_to_team_to_key_event_pos[title][ct_team][0] += x_pos.tolist()
+                    title_to_team_to_key_event_pos[title][ct_team][1] += y_pos.tolist()
             else:
                 cur_player_d2_img = Image.new("L", d2_img.size, color=0)
                 cur_player_d2_drw = ImageDraw.Draw(cur_player_d2_img)

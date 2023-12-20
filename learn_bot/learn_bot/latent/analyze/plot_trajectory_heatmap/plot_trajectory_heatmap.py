@@ -13,9 +13,11 @@ from learn_bot.latent.analyze.compare_trajectories.run_trajectory_comparison imp
 from learn_bot.latent.analyze.comparison_column_names import similarity_plots_path
 from learn_bot.latent.analyze.plot_trajectory_heatmap.filter_trajectories import TrajectoryFilterOptions, \
     region_constraints
+from learn_bot.latent.analyze.plot_trajectory_heatmap.plot_key_event_heatmap import plot_key_event_heatmaps
 from learn_bot.latent.analyze.plot_trajectory_heatmap.plot_metrics import plot_metrics
-from learn_bot.latent.analyze.plot_trajectory_heatmap.plot_one_trajectory_np import plot_one_trajectory_dataset, \
-    plot_trajectories_to_image, clear_title_caches, get_title_to_num_points, plot_trajectory_diffs_to_image
+from learn_bot.latent.analyze.plot_trajectory_heatmap.build_heatmap_plots import plot_one_trajectory_dataset, \
+    plot_trajectories_to_image, clear_title_caches, get_title_to_num_points, plot_trajectory_diffs_to_image, \
+    get_title_to_team_to_key_event_pos
 from learn_bot.latent.analyze.plot_trajectory_heatmap.plot_points_per_game_seconds_bar_chart import \
     record_points_per_one_game_seconds_range, plot_points_per_game_seconds, reset_points_per_game_seconds_state
 from learn_bot.latent.load_model import load_model_file, LoadedModel
@@ -99,6 +101,7 @@ def run_trajectory_heatmaps_one_filter_option(trajectory_filter_options: Traject
     plot_trajectories_to_image(title_strs, True, plots_path, trajectory_filter_options)
     plot_trajectory_diffs_to_image(title_strs, diff_indices, plots_path, trajectory_filter_options)
     plot_metrics(trajectory_filter_options, plots_path)
+    plot_key_event_heatmaps(get_title_to_team_to_key_event_pos(), trajectory_filter_options, plots_path)
 
 
 def run_trajectory_heatmaps(plot_only_first_hdf5_file_train_and_test: bool):
@@ -116,9 +119,9 @@ def run_trajectory_heatmaps(plot_only_first_hdf5_file_train_and_test: bool):
 
     os.makedirs(plots_path / 'diff', exist_ok=True)
 
-    run_trajectory_heatmaps_one_filter_option(TrajectoryFilterOptions(compute_speeds=True, compute_lifetimes=True),
-                                              rollout_extensions, diff_indices, plots_path,
-                                              plot_only_first_hdf5_file_train_and_test)
+    #run_trajectory_heatmaps_one_filter_option(TrajectoryFilterOptions(compute_speeds=True, compute_lifetimes=True),
+    #                                          rollout_extensions, diff_indices, plots_path,
+    #                                          plot_only_first_hdf5_file_train_and_test)
 
     # plot distributions during key events
     run_trajectory_heatmaps_one_filter_option(TrajectoryFilterOptions(compute_speeds=True, only_kill=True),

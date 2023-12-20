@@ -48,6 +48,9 @@ class TrajectoryFilterOptions:
             compound_name = 'no_filter'
         return compound_name
 
+    def filtering_key_events(self) -> bool:
+        return self.only_kill or self.only_killed or self.only_shots
+
 
 default_trajectory_filter_options = TrajectoryFilterOptions()
 

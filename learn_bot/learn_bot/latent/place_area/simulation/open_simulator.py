@@ -18,7 +18,7 @@ from learn_bot.latent.analyze.compare_trajectories.process_trajectory_comparison
 from learn_bot.latent.analyze.comparison_column_names import similarity_plots_path
 from learn_bot.latent.analyze.plot_trajectory_heatmap.filter_trajectories import default_trajectory_filter_options, \
     TrajectoryFilterOptions
-from learn_bot.latent.analyze.plot_trajectory_heatmap.plot_one_trajectory_np import plot_one_trajectory_dataset, \
+from learn_bot.latent.analyze.plot_trajectory_heatmap.build_heatmap_plots import plot_one_trajectory_dataset, \
     plot_trajectories_to_image
 from learn_bot.libs.pd_printing import set_pd_print_options
 from learn_bot.latent.engagement.column_names import round_id_column
