@@ -38,15 +38,19 @@ class ImageBuffers:
         else:
             return self.t_buffer
 
-
 spread_radius = 2
 title_to_buffers: Dict[str, ImageBuffers] = {}
 title_to_num_points: Dict[str, int] = {}
 title_to_lifetimes: Dict[str, List[float]] = {}
 title_to_speeds: Dict[str, List[float]] = {}
+title_to_shots_per_kill: Dict[str, List[Dict[str, int]]] = {}
 title_to_key_events: Dict[str, int] = {}
 title_to_team_to_pos_dict = Dict[str, Dict[bool, Tuple[List[float], List[float]]]]
 title_to_team_to_key_event_pos: title_to_team_to_pos_dict = {}
+
+# column names for shots and kills dicts (and df when plotting histogram)
+shots_column = 'shots'
+kills_column = 'kills'
 
 
 def get_title_to_num_points() -> Dict[str, int]:
@@ -59,6 +63,10 @@ def get_title_to_lifetimes() -> Dict[str, List[float]]:
 
 def get_title_to_speeds() -> Dict[str, List[float]]:
     return title_to_speeds
+
+
+def get_title_to_shots_and_kills() -> Dict[str, List[Dict[str, int]]]:
+    return title_to_shots_and_kills
 
 
 def get_title_to_team_to_key_event_pos() -> title_to_team_to_pos_dict:
@@ -168,17 +176,14 @@ def plot_one_trajectory_dataset(loaded_model: LoadedModel, id_df: pd.DataFrame, 
             player_in_region = trajectory_np[:, 0] == trajectory_np[:, 0]
         trajectory_np = trajectory_np[player_in_region]
 
-        if (trajectory_filter_options.only_kill or trajectory_filter_options.only_killed or
-            trajectory_filter_options.only_shots) and \
+        if trajectory_filter_options.filtering_key_events() and \
                 (trajectory_filter_options.round_game_seconds is not None or
                  trajectory_filter_options.include_all_players_when_one_in_region):
             raise Exception("can't filter by game seconds or player in region and only key events like kill/killed/shot")
-        filtering_key_events = trajectory_filter_options.filtering_key_events()
-        if (trajectory_filter_options.compute_lifetimes or trajectory_filter_options.compute_speeds) and \
+        if trajectory_filter_options.computing_metrics() and \
                 (trajectory_filter_options.round_game_seconds is not None or
                  trajectory_filter_options.include_all_players_when_one_in_region):
             raise Exception("can't filter by game seconds or player in region and compute lifetimes or speeds")
-        computing_metrics = trajectory_filter_options.compute_lifetimes or trajectory_filter_options.compute_speeds
 
         for player_index, player_place_area_columns in enumerate(specific_player_place_area_columns):
             ct_team = team_strs[0] in player_place_area_columns.player_id
@@ -193,7 +198,7 @@ def plot_one_trajectory_dataset(loaded_model: LoadedModel, id_df: pd.DataFrame, 
             # only using vis_df to compute speed and filter for key events, so don't filter it if not computing metrics
             # or filtering for key events, otherwise will have length mismatch as other types of filters (like area
             # and time) will make trajectory_np have different length
-            if computing_metrics or filtering_key_events:
+            if trajectory_filter_options.computing_metrics() or trajectory_filter_options.filtering_key_events():
                 alive_trajectory_vis_df = trajectory_vis_df[alive_constraint]
             else:
                 alive_trajectory_vis_df = None
@@ -249,7 +254,7 @@ def plot_one_trajectory_dataset(loaded_model: LoadedModel, id_df: pd.DataFrame, 
             canvas_pos_xy = list(zip(list(canvas_pos_x_np), list(canvas_pos_y_np)))
 
             buffer = title_to_buffers[title].get_buffer(ct_team)
-            if filtering_key_events:
+            if trajectory_filter_options.filtering_key_events():
                 for i, pos_xy in enumerate(canvas_pos_xy):
                     #buffer[pos_xy[0], pos_xy[1]] += num_events_per_tick_with_event[i]
                     if title not in title_to_team_to_key_event_pos:
@@ -290,6 +295,13 @@ def plot_one_trajectory_dataset(loaded_model: LoadedModel, id_df: pd.DataFrame, 
                 # found 1.3% are over max speed, just clip them to avoid annoyances
                 clipped_scaled_speeds = np.clip(scaled_speeds, 0., 1.)
                 title_to_speeds[title] += clipped_scaled_speeds.tolist()
+            if trajectory_filter_options.compute_shots_per_kill:
+                if title not in title_to_shots_and_kills:
+                    title_to_shots_and_kills[title] = []
+                num_shots = int(alive_trajectory_vis_df[player_place_area_columns.player_shots_cur_tick].sum())
+                num_kills = int(alive_trajectory_vis_df[player_place_area_columns.player_kill_next_tick].sum())
+                title_to_shots_and_kills[title].append({num_shots: num_shots, kills_column: num_kills})
+
 
     # verify that got all key events
     if debug_event_counting and (trajectory_filter_options.only_kill or trajectory_filter_options.only_killed or
