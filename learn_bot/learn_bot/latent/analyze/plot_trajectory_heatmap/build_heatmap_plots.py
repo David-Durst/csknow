@@ -41,7 +41,6 @@ class ImageBuffers:
 
 spread_radius = 2
 title_to_buffers: Dict[str, ImageBuffers] = {}
-title_to_: Dict[str, ImageBuffers] = {}
 title_to_num_points: Dict[str, int] = {}
 title_to_lifetimes: Dict[str, List[float]] = {}
 title_to_speeds: Dict[str, List[float]] = {}
@@ -98,6 +97,11 @@ def compute_overall_key_event_indices(vis_df: pd.DataFrame,
     return key_event_indices, num_key_events
 
 
+# debugging to make sure that get all events even with filtering
+# this requires disabling restricting to push only round ids, as want to tie out with overall count numbers
+debug_event_counting = False
+
+
 def plot_one_trajectory_dataset(loaded_model: LoadedModel, id_df: pd.DataFrame, vis_df: pd.DataFrame,
                                 dataset: np.ndarray, trajectory_filter_options: TrajectoryFilterOptions, title: str):
     if title not in title_to_buffers:
@@ -107,9 +111,10 @@ def plot_one_trajectory_dataset(loaded_model: LoadedModel, id_df: pd.DataFrame, 
     if trajectory_filter_options.trajectory_counter is None:
         trajectory_ids = id_df[round_id_column].unique()
         if trajectory_filter_options.valid_round_ids is not None:
-            trajectory_ids = [r for r in trajectory_ids if r in trajectory_filter_options.valid_round_ids]
-            # for exploring with all data, not just test push/save rounds like above
-            #trajectory_ids = id_df[round_id_column].unique().tolist()
+            if debug_event_counting:
+                trajectory_ids = id_df[round_id_column].unique().tolist()
+            else:
+                trajectory_ids = [r for r in trajectory_ids if r in trajectory_filter_options.valid_round_ids]
         trajectory_id_col = id_df[round_id_column]
     else:
         trajectory_ids = trajectory_filter_options.trajectory_counter.unique()
@@ -119,15 +124,16 @@ def plot_one_trajectory_dataset(loaded_model: LoadedModel, id_df: pd.DataFrame, 
 
     weapon_scoped_to_max_speed = loaded_model.model.weapon_scoped_to_max_speed_tensor_gpu.to(CPU_DEVICE_STR)
 
-    # compute key events before any filtering/spltting by trajectory to ensure logic is correct
-    # overall - look at entire df, per trajectory - compute by looking at each trajectory per player after alive filter
-    overall_key_event_indices, overall_num_key_events = \
-        compute_overall_key_event_indices(vis_df, trajectory_filter_options)
-    if title not in title_to_key_events:
-        title_to_key_events[title] = 0
-    title_to_key_events[title] += overall_num_key_events
-    per_trajectory_key_event_indices = set()
-    per_trajectory_num_key_events = 0
+    if debug_event_counting:
+        # compute key events before any filtering/spltting by trajectory to ensure logic is correct
+        # overall - look at entire df, per trajectory - compute by looking at each trajectory per player after alive filter
+        overall_key_event_indices, overall_num_key_events = \
+            compute_overall_key_event_indices(vis_df, trajectory_filter_options)
+        if title not in title_to_key_events:
+            title_to_key_events[title] = 0
+        title_to_key_events[title] += overall_num_key_events
+        per_trajectory_key_event_indices = set()
+        per_trajectory_num_key_events = 0
 
     for trajectory_id in trajectory_ids:
         trajectory_np = dataset[trajectory_id_col == trajectory_id]
@@ -224,8 +230,9 @@ def plot_one_trajectory_dataset(loaded_model: LoadedModel, id_df: pd.DataFrame, 
                 event_constraint = event_series > 0.5
                 alive_trajectory_np = alive_trajectory_np[event_constraint]
                 alive_trajectory_vis_df = alive_trajectory_vis_df[event_constraint]
-                per_trajectory_key_event_indices.update(alive_trajectory_vis_df.index.tolist())
-                num_events_per_tick_with_event = event_series[event_constraint].tolist()
+                if debug_event_counting:
+                    per_trajectory_key_event_indices.update(alive_trajectory_vis_df.index.tolist())
+                    num_events_per_tick_with_event = event_series[event_constraint].tolist()
             if trajectory_filter_options.compute_lifetimes and \
                     (trajectory_filter_options.only_kill or trajectory_filter_options.only_killed or
                      trajectory_filter_options.only_shots):
@@ -242,11 +249,14 @@ def plot_one_trajectory_dataset(loaded_model: LoadedModel, id_df: pd.DataFrame, 
             if trajectory_filter_options.only_kill or trajectory_filter_options.only_killed or trajectory_filter_options.only_shots:
                 for i, pos_xy in enumerate(canvas_pos_xy):
                     #buffer[pos_xy[0], pos_xy[1]] += num_events_per_tick_with_event[i]
-                    per_trajectory_num_key_events += num_events_per_tick_with_event[i]
+                    if title not in title_to_team_to_key_event_pos:
+                        title_to_team_to_key_event_pos[title] = {}
                     if ct_team not in title_to_team_to_key_event_pos[title]:
                         title_to_team_to_key_event_pos[title][ct_team] = ([], [])
-                    title_to_team_to_key_event_pos[title][ct_team][0] += x_pos.tolist()
-                    title_to_team_to_key_event_pos[title][ct_team][1] += y_pos.tolist()
+                    title_to_team_to_key_event_pos[title][ct_team][0].extend(x_pos.tolist())
+                    title_to_team_to_key_event_pos[title][ct_team][1].extend(y_pos.tolist())
+                    if debug_event_counting:
+                        per_trajectory_num_key_events += int(num_events_per_tick_with_event[i])
             else:
                 cur_player_d2_img = Image.new("L", d2_img.size, color=0)
                 cur_player_d2_drw = ImageDraw.Draw(cur_player_d2_img)
@@ -279,8 +289,8 @@ def plot_one_trajectory_dataset(loaded_model: LoadedModel, id_df: pd.DataFrame, 
                 title_to_speeds[title] += clipped_scaled_speeds.tolist()
 
     # verify that got all key events
-    if trajectory_filter_options.only_kill or trajectory_filter_options.only_killed or \
-            trajectory_filter_options.only_shots:
+    if debug_event_counting and (trajectory_filter_options.only_kill or trajectory_filter_options.only_killed or
+                                 trajectory_filter_options.only_shots):
         per_trajectory_indices_not_in_overall = per_trajectory_key_event_indices.difference(overall_key_event_indices)
         if not len(per_trajectory_indices_not_in_overall) == 0:
             print(f"How is per trajectory getting extra indices {per_trajectory_indices_not_in_overall}")
