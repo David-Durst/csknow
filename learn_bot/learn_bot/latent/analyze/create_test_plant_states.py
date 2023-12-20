@@ -58,6 +58,7 @@ def create_test_plant_states():
 
 
     test_start_dfs = []
+    total_save_or_push_rounds = 0
     for hdf5_wrapper in load_data_result.multi_hdf5_wrapper.hdf5_wrappers:
         df = load_hdf5_to_pd(hdf5_wrapper.hdf5_path, cols_to_get=cols_to_gets)
         id_df = hdf5_wrapper.id_df
@@ -71,9 +72,13 @@ def create_test_plant_states():
             start_df = start_df[start_df[get_similarity_column(0)] > 0.5]
         elif filter_for_save:
             start_df = start_df[start_df[get_similarity_column(0)] < 0.5]
+        total_save_or_push_rounds += len(start_df)
         test_start_df = start_df[~start_df[round_id_column].isin(train_test_split.train_group_ids)].copy()
         test_start_df[num_ct_alive_column] = test_start_df[ct_alive_cols].sum(axis=1)
         test_start_df[num_t_alive_column] = test_start_df[t_alive_cols].sum(axis=1)
+        # 42 has like 20 save rounds, but all fail the 4/3 alive test
+        #if '42' in str(hdf5_wrapper.hdf5_path.name):
+        #    print('round with no entries in test fitting 4/3 constraint')
         if filter_for_players_alive:
             test_start_df = test_start_df[(test_start_df[num_ct_alive_column] <= 4) &
                                           (test_start_df[num_t_alive_column] <= 3)]

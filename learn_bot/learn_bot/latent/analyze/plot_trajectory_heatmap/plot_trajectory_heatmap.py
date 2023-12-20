@@ -67,6 +67,7 @@ def run_one_dataset_trajectory_heatmap(use_all_human_data: bool, title: str,
             if use_all_human_data:
                 hdf5_key = str(hdf5_wrapper.hdf5_path.name)
                 if hdf5_key not in hdf5_to_round_ids:
+                    #print(f'skipping {hdf5_key}')
                     continue
                 trajectory_filter_options = \
                     dataclasses.replace(base_trajectory_filter_options, valid_round_ids=set(hdf5_to_round_ids[hdf5_key]))
@@ -165,4 +166,4 @@ if __name__ == "__main__":
     if sys.argv[2] == 'invalid':
         title_to_loaded_model = {}
         title_to_hdf5_to_round_ids = {}
-        #run_trajectory_heatmaps(True)
+        run_trajectory_heatmaps(True)
