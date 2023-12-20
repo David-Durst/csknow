@@ -120,10 +120,10 @@ def run_trajectory_heatmaps(plot_only_first_hdf5_file_train_and_test: bool):
 
     os.makedirs(plots_path / 'diff', exist_ok=True)
 
-    run_trajectory_heatmaps_one_filter_option(TrajectoryFilterOptions(compute_speeds=True, compute_lifetimes=True,
-                                                                      compute_shots_per_kill=True),
-                                              rollout_extensions, diff_indices, plots_path,
-                                              plot_only_first_hdf5_file_train_and_test)
+    #run_trajectory_heatmaps_one_filter_option(TrajectoryFilterOptions(compute_speeds=True, compute_lifetimes=True,
+    #                                                                  compute_shots_per_kill=True),
+    #                                          rollout_extensions, diff_indices, plots_path,
+    #                                          plot_only_first_hdf5_file_train_and_test)
 
     # plot distributions during key events
     run_trajectory_heatmaps_one_filter_option(TrajectoryFilterOptions(compute_speeds=True, only_kill=True),
@@ -141,6 +141,8 @@ def run_trajectory_heatmaps(plot_only_first_hdf5_file_train_and_test: bool):
     run_trajectory_heatmaps_one_filter_option(TrajectoryFilterOptions(compute_speeds=True, only_shots=True),
                                               rollout_extensions, diff_indices, plots_path,
                                               plot_only_first_hdf5_file_train_and_test)
+
+    quit(0)
 
     for region_constraint_str, region_constraint in region_constraints.items():
         # haven't had luck seeing anything interesting with just one player

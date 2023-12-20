@@ -104,7 +104,7 @@ def compute_overall_key_event_indices(vis_df: pd.DataFrame,
 
 # debugging to make sure that get all events even with filtering
 # this requires disabling restricting to push only round ids, as want to tie out with overall count numbers
-debug_event_counting = False
+debug_event_counting = True
 
 
 def plot_one_trajectory_dataset(loaded_model: LoadedModel, id_df: pd.DataFrame, vis_df: pd.DataFrame,
@@ -138,6 +138,12 @@ def plot_one_trajectory_dataset(loaded_model: LoadedModel, id_df: pd.DataFrame, 
             title_to_key_events[title] = 0
         title_to_key_events[title] += overall_num_key_events
         per_trajectory_key_event_indices = set()
+        # these are tracked across data sets, so need to account for that when compare to events in just this data set
+        if title in title_to_team_to_key_event_pos:
+            prior_datasets_per_trajectory_num_key_events = len(title_to_team_to_key_event_pos[title][True][0]) + \
+                                                           len(title_to_team_to_key_event_pos[title][False][0])
+        else:
+            prior_datasets_per_trajectory_num_key_events = 0
 
     for trajectory_id in trajectory_ids:
         trajectory_np = dataset[trajectory_id_col == trajectory_id]
@@ -260,8 +266,8 @@ def plot_one_trajectory_dataset(loaded_model: LoadedModel, id_df: pd.DataFrame, 
                         title_to_team_to_key_event_pos[title][ct_team] = ([], [])
                     # add multiple entries for ticks with multiple copies of each event
                     for _ in range(int(num_events_per_tick_with_event[i])):
-                        title_to_team_to_key_event_pos[title][ct_team][0].extend(x_pos.tolist())
-                        title_to_team_to_key_event_pos[title][ct_team][1].extend(y_pos.tolist())
+                        title_to_team_to_key_event_pos[title][ct_team][0].append(x_pos[i])
+                        title_to_team_to_key_event_pos[title][ct_team][1].append(y_pos[i])
             else:
                 cur_player_d2_img = Image.new("L", d2_img.size, color=0)
                 cur_player_d2_drw = ImageDraw.Draw(cur_player_d2_img)
@@ -303,24 +309,27 @@ def plot_one_trajectory_dataset(loaded_model: LoadedModel, id_df: pd.DataFrame, 
 
 
     # verify that got all key events
-    if debug_event_counting and (trajectory_filter_options.only_kill or trajectory_filter_options.only_killed or
-                                 trajectory_filter_options.only_shots):
+    if debug_event_counting and trajectory_filter_options.filtering_key_events():
         per_trajectory_indices_not_in_overall = per_trajectory_key_event_indices.difference(overall_key_event_indices)
         if not len(per_trajectory_indices_not_in_overall) == 0:
             print(f"How is per trajectory getting extra indices {per_trajectory_indices_not_in_overall}")
         overall_indices_not_in_per_trajectory = overall_key_event_indices.difference(per_trajectory_key_event_indices)
         if not len(overall_indices_not_in_per_trajectory) == 0:
             print("overall has more indices")
-            print(loaded_model.cur_hdf5_index)
+            print(f"hdf5 index {loaded_model.cur_hdf5_index}")
+            print("missing entries in id_df")
             print(id_df.loc[list(overall_indices_not_in_per_trajectory)])
+            print("first complete missing entry")
             print(id_df.loc[list(overall_indices_not_in_per_trajectory)].iloc[0])
-        per_trajectory_num_key_events = len(title_to_team_to_key_event_pos[title][True]) + \
-                                        len(title_to_team_to_key_event_pos[title][False])
+        all_data_sets_per_trajectory_num_key_events = len(title_to_team_to_key_event_pos[title][True][0]) + \
+                                                      len(title_to_team_to_key_event_pos[title][False][0])
+        per_trajectory_num_key_events = all_data_sets_per_trajectory_num_key_events - \
+                                        prior_datasets_per_trajectory_num_key_events
         if overall_num_key_events != per_trajectory_num_key_events:
-            print("overall has more events")
-            print(loaded_model.cur_hdf5_index)
-            print(overall_num_key_events)
-            print(per_trajectory_num_key_events)
+            print("overall and per trajectory different number of events")
+            print(f"hdf5 index {loaded_model.cur_hdf5_index}")
+            print(f"overall num key events {overall_num_key_events}")
+            print(f"per trajectory num key events {per_trajectory_num_key_events}")
 
 
 scale_factor = 0
@@ -413,15 +422,16 @@ saturated_t_color_list = [178, 69, 2, 0]
 
 def plot_trajectories_to_image(titles: List[str], plot_teams_separately: bool, plots_path: Path,
                                trajectory_filter_options: TrajectoryFilterOptions):
-    title_images: List[Image.Image] = []
-
-    scale_buffers_by_points(titles)
     #print(f"max pixel value after scaling before clamp to 255 {max_value}")
     if debug_event_counting:
+        print(str(trajectory_filter_options))
         print(title_to_key_events["Human"])
         print(len(title_to_team_to_key_event_pos["Human"][True][0]) +
               len(title_to_team_to_key_event_pos["Human"][True][1]))
-        quit(0)
+        return
+
+    title_images: List[Image.Image] = []
+    scale_buffers_by_points(titles)
 
     for title in titles:
         images_per_title: List[Image.Image] = []
