@@ -19,6 +19,7 @@ class TrajectoryFilterOptions:
     round_game_seconds: Optional[range] = None
     only_kill: bool = False
     only_killed: bool = False
+    only_killed_or_end: bool = False
     only_shots: bool = False
     compute_lifetimes: bool = False
     compute_speeds: bool = False
@@ -40,6 +41,10 @@ class TrajectoryFilterOptions:
             if compound_name != '':
                 compound_name += '_'
             compound_name += f'only_killed'
+        if self.only_killed_or_end:
+            if compound_name != '':
+                compound_name += '_'
+            compound_name += f'only_killed_or_end'
         if self.only_shots:
             if compound_name != '':
                 compound_name += '_'
@@ -49,7 +54,7 @@ class TrajectoryFilterOptions:
         return compound_name
 
     def filtering_key_events(self) -> bool:
-        return self.only_kill or self.only_killed or self.only_shots
+        return self.only_kill or self.only_killed or self.only_killed_or_end or self.only_shots
 
 
 default_trajectory_filter_options = TrajectoryFilterOptions()

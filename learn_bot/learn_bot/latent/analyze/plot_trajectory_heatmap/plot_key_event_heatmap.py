@@ -53,10 +53,12 @@ def plot_key_event_heatmaps(title_to_team_to_key_event_pos: title_to_team_to_pos
         max_points = max(max_points, len(team_to_key_event_pos[False][0]))
 
     event = ""
-    if trajectory_filter_options.only_killed:
-        event = "Deaths"
-    elif trajectory_filter_options.only_kill:
+    if trajectory_filter_options.only_kill:
         event = "Kills"
+    elif trajectory_filter_options.only_killed:
+        event = "Deaths"
+    elif trajectory_filter_options.only_killed_or_end:
+        event = "DeathsAndEnds"
     elif trajectory_filter_options.only_shots:
         event = "Shots"
 

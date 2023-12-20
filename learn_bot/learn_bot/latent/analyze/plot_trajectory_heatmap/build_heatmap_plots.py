@@ -133,7 +133,6 @@ def plot_one_trajectory_dataset(loaded_model: LoadedModel, id_df: pd.DataFrame, 
             title_to_key_events[title] = 0
         title_to_key_events[title] += overall_num_key_events
         per_trajectory_key_event_indices = set()
-        per_trajectory_num_key_events = 0
 
     for trajectory_id in trajectory_ids:
         trajectory_np = dataset[trajectory_id_col == trajectory_id]
@@ -219,6 +218,10 @@ def plot_one_trajectory_dataset(loaded_model: LoadedModel, id_df: pd.DataFrame, 
                 event_series = alive_trajectory_vis_df[player_place_area_columns.player_kill_next_tick]
             elif trajectory_filter_options.only_killed:
                 event_series = alive_trajectory_vis_df[player_place_area_columns.player_killed_next_tick]
+            elif trajectory_filter_options.only_killed_or_end:
+                # either killed next tick, or alive on the last tick
+                event_series = np.maximum(alive_trajectory_vis_df[player_place_area_columns.player_killed_next_tick],
+                                          alive_trajectory_vis_df.index == trajectory_vis_df.index[-1])
             elif trajectory_filter_options.only_shots:
                 event_series = alive_trajectory_vis_df[player_place_area_columns.player_shots_cur_tick]
             else:
@@ -230,9 +233,9 @@ def plot_one_trajectory_dataset(loaded_model: LoadedModel, id_df: pd.DataFrame, 
                 event_constraint = event_series > 0.5
                 alive_trajectory_np = alive_trajectory_np[event_constraint]
                 alive_trajectory_vis_df = alive_trajectory_vis_df[event_constraint]
+                num_events_per_tick_with_event = event_series[event_constraint].tolist()
                 if debug_event_counting:
                     per_trajectory_key_event_indices.update(alive_trajectory_vis_df.index.tolist())
-                    num_events_per_tick_with_event = event_series[event_constraint].tolist()
             if trajectory_filter_options.compute_lifetimes and \
                     (trajectory_filter_options.only_kill or trajectory_filter_options.only_killed or
                      trajectory_filter_options.only_shots):
@@ -246,17 +249,17 @@ def plot_one_trajectory_dataset(loaded_model: LoadedModel, id_df: pd.DataFrame, 
             canvas_pos_xy = list(zip(list(canvas_pos_x_np), list(canvas_pos_y_np)))
 
             buffer = title_to_buffers[title].get_buffer(ct_team)
-            if trajectory_filter_options.only_kill or trajectory_filter_options.only_killed or trajectory_filter_options.only_shots:
+            if filtering_key_events:
                 for i, pos_xy in enumerate(canvas_pos_xy):
                     #buffer[pos_xy[0], pos_xy[1]] += num_events_per_tick_with_event[i]
                     if title not in title_to_team_to_key_event_pos:
                         title_to_team_to_key_event_pos[title] = {}
                     if ct_team not in title_to_team_to_key_event_pos[title]:
                         title_to_team_to_key_event_pos[title][ct_team] = ([], [])
-                    title_to_team_to_key_event_pos[title][ct_team][0].extend(x_pos.tolist())
-                    title_to_team_to_key_event_pos[title][ct_team][1].extend(y_pos.tolist())
-                    if debug_event_counting:
-                        per_trajectory_num_key_events += int(num_events_per_tick_with_event[i])
+                    # add multiple entries for ticks with multiple copies of each event
+                    for _ in range(int(num_events_per_tick_with_event[i])):
+                        title_to_team_to_key_event_pos[title][ct_team][0].extend(x_pos.tolist())
+                        title_to_team_to_key_event_pos[title][ct_team][1].extend(y_pos.tolist())
             else:
                 cur_player_d2_img = Image.new("L", d2_img.size, color=0)
                 cur_player_d2_drw = ImageDraw.Draw(cur_player_d2_img)
@@ -300,6 +303,8 @@ def plot_one_trajectory_dataset(loaded_model: LoadedModel, id_df: pd.DataFrame, 
             print(loaded_model.cur_hdf5_index)
             print(id_df.loc[list(overall_indices_not_in_per_trajectory)])
             print(id_df.loc[list(overall_indices_not_in_per_trajectory)].iloc[0])
+        per_trajectory_num_key_events = len(title_to_team_to_key_event_pos[title][True]) + \
+                                        len(title_to_team_to_key_event_pos[title][False])
         if overall_num_key_events != per_trajectory_num_key_events:
             print("overall has more events")
             print(loaded_model.cur_hdf5_index)
