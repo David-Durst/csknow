@@ -22,21 +22,41 @@ from learn_bot.latent.load_model import LoadedModel
 from learn_bot.latent.order.column_names import team_strs
 from learn_bot.latent.place_area.column_names import specific_player_place_area_columns
 from learn_bot.libs.io_transforms import CPU_DEVICE_STR
+from learn_bot.libs.vec import Vec3
+
+
+@dataclass
+class TrajectoryPoints:
+    x_pos: np.ndarray
+    y_pos: np.ndarray
+    z_pos: np.ndarray
 
 
 class ImageBuffers:
     ct_buffer: np.ndarray
+    # x/y pos in world coordinates, not image coordinates like for the image
+    ct_points: List[TrajectoryPoints]
     t_buffer: np.ndarray
+    t_points: List[TrajectoryPoints]
 
     def __init__(self):
         self.ct_buffer = np.zeros(d2_img.size, dtype=np.intc)
+        self.ct_points = []
         self.t_buffer = np.zeros(d2_img.size, dtype=np.intc)
+        self.t_points = []
 
     def get_buffer(self, ct_team) -> np.ndarray:
         if ct_team:
             return self.ct_buffer
         else:
             return self.t_buffer
+
+    def get_points(self, ct_team) -> List[TrajectoryPoints]:
+        if ct_team:
+            return self.ct_points
+        else:
+            return self.t_points
+
 
 spread_radius = 2
 title_to_buffers: Dict[str, ImageBuffers] = {}
@@ -46,7 +66,14 @@ title_to_speeds: Dict[str, List[float]] = {}
 title_to_shots_per_kill: Dict[str, List[float]] = {}
 title_to_key_events: Dict[str, int] = {}
 title_to_team_to_pos_dict = Dict[str, Dict[bool, Tuple[List[float], List[float]]]]
+# this is different from buffers as buffers stores each point exactly once
+# this can store a point multiple times if multiple events happened on that point (need to weight it)
+# such as shooting multiple bullets in same point (as span time over multiple shots in 64ms)
 title_to_team_to_key_event_pos: title_to_team_to_pos_dict = {}
+
+
+def get_title_to_buffers() -> Dict[str, ImageBuffers]:
+    return title_to_buffers
 
 
 def get_title_to_num_points() -> Dict[str, int]:
@@ -138,12 +165,6 @@ def plot_one_trajectory_dataset(loaded_model: LoadedModel, id_df: pd.DataFrame, 
             title_to_key_events[title] = 0
         title_to_key_events[title] += overall_num_key_events
         per_trajectory_key_event_indices = set()
-        # these are tracked across data sets, so need to account for that when compare to events in just this data set
-        if title in title_to_team_to_key_event_pos:
-            prior_datasets_per_trajectory_num_key_events = len(title_to_team_to_key_event_pos[title][True][0]) + \
-                                                           len(title_to_team_to_key_event_pos[title][False][0])
-        else:
-            prior_datasets_per_trajectory_num_key_events = 0
 
     for trajectory_id in trajectory_ids:
         trajectory_np = dataset[trajectory_id_col == trajectory_id]
@@ -251,12 +272,14 @@ def plot_one_trajectory_dataset(loaded_model: LoadedModel, id_df: pd.DataFrame, 
 
             x_pos = alive_trajectory_np[:, loaded_model.model.nested_players_pos_columns_tensor[player_index, 0, 0]]
             y_pos = alive_trajectory_np[:, loaded_model.model.nested_players_pos_columns_tensor[player_index, 0, 1]]
+            z_pos = alive_trajectory_np[:, loaded_model.model.nested_players_pos_columns_tensor[player_index, 0, 2]]
             canvas_pos_np = convert_to_canvas_coordinates(x_pos, y_pos)
             canvas_pos_x_np = canvas_pos_np[0].astype(np.intc)
             canvas_pos_y_np = canvas_pos_np[1].astype(np.intc)
             canvas_pos_xy = list(zip(list(canvas_pos_x_np), list(canvas_pos_y_np)))
 
             buffer = title_to_buffers[title].get_buffer(ct_team)
+            points = title_to_buffers[title].get_points(ct_team)
             if trajectory_filter_options.filtering_key_events():
                 for i, pos_xy in enumerate(canvas_pos_xy):
                     #buffer[pos_xy[0], pos_xy[1]] += num_events_per_tick_with_event[i]
@@ -273,6 +296,7 @@ def plot_one_trajectory_dataset(loaded_model: LoadedModel, id_df: pd.DataFrame, 
                 cur_player_d2_drw = ImageDraw.Draw(cur_player_d2_img)
                 cur_player_d2_drw.line(xy=canvas_pos_xy, fill=1, width=5)
                 buffer += np.asarray(cur_player_d2_img)
+                points.append(TrajectoryPoints(x_pos, y_pos, z_pos))
             title_to_num_points[title] += len(alive_trajectory_np)
             if trajectory_filter_options.compute_lifetimes:
                 if title not in title_to_lifetimes:
@@ -308,8 +332,10 @@ def plot_one_trajectory_dataset(loaded_model: LoadedModel, id_df: pd.DataFrame, 
                     title_to_shots_per_kill[title].append(num_shots / num_kills)
 
 
-    # verify that got all key events
-    if debug_event_counting and trajectory_filter_options.filtering_key_events():
+    # verify that got all key events, no need to check compound as already have killed and end not part of data set
+    # just a last entry in round (which must exist)
+    if debug_event_counting and trajectory_filter_options.filtering_key_events() and \
+            not trajectory_filter_options.only_killed_or_end:
         per_trajectory_indices_not_in_overall = per_trajectory_key_event_indices.difference(overall_key_event_indices)
         if not len(per_trajectory_indices_not_in_overall) == 0:
             print(f"How is per trajectory getting extra indices {per_trajectory_indices_not_in_overall}")
@@ -321,14 +347,12 @@ def plot_one_trajectory_dataset(loaded_model: LoadedModel, id_df: pd.DataFrame, 
             print(id_df.loc[list(overall_indices_not_in_per_trajectory)])
             print("first complete missing entry")
             print(id_df.loc[list(overall_indices_not_in_per_trajectory)].iloc[0])
-        all_data_sets_per_trajectory_num_key_events = len(title_to_team_to_key_event_pos[title][True][0]) + \
-                                                      len(title_to_team_to_key_event_pos[title][False][0])
-        per_trajectory_num_key_events = all_data_sets_per_trajectory_num_key_events - \
-                                        prior_datasets_per_trajectory_num_key_events
-        if overall_num_key_events != per_trajectory_num_key_events:
+        per_trajectory_num_key_events = len(title_to_team_to_key_event_pos[title][True][0]) + \
+                                        len(title_to_team_to_key_event_pos[title][False][0])
+        if title_to_key_events[title] != per_trajectory_num_key_events:
             print("overall and per trajectory different number of events")
             print(f"hdf5 index {loaded_model.cur_hdf5_index}")
-            print(f"overall num key events {overall_num_key_events}")
+            print(f"overall num key events {title_to_key_events[title]}")
             print(f"per trajectory num key events {per_trajectory_num_key_events}")
 
 
@@ -427,7 +451,7 @@ def plot_trajectories_to_image(titles: List[str], plot_teams_separately: bool, p
         print(str(trajectory_filter_options))
         print(title_to_key_events["Human"])
         print(len(title_to_team_to_key_event_pos["Human"][True][0]) +
-              len(title_to_team_to_key_event_pos["Human"][True][1]))
+              len(title_to_team_to_key_event_pos["Human"][False][0]))
         return
 
     title_images: List[Image.Image] = []
