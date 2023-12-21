@@ -25,19 +25,12 @@ from learn_bot.libs.io_transforms import CPU_DEVICE_STR
 from learn_bot.libs.vec import Vec3
 
 
-@dataclass
-class TrajectoryPoints:
-    x_pos: np.ndarray
-    y_pos: np.ndarray
-    z_pos: np.ndarray
-
-
 class ImageBuffers:
     ct_buffer: np.ndarray
     # x/y pos in world coordinates, not image coordinates like for the image
-    ct_points: List[TrajectoryPoints]
+    ct_points: List[np.ndarray]
     t_buffer: np.ndarray
-    t_points: List[TrajectoryPoints]
+    t_points: List[np.ndarray]
 
     def __init__(self):
         self.ct_buffer = np.zeros(d2_img.size, dtype=np.intc)
@@ -51,7 +44,7 @@ class ImageBuffers:
         else:
             return self.t_buffer
 
-    def get_points(self, ct_team) -> List[TrajectoryPoints]:
+    def get_points(self, ct_team) -> List[np.ndarray]:
         if ct_team:
             return self.ct_points
         else:
@@ -270,10 +263,8 @@ def plot_one_trajectory_dataset(loaded_model: LoadedModel, id_df: pd.DataFrame, 
                      trajectory_filter_options.only_shots):
                 raise Exception("can't filter to kill/killed/shot events and compute lifetimes")
 
-            x_pos = alive_trajectory_np[:, loaded_model.model.nested_players_pos_columns_tensor[player_index, 0, 0]]
-            y_pos = alive_trajectory_np[:, loaded_model.model.nested_players_pos_columns_tensor[player_index, 0, 1]]
-            z_pos = alive_trajectory_np[:, loaded_model.model.nested_players_pos_columns_tensor[player_index, 0, 2]]
-            canvas_pos_np = convert_to_canvas_coordinates(x_pos, y_pos)
+            world_pos = alive_trajectory_np[:, loaded_model.model.nested_players_pos_columns_tensor[player_index, 0, :]]
+            canvas_pos_np = convert_to_canvas_coordinates(world_pos[:, 0], world_pos[:, 1])
             canvas_pos_x_np = canvas_pos_np[0].astype(np.intc)
             canvas_pos_y_np = canvas_pos_np[1].astype(np.intc)
             canvas_pos_xy = list(zip(list(canvas_pos_x_np), list(canvas_pos_y_np)))
@@ -289,14 +280,14 @@ def plot_one_trajectory_dataset(loaded_model: LoadedModel, id_df: pd.DataFrame, 
                         title_to_team_to_key_event_pos[title][ct_team] = ([], [])
                     # add multiple entries for ticks with multiple copies of each event
                     for _ in range(int(num_events_per_tick_with_event[i])):
-                        title_to_team_to_key_event_pos[title][ct_team][0].append(x_pos[i])
-                        title_to_team_to_key_event_pos[title][ct_team][1].append(y_pos[i])
+                        title_to_team_to_key_event_pos[title][ct_team][0].append(world_pos[i, 0])
+                        title_to_team_to_key_event_pos[title][ct_team][1].append(world_pos[i, 1])
             else:
                 cur_player_d2_img = Image.new("L", d2_img.size, color=0)
                 cur_player_d2_drw = ImageDraw.Draw(cur_player_d2_img)
                 cur_player_d2_drw.line(xy=canvas_pos_xy, fill=1, width=5)
                 buffer += np.asarray(cur_player_d2_img)
-                points.append(TrajectoryPoints(x_pos, y_pos, z_pos))
+                points.append(world_pos)
             title_to_num_points[title] += len(alive_trajectory_np)
             if trajectory_filter_options.compute_lifetimes:
                 if title not in title_to_lifetimes:
