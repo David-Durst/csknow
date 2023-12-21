@@ -146,8 +146,6 @@ def run_trajectory_heatmaps(plot_only_first_hdf5_file_train_and_test: bool):
                                               rollout_extensions, diff_indices, plots_path,
                                               plot_only_first_hdf5_file_train_and_test)
 
-    quit(0)
-
     for region_constraint_str, region_constraint in region_constraints.items():
         # haven't had luck seeing anything interesting with just one player
         #run_trajectory_heatmaps_one_filter_option(TrajectoryFilterOptions(player_starts_in_region=region_constraint,
