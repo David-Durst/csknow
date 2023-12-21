@@ -88,14 +88,14 @@ b_car_constraint_str = 'B Car'
 b_tuns_constraint_str = 'B Tuns'
 
 region_constraints: Dict[str, AABB] = {
-    #a_long_constraint_str: a_long_constraint,
-    #a_cat_constraint_str: a_cat_constraint,
-    #a_site_constraint_str: a_site_constraint,
-    #a_ramp_constraint_str: a_ramp_constraint,
+    a_long_constraint_str: a_long_constraint,
+    a_cat_constraint_str: a_cat_constraint,
+    a_site_constraint_str: a_site_constraint,
+    a_ramp_constraint_str: a_ramp_constraint,
     mid_doors_constraint_str: mid_doors_constraint,
-    #b_doors_constraint_str: b_doors_constraint,
-    #b_back_plat_constraint_str: b_backplat_constraint,
-    #b_site_constraint_str: b_site_constraint,
-    #b_car_constraint_str: b_car_constraint,
-    #b_tuns_constraint_str: b_tuns_constraint,
+    b_doors_constraint_str: b_doors_constraint,
+    b_back_plat_constraint_str: b_backplat_constraint,
+    b_site_constraint_str: b_site_constraint,
+    b_car_constraint_str: b_car_constraint,
+    b_tuns_constraint_str: b_tuns_constraint,
 }

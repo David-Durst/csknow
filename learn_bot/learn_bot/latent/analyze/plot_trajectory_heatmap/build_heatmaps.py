@@ -14,6 +14,8 @@ from learn_bot.latent.analyze.compare_trajectories.plot_trajectories_from_compar
     concat_vertical
 from learn_bot.latent.analyze.knn.plot_min_distance_rounds import game_tick_rate
 from learn_bot.latent.analyze.plot_trajectory_heatmap.filter_trajectories import TrajectoryFilterOptions
+from learn_bot.latent.analyze.plot_trajectory_heatmap.split_discontinuities import \
+    identify_discontinuity_indices_in_valid_points, split_list_by_valid_points
 from learn_bot.latent.analyze.test_traces.run_trace_visualization import d2_img, convert_to_canvas_coordinates, \
     bot_ct_color_list, replay_ct_color_list, bot_t_color_list, replay_t_color_list
 from learn_bot.latent.engagement.column_names import round_id_column, game_tick_number_column
@@ -185,11 +187,14 @@ def plot_one_trajectory_dataset(loaded_model: LoadedModel, id_df: pd.DataFrame, 
                     (player_pos_x_np <= trajectory_filter_options.player_starts_in_region.max.x) &
                     (player_pos_y_np >= trajectory_filter_options.player_starts_in_region.min.y) &
                     (player_pos_y_np <= trajectory_filter_options.player_starts_in_region.max.y))
+            # within a trajectory, players can leave and enter the region of interest, creating discontinuous trajectories
+            # identify those splits so can plot them separately
+            # can't happen with time because only have one continuous time region per plot
+            trajectory_valid_discontinuities = identify_discontinuity_indices_in_valid_points(player_in_region)
         else:
             player_in_region = trajectory_np[:, 0] == trajectory_np[:, 0]
+            trajectory_valid_discontinuities = None
         trajectory_np = trajectory_np[player_in_region]
-        # within a trajectory, players can leave and enter the region of interest, creating discontinuous trajectories
-        # identify those splits so can plot them separately
 
         if trajectory_filter_options.filtering_key_events() and \
                 (trajectory_filter_options.round_game_seconds is not None or
@@ -268,10 +273,6 @@ def plot_one_trajectory_dataset(loaded_model: LoadedModel, id_df: pd.DataFrame, 
             canvas_pos_y_np = canvas_pos_np[1].astype(np.intc)
             canvas_pos_xy = list(zip(list(canvas_pos_x_np), list(canvas_pos_y_np)))
 
-            for i in range(len(x_pos) - 1):
-                if np.abs(x_pos[i] - x_pos[i+1]) > 200:
-                    print('hi')
-
             buffer = title_to_buffers[title].get_buffer(ct_team)
             if trajectory_filter_options.filtering_key_events():
                 for i, pos_xy in enumerate(canvas_pos_xy):
@@ -287,8 +288,13 @@ def plot_one_trajectory_dataset(loaded_model: LoadedModel, id_df: pd.DataFrame, 
                         title_to_team_to_key_event_pos[title][ct_team][1].append(y_pos[i])
             else:
                 cur_player_d2_img = Image.new("L", d2_img.size, color=0)
+                # blending occurs across images, so want to keep same number of images (1 per player trajectory)
+                # no matter how many discontinuities occur in each player's trajectory
+                # can differ per player even in same round due to early deaths
                 cur_player_d2_drw = ImageDraw.Draw(cur_player_d2_img)
-                cur_player_d2_drw.line(xy=canvas_pos_xy, fill=1, width=5)
+                for continuous_canvas_pos_xy in split_list_by_valid_points(canvas_pos_xy,
+                                                                           trajectory_valid_discontinuities):
+                    cur_player_d2_drw.line(xy=continuous_canvas_pos_xy, fill=1, width=5)
                 buffer += np.asarray(cur_player_d2_img)
             title_to_num_points[title] += len(alive_trajectory_np)
             if trajectory_filter_options.compute_lifetimes:
