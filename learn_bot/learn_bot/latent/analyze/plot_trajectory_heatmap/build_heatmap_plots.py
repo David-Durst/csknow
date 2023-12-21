@@ -262,7 +262,8 @@ def plot_one_trajectory_dataset(loaded_model: LoadedModel, id_df: pd.DataFrame, 
             buffer = title_to_buffers[title].get_buffer(ct_team)
             if trajectory_filter_options.filtering_key_events():
                 for i, pos_xy in enumerate(canvas_pos_xy):
-                    #buffer[pos_xy[0], pos_xy[1]] += num_events_per_tick_with_event[i]
+                    # drawing not useful as so few points and no lines connecting them, but good for computing EMD
+                    buffer[pos_xy[0], pos_xy[1]] += num_events_per_tick_with_event[i]
                     if title not in title_to_team_to_key_event_pos:
                         title_to_team_to_key_event_pos[title] = {}
                     if ct_team not in title_to_team_to_key_event_pos[title]:
