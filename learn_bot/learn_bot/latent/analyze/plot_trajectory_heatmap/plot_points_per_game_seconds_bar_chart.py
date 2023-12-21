@@ -3,7 +3,7 @@ from typing import List, Dict, Set
 
 import pandas as pd
 
-from learn_bot.latent.analyze.plot_trajectory_heatmap.build_heatmap_plots import get_title_to_num_points
+from learn_bot.latent.analyze.plot_trajectory_heatmap.build_heatmaps import get_title_to_num_points
 
 data_points_per_game_seconds: List[Dict] = []
 data_set_titles: Set = set()

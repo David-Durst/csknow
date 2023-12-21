@@ -8,15 +8,15 @@ from matplotlib import pyplot as plt
 
 from learn_bot.latent.analyze.compare_trajectories.process_trajectory_comparison import plot_hist, generate_bins
 from learn_bot.latent.analyze.plot_trajectory_heatmap.filter_trajectories import TrajectoryFilterOptions
-from learn_bot.latent.analyze.plot_trajectory_heatmap.build_heatmap_plots import get_title_to_speeds, \
+from learn_bot.latent.analyze.plot_trajectory_heatmap.build_heatmaps import get_title_to_speeds, \
     get_title_to_lifetimes, get_title_to_shots_per_kill
 
 fig_length = 6
 
 
-def plot_one_metric_histograms(title_to_values: Dict[str, List[float]], metric_title: str,
-                               bin_width: Union[int, float], smallest_max: float,
-                               x_label: str, plot_file_path: Path):
+def compute_one_metric_histograms(title_to_values: Dict[str, List[float]], metric_title: str,
+                                  bin_width: Union[int, float], smallest_max: float,
+                                  x_label: str, plot_file_path: Path):
     num_titles = len(title_to_values.keys())
     fig = plt.figure(figsize=(fig_length, fig_length * num_titles), constrained_layout=True)
     axs = fig.subplots(num_titles, 1, squeeze=False)
@@ -44,15 +44,15 @@ def plot_one_metric_histograms(title_to_values: Dict[str, List[float]], metric_t
     plt.savefig(plot_file_path)
 
 
-def plot_metrics(trajectory_filter_options: TrajectoryFilterOptions, plots_path: Path):
+def compute_metrics(trajectory_filter_options: TrajectoryFilterOptions, plots_path: Path):
     if trajectory_filter_options.compute_speeds:
         # airstrafing can get you above normal weapon max speed
-        plot_one_metric_histograms(get_title_to_speeds(), 'Weapon/Scoped Scaled Speed', 0.1, 1., 'Percent Max Speed',
-                                   plots_path / ('speeds_' + str(trajectory_filter_options) + '.png'))
+        compute_one_metric_histograms(get_title_to_speeds(), 'Weapon/Scoped Scaled Speed', 0.1, 1., 'Percent Max Speed',
+                                      plots_path / ('speeds_' + str(trajectory_filter_options) + '.png'))
     if trajectory_filter_options.compute_lifetimes:
         # small timing mismatch can get 41 seconds on bomb timer
-        plot_one_metric_histograms(get_title_to_lifetimes(), 'Lifetimes', 5, 40., 'Lifetime Length (s)',
-                                   plots_path / ('lifetimes_' + str(trajectory_filter_options) + '.png'))
+        compute_one_metric_histograms(get_title_to_lifetimes(), 'Lifetimes', 5, 40., 'Lifetime Length (s)',
+                                      plots_path / ('lifetimes_' + str(trajectory_filter_options) + '.png'))
     if trajectory_filter_options.compute_shots_per_kill:
-        plot_one_metric_histograms(get_title_to_shots_per_kill(), 'Shots Per Kill', 1, 30., 'Shots Per Kill',
-                                   plots_path / ('shots_per_kill_' + str(trajectory_filter_options) + '.png'))
+        compute_one_metric_histograms(get_title_to_shots_per_kill(), 'Shots Per Kill', 1, 30., 'Shots Per Kill',
+                                      plots_path / ('shots_per_kill_' + str(trajectory_filter_options) + '.png'))

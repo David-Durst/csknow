@@ -5,7 +5,7 @@ from typing import List, Dict, Tuple
 import numpy as np
 from matplotlib import pyplot as plt
 
-from learn_bot.latent.analyze.plot_trajectory_heatmap.build_heatmap_plots import title_to_team_to_pos_dict
+from learn_bot.latent.analyze.plot_trajectory_heatmap.build_heatmaps import title_to_team_to_pos_dict
 from learn_bot.latent.analyze.plot_trajectory_heatmap.filter_trajectories import TrajectoryFilterOptions
 from learn_bot.latent.analyze.run_coverage import coverage_pickle_path
 

@@ -8,7 +8,7 @@ from scipy.optimize import linear_sum_assignment
 from skimage.measure import block_reduce
 from tqdm import tqdm
 
-from learn_bot.latent.analyze.plot_trajectory_heatmap.build_heatmap_plots import get_title_to_buffers, ImageBuffers
+from learn_bot.latent.analyze.plot_trajectory_heatmap.build_heatmaps import get_title_to_buffers, ImageBuffers
 from learn_bot.latent.analyze.plot_trajectory_heatmap.filter_trajectories import TrajectoryFilterOptions
 
 

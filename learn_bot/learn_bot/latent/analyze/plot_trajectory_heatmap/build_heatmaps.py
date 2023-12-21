@@ -8,7 +8,6 @@ import numpy as np
 import pandas as pd
 import torch
 from PIL import Image, ImageDraw
-from skimage.draw import line_aa, line
 
 from learn_bot.latent.analyze.compare_trajectories.plot_trajectories_and_events import title_font
 from learn_bot.latent.analyze.compare_trajectories.plot_trajectories_from_comparison import concat_horizontal, \
@@ -74,6 +73,10 @@ def get_title_to_shots_per_kill() -> Dict[str, List[float]]:
     return title_to_shots_per_kill
 
 
+def get_title_to_key_events() -> Dict[str, int]:
+    return title_to_key_events
+
+
 def get_title_to_team_to_key_event_pos() -> title_to_team_to_pos_dict:
     return title_to_team_to_key_event_pos
 
@@ -114,6 +117,10 @@ def compute_overall_key_event_indices(vis_df: pd.DataFrame,
 # debugging to make sure that get all events even with filtering
 # this requires disabling restricting to push only round ids, as want to tie out with overall count numbers
 debug_event_counting = False
+
+
+def get_debug_event_counting() -> bool:
+    return debug_event_counting
 
 
 def plot_one_trajectory_dataset(loaded_model: LoadedModel, id_df: pd.DataFrame, vis_df: pd.DataFrame,
@@ -181,6 +188,8 @@ def plot_one_trajectory_dataset(loaded_model: LoadedModel, id_df: pd.DataFrame, 
         else:
             player_in_region = trajectory_np[:, 0] == trajectory_np[:, 0]
         trajectory_np = trajectory_np[player_in_region]
+        # within a trajectory, players can leave and enter the region of interest, creating discontinuous trajectories
+        # identify those splits so can plot them separately
 
         if trajectory_filter_options.filtering_key_events() and \
                 (trajectory_filter_options.round_game_seconds is not None or
@@ -259,6 +268,10 @@ def plot_one_trajectory_dataset(loaded_model: LoadedModel, id_df: pd.DataFrame, 
             canvas_pos_y_np = canvas_pos_np[1].astype(np.intc)
             canvas_pos_xy = list(zip(list(canvas_pos_x_np), list(canvas_pos_y_np)))
 
+            for i in range(len(x_pos) - 1):
+                if np.abs(x_pos[i] - x_pos[i+1]) > 200:
+                    print('hi')
+
             buffer = title_to_buffers[title].get_buffer(ct_team)
             if trajectory_filter_options.filtering_key_events():
                 for i, pos_xy in enumerate(canvas_pos_xy):
@@ -336,178 +349,5 @@ def plot_one_trajectory_dataset(loaded_model: LoadedModel, id_df: pd.DataFrame, 
             print(f"per trajectory num key events {per_trajectory_num_key_events}")
 
 
-scale_factor = 0
-max_value = 0
 
 
-def plot_one_image_one_team(title: str, ct_team: bool, team_color: List, saturated_team_color: List,
-                            base_img: Image.Image, custom_buffer: Optional[np.ndarray] = None):
-    if custom_buffer is None:
-        buffer = title_to_buffers[title].get_buffer(ct_team)
-    else:
-        buffer = custom_buffer
-    color_buffer = buffer[:, :, np.newaxis].repeat(4, axis=2)
-    color_buffer[:, :, 0] = team_color[0]
-    color_buffer[:, :, 1] = team_color[1]
-    color_buffer[:, :, 2] = team_color[2]
-
-    # if saturate, then move to darker color to indicate
-    saturated_color_buffer_entries = color_buffer[:, :, 3] >= 255
-    if np.sum(saturated_color_buffer_entries) > 0:
-        percent_saturated = color_buffer[saturated_color_buffer_entries][:, 3] / max_value
-        full_alpha_team_color = np.asarray(team_color)
-        full_alpha_team_color[3] = 255
-        full_alpha_saturated_team_color = np.asarray(saturated_team_color)
-        full_alpha_saturated_team_color[3] = 255
-        color_buffer[saturated_color_buffer_entries] = \
-            (percent_saturated[:, np.newaxis].repeat(4, axis=1) *
-             full_alpha_saturated_team_color[np.newaxis, :].repeat(np.sum(saturated_color_buffer_entries), axis=0)) + \
-            ((1 - percent_saturated[:, np.newaxis].repeat(4, axis=1)) *
-             full_alpha_team_color[np.newaxis, :].repeat(np.sum(saturated_color_buffer_entries), axis=0))
-    uint8_color_buffer = np.uint8(color_buffer)
-    base_img.alpha_composite(Image.fromarray(uint8_color_buffer, 'RGBA'))
-
-    title_drw = ImageDraw.Draw(base_img)
-    if custom_buffer is None:
-        title_text = title + f", \n Num Points Both Teams {title_to_num_points[title]} Scale Factor {scale_factor}"
-    else:
-        title_text = title
-    _, _, w, h = title_drw.textbbox((0, 0), title_text, font=title_font)
-    title_drw.text(((d2_img.width - w) / 2, (d2_img.height * 0.1 - h) / 2),
-                   title_text, fill=(255, 255, 255, 255), font=title_font)
-
-
-def scale_buffers_by_points(titles: List[str]):
-    global scale_factor, max_value
-
-    max_points_per_title = 0
-    for title in titles:
-        max_points_per_title = max(max_points_per_title, title_to_num_points[title])
-    if max_points_per_title > 1e6:
-        scale_factor = 8
-    elif max_points_per_title > 5e5:
-        scale_factor = 11
-    elif max_points_per_title > 1e5:
-        scale_factor = 14
-    elif max_points_per_title > 5e4:
-        scale_factor = 19
-    elif max_points_per_title > 1e4:
-        scale_factor = 25
-    else:
-        scale_factor = 30
-    #scale_factor = int(25. / log(2.2 + max_points_per_title / 1300, 10))
-    # compute scaling factor for points
-    #max_99_percentile = -1
-    #for title in titles:
-    #    ct_buffer = title_to_buffers[title].get_buffer(True)
-    #    max_99_percentile = max(max_99_percentile, np.percentile(ct_buffer, 99))
-    #    #print(f'ct_buffer percentiles: f{np.percentile(ct_buffer, [50, 90, 95, 99, 99.9, 99.99, 99.999, 99.9999])}')
-    #    t_buffer = title_to_buffers[title].get_buffer(False)
-    #    max_99_percentile = max(max_99_percentile, np.percentile(t_buffer, 99))
-    #    #print(f't_buffer percentiles: f{np.percentile(ct_buffer, [50, 90, 95, 99, 99.9, 99.99, 99.999, 99.9999])}')
-    #scale_factor = int(ceil(255 / max_99_percentile))
-
-    # compute max value for color overflow
-    max_value = -1
-    for title in titles:
-        ct_buffer = title_to_buffers[title].get_buffer(True)
-        ct_buffer *= scale_factor
-        max_value = max(max_value, np.max(ct_buffer))
-        t_buffer = title_to_buffers[title].get_buffer(False)
-        t_buffer *= scale_factor
-        max_value = max(max_value, np.max(t_buffer))
-        #print(f"{title} ct max value {np.max(ct_buffer)}, argmax {np.unravel_index(ct_buffer.argmax(), ct_buffer.shape)}")
-        #print(f"{title} t max value {np.max(t_buffer)}, argmax {np.unravel_index(t_buffer.argmax(), t_buffer.shape)}")
-
-
-saturated_ct_color_list = [19, 2, 178, 0]
-saturated_t_color_list = [178, 69, 2, 0]
-
-
-def plot_trajectories_to_image(titles: List[str], plot_teams_separately: bool, plots_path: Path,
-                               trajectory_filter_options: TrajectoryFilterOptions):
-    #print(f"max pixel value after scaling before clamp to 255 {max_value}")
-    if debug_event_counting:
-        print(str(trajectory_filter_options))
-        print(title_to_key_events["Human"])
-        print(len(title_to_team_to_key_event_pos["Human"][True][0]) +
-              len(title_to_team_to_key_event_pos["Human"][False][0]))
-        return
-
-    title_images: List[Image.Image] = []
-    scale_buffers_by_points(titles)
-
-    for title in titles:
-        images_per_title: List[Image.Image] = []
-
-        # image with everyone
-        base_both_d2_img = d2_img.copy().convert("RGBA")
-        plot_one_image_one_team(title, True, bot_ct_color_list, saturated_ct_color_list, base_both_d2_img)
-        plot_one_image_one_team(title, False, bot_t_color_list, saturated_t_color_list, base_both_d2_img)
-        images_per_title.append(base_both_d2_img)
-
-        if plot_teams_separately:
-            # image with just ct
-            base_ct_d2_img = d2_img.copy().convert("RGBA")
-            plot_one_image_one_team(title, True, bot_ct_color_list, saturated_ct_color_list, base_ct_d2_img)
-            images_per_title.append(base_ct_d2_img)
-
-            # image with just t
-            base_t_d2_img = d2_img.copy().convert("RGBA")
-            plot_one_image_one_team(title, False, bot_t_color_list, saturated_t_color_list, base_t_d2_img)
-            images_per_title.append(base_t_d2_img)
-            title_images.append(concat_horizontal(images_per_title))
-        else:
-            title_images.append(images_per_title[0])
-
-    complete_image = concat_vertical(title_images)
-    complete_image.save(plots_path / (str(trajectory_filter_options) + '.png'))
-
-
-base_positive_color_list = [31, 210, 93, 0]
-saturated_positive_color_list = [17, 162, 144, 0]
-base_negative_color_list = [242, 48, 48, 0]
-saturated_negative_color_list = [162, 7, 146, 0]
-
-
-def plot_diff_one_image_one_team(title0: str, title1: str, ct_team: bool) -> Image.Image:
-    buffer0 = title_to_buffers[title0].get_buffer(ct_team)
-    buffer1 = title_to_buffers[title1].get_buffer(ct_team)
-    delta_buffer = buffer0 - buffer1
-
-    # split delta_buffer into two sub buffers (one positive, one negative), plot them independently
-    positive_delta_buffer = np.where(delta_buffer >= 0, delta_buffer, 0)
-    negative_delta_buffer = np.where(delta_buffer < 0, -1 * delta_buffer, 0)
-
-    base_green_img = Image.new("RGBA", d2_img.size, (0, 0, 0, 255))
-    ct_team_str = 'CT' if ct_team else 'T'
-    plot_one_image_one_team(f"{title0} (Green) vs {title1} (Red) {ct_team_str}", ct_team, base_positive_color_list,
-                            saturated_positive_color_list, base_green_img, positive_delta_buffer)
-    green_np = np.asarray(base_green_img)
-    base_red_img = Image.new("RGBA", d2_img.size, (0, 0, 0, 255))
-    plot_one_image_one_team(f"{title0} (Green) vs {title1} (Red) {ct_team_str}", ct_team, base_negative_color_list,
-                            saturated_negative_color_list, base_red_img, negative_delta_buffer)
-    red_np = np.asarray(base_red_img)
-
-    combined_np = red_np + green_np
-    #base_img = d2_img.copy().convert("RGBA")
-    #base_img.alpha_composite(Image.fromarray(combined_np, 'RGBA'))
-    #return base_img
-    return Image.fromarray(combined_np, 'RGBA')
-
-
-def plot_trajectory_diffs_to_image(titles: List[str], diff_indices: List[int], plots_path: Path,
-                                   trajectory_filter_options: TrajectoryFilterOptions):
-    # assuming already called plot_trajectories_to_image, so already did scaling
-    title_images: List[Image.Image] = []
-
-    for i, title in enumerate(titles[1:]):
-        images_per_title: List[Image.Image] = []
-
-        images_per_title.append(plot_diff_one_image_one_team(title, titles[diff_indices[i]], True))
-        images_per_title.append(plot_diff_one_image_one_team(title, titles[diff_indices[i]], False))
-
-        title_images.append(concat_horizontal(images_per_title))
-
-    complete_image = concat_vertical(title_images)
-    complete_image.save(plots_path / 'diff' / (str(trajectory_filter_options) + '.png'))
