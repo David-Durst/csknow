@@ -124,7 +124,7 @@ def compute_overall_key_event_indices(vis_df: pd.DataFrame,
 
 # debugging to make sure that get all events even with filtering
 # this requires disabling restricting to push only round ids, as want to tie out with overall count numbers
-debug_event_counting = True
+debug_event_counting = False
 
 
 def plot_one_trajectory_dataset(loaded_model: LoadedModel, id_df: pd.DataFrame, vis_df: pd.DataFrame,
