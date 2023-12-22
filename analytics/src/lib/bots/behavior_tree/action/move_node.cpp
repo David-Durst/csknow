@@ -81,9 +81,7 @@ namespace action {
 
                 Vec2 deltaViewAngle = targetViewAngle - curViewAngle;
                 deltaViewAngle.makeYawNeg180To180();
-                if (blackboard.isPlayerDefuser(curClient.csgoId) ||
-                    (!curPriority.learnedTargetPos && computeMagnitude(finalVector) > WIDTH/2) ||
-                    curPriority.learnedTargetPos) {
+                if (blackboard.isPlayerDefuser(curClient.csgoId) || computeMagnitude(finalVector) > WIDTH/2) {
                     moveInDir(curAction, deltaViewAngle);
                 }
 
@@ -107,7 +105,7 @@ namespace action {
 
                 // can't compare current nav area to target nav area as current nav area max z different from current pos z
                 // (see d2 slope to A site)
-                if (!curPriority.learnedTargetPos && handCraftedJump) {
+                if (handCraftedJump) {
                     // make sure moving into target in 2d
                     // check if aiming at enemy anywhere
                     /*
