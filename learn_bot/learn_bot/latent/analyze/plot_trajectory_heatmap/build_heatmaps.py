@@ -43,6 +43,7 @@ class ImageBuffers:
 
 spread_radius = 2
 title_to_buffers: Dict[str, ImageBuffers] = {}
+title_to_num_trajectory_ids: Dict[str, int] = {}
 title_to_num_points: Dict[str, int] = {}
 title_to_lifetimes: Dict[str, List[float]] = {}
 title_to_speeds: Dict[str, List[float]] = {}
@@ -57,6 +58,10 @@ title_to_team_to_key_event_pos: title_to_team_to_pos_dict = {}
 
 def get_title_to_buffers() -> Dict[str, ImageBuffers]:
     return title_to_buffers
+
+
+def get_title_to_num_trajectory_ids() -> Dict[str, int]:
+    return title_to_num_trajectory_ids
 
 
 def get_title_to_num_points() -> Dict[str, int]:
@@ -84,9 +89,10 @@ def get_title_to_team_to_key_event_pos() -> title_to_team_to_pos_dict:
 
 
 def clear_title_caches():
-    global title_to_buffers, title_to_num_points, title_to_lifetimes, title_to_speeds, title_to_shots_per_kill, \
-        title_to_key_events, title_to_team_to_key_event_pos
+    global title_to_buffers, title_to_num_trajectory_ids, title_to_num_points, title_to_lifetimes, title_to_speeds, \
+        title_to_shots_per_kill, title_to_key_events, title_to_team_to_key_event_pos
     title_to_buffers = {}
+    title_to_num_trajectory_ids = {}
     title_to_num_points = {}
     title_to_lifetimes = {}
     title_to_speeds = {}
@@ -144,6 +150,10 @@ def plot_one_trajectory_dataset(loaded_model: LoadedModel, id_df: pd.DataFrame, 
         trajectory_id_col = trajectory_filter_options.trajectory_counter
         # trajectories are already short (open sim runs for 5s), no need to restrict them further
         assert trajectory_filter_options.round_game_seconds is None
+
+    if title not in title_to_num_trajectory_ids:
+        title_to_num_trajectory_ids[title] = 0
+    title_to_num_trajectory_ids[title] += len(trajectory_ids)
 
     weapon_scoped_to_max_speed = loaded_model.model.weapon_scoped_to_max_speed_tensor_gpu.to(CPU_DEVICE_STR)
 
@@ -245,8 +255,12 @@ def plot_one_trajectory_dataset(loaded_model: LoadedModel, id_df: pd.DataFrame, 
                 event_series = alive_trajectory_vis_df[player_place_area_columns.player_killed_next_tick]
             elif trajectory_filter_options.only_killed_or_end:
                 # either killed next tick, or alive on the last tick
+                # note: a few times player dies without kill event. this is a core flaw in demo file recording
+                # not going to invent kills, but want to catch ends here, so look for end of trajectory for this player
+                # rather than end of overall round
                 event_series = np.maximum(alive_trajectory_vis_df[player_place_area_columns.player_killed_next_tick],
-                                          alive_trajectory_vis_df.index == trajectory_vis_df.index[-1])
+                                          alive_trajectory_vis_df.index == alive_trajectory_vis_df.index[-1])
+                assert sum(event_series) == 1.
             elif trajectory_filter_options.only_shots:
                 event_series = alive_trajectory_vis_df[player_place_area_columns.player_shots_cur_tick]
             else:
@@ -331,8 +345,8 @@ def plot_one_trajectory_dataset(loaded_model: LoadedModel, id_df: pd.DataFrame, 
                     title_to_shots_per_kill[title].append(num_shots / num_kills)
 
 
-    # verify that got all key events, no need to check compound as already have killed and end not part of data set
-    # just a last entry in round (which must exist)
+    # verify that got all key events, no need to check killed or end as have assert above for that
+    # which ensures every trajectory has 1
     if debug_event_counting and trajectory_filter_options.filtering_key_events() and \
             not trajectory_filter_options.only_killed_or_end:
         per_trajectory_indices_not_in_overall = per_trajectory_key_event_indices.difference(overall_key_event_indices)

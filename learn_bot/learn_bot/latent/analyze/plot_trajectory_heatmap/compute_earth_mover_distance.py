@@ -8,7 +8,8 @@ from scipy.optimize import linear_sum_assignment
 from skimage.measure import block_reduce
 from tqdm import tqdm
 
-from learn_bot.latent.analyze.plot_trajectory_heatmap.build_heatmaps import get_title_to_buffers, ImageBuffers
+from learn_bot.latent.analyze.plot_trajectory_heatmap.build_heatmaps import get_title_to_buffers, ImageBuffers, \
+    get_title_to_num_trajectory_ids
 from learn_bot.latent.analyze.plot_trajectory_heatmap.filter_trajectories import TrajectoryFilterOptions
 
 
@@ -51,6 +52,7 @@ def compute_trajectory_earth_mover_distances(titles: List[str], diff_indices: Li
                                              trajectory_filter_options: TrajectoryFilterOptions):
     print(f'Computing earth movers distance for {", ".join(titles)}')
     title_to_buffers = get_title_to_buffers()
+    #title_to_num_trajectory_ids = get_title_to_num_trajectory_ids()
 
     titles_to_emd: Dict[str, float] = {}
 
