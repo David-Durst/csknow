@@ -95,11 +95,15 @@ namespace action {
             curAction.aimTarget = state.getC4Pos();
             curAction.aimTargetType = AimTargetType::C4;
         }
+        // disabling hold and path non danger aim areas to ensure that exact same controller is used
+        // for two
+        /*
         else if (curPriority.nonDangerAimArea && curPriority.nonDangerAimAreaType == NonDangerAimAreaType::Hold && !curPriority.learnedTargetPos) {
             curAction.aimTarget = vec3tConv(blackboard.navFile.get_area_by_id_fast(curPriority.nonDangerAimArea.value()).get_center());
             curAction.aimTarget.z += EYE_HEIGHT;
             curAction.aimTargetType = AimTargetType::HoldNonDangerArea;
         }
+         */
         else if (blackboard.playerToDangerAreaId.find(treeThinker.csgoId) != blackboard.playerToDangerAreaId.end()) {
             curAction.aimTarget = vec3tConv(blackboard.navFile.get_area_by_id_fast(blackboard.playerToDangerAreaId[treeThinker.csgoId]).get_center());
             curAction.aimTarget.z += EYE_HEIGHT;
@@ -119,11 +123,13 @@ namespace action {
             }
             curAction.aimTargetType = AimTargetType::MovementDirection;
         }
+        /*
         else if (curPriority.nonDangerAimArea && curPriority.nonDangerAimAreaType == NonDangerAimAreaType::Path) {
             curAction.aimTarget = vec3tConv(blackboard.navFile.get_area_by_id_fast(curPriority.nonDangerAimArea.value()).get_center());
             curAction.aimTarget.z += EYE_HEIGHT;
             curAction.aimTargetType = AimTargetType::PathNonDangerArea;
         }
+         */
         else {
             curAction.aimTarget = curPath.waypoints[curPath.curWaypoint].pos;
             curAction.aimTarget.z += EYE_HEIGHT;
