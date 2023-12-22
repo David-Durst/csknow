@@ -113,13 +113,17 @@ def run_trajectory_heatmaps_one_filter_option(trajectory_filter_options: Traject
 def run_trajectory_heatmaps(plot_only_first_hdf5_file_train_and_test: bool):
     rollout_extensions = sys.argv[2].split(',')
     # indices for plots to diff with (first plot is human data, which all rollout extensions come after, so offset indexing by 1)
-    if len(sys.argv) == 4:
+    if len(sys.argv) >= 4:
         diff_indices = [int(x) for x in sys.argv[3].split(',')]
     elif rollout_extensions[0] == 'invalid':
         diff_indices = [0 for _ in range(len(rollout_extensions))]
     else:
         raise Exception('must provide diff indices if not just plotting human data')
-    plots_path = similarity_plots_path / (rollout_extensions[0] +
+    # may have multiple calls with same first rollout extension, this enables separating their folders
+    rollout_prefix = ""
+    if len(sys.argv) == 5:
+        rollout_prefix = sys.argv[4] + "_"
+    plots_path = similarity_plots_path / (rollout_prefix + rollout_extensions[0] +
                                           ("_all_first" if plot_only_first_hdf5_file_train_and_test else ""))
     os.makedirs(plots_path, exist_ok=True)
 
@@ -142,6 +146,8 @@ def run_trajectory_heatmaps(plot_only_first_hdf5_file_train_and_test: bool):
     run_trajectory_heatmaps_one_filter_option(TrajectoryFilterOptions(compute_speeds=True, only_killed_or_end=True),
                                               rollout_extensions, diff_indices, plots_path,
                                               plot_only_first_hdf5_file_train_and_test)
+
+    quit(0)
 
     run_trajectory_heatmaps_one_filter_option(TrajectoryFilterOptions(compute_speeds=True, only_shots=True),
                                               rollout_extensions, diff_indices, plots_path,
