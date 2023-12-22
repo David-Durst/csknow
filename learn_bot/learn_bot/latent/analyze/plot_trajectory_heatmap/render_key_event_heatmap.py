@@ -14,6 +14,10 @@ fig_length = 10
 title_to_num_y_points_less_than_1000: Dict[str, int] = {}
 title_to_num_x_points_between_negative_1200_and_0: Dict[str, int] = {}
 
+def clear_event_counters():
+    title_to_num_y_points_less_than_1000 = {}
+    title_to_num_x_points_between_negative_1200_and_0 = {}
+
 def create_heatmap(title: str, ct_team: bool, title_to_team_to_heatmap: Dict[str, Dict],
                    x_pos: List[float], y_pos: List[float]) -> Tuple[np.ndarray, np.ndarray]:
     heatmap, x_bins, y_bins = np.histogram2d(x_pos, y_pos, bins=50,
@@ -46,6 +50,8 @@ def plot_key_event_heatmaps(title_to_team_to_key_event_pos: title_to_team_to_pos
     if not trajectory_filter_options.filtering_key_events():
         return
 
+    clear_event_counters()
+
     num_titles = len(title_to_team_to_key_event_pos.keys())
     # mul cols by 2 as need ct and t plots
     fig = plt.figure(figsize=(fig_length * 2, fig_length * num_titles), constrained_layout=True)
@@ -61,13 +67,13 @@ def plot_key_event_heatmaps(title_to_team_to_key_event_pos: title_to_team_to_pos
 
     event = ""
     if trajectory_filter_options.only_kill:
-        event = "Kills"
+        event = "kills"
     elif trajectory_filter_options.only_killed:
-        event = "Deaths"
+        event = "deaths"
     elif trajectory_filter_options.only_killed_or_end:
-        event = "DeathsAndEnds"
+        event = "deaths_and_ends"
     elif trajectory_filter_options.only_shots:
-        event = "Shots"
+        event = "shots"
 
     title_to_team_to_heatmap = {}
     max_bin_value = 0
@@ -87,5 +93,6 @@ def plot_key_event_heatmaps(title_to_team_to_key_event_pos: title_to_team_to_pos
                      team_to_key_event_pos[False][0], max_bin_value,
                      x_bins, y_bins, fig, axs[i, 1], cmap)
     plt.savefig(plots_path / (event + '.png'))
-    print(title_to_num_y_points_less_than_1000)
-    print(title_to_num_x_points_between_negative_1200_and_0)
+    with open(plots_path / (event + '.txt'), 'w') as f:
+        f.write(f"num y points less than 1000: {title_to_num_y_points_less_than_1000}\n")
+        f.write(f"num x points between negative 1200 and 0: {title_to_num_x_points_between_negative_1200_and_0}\n")
