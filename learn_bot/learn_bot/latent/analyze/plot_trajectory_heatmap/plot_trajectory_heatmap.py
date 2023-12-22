@@ -16,7 +16,7 @@ from learn_bot.latent.analyze.plot_trajectory_heatmap.compute_earth_mover_distan
 from learn_bot.latent.analyze.plot_trajectory_heatmap.filter_trajectories import TrajectoryFilterOptions, \
     region_constraints
 from learn_bot.latent.analyze.plot_trajectory_heatmap.render_diffs import plot_trajectory_diffs_to_image
-from learn_bot.latent.analyze.plot_trajectory_heatmap.render_heatmaps import plot_trajectories_to_image
+from learn_bot.latent.analyze.plot_trajectory_heatmap.render_trajectory_heatmaps import plot_trajectories_to_image
 from learn_bot.latent.analyze.plot_trajectory_heatmap.render_key_event_heatmap import plot_key_event_heatmaps
 from learn_bot.latent.analyze.plot_trajectory_heatmap.compute_metrics import compute_metrics
 from learn_bot.latent.analyze.plot_trajectory_heatmap.build_heatmaps import plot_one_trajectory_dataset, \

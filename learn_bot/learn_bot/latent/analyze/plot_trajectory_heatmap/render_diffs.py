@@ -8,7 +8,7 @@ from learn_bot.latent.analyze.compare_trajectories.plot_trajectories_from_compar
     concat_vertical
 from learn_bot.latent.analyze.plot_trajectory_heatmap.build_heatmaps import get_title_to_buffers
 from learn_bot.latent.analyze.plot_trajectory_heatmap.filter_trajectories import TrajectoryFilterOptions
-from learn_bot.latent.analyze.plot_trajectory_heatmap.render_heatmaps import plot_one_image_one_team
+from learn_bot.latent.analyze.plot_trajectory_heatmap.render_trajectory_heatmaps import plot_one_image_one_team
 from learn_bot.latent.analyze.test_traces.run_trace_visualization import d2_img
 
 base_positive_color_list = [31, 210, 93, 0]
