@@ -64,29 +64,15 @@ namespace action {
             curAction.setButton(IN_DUCK, curPriority.moveOptions.crouch || curClient.isAirborne);
         }
         else if (!curPriority.learnedTargetPos && curPath.pathCallSucceeded) {
-
             // don't move if move is set to false on priority
-            if (!curPriority.learnedTargetPos && !curPriority.moveOptions.move) {
+            if (!curPriority.moveOptions.move) {
                 stop(curAction);
                 // add counter strafing later
             }
             else {
                 Vec2 curViewAngle = curClient.getCurrentViewAnglesWithAimpunch();
                 // if learned model, just run it's output, otherwise look at path
-                Vec3 targetVector;
-                if (curPriority.learnedTargetPos) {
-                    Vec3 targetPos = curClient.getFootPosForPlayer() + Vec3{
-                            static_cast<double>(curPriority.learnedMovementStatus.value().vel.x),
-                            static_cast<double>(curPriority.learnedMovementStatus.value().vel.y),
-                            0.
-                    };
-                    targetVector = targetPos - curClient.getFootPosForPlayer();
-                }
-                //if (!curPriority.learnedTargetPos ||
-                //    !(curPriority.directPathToLearnedTargetPos && curPriority.directPathToLearnedTargetPos.value())) {
-                else {
-                    targetVector = curPath.waypoints[curPath.curWaypoint].pos - curClient.getFootPosForPlayer();
-                }
+                Vec3 targetVector = curPath.waypoints[curPath.curWaypoint].pos - curClient.getFootPosForPlayer();
                 Vec3 finalVector = curPath.waypoints.back().pos - curClient.getFootPosForPlayer();
                 // add eye height since waypoints are on floor and aim is from eye
                 //targetVector.z += EYE_HEIGHT;

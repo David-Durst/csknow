@@ -57,7 +57,7 @@ void Tree::tick(ServerState & state, const string & mapsPath) {
                 6938, 9026, // these are barrels on A that I get stuck on
                 8251, // this one is under t spawn
                 8631, // this one is on cat next to boxes, weird
-                //4232, 4417, // bad wall and box on long
+                /*4232,*/ 4417, // bad wall and box on long
                 8531, // mid doors ct side
                 8753, 8550, 8574, // b car
                 8594, 8600, 8601, 8602, 8607, // boxes under cat to a
