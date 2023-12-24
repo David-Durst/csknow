@@ -29,6 +29,8 @@ RoundScript::RoundScript(const csknow::plant_states::PlantStatesResult & plantSt
             double tmpX = playerViewAngle.back().x;
             playerViewAngle.back().x = playerViewAngle.back().y;
             playerViewAngle.back().y = tmpX;
+            health.push_back(static_cast<int>(100 * plantStatesResult.ctPlayerStates[i].health[plantStateIndex]));
+            armor.push_back(static_cast<int>(100 * plantStatesResult.ctPlayerStates[i].armor[plantStateIndex]));
         }
         if (plantStatesResult.tPlayerStates[i].alive[plantStateIndex] && numT < maxT) {
             numT++;
@@ -39,6 +41,8 @@ RoundScript::RoundScript(const csknow::plant_states::PlantStatesResult & plantSt
             double tmpX = playerViewAngle.back().x;
             playerViewAngle.back().x = playerViewAngle.back().y;
             playerViewAngle.back().y = tmpX;
+            health.push_back(static_cast<int>(100 * plantStatesResult.tPlayerStates[i].health[plantStateIndex]));
+            armor.push_back(static_cast<int>(100 * plantStatesResult.tPlayerStates[i].armor[plantStateIndex]));
         }
     }
 }
@@ -49,6 +53,7 @@ void RoundScript::initialize(Tree &tree, ServerState &state) {
         Script::initialize(tree, state);
         vector<CSGOId> neededBotIds = getNeededBotIds();
         bool lastRound = numRounds == plantStateIndex + 1;
+
         Node::Ptr setupCommands = make_unique<SequenceNode>(blackboard, Node::makeList(
             make_unique<InitGameRound>(blackboard, name),
             make_unique<SetMaxRounds>(blackboard, lastRound ? 2 : 20, true),
@@ -59,8 +64,7 @@ void RoundScript::initialize(Tree &tree, ServerState &state) {
             make_unique<SetPos>(blackboard, c4Pos, Vec2({0., 0.})),
             make_unique<TeleportPlantedC4>(blackboard),
             make_unique<movement::WaitNode>(blackboard, 0.1),
-            make_unique<DamageActive>(blackboard, neededBotIds[0], neededBotIds[0], state),
-            make_unique<SetHealth>(blackboard, neededBotIds[0], state, 100),
+            make_unique<SetHealthArmorMultiple>(blackboard, neededBotIds, health, armor, state),
             make_unique<movement::WaitNode>(blackboard, 0.1),
             make_unique<ClearMemoryCommunicationDangerNode>(blackboard),
             make_unique<RecomputeOrdersNode>(blackboard)), "RoundSetup");
@@ -157,9 +161,13 @@ void addRow(csknow::plant_states::PlantStatesResult & plantStatesResult, Vec3 c4
         plantStatesResult.ctPlayerStates[i].alive.push_back(false);
         plantStatesResult.ctPlayerStates[i].pos.push_back({});
         plantStatesResult.ctPlayerStates[i].viewAngle.push_back({});
+        plantStatesResult.ctPlayerStates[i].health.push_back(1.);
+        plantStatesResult.ctPlayerStates[i].armor.push_back(1.);
         plantStatesResult.tPlayerStates[i].alive.push_back(false);
         plantStatesResult.tPlayerStates[i].pos.push_back({});
         plantStatesResult.tPlayerStates[i].viewAngle.push_back({});
+        plantStatesResult.tPlayerStates[i].health.push_back(1.);
+        plantStatesResult.tPlayerStates[i].armor.push_back(1.);
     }
 }
 

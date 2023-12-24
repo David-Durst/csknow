@@ -217,6 +217,36 @@ struct SetHealth : Command {
     }
 };
 
+struct SetHealthArmorMultiple : Command {
+    vector<string> playerNames;
+    vector<int> health;
+    vector<int> armor;
+
+    SetHealthArmorMultiple(Blackboard & blackboard, vector<CSGOId> playerIds, vector<int> health,
+                           vector<int> armor, const ServerState & serverState) :
+                           Command(blackboard, "SetHealthArmorMultipleCmd"),
+                           health(std::move(health)), armor(std::move(armor)) {
+        for (const auto & playerId : playerIds) {
+            playerNames.push_back(serverState.getClient(playerId).name);
+        }
+    }
+    SetHealthArmorMultiple(Blackboard & blackboard, vector<string> playerNames, vector<int> health,
+                           vector<int> armor) :
+            Command(blackboard, "TeleportCmd"), playerNames(std::move(playerNames)), health(std::move(health)),
+            armor(std::move(armor)) { }
+
+    virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
+        scriptLines = {};
+        for (size_t i = 0; i < playerNames.size(); i++) {
+            std::stringstream result;
+            result << "sm_setHealth " << playerNames[i] << " " << health[i] << std::endl;
+            result << "sm_setArmor " << playerNames[i] << " " << armor[i] << std::endl;
+            scriptLines.push_back(result.str());
+        }
+        return Command::exec(state, treeThinker);
+    }
+};
+
 struct DamageActive : Command {
     string attackerName, victimName;
 
