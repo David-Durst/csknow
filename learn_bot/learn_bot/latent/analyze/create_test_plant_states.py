@@ -49,7 +49,8 @@ def create_test_plant_states():
 
     for player_place_area_columns in specific_player_place_area_columns:
         cols_to_gets += player_place_area_columns.pos + player_place_area_columns.view_angle + \
-                        [player_place_area_columns.alive]
+                        [player_place_area_columns.alive, player_place_area_columns.player_health,
+                         player_place_area_columns.player_armor]
         alive_cols.append(player_place_area_columns.alive)
         if team_strs[0] in player_place_area_columns.alive:
             ct_alive_cols.append(player_place_area_columns.alive)
@@ -85,7 +86,7 @@ def create_test_plant_states():
         test_start_dfs.append(test_start_df)
 
     concat_test_start_df = pd.concat(test_start_dfs)
-    concat_test_start_df = concat_test_start_df.sample(frac=1., random_state=42)
+    #concat_test_start_df = concat_test_start_df.sample(frac=1., random_state=42)
 
     # add all the columns that are legacy from old analyses
     concat_test_start_df.loc[:, "round end tick id"] = -1
