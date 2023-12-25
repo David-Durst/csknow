@@ -37,6 +37,7 @@ RoundScript::RoundScript(const csknow::plant_states::PlantStatesResult & plantSt
             // no need to flip view angle between recording and game, my bt test set pos command already does it
             health.push_back(static_cast<int>(100 * plantStatesResult.ctPlayerStates[i].health[plantStateIndex]));
             armor.push_back(static_cast<int>(100 * plantStatesResult.ctPlayerStates[i].armor[plantStateIndex]));
+            helmet.push_back(plantStatesResult.ctPlayerStates[i].helmet[plantStateIndex]);
             numCT++;
         }
         if (plantStatesResult.tPlayerStates[i].alive[plantStateIndex] && numT < maxT) {
@@ -49,6 +50,7 @@ RoundScript::RoundScript(const csknow::plant_states::PlantStatesResult & plantSt
             // no need to flip view angle between recording and game, my bt test set pos command already does it
             health.push_back(static_cast<int>(100 * plantStatesResult.tPlayerStates[i].health[plantStateIndex]));
             armor.push_back(static_cast<int>(100 * plantStatesResult.tPlayerStates[i].armor[plantStateIndex]));
+            helmet.push_back(plantStatesResult.tPlayerStates[i].helmet[plantStateIndex]);
             numT++;
         }
     }
@@ -71,7 +73,7 @@ void RoundScript::initialize(Tree &tree, ServerState &state) {
             make_unique<SetPos>(blackboard, c4Pos, Vec2({0., 0.})),
             make_unique<TeleportPlantedC4>(blackboard),
             make_unique<movement::WaitNode>(blackboard, 0.1),
-            make_unique<SetHealthArmorMultiple>(blackboard, neededBotIds, health, armor, state),
+            make_unique<SetHealthArmorHelmetMultiple>(blackboard, neededBotIds, health, armor, helmet, state),
             make_unique<movement::WaitNode>(blackboard, 0.1),
             make_unique<ClearMemoryCommunicationDangerNode>(blackboard),
             make_unique<RecomputeOrdersNode>(blackboard)), "RoundSetup");

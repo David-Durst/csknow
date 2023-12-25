@@ -39,6 +39,7 @@ namespace csknow::plant_states {
             vector<Vec2> viewAngle;
             vector<float> health;
             vector<float> armor;
+            vector<bool> helmet;
         };
         array<PlayerState, max_players_per_team> ctPlayerStates, tPlayerStates;
         vector<Vec3> cameraPos;
@@ -104,6 +105,7 @@ namespace csknow::plant_states {
                 saveVec2VectorToHDF5(ctPlayerStates[i].viewAngle, file, "ct " + iStr + " view angle", hdf5FlatCreateProps);
                 file.createDataSet("/data/ct " + iStr + " health", ctPlayerStates[i].health, hdf5FlatCreateProps);
                 file.createDataSet("/data/ct " + iStr + " armor", ctPlayerStates[i].armor, hdf5FlatCreateProps);
+                file.createDataSet("/data/ct " + iStr + " helmet", ctPlayerStates[i].helmet, hdf5FlatCreateProps);
             }
             for (size_t i = 0; i < max_players_per_team; i++) {
                 string iStr = std::to_string(i);
@@ -112,6 +114,7 @@ namespace csknow::plant_states {
                 saveVec2VectorToHDF5(tPlayerStates[i].viewAngle, file, "t " + iStr + " view angle", hdf5FlatCreateProps);
                 file.createDataSet("/data/t " + iStr + " health", tPlayerStates[i].health, hdf5FlatCreateProps);
                 file.createDataSet("/data/t " + iStr + " armor", tPlayerStates[i].armor, hdf5FlatCreateProps);
+                file.createDataSet("/data/t " + iStr + " helmet", tPlayerStates[i].helmet, hdf5FlatCreateProps);
             }
         }
 
@@ -137,6 +140,7 @@ namespace csknow::plant_states {
                 loadVec2VectorFromHDF5(ctPlayerStates[i].viewAngle, file, "ct " + iStr + " view angle");
                 ctPlayerStates[i].health = file.getDataSet("/data/ct " + iStr + " health").read<std::vector<float>>();
                 ctPlayerStates[i].armor = file.getDataSet("/data/ct " + iStr + " armor").read<std::vector<float>>();
+                ctPlayerStates[i].helmet = file.getDataSet("/data/ct " + iStr + " helmet").read<std::vector<bool>>();
             }
             for (size_t i = 0; i < max_players_per_team; i++) {
                 string iStr = std::to_string(i);
@@ -146,6 +150,7 @@ namespace csknow::plant_states {
                 loadVec2VectorFromHDF5(tPlayerStates[i].viewAngle, file, "t " + iStr + " view angle");
                 tPlayerStates[i].health = file.getDataSet("/data/t " + iStr + " health").read<std::vector<float>>();
                 tPlayerStates[i].armor = file.getDataSet("/data/t " + iStr + " armor").read<std::vector<float>>();
+                tPlayerStates[i].helmet = file.getDataSet("/data/t " + iStr + " helmet").read<std::vector<bool>>();
             }
 
             size = plantTickId.size();
@@ -172,6 +177,7 @@ namespace csknow::plant_states {
                 loadVec2VectorFromHDF5(ctPlayerStates[i].viewAngle, file, "player view angle CT " + iStr);
                 ctPlayerStates[i].health = file.getDataSet("/data/player health CT " + iStr).read<std::vector<float>>();
                 ctPlayerStates[i].armor = file.getDataSet("/data/player armor CT " + iStr).read<std::vector<float>>();
+                ctPlayerStates[i].helmet = file.getDataSet("/data/player helmet CT " + iStr).read<std::vector<bool>>();
             }
             for (size_t i = 0; i < max_players_per_team; i++) {
                 string iStr = std::to_string(i);
@@ -180,6 +186,7 @@ namespace csknow::plant_states {
                 loadVec2VectorFromHDF5(tPlayerStates[i].viewAngle, file, "player view angle T " + iStr);
                 tPlayerStates[i].health = file.getDataSet("/data/player health T " + iStr).read<std::vector<float>>();
                 tPlayerStates[i].armor = file.getDataSet("/data/player armor T " + iStr).read<std::vector<float>>();
+                tPlayerStates[i].helmet = file.getDataSet("/data/player helmet T " + iStr).read<std::vector<bool>>();
             }
 
             if (loadCamera) {

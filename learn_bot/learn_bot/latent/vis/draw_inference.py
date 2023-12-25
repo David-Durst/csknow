@@ -206,6 +206,7 @@ def draw_all_players(data_dict: Dict, pred_dict: Optional[Dict], im_draw: ImageD
             #f"kill next tick {kill_next_tick}, killed next tick {killed_next_tick}, " \
             health = data_dict[player_place_area_columns.player_health]
             armor = data_dict[player_place_area_columns.player_armor]
+            helmet = data_dict[player_place_area_columns.player_helmet]
             temporal_str = f"{player_place_area_columns.player_id_uniform_space} " \
                            f"decrease distance to c4 5s {decrease_distance_to_c4_5s} 10s {decrease_distance_to_c4_10s} 20s {decrease_distance_to_c4_20s}, " \
                            f"nearest crosshair distance to enemy {nearest_crosshair_distance_to_enemy:3.2f}, " \
@@ -222,7 +223,7 @@ def draw_all_players(data_dict: Dict, pred_dict: Optional[Dict], im_draw: ImageD
                                    player_text=player_to_text[player_index] if player_index in player_to_text else None,
                                    view_angle=data_dict[player_place_area_columns.view_angle[0]])
                 result.status += f"{player_place_area_columns.player_id} pos {pos_coord.coords}, " \
-                                 f"vel {vel_per_player}, health {health:3.2f}, armor {armor:3.2f}, " \
+                                 f"vel {vel_per_player}, health {health:3.2f}, armor {armor:3.2f}, helmet {helmet}" \
                                  f"weapon {str(EngineWeaponId(weapon_id))}, " \
                                  f"k/d/s {kill_next_tick}/{killed_next_tick}/{shots_cur_tick}\n"
                 continue

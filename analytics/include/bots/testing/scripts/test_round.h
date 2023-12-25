@@ -21,6 +21,7 @@ class RoundScript : public Script {
     vector<Vec2> playerViewAngle;
     vector<int> health;
     vector<int> armor;
+    vector<bool> helmet;
     size_t plantStateIndex, numRounds;
     std::optional<vector<bool>> playerFreeze;
 

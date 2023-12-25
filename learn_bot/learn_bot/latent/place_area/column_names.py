@@ -102,6 +102,7 @@ class PlayerPlaceAreaColumns:
         self.player_shots_cur_tick = get_player_shots_cur_tick_columns(player_index, team_str)
         self.player_health = get_player_health_columns(player_index, team_str)
         self.player_armor = get_player_armor_columns(player_index, team_str)
+        self.player_helmet = get_player_helmet_columns(player_index, team_str)
         self.decrease_distance_to_c4_5s = f"player decrease distance to c4 over 5s {team_str} {player_index}"
         self.decrease_distance_to_c4_10s = f"player decrease distance to c4 over 10s {team_str} {player_index}"
         self.decrease_distance_to_c4_20s = f"player decrease distance to c4 over 20s {team_str} {player_index}"
@@ -197,7 +198,8 @@ class PlayerPlaceAreaColumns:
 
     def get_vis_only_columns(self) -> list[str]:
         return [self.player_id, self.player_hurt_next_tick, self.player_kill_next_tick, self.player_killed_next_tick,
-                self.player_shots_cur_tick, self.player_weapon_id, self.player_scoped] + self.vel + self.view_angle
+                self.player_shots_cur_tick, self.player_weapon_id, self.player_scoped, self.player_helmet] \
+            + self.vel + self.view_angle
 
 
 specific_player_place_area_columns: list[PlayerPlaceAreaColumns] = \

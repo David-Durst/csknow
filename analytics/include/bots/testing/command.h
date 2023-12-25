@@ -217,21 +217,22 @@ struct SetHealth : Command {
     }
 };
 
-struct SetHealthArmorMultiple : Command {
+struct SetHealthArmorHelmetMultiple : Command {
     vector<string> playerNames;
     vector<int> health;
     vector<int> armor;
+    vector<bool> helmet;
 
-    SetHealthArmorMultiple(Blackboard & blackboard, vector<CSGOId> playerIds, vector<int> health,
-                           vector<int> armor, const ServerState & serverState) :
+    SetHealthArmorHelmetMultiple(Blackboard & blackboard, vector<CSGOId> playerIds, vector<int> health,
+                           vector<int> armor, vector<bool> helmet, const ServerState & serverState) :
                            Command(blackboard, "SetHealthArmorMultipleCmd"),
-                           health(std::move(health)), armor(std::move(armor)) {
+                           health(std::move(health)), armor(std::move(armor)), helmet(std::move(helmet)) {
         for (const auto & playerId : playerIds) {
             playerNames.push_back(serverState.getClient(playerId).name);
         }
     }
-    SetHealthArmorMultiple(Blackboard & blackboard, vector<string> playerNames, vector<int> health,
-                           vector<int> armor) :
+    SetHealthArmorHelmetMultiple(Blackboard & blackboard, vector<string> playerNames, vector<int> health,
+                                 vector<int> armor) :
             Command(blackboard, "TeleportCmd"), playerNames(std::move(playerNames)), health(std::move(health)),
             armor(std::move(armor)) { }
 
@@ -241,6 +242,7 @@ struct SetHealthArmorMultiple : Command {
             std::stringstream result;
             result << "sm_setHealth " << playerNames[i] << " " << health[i] << std::endl;
             result << "sm_setArmor " << playerNames[i] << " " << armor[i] << std::endl;
+            result << "sm_setHelmet " << playerNames[i] << " " << (helmet[i] ? 1 : 0) << std::endl;
             scriptLines.push_back(result.str());
         }
         return Command::exec(state, treeThinker);

@@ -50,7 +50,7 @@ def create_test_plant_states():
     for player_place_area_columns in specific_player_place_area_columns:
         cols_to_gets += player_place_area_columns.pos + player_place_area_columns.view_angle + \
                         [player_place_area_columns.alive, player_place_area_columns.player_health,
-                         player_place_area_columns.player_armor]
+                         player_place_area_columns.player_armor, player_place_area_columns.player_helmet]
         alive_cols.append(player_place_area_columns.alive)
         if team_strs[0] in player_place_area_columns.alive:
             ct_alive_cols.append(player_place_area_columns.alive)
