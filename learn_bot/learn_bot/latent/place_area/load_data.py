@@ -237,7 +237,8 @@ class LoadDataResult:
 
         #print(f"num non matched rounds: {num_rounds_not_matched} / {total_rounds}, {num_rounds_not_matched / total_rounds:.3f}")
         if limit:
-            self.limit(similarity_fns)
+            raise Exception("trying to use old limiting code that isn't valid now that similarity is a float")
+            #self.limit(similarity_fns)
         self.add_column(similarity_fns, get_similarity_column(similarity_index))
 
 
