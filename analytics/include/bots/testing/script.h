@@ -69,8 +69,10 @@ public:
 
 struct NeedPreTestingInitNode : Node {
     int numHumansNonSpec;
-    explicit NeedPreTestingInitNode(Blackboard & blackboard, int numHumansNonSpec) :
-            Node(blackboard, "NeedPreTestingInitNode"), numHumansNonSpec(numHumansNonSpec) { }
+    int numNeededNonHumanBots;
+    explicit NeedPreTestingInitNode(Blackboard & blackboard, int numHumansNonSpec, int numNeededNonHumanBots) :
+            Node(blackboard, "NeedPreTestingInitNode"), numHumansNonSpec(numHumansNonSpec),
+            numNeededNonHumanBots(numNeededNonHumanBots) { }
     NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
         blackboard.inTest = true;
         // need preinit testing if score is 0 0
@@ -97,14 +99,12 @@ struct NeedPreTestingInitNode : Node {
                 numBots++;
             }
         }
-        // another human team check
-        /*
-        if (numBots < 7) {
+        // need preinit testing if too few bots
+        if (numBots < numNeededNonHumanBots) {
             playerNodeState[treeThinker.csgoId] = NodeState::Success;
             return playerNodeState[treeThinker.csgoId];
         }
-         */
-        // otherwise don't need score
+        // otherwise don't need pre init testings
         playerNodeState[treeThinker.csgoId] = NodeState::Failure;
         return playerNodeState[treeThinker.csgoId];
     }
@@ -163,8 +163,14 @@ public:
         if (tree.newBlackboard) {
             Blackboard & blackboard = *tree.blackboard;
             Script::initialize(tree, state);
+            int numNeededNonHumanBots = 0;
+            for (const auto & neededBot : neededBots) {
+                if (!neededBot.human) {
+                    numNeededNonHumanBots++;
+                }
+            }
             commands = make_unique<SequenceNode>(blackboard, Node::makeList(
-                    make_unique<NeedPreTestingInitNode>(blackboard, numHumansNonSpec),
+                    make_unique<NeedPreTestingInitNode>(blackboard, numHumansNonSpec, numNeededNonHumanBots),
                     make_unique<PreTestingInit>(blackboard, numHumansNonSpec),
                     make_unique<PreTestingInitFinishedNode>(blackboard, numHumansNonSpec),
                     make_unique<Draw>(blackboard),
