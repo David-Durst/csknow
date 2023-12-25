@@ -19,7 +19,7 @@ def create_non_confounding_test_plant_states():
     load_data_result = LoadDataResult(load_data_options)
     test_plant_states_path = \
         load_data_result.multi_hdf5_wrapper.train_test_split_path.parent / push_only_test_plant_states_file_name
-    test_plant_states_df = load_hdf5_to_pd(test_plant_states_path)
+    test_plant_states_df = load_hdf5_to_pd(test_plant_states_path, cast_bool_to_int=False)
     test_plant_states_df[hdf5_key_column] = test_plant_states_df[hdf5_key_column].str.decode("utf-8")
     rounds_without_confounds_path = \
         load_data_result.multi_hdf5_wrapper.train_test_split_path.parent / 'rounds_without_confounds.csv'
