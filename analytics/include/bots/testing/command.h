@@ -30,7 +30,7 @@ struct Command : Node {
 struct PreTestingInit : Command {
     int numHumansNonSpec;
     PreTestingInit(Blackboard & blackboard, int numHumansNonSpec) :
-            Command(blackboard, "PreTestingInitmd"), numHumansNonSpec(numHumansNonSpec) { }
+            Command(blackboard, "PreTestingInitCmd"), numHumansNonSpec(numHumansNonSpec) { }
     virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
         blackboard.inTest = true;
         scriptLines = {"sm_allHumansSpec " + std::to_string(numHumansNonSpec) + "; sm_botDebug f; sm_skipFirstRound;"};

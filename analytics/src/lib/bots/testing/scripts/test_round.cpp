@@ -142,7 +142,7 @@ vector<Script::Ptr> createRoundScripts(const csknow::plant_states::PlantStatesRe
     for (size_t i = batchSize * startSituationId; i < maxI; i++) {
         // 0 - push in to b from mid with enemy in b site
         // 4 - attacking a from cat and spawn
-        result.push_back(make_unique<RoundScript>(plantStatesResult, 48+i/*0*//*4*//*8*//*12*//*205*/, maxI, gen, dis,
+        result.push_back(make_unique<RoundScript>(plantStatesResult, i/*0*//*4*//*8*//*12*//*205*/, maxI, gen, dis,
                                                   std::nullopt, "RoundScript", std::nullopt, std::nullopt));
     }
     if (quitAtEnd) {

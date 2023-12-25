@@ -112,8 +112,10 @@ struct NeedPreTestingInitNode : Node {
 
 struct PreTestingInitFinishedNode : Node {
     int numHumansNonSpec;
-    explicit PreTestingInitFinishedNode(Blackboard & blackboard, int numHumansNonSpec) :
-            Node(blackboard, "PreTestingInitFinishedNode"), numHumansNonSpec(numHumansNonSpec) { }
+    int numNeededNonHumanBots;
+    explicit PreTestingInitFinishedNode(Blackboard & blackboard, int numHumansNonSpec, int numNeededNonHumanBots) :
+            Node(blackboard, "PreTestingInitFinishedNode"), numHumansNonSpec(numHumansNonSpec),
+            numNeededNonHumanBots(numNeededNonHumanBots) { }
     NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
         blackboard.inTest = true;
         // need preinit testing if score is 0 0
@@ -139,15 +141,12 @@ struct PreTestingInitFinishedNode : Node {
                 numBots++;
             }
         }
-        // another human team check
-        /*
-         * this was a buggy check. human on spectator but only 6 bots as 7th hasn't spawned yet
-        if (numBots < 7) {
+        // need preinit testing if too few bots
+        if (numBots < numNeededNonHumanBots) {
             playerNodeState[treeThinker.csgoId] = NodeState::Running;
             return playerNodeState[treeThinker.csgoId];
         }
-         */
-        // otherwise don't need score
+        // otherwise don't need pre init testings
         playerNodeState[treeThinker.csgoId] = NodeState::Success;
         return playerNodeState[treeThinker.csgoId];
     }
@@ -172,9 +171,9 @@ public:
             commands = make_unique<SequenceNode>(blackboard, Node::makeList(
                     make_unique<NeedPreTestingInitNode>(blackboard, numHumansNonSpec, numNeededNonHumanBots),
                     make_unique<PreTestingInit>(blackboard, numHumansNonSpec),
-                    make_unique<PreTestingInitFinishedNode>(blackboard, numHumansNonSpec),
+                    make_unique<PreTestingInitFinishedNode>(blackboard, numHumansNonSpec, numNeededNonHumanBots),
                     make_unique<Draw>(blackboard),
-                    make_unique<PreTestingInitFinishedNode>(blackboard, numHumansNonSpec)),
+                    make_unique<PreTestingInitFinishedNode>(blackboard, numHumansNonSpec, numNeededNonHumanBots)),
                  "InitScript");
         }
     }
