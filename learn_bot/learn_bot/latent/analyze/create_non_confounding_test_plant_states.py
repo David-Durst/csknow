@@ -6,9 +6,9 @@ from learn_bot.latent.engagement.column_names import round_id_column
 from learn_bot.latent.place_area.load_data import LoadDataResult
 from learn_bot.libs.hdf5_to_pd import load_hdf5_to_pd, save_pd_to_hdf5
 
-camera_x_column = "camera x"
-camera_y_column = "camera y"
-camera_z_column = "camera z"
+camera_x_column = "camera pos x"
+camera_y_column = "camera pos y"
+camera_z_column = "camera pos z"
 camera_yaw_column = "camera view angle x"
 camera_pitch_column = "camera view angle y"
 camera_columns = [camera_x_column, camera_y_column, camera_z_column, camera_pitch_column, camera_yaw_column]
