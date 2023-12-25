@@ -14,12 +14,17 @@ RoundScript::RoundScript(const csknow::plant_states::PlantStatesResult & plantSt
     if (cameraOrigin) {
         observeSettings.observeType = ObserveType::Absolute;
         observeSettings.cameraOrigin = cameraOrigin.value();
+        // this has to be flipped (done in code below when creating situations) because being passed directly
         observeSettings.cameraAngle = cameraAngle.value();
     }
     else if (!plantStatesResult.cameraPos.empty()) {
         observeSettings.observeType = ObserveType::Absolute;
         observeSettings.cameraOrigin = plantStatesResult.cameraPos[plantStateIndex];
+        // this has to be flipped because being passed directly
         observeSettings.cameraAngle = plantStatesResult.cameraViewAngle[plantStateIndex];
+        double tmpX = observeSettings.cameraAngle.x;
+        observeSettings.cameraAngle.x = observeSettings.cameraAngle.y;
+        observeSettings.cameraAngle.y = tmpX;
     }
     int numCT = 0, numT = 0;
     neededBots.clear();
