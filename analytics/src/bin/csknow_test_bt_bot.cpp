@@ -73,7 +73,7 @@ int main(int argc, char * argv[]) {
     bool finishedTests = false;
     csknow::plant_states::PlantStatesResult plantStatesResult;
     plantStatesResult.loadFromPython(savedDatasetsDir + "/push_only_test_plant_states.hdf5");
-    ScriptsRunner roundScriptsRunner(createRoundScripts(plantStatesResult, situationId, false), false, 1);
+    ScriptsRunner roundScriptsRunner(createRoundScripts(plantStatesResult, situationId, false, 0), false, 0);
     csknow::tests::trace::TracesData traceData(savedDatasetsDir + "/traces.hdf5");
     ScriptsRunner traceScriptsRunner(csknow::tests::trace::createTracesScripts(traceData, botStop, true), false);
 

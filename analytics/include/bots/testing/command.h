@@ -366,7 +366,7 @@ struct SpecDynamic : Command {
     virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
         std::stringstream result;
         for (const auto & client : state.clients) {
-            if (!client.isBot) {
+            if (!client.isBot && client.team == ENGINE_TEAM_SPEC) {
                 if (observeSettings.observeType == ObserveType::FirstPerson) {
                     CSGOId neededBotCSGOId = neededBots[observeSettings.neededBotIndex].id;
                     result << "sm_specPlayerToTarget " << client.name << " " << state.getClient(neededBotCSGOId).name << "; ";

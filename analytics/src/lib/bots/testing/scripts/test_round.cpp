@@ -7,7 +7,7 @@
 RoundScript::RoundScript(const csknow::plant_states::PlantStatesResult & plantStatesResult, size_t plantStateIndex,
                          size_t numRounds, std::mt19937 gen, std::uniform_real_distribution<> dis,
                          std::optional<vector<bool>> playerFreeze, string baseName, std::optional<Vec3> cameraOrigin,
-                         std::optional<Vec2> cameraAngle) :
+                         std::optional<Vec2> cameraAngle, int numHumans) :
     Script(baseName, {}, {ObserveType::FirstPerson, 0}),
     plantStateIndex(plantStateIndex), numRounds(numRounds), playerFreeze(playerFreeze) {
     name += std::to_string(plantStateIndex);
@@ -21,28 +21,25 @@ RoundScript::RoundScript(const csknow::plant_states::PlantStatesResult & plantSt
     c4Pos = plantStatesResult.c4Pos[plantStateIndex];
     for (size_t i = 0; i < csknow::plant_states::max_players_per_team; i++) {
         if (plantStatesResult.ctPlayerStates[i].alive[plantStateIndex] && numCT < maxCT) {
-            numCT++;
             neededBots.push_back({0, ENGINE_TEAM_CT, dis(gen) < 0.5 ? AggressiveType::Push : AggressiveType::Bait});
             playerPos.push_back(plantStatesResult.ctPlayerStates[i].pos[plantStateIndex]);
             playerViewAngle.push_back(plantStatesResult.ctPlayerStates[i].viewAngle[plantStateIndex]);
-            // need to flip view angle between recording and game
-            double tmpX = playerViewAngle.back().x;
-            playerViewAngle.back().x = playerViewAngle.back().y;
-            playerViewAngle.back().y = tmpX;
+            // no need to flip view angle between recording and game, my bt test set pos command already does it
             health.push_back(static_cast<int>(100 * plantStatesResult.ctPlayerStates[i].health[plantStateIndex]));
             armor.push_back(static_cast<int>(100 * plantStatesResult.ctPlayerStates[i].armor[plantStateIndex]));
+            numCT++;
         }
         if (plantStatesResult.tPlayerStates[i].alive[plantStateIndex] && numT < maxT) {
-            numT++;
             neededBots.push_back({0, ENGINE_TEAM_T, dis(gen) < 0.5 ? AggressiveType::Push : AggressiveType::Bait});
+            if (numT < numHumans) {
+                neededBots.back().human = true;
+            }
             playerPos.push_back(plantStatesResult.tPlayerStates[i].pos[plantStateIndex]);
             playerViewAngle.push_back(plantStatesResult.tPlayerStates[i].viewAngle[plantStateIndex]);
-            // need to flip view angle between recording and game
-            double tmpX = playerViewAngle.back().x;
-            playerViewAngle.back().x = playerViewAngle.back().y;
-            playerViewAngle.back().y = tmpX;
+            // no need to flip view angle between recording and game, my bt test set pos command already does it
             health.push_back(static_cast<int>(100 * plantStatesResult.tPlayerStates[i].health[plantStateIndex]));
             armor.push_back(static_cast<int>(100 * plantStatesResult.tPlayerStates[i].armor[plantStateIndex]));
+            numT++;
         }
     }
 }
@@ -124,7 +121,7 @@ void WaitUntilScoreScript::initialize(Tree & tree, ServerState & state) {
 }
 
 vector<Script::Ptr> createRoundScripts(const csknow::plant_states::PlantStatesResult & plantStatesResult,
-                                       int startSituationId, bool quitAtEnd) {
+                                       int startSituationId, bool quitAtEnd, int numHumans) {
     vector<Script::Ptr> result;
 
     std::random_device rd;
@@ -143,7 +140,8 @@ vector<Script::Ptr> createRoundScripts(const csknow::plant_states::PlantStatesRe
         // 0 - push in to b from mid with enemy in b site
         // 4 - attacking a from cat and spawn
         result.push_back(make_unique<RoundScript>(plantStatesResult, i/*0*//*4*//*8*//*12*//*205*/, maxI, gen, dis,
-                                                  std::nullopt, "RoundScript", std::nullopt, std::nullopt));
+                                                  std::nullopt, "RoundScript", std::nullopt, std::nullopt,
+                                                  numHumans));
     }
     if (quitAtEnd) {
         result.push_back(make_unique<QuitScript>());
@@ -552,7 +550,7 @@ vector<Script::Ptr> createPrebakedRoundScripts(const nav_mesh::nav_file & navFil
     size_t numRounds = static_cast<size_t>(plantStatesResult.size);
     for (size_t i = 0; i < numRounds; i++) {
         result.push_back(make_unique<RoundScript>(plantStatesResult, i/*1*//*8*//*12*//*205*/, numRounds, gen, dis,
-                                                  playerFreeze[i], names[i], cameraPoses[i], cameraAngles[i]));
+                                                  playerFreeze[i], names[i], cameraPoses[i], cameraAngles[i], 0));
     }
     if (quitAtEnd) {
         result.push_back(make_unique<QuitScript>());

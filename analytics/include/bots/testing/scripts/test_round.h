@@ -28,7 +28,7 @@ public:
     explicit RoundScript(const csknow::plant_states::PlantStatesResult & plantStatesResult, size_t plantStateIndex,
                          size_t numRounds, std::mt19937 gen, std::uniform_real_distribution<> dis,
                          std::optional<vector<bool>> playerFreeze, string baseName, std::optional<Vec3> cameraOrigin,
-                         std::optional<Vec2> cameraAngle);
+                         std::optional<Vec2> cameraAngle, int numHumans);
 
     void initialize(Tree & tree, ServerState & state) override;
 };
@@ -40,7 +40,7 @@ public:
 };
 
 vector<Script::Ptr> createRoundScripts(const csknow::plant_states::PlantStatesResult & plantStatesResult,
-                                       int startSituationId, bool quitAtEnd);
+                                       int startSituationId, bool quitAtEnd, int numHumans);
 vector<Script::Ptr> createPrebakedRoundScripts(const nav_mesh::nav_file & navFile, bool shouldRandomizePositions,
                                                int situationId, bool quitAtEnd);
 
