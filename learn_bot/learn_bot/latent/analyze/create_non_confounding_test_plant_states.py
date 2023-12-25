@@ -9,8 +9,8 @@ from learn_bot.libs.hdf5_to_pd import load_hdf5_to_pd, save_pd_to_hdf5
 camera_x_column = "camera x"
 camera_y_column = "camera y"
 camera_z_column = "camera z"
-camera_pitch_column = "camera pitch"
-camera_yaw_column = "camera yaw"
+camera_yaw_column = "camera view angle x"
+camera_pitch_column = "camera view angle y"
 camera_columns = [camera_x_column, camera_y_column, camera_z_column, camera_pitch_column, camera_yaw_column]
 non_confound_test_plant_states_file_name = 'non_confound_test_plant_states.hdf5'
 

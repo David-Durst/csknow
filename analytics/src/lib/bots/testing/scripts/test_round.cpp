@@ -16,6 +16,11 @@ RoundScript::RoundScript(const csknow::plant_states::PlantStatesResult & plantSt
         observeSettings.cameraOrigin = cameraOrigin.value();
         observeSettings.cameraAngle = cameraAngle.value();
     }
+    else if (!plantStatesResult.cameraPos.empty()) {
+        observeSettings.observeType = ObserveType::Absolute;
+        observeSettings.cameraOrigin = plantStatesResult.cameraPos[plantStateIndex];
+        observeSettings.cameraAngle = plantStatesResult.cameraViewAngle[plantStateIndex];
+    }
     int numCT = 0, numT = 0;
     neededBots.clear();
     c4Pos = plantStatesResult.c4Pos[plantStateIndex];

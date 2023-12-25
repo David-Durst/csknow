@@ -41,6 +41,8 @@ namespace csknow::plant_states {
             vector<float> armor;
         };
         array<PlayerState, max_players_per_team> ctPlayerStates, tPlayerStates;
+        vector<Vec3> cameraPos;
+        vector<Vec2> cameraViewAngle;
 
 
         PlantStatesResult() {
@@ -149,7 +151,7 @@ namespace csknow::plant_states {
             size = plantTickId.size();
         }
 
-        void loadFromPython(const string& filePath) {
+        void loadFromPython(const string& filePath, bool loadCamera) {
             // We open the file as read-only:
             HighFive::File file(filePath, HighFive::File::ReadOnly);
 
@@ -178,6 +180,11 @@ namespace csknow::plant_states {
                 loadVec2VectorFromHDF5(tPlayerStates[i].viewAngle, file, "player view angle T " + iStr);
                 tPlayerStates[i].health = file.getDataSet("/data/player health T " + iStr).read<std::vector<float>>();
                 tPlayerStates[i].armor = file.getDataSet("/data/player armor T " + iStr).read<std::vector<float>>();
+            }
+
+            if (loadCamera) {
+                loadVec3VectorFromHDF5(cameraPos, file, "camera pos");
+                loadVec2VectorFromHDF5(cameraViewAngle, file, "camera view angle");
             }
 
             size = plantTickId.size();
