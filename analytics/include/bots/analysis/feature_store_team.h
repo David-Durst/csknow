@@ -140,6 +140,7 @@ namespace csknow::feature_store {
             vector<int> shotsCurTick;
             vector<float> secondsUntilNextHitEnemy, secondsAfterPriorHitEnemy;
             vector<float> health, armor;
+            vector<bool> helmet;
             // control inputs
             vector<int64_t> areaIndex;
             vector<bool> decreaseDistanceToC4Over5s, decreaseDistanceToC4Over10s, decreaseDistanceToC4Over20s;

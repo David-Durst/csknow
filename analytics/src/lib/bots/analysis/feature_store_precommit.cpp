@@ -260,7 +260,7 @@ namespace csknow::feature_store {
                                         nearestCrosshairDistanceToEnemy[client.csgoId],
                                         nearestWorldDistanceToEnemy[client.csgoId],
                                         nearestWorldDistanceToTeammate[client.csgoId],
-                                        client.health, client.armor,
+                                        client.health, client.armor, client.hasHelmet,
                                         static_cast<EngineWeaponId>(client.currentWeaponId),
                                         client.isScoped, client.isAirborne, client.isWalking, client.duckKeyPressed});
         }

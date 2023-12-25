@@ -56,6 +56,7 @@ namespace csknow::feature_store {
         double nearestWorldDistanceToEnemy;
         double nearestWorldDistanceToTeammate;
         int health, armor;
+        bool helmet;
         EngineWeaponId weaponId;
         bool scoped;
         bool airborne;
