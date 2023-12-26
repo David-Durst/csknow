@@ -133,6 +133,9 @@ namespace csknow::key_retake_events {
                         ticks.sayPerTick.intervalToEvent.findOverlapping(tickIndex, tickIndex)) {
                     std::string sayMessage = say.message[sayIndex];
                     if (sayMessage.find(test_ready_string) != std::string::npos) {
+                        if (foundTestStartInRound) {
+                            throw std::runtime_error("Found two test start in one round");
+                        }
                         foundTestStartInRound = true;
                         std::vector<std::string> parsedMessage = parseString(sayMessage, '_');
                         roundTestName[roundIndex] = parsedMessage[1];
