@@ -46,6 +46,7 @@ def create_test_plant_states():
     alive_cols = []
     ct_alive_cols = []
     t_alive_cols = []
+    helmet_cols = []
 
     for player_place_area_columns in specific_player_place_area_columns:
         cols_to_gets += player_place_area_columns.pos + player_place_area_columns.view_angle + \
@@ -56,6 +57,7 @@ def create_test_plant_states():
             ct_alive_cols.append(player_place_area_columns.alive)
         else:
             t_alive_cols.append(player_place_area_columns.alive)
+        helmet_cols.append(player_place_area_columns.player_helmet)
 
 
     test_start_dfs = []
@@ -96,9 +98,11 @@ def create_test_plant_states():
     concat_test_start_df.loc[:, "winner team"] = 0
     concat_test_start_df.loc[:, "c4 defused"] = False
 
-    # cast all alive columns to bools
+    # cast all alive and helmet columns to bools
     for alive_col in alive_cols:
         concat_test_start_df.loc[:, alive_col] = concat_test_start_df.loc[:, alive_col].astype('bool')
+    for helmet_col in helmet_cols:
+        concat_test_start_df.loc[:, helmet_col] = concat_test_start_df.loc[:, helmet_col].astype('bool')
 
     test_plant_states_file_name = all_test_plant_states_file_name
     if filter_for_push:
