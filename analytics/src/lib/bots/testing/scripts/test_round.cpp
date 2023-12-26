@@ -151,7 +151,7 @@ vector<Script::Ptr> createRoundScripts(const csknow::plant_states::PlantStatesRe
     for (size_t i = batchSize * startSituationId; i < maxI; i++) {
         // 0 - push in to b from mid with enemy in b site
         // 4 - attacking a from cat and spawn
-        result.push_back(make_unique<RoundScript>(plantStatesResult, 2/*0*//*4*//*8*//*12*//*205*/, maxI, gen, dis,
+        result.push_back(make_unique<RoundScript>(plantStatesResult, i/*0*//*4*//*8*//*12*//*205*/, maxI, gen, dis,
                                                   std::nullopt, "RoundScript", std::nullopt, std::nullopt,
                                                   numHumans));
     }
@@ -173,11 +173,13 @@ void addRow(csknow::plant_states::PlantStatesResult & plantStatesResult, Vec3 c4
         plantStatesResult.ctPlayerStates[i].viewAngle.push_back({});
         plantStatesResult.ctPlayerStates[i].health.push_back(1.);
         plantStatesResult.ctPlayerStates[i].armor.push_back(1.);
+        plantStatesResult.ctPlayerStates[i].helmet.push_back(true);
         plantStatesResult.tPlayerStates[i].alive.push_back(false);
         plantStatesResult.tPlayerStates[i].pos.push_back({});
         plantStatesResult.tPlayerStates[i].viewAngle.push_back({});
         plantStatesResult.tPlayerStates[i].health.push_back(1.);
         plantStatesResult.tPlayerStates[i].armor.push_back(1.);
+        plantStatesResult.tPlayerStates[i].helmet.push_back(true);
     }
 }
 
