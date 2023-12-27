@@ -153,6 +153,14 @@ class TransformerNestedHiddenLatentModel(nn.Module):
             [range_list_to_index_list(cts.get_name_ranges(True, True, contained_str=player_place_area_columns.alive))
              for player_place_area_columns in specific_player_place_area_columns]
         )
+        self.health_columns = flatten_list(
+            [range_list_to_index_list(cts.get_name_ranges(True, True, contained_str=player_place_area_columns.player_health))
+             for player_place_area_columns in specific_player_place_area_columns]
+        )
+        self.armor_columns = flatten_list(
+            [range_list_to_index_list(cts.get_name_ranges(True, True, contained_str=player_place_area_columns.player_armor))
+             for player_place_area_columns in specific_player_place_area_columns]
+        )
 
         self.noise_var = -1.
 
@@ -233,6 +241,10 @@ class TransformerNestedHiddenLatentModel(nn.Module):
             x[:, self.time_control_columns] = 0.
         if self.mask_partial_info:
             x[:, self.players_visibility] = 0.
+
+        x[:, self.health_columns] = 0.
+        x[:, self.armor_columns] = 0.
+
         # legacy, so that if hand in too many similarity columns, still use them
         similarity = similarity_in[:, self.num_similarity_columns * -1:].clone()
         if self.control_type != ControlType.SimilarityControl:
