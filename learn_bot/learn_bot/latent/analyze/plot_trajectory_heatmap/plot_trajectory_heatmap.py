@@ -104,6 +104,7 @@ def run_trajectory_heatmaps_one_filter_option(trajectory_filter_options: Traject
                                       else [human_title_str + ' Save'])
     # run this before plotting trajectories so get unscaled buffers
     compute_trajectory_earth_mover_distances(title_strs, diff_indices, plots_path, trajectory_filter_options)
+    return
     plot_trajectories_to_image(title_strs, True, plots_path, trajectory_filter_options)
     plot_trajectory_diffs_to_image(title_strs, diff_indices, plots_path, trajectory_filter_options)
     compute_metrics(trajectory_filter_options, plots_path)
