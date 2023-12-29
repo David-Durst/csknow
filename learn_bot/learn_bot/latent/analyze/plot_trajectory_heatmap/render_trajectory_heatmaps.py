@@ -124,27 +124,26 @@ def plot_trajectories_to_image(titles: List[str], plot_teams_separately: bool, p
     scale_buffers_by_points(titles)
 
     for title in titles:
-        images_per_title: List[Image.Image] = []
-
-        # image with everyone
-        base_both_d2_img = d2_img.copy().convert("RGBA")
-        plot_one_image_one_team(title, True, bot_ct_color_list, saturated_ct_color_list, base_both_d2_img)
-        plot_one_image_one_team(title, False, bot_t_color_list, saturated_t_color_list, base_both_d2_img)
-        images_per_title.append(base_both_d2_img)
-
         if plot_teams_separately:
+            images_per_title: List[Image.Image] = []
             # image with just ct
             base_ct_d2_img = d2_img.copy().convert("RGBA")
             plot_one_image_one_team(title, True, bot_ct_color_list, saturated_ct_color_list, base_ct_d2_img)
+            base_ct_d2_img.thumbnail([1000, 1000], Image.ANTIALIAS)
             images_per_title.append(base_ct_d2_img)
 
             # image with just t
             base_t_d2_img = d2_img.copy().convert("RGBA")
             plot_one_image_one_team(title, False, bot_t_color_list, saturated_t_color_list, base_t_d2_img)
+            base_t_d2_img.thumbnail([1000, 1000], Image.ANTIALIAS)
             images_per_title.append(base_t_d2_img)
             title_images.append(concat_horizontal(images_per_title))
         else:
-            title_images.append(images_per_title[0])
+            # image with everyone
+            base_both_d2_img = d2_img.copy().convert("RGBA")
+            plot_one_image_one_team(title, True, bot_ct_color_list, saturated_ct_color_list, base_both_d2_img)
+            plot_one_image_one_team(title, False, bot_t_color_list, saturated_t_color_list, base_both_d2_img)
+            title_images.append(base_both_d2_img)
 
     complete_image = concat_vertical(title_images)
     complete_image.save(plots_path / (str(trajectory_filter_options) + '.png'))
