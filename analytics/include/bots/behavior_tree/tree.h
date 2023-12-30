@@ -46,5 +46,6 @@ public:
     void readFilterNames();
 };
 void addTreeThinkersToBlackboard(const ServerState & state, Blackboard * blackboard);
+void makeSureCTPusher(const ServerState & state, Blackboard * blackboard);
 
 #endif //CSKNOW_TREE_H

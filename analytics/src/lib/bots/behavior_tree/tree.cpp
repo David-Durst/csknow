@@ -117,6 +117,7 @@ void Tree::tick(ServerState & state, const string & mapsPath) {
 
     // insert tree thinkers and memories for new bots
     addTreeThinkersToBlackboard(state, blackboard.get());
+    makeSureCTPusher(state, blackboard.get());
 
     // compute the ids that are valid
     if (filterMutex.try_lock()) {
@@ -304,6 +305,28 @@ void addTreeThinkersToBlackboard(const ServerState & state, Blackboard * blackbo
                 { }
             };
             blackboard->playerToMouseController.insert({client.csgoId, SecondOrderController(1.6, 0.76, 0.5)});
+        }
+    }
+}
+
+void makeSureCTPusher(const ServerState & state, Blackboard * blackboard) {
+    // useful for testing cases when adding bots manually and made not create a pusher, or no pushers left alive
+    bool haveCTPusher = false;
+    for (const auto & [playerId, thinker] : blackboard->playerToTreeThinkers) {
+        const ServerState::Client & client = state.getClient(playerId);
+        if (client.team == ENGINE_TEAM_CT && client.isAlive && thinker.aggressiveType == AggressiveType::Push) {
+            haveCTPusher = true;
+        }
+    }
+    if (haveCTPusher) {
+        return;
+    }
+    for (const auto & client : state.clients) {
+        if (client.isBot && blackboard->playerToTreeThinkers.count(client.csgoId)) {
+            if (client.team == ENGINE_TEAM_CT && !haveCTPusher) {
+                blackboard->playerToTreeThinkers[client.csgoId].aggressiveType = AggressiveType::Push;
+                haveCTPusher = true;
+            }
         }
     }
 }
