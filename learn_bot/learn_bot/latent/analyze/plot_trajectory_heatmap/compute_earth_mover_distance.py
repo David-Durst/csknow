@@ -20,6 +20,19 @@ from learn_bot.latent.analyze.plot_trajectory_heatmap.filter_trajectories import
 
 plot_downsampled = False
 plot_scaled = True
+debug_printing = True
+
+
+def print_halves(title: str, buffer: np.ndarray):
+    if not debug_printing:
+        return
+    num_rows, num_cols = buffer.shape
+    top = buffer[:num_rows // 2, :].sum()
+    bottom = buffer[num_rows // 2:, :].sum()
+    left = buffer[:, :num_cols // 2].sum()
+    right = buffer[:, num_cols // 2:].sum()
+    print(f"{title} top {top:.2f} bottom {bottom:.2f} left {left:.2f} right {right:.2f}")
+
 
 # compute emd with weights scaled to dist_b, treating that as baseline
 def compute_one_earth_mover_distance(dist_a: ImageBuffers, dist_b: ImageBuffers,
@@ -44,6 +57,7 @@ def compute_one_earth_mover_distance(dist_a: ImageBuffers, dist_b: ImageBuffers,
         a_buffer_downsampled = block_reduce(a_buffer, (20, 20), np.sum)
         if record_a and plot_downsampled:
             model_team_buffers[title_a].append(a_buffer_downsampled)
+            print_halves(title_a, a_buffer_downsampled)
         a_non_zero_coords = a_buffer_downsampled.nonzero()
         a_non_zero_coords_np = np.column_stack(a_non_zero_coords)
         a_non_zero_values = a_buffer_downsampled[a_non_zero_coords[0], a_non_zero_coords[1]].astype(np.float64)
@@ -52,6 +66,7 @@ def compute_one_earth_mover_distance(dist_a: ImageBuffers, dist_b: ImageBuffers,
         b_buffer_downsampled = block_reduce(b_buffer, (20, 20), np.sum)
         if record_b and plot_downsampled:
             model_team_buffers[title_b].append(b_buffer_downsampled)
+            print_halves(title_b, b_buffer_downsampled)
         b_non_zero_coords = b_buffer_downsampled.nonzero()
         b_non_zero_coords_np = np.column_stack(b_non_zero_coords)
         b_non_zero_values = b_buffer_downsampled[b_non_zero_coords[0], b_non_zero_coords[1]].astype(np.float64)
@@ -65,10 +80,12 @@ def compute_one_earth_mover_distance(dist_a: ImageBuffers, dist_b: ImageBuffers,
             a_buffer_scaled = np.zeros(a_buffer_downsampled.shape, np.float)
             a_buffer_scaled[a_non_zero_coords[0], a_non_zero_coords[1]] = scaled_a_non_zero_values
             model_team_buffers[title_a].append(a_buffer_scaled)
+            print_halves(title_a, a_buffer_scaled)
         if record_b and plot_scaled:
             b_buffer_scaled = np.zeros(b_buffer_downsampled.shape, np.float)
             b_buffer_scaled[b_non_zero_coords[0], b_non_zero_coords[1]] = scaled_b_non_zero_values
             model_team_buffers[title_b].append(b_buffer_scaled)
+            print_halves(title_b, b_buffer_scaled)
 
         # compute distance between all cluster coordinates
         dist_matrix = ot.dist(a_non_zero_coords_np, b_non_zero_coords_np)
