@@ -18,6 +18,9 @@ from learn_bot.latent.analyze.plot_trajectory_heatmap.filter_trajectories import
 # https://homepages.inf.ed.ac.uk/rbf/CVonline/LOCAL_COPIES/RUBNER/emd.htm
 # https://docs.scipy.org/doc/scipy/reference/generated/scipy.spatial.distance.cdist.html
 
+plot_downsampled = False
+plot_scaled = True
+
 # compute emd with weights scaled to dist_b, treating that as baseline
 def compute_one_earth_mover_distance(dist_a: ImageBuffers, dist_b: ImageBuffers,
                                      title_a: str, title_b: str,
@@ -39,7 +42,7 @@ def compute_one_earth_mover_distance(dist_a: ImageBuffers, dist_b: ImageBuffers,
         # downsample so reasonable size, get x,y coordinates and weights of clusters with non-zero weight
         a_buffer = dist_a.get_buffer(ct_team)
         a_buffer_downsampled = block_reduce(a_buffer, (20, 20), np.sum)
-        if record_a:
+        if record_a and plot_downsampled:
             model_team_buffers[title_a].append(a_buffer_downsampled)
         a_non_zero_coords = a_buffer_downsampled.nonzero()
         a_non_zero_coords_np = np.column_stack(a_non_zero_coords)
@@ -47,16 +50,25 @@ def compute_one_earth_mover_distance(dist_a: ImageBuffers, dist_b: ImageBuffers,
 
         b_buffer = dist_b.get_buffer(ct_team)
         b_buffer_downsampled = block_reduce(b_buffer, (20, 20), np.sum)
-        if record_b:
+        if record_b and plot_downsampled:
             model_team_buffers[title_b].append(b_buffer_downsampled)
         b_non_zero_coords = b_buffer_downsampled.nonzero()
         b_non_zero_coords_np = np.column_stack(b_non_zero_coords)
         b_non_zero_values = b_buffer_downsampled[b_non_zero_coords[0], b_non_zero_coords[1]].astype(np.float64)
 
-        # scale a_non_zero_values sum to b_non_zero_values sum
+        # scale a_non_zero_values and b_non_zero_values to sum to 1
         # while the inf.ed.ac.uk shows that EMD is defined if different sums, POT only supports weights that sum to 1
         scaled_a_non_zero_values = a_non_zero_values / np.sum(a_non_zero_values)
         scaled_b_non_zero_values = b_non_zero_values / np.sum(b_non_zero_values)
+
+        if record_a and plot_scaled:
+            a_buffer_scaled = np.zeros(a_buffer_downsampled.shape, np.float)
+            a_buffer_scaled[a_non_zero_coords[0], a_non_zero_coords[1]] = scaled_a_non_zero_values
+            model_team_buffers[title_a].append(a_buffer_scaled)
+        if record_b and plot_scaled:
+            b_buffer_scaled = np.zeros(b_buffer_downsampled.shape, np.float)
+            b_buffer_scaled[b_non_zero_coords[0], b_non_zero_coords[1]] = scaled_b_non_zero_values
+            model_team_buffers[title_b].append(b_buffer_scaled)
 
         # compute distance between all cluster coordinates
         dist_matrix = ot.dist(a_non_zero_coords_np, b_non_zero_coords_np)
