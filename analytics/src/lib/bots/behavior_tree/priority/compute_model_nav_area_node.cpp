@@ -8,7 +8,7 @@
 
 namespace csknow::compute_nav_area {
 
-    constexpr float certainty_threshold = 0.05;
+    constexpr float certainty_threshold = 0.10;
 
     void ComputeModelNavAreaNode::computeDeltaPosProbabilistic(const ServerState & state, Priority & curPriority,
                                                                CSGOId csgoId, ModelNavData & modelNavData) {
@@ -33,15 +33,19 @@ namespace csknow::compute_nav_area {
         size_t deltaPosOption = 0;
         bool setDeltaPosOption = false;
         double probSample = blackboard.aggressionDis(blackboard.gen);
+        probabiltiesAreCertain = probSample > 0.2;
         double weightSoFar = 0.;
         modelNavData.deltaPosProbs.clear();
         for (size_t i = 0; i < probabilities.size(); i++) {
+            /*
             if (probabiltiesAreCertain) {
                 weightSoFar += probabilities[i];
             }
             else {
                 weightSoFar += uncertainProbabilities[i];
             }
+             */
+            weightSoFar += probabilities[i] * 0.5 + uncertainProbabilities[i] * 0.5;
             modelNavData.deltaPosProbs.push_back(probabilities[i]);
             if (probSample < weightSoFar && !setDeltaPosOption) {
                 deltaPosOption = i;
