@@ -25,6 +25,18 @@ load_data_options = LoadDataOptions(
     train_test_split_file_name=train_test_split_file_name
 )
 
+rollout_load_data_options = LoadDataOptions(
+    use_manual_data=False,
+    use_rollout_data=True,
+    use_synthetic_data=False,
+    use_small_human_data=False,
+    use_human_28_data=False,
+    use_all_human_data=False,
+    add_manual_to_all_human_data=False,
+    limit_manual_data_to_no_enemies_nav=False,
+    custom_rollout_extension='_12_29_23_model_learned_no_time_with_partial_1474_rounds*'
+
+)
 
 def compute_num_points(load_data_result: LoadDataResult):
     all_points = 0

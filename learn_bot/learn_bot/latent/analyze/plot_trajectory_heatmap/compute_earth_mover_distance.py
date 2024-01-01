@@ -22,7 +22,7 @@ from learn_bot.latent.analyze.plot_trajectory_heatmap.filter_trajectories import
 
 plot_downsampled = False
 plot_scaled = True
-plot_flow = False
+plot_flow = True
 debug_printing = False
 
 
@@ -94,7 +94,7 @@ def compute_one_earth_mover_distance(dist_a: ImageBuffers, dist_b: ImageBuffers,
             print_halves(title_b, b_buffer_scaled)
 
         # compute distance between all cluster coordinates
-        dist_matrix = ot.dist(a_non_zero_coords_np, b_non_zero_coords_np, metric='euclidean')
+        dist_matrix = ot.dist(a_non_zero_coords_np, b_non_zero_coords_np, metric='cityblock')
 
         # compute emd
         #new_emd = ot.emd2(scaled_a_non_zero_values, scaled_b_non_zero_values, dist_matrix, numItermax=1000000)
