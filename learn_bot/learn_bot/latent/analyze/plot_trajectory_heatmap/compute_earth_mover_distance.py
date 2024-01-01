@@ -103,20 +103,16 @@ def compute_one_earth_mover_distance(dist_a: ImageBuffers, dist_b: ImageBuffers,
                                       numItermax=1000000)
         new_emd = emd_dict['cost']
         emd += new_emd
-        #plt.plot(a_non_zero_coords_np[:, 1], a_non_zero_coords_np[:, 0], '+b', label='Source samples')
-        #plt.plot(b_non_zero_coords_np[:, 1], b_non_zero_coords_np[:, 0], 'xr', label='Target samples')
-        if record_a and plot_flow:
+        if record_a:
             model_team_emd[title_a].append(new_emd)
-            # plot flow
-            fig = plt.figure(figsize=(4,4))
-            ot.plot.plot2D_samples_mat(a_non_zero_coords_np[:, [1, 0]], b_non_zero_coords_np[:, [1, 0]],
-                                       emd_matrix, c=[.5, .5, 1])
-            plt.gca().invert_yaxis()
-            fig.canvas.draw()
-            model_team_flow[title_a].append(
-                Image.frombytes('RGB', fig.canvas.get_width_height(), fig.canvas.tostring_rgb()))
-        #plt.legend(loc=0)
-        #plt.title('OT matrix with samples')
+            if plot_flow:
+                fig = plt.figure(figsize=(4,4))
+                ot.plot.plot2D_samples_mat(a_non_zero_coords_np[:, [1, 0]], b_non_zero_coords_np[:, [1, 0]],
+                                           emd_matrix, c=[.5, .5, 1])
+                plt.gca().invert_yaxis()
+                fig.canvas.draw()
+                model_team_flow[title_a].append(
+                    Image.frombytes('RGB', fig.canvas.get_width_height(), fig.canvas.tostring_rgb()))
     return emd
 
 title_font = ImageFont.truetype("arial.ttf", 12)
