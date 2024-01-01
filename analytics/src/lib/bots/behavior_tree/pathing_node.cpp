@@ -111,14 +111,12 @@ namespace movement {
             }
         }
 
-        bool newDeltaPosDestination = blackboard.inferenceManager.ranDeltaPosInferenceThisTick;
-
         // if have a path and haven't changed source or target nav area id and not stuck.
         // If so, do nothing (except increment waypoint if necessary)
         // also check that not in an already visited area because missed a jump
         if (blackboard.playerToPath.find(treeThinker.csgoId) != blackboard.playerToPath.end() &&
             blackboard.playerToLastPathingSourceNavAreaId.find(treeThinker.csgoId) != blackboard.playerToLastPathingSourceNavAreaId.end() &&
-            !changeCurArea && !newDeltaPosDestination &&
+            !changeCurArea &&
             blackboard.playerToLastPathingTargetNavAreaId.find(treeThinker.csgoId) != blackboard.playerToLastPathingTargetNavAreaId.end() &&
             targetAreaId == blackboard.playerToLastPathingTargetNavAreaId[treeThinker.csgoId]) {
             Path & curPath = blackboard.playerToPath[treeThinker.csgoId];

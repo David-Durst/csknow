@@ -29,12 +29,12 @@ namespace csknow::inference_manager {
         TeamId team;
         size_t ticksSinceLastInference;
         csknow::inference_delta_pos::InferenceDeltaPosPlayerAtTickProbabilities deltaPosProbabilities,
-            combatDeltaPosProbabilities;
+            uncertainDeltaPosProbabilities;
     };
 
     class InferenceManager {
-        bool ranDeltaPosInference = false;
-        void runDeltaPosInference();
+        bool ranDeltaPosInference = false, ranUncertainDeltaPosInference;
+        void runDeltaPosInference(bool uncertainModule);
         int overallModelToRun = 0;
     public:
         bool ranDeltaPosInferenceThisTick = false;
@@ -42,11 +42,11 @@ namespace csknow::inference_manager {
         double inferenceSeconds;
         torch::TensorOptions options = torch::TensorOptions().dtype(at::kFloat);
         map<CSGOId, ClientInferenceData> playerToInferenceData;
-        csknow::inference_delta_pos::InferenceDeltaPosTickValues deltaPosValues, combatDeltaPosValues;
+        csknow::inference_delta_pos::InferenceDeltaPosTickValues deltaPosValues;
         TeamSaveControlParameters teamSaveControlParameters;
 
-        fs::path deltaPosModelPath, combatDeltaPosModelPath;
-        torch::jit::script::Module deltaPosModule, combatDeltaPosModule;
+        fs::path deltaPosModelPath, uncertainDeltaPosModelPath;
+        torch::jit::script::Module deltaPosModule, uncertainDeltaPosModule;
         InferenceManager(const std::string & modelsDir);
         InferenceManager() : valid(false) { };
 

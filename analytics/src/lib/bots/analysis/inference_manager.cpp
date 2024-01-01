@@ -10,15 +10,15 @@ namespace csknow::inference_manager {
     InferenceManager::InferenceManager(const std::string & modelsDir) : valid(true),
         deltaPosModelPath(fs::path(modelsDir) / fs::path("latent_model") /
                       fs::path("delta_pos_script_model.pt")),
-        combatDeltaPosModelPath(fs::path(modelsDir) / fs::path("combat_model") /
+        uncertainDeltaPosModelPath(fs::path(modelsDir) / fs::path("uncertain_model") /
                       fs::path("delta_pos_script_model.pt")) {
         at::set_num_threads(1);
         at::set_num_interop_threads(1);
         torch::jit::getProfilingMode() = false;
         auto tmpDeltaPosModule = torch::jit::load(deltaPosModelPath);
         deltaPosModule = torch::jit::optimize_for_inference(tmpDeltaPosModule);
-        auto tmpCombatDeltaPosModule = torch::jit::load(combatDeltaPosModelPath);
-        combatDeltaPosModule = torch::jit::optimize_for_inference(tmpCombatDeltaPosModule);
+        auto tmpUncertainDeltaPosModule = torch::jit::load(uncertainDeltaPosModelPath);
+        uncertainDeltaPosModule = torch::jit::optimize_for_inference(tmpUncertainDeltaPosModule);
     }
 
     void InferenceManager::setCurClients(const vector<ServerState::Client> & clients) {
@@ -56,7 +56,7 @@ namespace csknow::inference_manager {
                                                                                         teamSaveControlParameters);
     }
 
-    void InferenceManager::runDeltaPosInference() {
+    void InferenceManager::runDeltaPosInference(bool uncertainModule) {
         std::vector<torch::jit::IValue> inputs;
         torch::Tensor rowPT = torch::from_blob(deltaPosValues.rowCPP.data(),
                                                {1, static_cast<long>(deltaPosValues.rowCPP.size())},
@@ -72,11 +72,22 @@ namespace csknow::inference_manager {
         torch::Tensor temperaturePt = torch::from_blob(temperatureArr.data(), {1, 1}, options);
         inputs.push_back(temperaturePt);
 
-        at::Tensor output = deltaPosModule.forward(inputs).toTuple()->elements()[1].toTensor();
+        if (uncertainModule) {
+            at::Tensor output = uncertainDeltaPosModule.forward(inputs).toTuple()->elements()[1].toTensor();
 
-        for (auto & [csgoId, inferenceData] : playerToInferenceData) {
-            playerToInferenceData[csgoId].deltaPosProbabilities =
-                    extractFeatureStoreDeltaPosResults(output, deltaPosValues, csgoId, inferenceData.team);
+            for (auto & [csgoId, inferenceData] : playerToInferenceData) {
+                playerToInferenceData[csgoId].uncertainDeltaPosProbabilities =
+                        extractFeatureStoreDeltaPosResults(output, deltaPosValues, csgoId, inferenceData.team);
+            }
+        }
+        else {
+            at::Tensor output = deltaPosModule.forward(inputs).toTuple()->elements()[1].toTensor();
+
+            for (auto & [csgoId, inferenceData] : playerToInferenceData) {
+                playerToInferenceData[csgoId].deltaPosProbabilities =
+                        extractFeatureStoreDeltaPosResults(output, deltaPosValues, csgoId, inferenceData.team);
+            }
+
         }
     }
 
@@ -121,10 +132,14 @@ namespace csknow::inference_manager {
         //runAggressionInference(clients);
         ranDeltaPosInferenceThisTick = false;
         if (overallModelToRun == 0) {
+            runDeltaPosInference(true);
+            ranUncertainDeltaPosInference = true;
+        }
+        else if (overallModelToRun == 4) {
             //std::chrono::duration<double> inferenceTime = start - lastInferenceTime;
             //std::cout << "times between inferences " << inferenceTime.count() << std::endl;
             //lastInferenceTime = start;
-            runDeltaPosInference();
+            runDeltaPosInference(false);
             ranDeltaPosInference = true;
             ranDeltaPosInferenceThisTick = true;
         }
@@ -138,7 +153,7 @@ namespace csknow::inference_manager {
     }
 
     bool InferenceManager::haveValidData() const {
-        return ranDeltaPosInference;
+        return ranDeltaPosInference && ranUncertainDeltaPosInference;
         /*
         if (!ranOrderInference || !ranPlaceInference || !ranAreaInference || !ranDeltaPosInference) {
             return false;
