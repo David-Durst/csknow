@@ -20,9 +20,10 @@ run_csknow_rounds() {
     for i in {0..14}
     do
         cd ${script_dir}/../../learn_bot/
+        echo "model"
         echo $model 
+        echo "uncertain model"
         echo $uncertain_model 
-        exit 0
         ./scripts/deploy_latent_models_specific.sh $model 
         ./scripts/deploy_uncertain_models_specific.sh $uncertain_model 
         cd ${script_dir}/../build
@@ -48,7 +49,7 @@ run_csknow_rounds() {
     result_strs+=("")
 }
 
-
+git log -n 1
 mkdir -p ${script_dir}/../build
 cd ${script_dir}/../build
 cmake .. -DCMAKE_BUILD_TYPE=Release
@@ -70,7 +71,7 @@ if make -j 8; then
     #models=(12_28_2023__17_14_50_iw_256_bc_20_pr_0_fr_0_b_1024_it_1_ot_3_lr_4e-05_wd_0.0_l_4_h_4_n_20.0_ros_2.0_ct_SimilarityControl_pm_NoMask_mpi_False_om_NoMask_w_None_dh_None_c_just_human_all)
     #models=(12_28_2023__17_14_50_iw_256_bc_20_pr_0_fr_0_b_1024_it_1_ot_3_lr_4e-05_wd_0.0_l_4_h_4_n_20.0_ros_2.0_ct_SimilarityControl_pm_NoMask_mpi_False_om_NoMask_w_None_dh_None_c_just_human_all \
     #    12_28_2023__17_14_50_iw_256_bc_20_pr_0_fr_0_b_1024_it_3_ot_3_lr_4e-05_wd_0.0_l_4_h_4_n_20.0_ros_2.0_ct_SimilarityControl_pm_NoMask_mpi_False_om_NoMask_w_None_dh_None_c_just_human_all)
-    for (( i=0; i<$#models; i++ ))
+    for (( i=0; i<${#models[*]}; i++ ))
     do
         /home/steam/csgo-ds/csgo/addons/sourcemod/scripting/bot-link/make_push.sh
         model_type="learned push"
