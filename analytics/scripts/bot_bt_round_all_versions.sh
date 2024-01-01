@@ -60,9 +60,11 @@ if make -j 8; then
     model_type="learned"
     result_strs=()
     #models=(11_26_2023__22_28_22_iw_256_bc_20_pr_0_fr_0_b_1024_it_1_ot_3_lr_4e-05_wd_0.0_l_4_h_4_n_20.0_ros_2.0_ct_SimilarityControl_pm_NoMask_nm_False_om_NoMask_w_None_dh_None_c_just_human_all)
-    models=(12_25_2023__21_22_14_iw_256_bc_20_pr_0_fr_0_b_1024_it_1_ot_3_lr_4e-05_wd_0.0_l_4_h_4_n_20.0_ros_2.0_ct_SimilarityControl_pm_NoMask_mpi_False_om_NoMask_w_None_dh_None_c_just_human_all)
-    #models=(12_25_2023__21_22_14_iw_256_bc_20_pr_0_fr_0_b_1024_it_1_ot_3_lr_4e-05_wd_0.0_l_4_h_4_n_20.0_ros_2.0_ct_SimilarityControl_pm_NoMask_mpi_False_om_NoMask_w_None_dh_None_c_just_human_all \
-    #    12_25_2023__21_22_14_iw_256_bc_20_pr_0_fr_0_b_1024_it_3_ot_3_lr_4e-05_wd_0.0_l_4_h_4_n_20.0_ros_2.0_ct_SimilarityControl_pm_NoMask_mpi_False_om_NoMask_w_None_dh_None_c_just_human_all)
+    models=(12_29_2023__22_46_01_iw_256_bc_20_pr_0_fr_0_b_1024_it_1_ot_3_lr_4e-05_wd_0.0_l_4_h_4_n_20.0_ros_2.0_ct_TimeControl_pm_NoMask_mpi_False_om_NoMask_w_None_dh_None_c_just_human_all)
+    #models=(12_25_2023__21_22_14_iw_256_bc_20_pr_0_fr_0_b_1024_it_1_ot_3_lr_4e-05_wd_0.0_l_4_h_4_n_20.0_ros_2.0_ct_SimilarityControl_pm_NoMask_mpi_False_om_NoMask_w_None_dh_None_c_just_human_all)
+    #models=(12_28_2023__17_14_50_iw_256_bc_20_pr_0_fr_0_b_1024_it_1_ot_3_lr_4e-05_wd_0.0_l_4_h_4_n_20.0_ros_2.0_ct_SimilarityControl_pm_NoMask_mpi_False_om_NoMask_w_None_dh_None_c_just_human_all)
+    #models=(12_28_2023__17_14_50_iw_256_bc_20_pr_0_fr_0_b_1024_it_1_ot_3_lr_4e-05_wd_0.0_l_4_h_4_n_20.0_ros_2.0_ct_SimilarityControl_pm_NoMask_mpi_False_om_NoMask_w_None_dh_None_c_just_human_all \
+    #    12_28_2023__17_14_50_iw_256_bc_20_pr_0_fr_0_b_1024_it_3_ot_3_lr_4e-05_wd_0.0_l_4_h_4_n_20.0_ros_2.0_ct_SimilarityControl_pm_NoMask_mpi_False_om_NoMask_w_None_dh_None_c_just_human_all)
     for model in "${models[@]}"
     do
         /home/steam/csgo-ds/csgo/addons/sourcemod/scripting/bot-link/make_push.sh
