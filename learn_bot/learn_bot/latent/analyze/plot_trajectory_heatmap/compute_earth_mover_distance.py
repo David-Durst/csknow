@@ -3,7 +3,9 @@ from typing import List, Dict
 
 import numpy as np
 import ot
+import ot.plot
 from PIL import Image, ImageFont, ImageDraw
+from matplotlib import pyplot as plt
 from scipy.spatial.distance import cdist
 from scipy.optimize import linear_sum_assignment
 from skimage.measure import block_reduce
@@ -20,7 +22,8 @@ from learn_bot.latent.analyze.plot_trajectory_heatmap.filter_trajectories import
 
 plot_downsampled = False
 plot_scaled = True
-debug_printing = True
+plot_flow = False
+debug_printing = False
 
 
 def print_halves(title: str, buffer: np.ndarray):
@@ -38,13 +41,16 @@ def print_halves(title: str, buffer: np.ndarray):
 def compute_one_earth_mover_distance(dist_a: ImageBuffers, dist_b: ImageBuffers,
                                      title_a: str, title_b: str,
                                      model_team_buffers: Dict[str, List[np.ndarray]],
-                                     model_team_emd: Dict[str, List[float]]) -> float:
+                                     model_team_emd: Dict[str, List[float]],
+                                     model_team_flow: Dict[str, List[Image.Image]]) -> float:
     # don't record a title that was already recorded, as if b used multiple times as baseline
     record_a = False
     if title_a not in model_team_buffers:
         record_a = True
         model_team_buffers[title_a] = []
         model_team_emd[title_a] = []
+        if plot_flow:
+            model_team_flow[title_a] = []
     record_b = False
     if title_b not in model_team_buffers:
         record_b = True
@@ -88,18 +94,34 @@ def compute_one_earth_mover_distance(dist_a: ImageBuffers, dist_b: ImageBuffers,
             print_halves(title_b, b_buffer_scaled)
 
         # compute distance between all cluster coordinates
-        dist_matrix = ot.dist(a_non_zero_coords_np, b_non_zero_coords_np)
+        dist_matrix = ot.dist(a_non_zero_coords_np, b_non_zero_coords_np, metric='euclidean')
 
         # compute emd
-        new_emd = ot.emd2(scaled_a_non_zero_values, scaled_b_non_zero_values, dist_matrix, numItermax=1000000)
+        #new_emd = ot.emd2(scaled_a_non_zero_values, scaled_b_non_zero_values, dist_matrix, numItermax=1000000)
+        #emd += new_emd
+        emd_matrix, emd_dict = ot.emd(scaled_a_non_zero_values, scaled_b_non_zero_values, dist_matrix, log=True,
+                                      numItermax=1000000)
+        new_emd = emd_dict['cost']
         emd += new_emd
-        if record_a:
+        #plt.plot(a_non_zero_coords_np[:, 1], a_non_zero_coords_np[:, 0], '+b', label='Source samples')
+        #plt.plot(b_non_zero_coords_np[:, 1], b_non_zero_coords_np[:, 0], 'xr', label='Target samples')
+        if record_a and plot_flow:
             model_team_emd[title_a].append(new_emd)
+            # plot flow
+            fig = plt.figure(figsize=(4,4))
+            ot.plot.plot2D_samples_mat(a_non_zero_coords_np[:, [1, 0]], b_non_zero_coords_np[:, [1, 0]],
+                                       emd_matrix, c=[.5, .5, 1])
+            plt.gca().invert_yaxis()
+            fig.canvas.draw()
+            model_team_flow[title_a].append(
+                Image.frombytes('RGB', fig.canvas.get_width_height(), fig.canvas.tostring_rgb()))
+        #plt.legend(loc=0)
+        #plt.title('OT matrix with samples')
     return emd
 
 title_font = ImageFont.truetype("arial.ttf", 12)
 
-# first index is the model, second is the team
+
 def plot_emd_buffer(model_team_buffers: Dict[str, List[np.ndarray]], model_team_emd: Dict[str, List[float]],
                     titles: List[str], plots_path: Path, trajectory_filter_options: TrajectoryFilterOptions):
     model_team_imgs: List[Image.Image] = []
@@ -125,6 +147,28 @@ def plot_emd_buffer(model_team_buffers: Dict[str, List[np.ndarray]], model_team_
     emd_img.save(plots_path / 'diff' / ('emd_' + str(trajectory_filter_options) + '.png'))
 
 
+def plot_emd_flow(model_team_flow: Dict[str, List[Image.Image]], model_team_emd: Dict[str, List[float]],
+                  titles: List[str], plots_path: Path, trajectory_filter_options: TrajectoryFilterOptions):
+    if not plot_flow:
+        return
+    model_team_imgs: List[Image.Image] = []
+    for title in titles:
+        if title not in model_team_flow:
+            continue
+        team_imgs = model_team_flow[title]
+        for i, team_img in enumerate(team_imgs):
+            team_img_drw = ImageDraw.Draw(team_img)
+            img_text = title[:50]
+            if title in model_team_emd:
+                img_text += " " + str(f"{model_team_emd[title][i]:.2f}")
+            _, _, w, h = team_img_drw.textbbox((0, 0), img_text, font=title_font)
+            team_img_drw.text(((team_img.width - w) / 2, (team_img.height * 0.05 - h) / 2),
+                              img_text, fill=(0, 0, 0, 255), font=title_font)
+        model_team_imgs.append(concat_horizontal(team_imgs))
+    emd_img = concat_vertical(model_team_imgs)
+    emd_img.save(plots_path / 'diff' / ('emd_' + str(trajectory_filter_options) + '_flow.png'))
+
+
 def compute_trajectory_earth_mover_distances(titles: List[str], diff_indices: List[int], plots_path: Path,
                                              trajectory_filter_options: TrajectoryFilterOptions):
     print(f'Computing earth movers distance for {", ".join(titles)}')
@@ -134,16 +178,19 @@ def compute_trajectory_earth_mover_distances(titles: List[str], diff_indices: Li
     titles_to_emd: Dict[str, float] = {}
     model_team_buffers: Dict[str, List[np.ndarray]] = {}
     model_team_emd: Dict[str, List[float]] = {}
+    model_team_flow: Dict[str, List[Image.Image]] = {}
 
     with tqdm(total=len(titles) - 1, disable=False) as pbar:
         for i, title in enumerate(titles[1:]):
             diff_title = titles[diff_indices[i]]
             titles_to_emd[f'{title} vs {diff_title}'] = \
                 compute_one_earth_mover_distance(title_to_buffers[title], title_to_buffers[diff_title],
-                                                 title, diff_title, model_team_buffers, model_team_emd)
+                                                 title, diff_title, model_team_buffers, model_team_emd,
+                                                 model_team_flow)
             pbar.update(1)
 
     plot_emd_buffer(model_team_buffers, model_team_emd, titles, plots_path, trajectory_filter_options)
+    plot_emd_flow(model_team_flow, model_team_emd, titles, plots_path, trajectory_filter_options)
 
     with open(plots_path / 'diff' / ('emd_' + str(trajectory_filter_options) + '.txt'), 'w') as f:
         for titles, emd in titles_to_emd.items():
