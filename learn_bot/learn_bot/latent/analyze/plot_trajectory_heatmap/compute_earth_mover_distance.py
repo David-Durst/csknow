@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 from pathlib import Path
 from typing import List, Dict
 
@@ -37,11 +38,20 @@ def print_halves(title: str, buffer: np.ndarray):
     print(f"{title} top {top:.2f} bottom {bottom:.2f} left {left:.2f} right {right:.2f}")
 
 
+@dataclass
+class EMDResults:
+    emd_value: float
+    num_points_relative_to_baseline: float
+
+    def __str__(self):
+        return f"EMD {self.emd_value:.2f} Ratio Points {self.num_points_relative_to_baseline:.3f}"
+
+
 # compute emd with weights scaled to dist_b, treating that as baseline
 def compute_one_earth_mover_distance(dist_a: ImageBuffers, dist_b: ImageBuffers,
                                      title_a: str, title_b: str,
                                      model_team_buffers: Dict[str, List[np.ndarray]],
-                                     model_team_emd: Dict[str, List[float]],
+                                     model_team_emd: Dict[str, List[EMDResults]],
                                      model_team_flow: Dict[str, List[Image.Image]]) -> float:
     # don't record a title that was already recorded, as if b used multiple times as baseline
     record_a = False
@@ -79,8 +89,10 @@ def compute_one_earth_mover_distance(dist_a: ImageBuffers, dist_b: ImageBuffers,
 
         # scale a_non_zero_values and b_non_zero_values to sum to 1
         # while the inf.ed.ac.uk shows that EMD is defined if different sums, POT only supports weights that sum to 1
-        scaled_a_non_zero_values = a_non_zero_values / np.sum(a_non_zero_values)
-        scaled_b_non_zero_values = b_non_zero_values / np.sum(b_non_zero_values)
+        a_sum = np.sum(a_non_zero_values)
+        b_sum = np.sum(b_non_zero_values)
+        scaled_a_non_zero_values = a_non_zero_values / max(a_sum, b_sum)
+        scaled_b_non_zero_values = b_non_zero_values / max(a_sum, b_sum)
 
         if record_a and plot_scaled:
             a_buffer_scaled = np.zeros(a_buffer_downsampled.shape, np.float)
@@ -94,17 +106,15 @@ def compute_one_earth_mover_distance(dist_a: ImageBuffers, dist_b: ImageBuffers,
             print_halves(title_b, b_buffer_scaled)
 
         # compute distance between all cluster coordinates
-        dist_matrix = ot.dist(a_non_zero_coords_np, b_non_zero_coords_np, metric='cityblock')
+        dist_matrix = ot.dist(a_non_zero_coords_np, b_non_zero_coords_np, metric='euclidean')
 
         # compute emd
-        #new_emd = ot.emd2(scaled_a_non_zero_values, scaled_b_non_zero_values, dist_matrix, numItermax=1000000)
-        #emd += new_emd
-        emd_matrix, emd_dict = ot.emd(scaled_a_non_zero_values, scaled_b_non_zero_values, dist_matrix, log=True,
-                                      numItermax=1000000)
+        emd_matrix, emd_dict = ot.partial.partial_wasserstein(scaled_a_non_zero_values, scaled_b_non_zero_values,
+                                                              dist_matrix, log=True, numItermax=1000000)
         new_emd = emd_dict['cost']
         emd += new_emd
         if record_a:
-            model_team_emd[title_a].append(new_emd)
+            model_team_emd[title_a].append(EMDResults(new_emd, a_sum / b_sum))
             if plot_flow:
                 fig = plt.figure(figsize=(4,4))
                 ot.plot.plot2D_samples_mat(a_non_zero_coords_np[:, [1, 0]], b_non_zero_coords_np[:, [1, 0]],
@@ -118,7 +128,7 @@ def compute_one_earth_mover_distance(dist_a: ImageBuffers, dist_b: ImageBuffers,
 title_font = ImageFont.truetype("arial.ttf", 12)
 
 
-def plot_emd_buffer(model_team_buffers: Dict[str, List[np.ndarray]], model_team_emd: Dict[str, List[float]],
+def plot_emd_buffer(model_team_buffers: Dict[str, List[np.ndarray]], model_team_emd: Dict[str, List[EMDResults]],
                     titles: List[str], plots_path: Path, trajectory_filter_options: TrajectoryFilterOptions):
     model_team_imgs: List[Image.Image] = []
     for title in titles:
@@ -129,13 +139,13 @@ def plot_emd_buffer(model_team_buffers: Dict[str, List[np.ndarray]], model_team_
         for i, buffer in enumerate(team_buffers):
             max_value = np.max(buffer)
             scaled_buffer = np.uint8(buffer / max_value * 255)
-            team_img = Image.fromarray(scaled_buffer, 'L').resize((500, 500), Image.NEAREST)
+            team_img = Image.fromarray(scaled_buffer, 'L').resize((800, 800), Image.NEAREST)
             team_img_drw = ImageDraw.Draw(team_img)
             img_text = title[:60]
             if title in model_team_emd:
-                img_text += " " + str(f"{model_team_emd[title][i]:.2f}")
+                img_text += " \n " + str(model_team_emd[title][i])
             _, _, w, h = team_img_drw.textbbox((0, 0), img_text, font=title_font)
-            team_img_drw.text(((team_img.width - w) / 2, (team_img.height * 0.05 - h) / 2),
+            team_img_drw.text(((team_img.width - w) / 2, (team_img.height * 0.1 - h) / 2),
                           img_text, fill=(255), font=title_font)
             team_imgs.append(team_img)
         model_team_imgs.append(concat_horizontal(team_imgs))
@@ -143,7 +153,7 @@ def plot_emd_buffer(model_team_buffers: Dict[str, List[np.ndarray]], model_team_
     emd_img.save(plots_path / 'diff' / ('emd_' + str(trajectory_filter_options) + '.png'))
 
 
-def plot_emd_flow(model_team_flow: Dict[str, List[Image.Image]], model_team_emd: Dict[str, List[float]],
+def plot_emd_flow(model_team_flow: Dict[str, List[Image.Image]], model_team_emd: Dict[str, List[EMDResults]],
                   titles: List[str], plots_path: Path, trajectory_filter_options: TrajectoryFilterOptions):
     if not plot_flow:
         return
@@ -156,9 +166,9 @@ def plot_emd_flow(model_team_flow: Dict[str, List[Image.Image]], model_team_emd:
             team_img_drw = ImageDraw.Draw(team_img)
             img_text = title[:50]
             if title in model_team_emd:
-                img_text += " " + str(f"{model_team_emd[title][i]:.2f}")
+                img_text += " \n " + str(model_team_emd[title][i])
             _, _, w, h = team_img_drw.textbbox((0, 0), img_text, font=title_font)
-            team_img_drw.text(((team_img.width - w) / 2, (team_img.height * 0.05 - h) / 2),
+            team_img_drw.text(((team_img.width - w) / 2, (team_img.height * 0.1 - h) / 2),
                               img_text, fill=(0, 0, 0, 255), font=title_font)
         model_team_imgs.append(concat_horizontal(team_imgs))
     emd_img = concat_vertical(model_team_imgs)
@@ -173,7 +183,7 @@ def compute_trajectory_earth_mover_distances(titles: List[str], diff_indices: Li
 
     titles_to_emd: Dict[str, float] = {}
     model_team_buffers: Dict[str, List[np.ndarray]] = {}
-    model_team_emd: Dict[str, List[float]] = {}
+    model_team_emd: Dict[str, List[EMDResults]] = {}
     model_team_flow: Dict[str, List[Image.Image]] = {}
 
     with tqdm(total=len(titles) - 1, disable=False) as pbar:
@@ -189,5 +199,6 @@ def compute_trajectory_earth_mover_distances(titles: List[str], diff_indices: Li
     plot_emd_flow(model_team_flow, model_team_emd, titles, plots_path, trajectory_filter_options)
 
     with open(plots_path / 'diff' / ('emd_' + str(trajectory_filter_options) + '.txt'), 'w') as f:
-        for titles, emd in titles_to_emd.items():
-            f.write(f'{titles}: {emd}\n')
+        f.write("title, emd")
+        for title, emd in titles_to_emd.items():
+            f.write(f'{title}, {emd}\n')
