@@ -8,16 +8,27 @@
 
 namespace csknow::compute_nav_area {
 
+    constexpr float certainty_threshold = 0.05;
+
     void ComputeModelNavAreaNode::computeDeltaPosProbabilistic(const ServerState & state, Priority & curPriority,
                                                                CSGOId csgoId, ModelNavData & modelNavData) {
         //TargetPlayer & curTarget = curPriority.targetPlayer;
         // compute area probabilities
         const csknow::inference_delta_pos::InferenceDeltaPosPlayerAtTickProbabilities & deltaPosProbabilities =
-                //curTarget.playerId == INVALID_ID ?
-                blackboard.inferenceManager.playerToInferenceData.at(csgoId).deltaPosProbabilities; // :
-                //blackboard.inferenceManager.playerToInferenceData.at(csgoId).combatDeltaPosProbabilities;
+                blackboard.inferenceManager.playerToInferenceData.at(csgoId).deltaPosProbabilities;
+        const csknow::inference_delta_pos::InferenceDeltaPosPlayerAtTickProbabilities & uncertainDeltaPosProbabilities =
+                blackboard.inferenceManager.playerToInferenceData.at(csgoId).uncertainDeltaPosProbabilities;
         vector<float> probabilities = deltaPosProbabilities.radialVelProbabilities;
+        vector<float> uncertainProbabilities = uncertainDeltaPosProbabilities.radialVelProbabilities;
         const ServerState::Client & curClient = state.getClient(csgoId);
+
+        bool probabiltiesAreCertain = false;
+        for (size_t i = 0; i < probabilities.size(); i++) {
+            if (probabilities[i] > certainty_threshold) {
+                probabiltiesAreCertain = true;
+                break;
+            }
+        }
 
         size_t deltaPosOption = 0;
         bool setDeltaPosOption = false;
@@ -25,7 +36,12 @@ namespace csknow::compute_nav_area {
         double weightSoFar = 0.;
         modelNavData.deltaPosProbs.clear();
         for (size_t i = 0; i < probabilities.size(); i++) {
-            weightSoFar += probabilities[i];
+            if (probabiltiesAreCertain) {
+                weightSoFar += probabilities[i];
+            }
+            else {
+                weightSoFar += uncertainProbabilities[i];
+            }
             modelNavData.deltaPosProbs.push_back(probabilities[i]);
             if (probSample < weightSoFar && !setDeltaPosOption) {
                 deltaPosOption = i;
