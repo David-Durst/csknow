@@ -23,7 +23,7 @@ from learn_bot.latent.analyze.plot_trajectory_heatmap.filter_trajectories import
 
 plot_downsampled = False
 plot_scaled = True
-plot_flow = True
+plot_flow = False
 debug_printing = False
 
 
@@ -39,39 +39,76 @@ def print_halves(title: str, buffer: np.ndarray):
 
 
 @dataclass
-class EMDResults:
+class DiffMetrics:
     emd_value: float
+    partial_emd_value: float
+    total_variation_distance: float
+    kl_divergence: float
+    symmetric_kl_divergence: float
+    num_points: float
+    num_baseline_points: float
     num_points_relative_to_baseline: float
 
-    def __str__(self):
-        return f"EMD {self.emd_value:.2f} Ratio Points {self.num_points_relative_to_baseline:.3f}"
+    def __str__(self) -> str:
+        return f"EMD {self.emd_value:.2f} PEMD {self.partial_emd_value:.2f} " \
+               f"TV {self.total_variation_distance:.2f} " \
+               f"KLD {self.kl_divergence:.2f} SKLD {self.symmetric_kl_divergence:.2f} " \
+               f"Ratio Points {self.num_points_relative_to_baseline:.3f}"
+
+    def csv(self) -> str:
+        return f"{self.emd_value}, {self.partial_emd_value}, " \
+               f"{self.total_variation_distance}, " \
+               f"{self.kl_divergence}, {self.symmetric_kl_divergence:}, " \
+               f"{self.num_points_relative_to_baseline}"
+
+
+def sum_diff_metrics(diff_metrics_list: List[DiffMetrics]) -> DiffMetrics:
+    result = DiffMetrics(emd_value=0, partial_emd_value=0, total_variation_distance=0, kl_divergence=0,
+                         symmetric_kl_divergence=0, num_points=0, num_baseline_points=0,
+                         num_points_relative_to_baseline=0)
+    for dm in diff_metrics_list:
+        result.emd_value += dm.emd_value
+        result.partial_emd_value += dm.partial_emd_value
+        result.total_variation_distance += dm.total_variation_distance
+        result.kl_divergence += dm.kl_divergence
+        result.symmetric_kl_divergence += dm.symmetric_kl_divergence
+        result.num_points += dm.num_points
+        result.num_baseline_points += dm.num_baseline_points
+
+    result.num_points_relative_to_baseline = result.num_points / result.num_baseline_points
+    return result
+
+
+def compute_kld(p: np.ndarray, q: np.ndarray) -> float:
+    q_nonzero_coordinates = q.nonzero()
+    q_nonzero = q[q_nonzero_coordinates[0], q_nonzero_coordinates[1]]
+    p_where_q_nonzero = p[q_nonzero_coordinates[0], q_nonzero_coordinates[1]]
+    return float(np.sum(p_where_q_nonzero * np.log(p_where_q_nonzero / q_nonzero)))
 
 
 # compute emd with weights scaled to dist_b, treating that as baseline
-def compute_one_earth_mover_distance(dist_a: ImageBuffers, dist_b: ImageBuffers,
-                                     title_a: str, title_b: str,
-                                     model_team_buffers: Dict[str, List[np.ndarray]],
-                                     model_team_emd: Dict[str, List[EMDResults]],
-                                     model_team_flow: Dict[str, List[Image.Image]]) -> float:
-    # don't record a title that was already recorded, as if b used multiple times as baseline
-    record_a = False
-    if title_a not in model_team_buffers:
-        record_a = True
-        model_team_buffers[title_a] = []
-        model_team_emd[title_a] = []
-        if plot_flow:
-            model_team_flow[title_a] = []
+def compute_one_distribution_pair_metrics(dist_a: ImageBuffers, dist_b: ImageBuffers,
+                                          title_a: str, title_b: str,
+                                          model_team_buffers: Dict[str, List[np.ndarray]],
+                                          model_team_metrics: Dict[str, List[DiffMetrics]],
+                                          model_team_flow: Dict[str, List[Image.Image]]):
+    if title_a in model_team_buffers:
+        raise Exception("running diff with same source metric twice")
+    model_team_buffers[title_a] = []
+    model_team_metrics[title_a] = []
+    if plot_flow:
+        model_team_flow[title_a] = []
     record_b = False
+    # don't record a title that was already recorded, as if b used multiple times as baseline
     if title_b not in model_team_buffers:
         record_b = True
         model_team_buffers[title_b] = []
 
-    emd = 0
     for ct_team in [True, False]:
         # downsample so reasonable size, get x,y coordinates and weights of clusters with non-zero weight
         a_buffer = dist_a.get_buffer(ct_team)
         a_buffer_downsampled = block_reduce(a_buffer, (20, 20), np.sum)
-        if record_a and plot_downsampled:
+        if plot_downsampled:
             model_team_buffers[title_a].append(a_buffer_downsampled)
             print_halves(title_a, a_buffer_downsampled)
         a_non_zero_coords = a_buffer_downsampled.nonzero()
@@ -94,7 +131,7 @@ def compute_one_earth_mover_distance(dist_a: ImageBuffers, dist_b: ImageBuffers,
         scaled_a_non_zero_values = a_non_zero_values / max(a_sum, b_sum)
         scaled_b_non_zero_values = b_non_zero_values / max(a_sum, b_sum)
 
-        if record_a and plot_scaled:
+        if plot_scaled:
             a_buffer_scaled = np.zeros(a_buffer_downsampled.shape, np.float)
             a_buffer_scaled[a_non_zero_coords[0], a_non_zero_coords[1]] = scaled_a_non_zero_values
             model_team_buffers[title_a].append(a_buffer_scaled)
@@ -109,26 +146,30 @@ def compute_one_earth_mover_distance(dist_a: ImageBuffers, dist_b: ImageBuffers,
         dist_matrix = ot.dist(a_non_zero_coords_np, b_non_zero_coords_np, metric='euclidean')
 
         # compute emd
-        emd_matrix, emd_dict = ot.partial.partial_wasserstein(scaled_a_non_zero_values, scaled_b_non_zero_values,
-                                                              dist_matrix, log=True, numItermax=1000000)
-        new_emd = emd_dict['cost']
-        emd += new_emd
-        if record_a:
-            model_team_emd[title_a].append(EMDResults(new_emd, a_sum / b_sum))
-            if plot_flow:
-                fig = plt.figure(figsize=(4,4))
-                ot.plot.plot2D_samples_mat(a_non_zero_coords_np[:, [1, 0]], b_non_zero_coords_np[:, [1, 0]],
-                                           emd_matrix, c=[.5, .5, 1])
-                plt.gca().invert_yaxis()
-                fig.canvas.draw()
-                model_team_flow[title_a].append(
-                    Image.frombytes('RGB', fig.canvas.get_width_height(), fig.canvas.tostring_rgb()))
-    return emd
+        partial_emd_matrix, partial_emd_dict = ot.partial.partial_wasserstein(scaled_a_non_zero_values,
+                                                                              scaled_b_non_zero_values,
+                                                                              dist_matrix, log=True, numItermax=1000000)
+        emd_matrix, emd_dict = ot.emd(scaled_a_non_zero_values, scaled_b_non_zero_values,
+                                      dist_matrix, log=True, numItermax=1000000)
+        total_variation = float(np.sum(np.abs(a_buffer - b_buffer)))
+        kl_divergence = compute_kld(a_buffer, b_buffer)
+        symmetric_kl_divergence = kl_divergence + compute_kld(b_buffer, a_buffer)
+        model_team_metrics[title_a].append(DiffMetrics(emd_dict['cost'], partial_emd_dict['cost'],
+                                                       total_variation, kl_divergence, symmetric_kl_divergence,
+                                                       float(a_sum), float(b_sum), a_sum / b_sum))
+        if plot_flow:
+            fig = plt.figure(figsize=(4,4))
+            ot.plot.plot2D_samples_mat(a_non_zero_coords_np[:, [1, 0]], b_non_zero_coords_np[:, [1, 0]],
+                                       emd_matrix, c=[.5, .5, 1])
+            plt.gca().invert_yaxis()
+            fig.canvas.draw()
+            model_team_flow[title_a].append(
+                Image.frombytes('RGB', fig.canvas.get_width_height(), fig.canvas.tostring_rgb()))
 
 title_font = ImageFont.truetype("arial.ttf", 12)
 
 
-def plot_emd_buffer(model_team_buffers: Dict[str, List[np.ndarray]], model_team_emd: Dict[str, List[EMDResults]],
+def plot_emd_buffer(model_team_buffers: Dict[str, List[np.ndarray]], model_team_metrics: Dict[str, List[DiffMetrics]],
                     titles: List[str], plots_path: Path, trajectory_filter_options: TrajectoryFilterOptions):
     model_team_imgs: List[Image.Image] = []
     for title in titles:
@@ -142,8 +183,8 @@ def plot_emd_buffer(model_team_buffers: Dict[str, List[np.ndarray]], model_team_
             team_img = Image.fromarray(scaled_buffer, 'L').resize((800, 800), Image.NEAREST)
             team_img_drw = ImageDraw.Draw(team_img)
             img_text = title[:60]
-            if title in model_team_emd:
-                img_text += " \n " + str(model_team_emd[title][i])
+            if title in model_team_metrics:
+                img_text += " \n " + str(model_team_metrics[title][i])
             _, _, w, h = team_img_drw.textbbox((0, 0), img_text, font=title_font)
             team_img_drw.text(((team_img.width - w) / 2, (team_img.height * 0.1 - h) / 2),
                           img_text, fill=(255), font=title_font)
@@ -153,7 +194,7 @@ def plot_emd_buffer(model_team_buffers: Dict[str, List[np.ndarray]], model_team_
     emd_img.save(plots_path / 'diff' / ('emd_' + str(trajectory_filter_options) + '.png'))
 
 
-def plot_emd_flow(model_team_flow: Dict[str, List[Image.Image]], model_team_emd: Dict[str, List[EMDResults]],
+def plot_emd_flow(model_team_flow: Dict[str, List[Image.Image]], model_team_metrics: Dict[str, List[DiffMetrics]],
                   titles: List[str], plots_path: Path, trajectory_filter_options: TrajectoryFilterOptions):
     if not plot_flow:
         return
@@ -165,8 +206,8 @@ def plot_emd_flow(model_team_flow: Dict[str, List[Image.Image]], model_team_emd:
         for i, team_img in enumerate(team_imgs):
             team_img_drw = ImageDraw.Draw(team_img)
             img_text = title[:50]
-            if title in model_team_emd:
-                img_text += " \n " + str(model_team_emd[title][i])
+            if title in model_team_metrics:
+                img_text += " \n " + str(model_team_metrics[title][i])
             _, _, w, h = team_img_drw.textbbox((0, 0), img_text, font=title_font)
             team_img_drw.text(((team_img.width - w) / 2, (team_img.height * 0.1 - h) / 2),
                               img_text, fill=(0, 0, 0, 255), font=title_font)
@@ -175,30 +216,29 @@ def plot_emd_flow(model_team_flow: Dict[str, List[Image.Image]], model_team_emd:
     emd_img.save(plots_path / 'diff' / ('emd_' + str(trajectory_filter_options) + '_flow.png'))
 
 
-def compute_trajectory_earth_mover_distances(titles: List[str], diff_indices: List[int], plots_path: Path,
-                                             trajectory_filter_options: TrajectoryFilterOptions):
+def compute_diff_metrics(titles: List[str], diff_indices: List[int], plots_path: Path,
+                         trajectory_filter_options: TrajectoryFilterOptions):
     print(f'Computing earth movers distance for {", ".join(titles)}')
     title_to_buffers = get_title_to_buffers()
     #title_to_num_trajectory_ids = get_title_to_num_trajectory_ids()
 
-    titles_to_emd: Dict[str, float] = {}
     model_team_buffers: Dict[str, List[np.ndarray]] = {}
-    model_team_emd: Dict[str, List[EMDResults]] = {}
+    model_team_metrics: Dict[str, List[DiffMetrics]] = {}
     model_team_flow: Dict[str, List[Image.Image]] = {}
 
     with tqdm(total=len(titles) - 1, disable=False) as pbar:
         for i, title in enumerate(titles[1:]):
             diff_title = titles[diff_indices[i]]
-            titles_to_emd[f'{title} vs {diff_title}'] = \
-                compute_one_earth_mover_distance(title_to_buffers[title], title_to_buffers[diff_title],
-                                                 title, diff_title, model_team_buffers, model_team_emd,
-                                                 model_team_flow)
+            compute_one_distribution_pair_metrics(title_to_buffers[title], title_to_buffers[diff_title],
+                                                  title, diff_title, model_team_buffers, model_team_metrics,
+                                                  model_team_flow)
             pbar.update(1)
 
-    plot_emd_buffer(model_team_buffers, model_team_emd, titles, plots_path, trajectory_filter_options)
-    plot_emd_flow(model_team_flow, model_team_emd, titles, plots_path, trajectory_filter_options)
+    plot_emd_buffer(model_team_buffers, model_team_metrics, titles, plots_path, trajectory_filter_options)
+    plot_emd_flow(model_team_flow, model_team_metrics, titles, plots_path, trajectory_filter_options)
 
     with open(plots_path / 'diff' / ('emd_' + str(trajectory_filter_options) + '.txt'), 'w') as f:
         f.write("title, emd")
-        for title, emd in titles_to_emd.items():
-            f.write(f'{title}, {emd}\n')
+        for title, team_metrics in model_team_metrics.items():
+            model_metrics = sum_diff_metrics(team_metrics)
+            f.write(f'{title}, {model_metrics.csv()}\n')
