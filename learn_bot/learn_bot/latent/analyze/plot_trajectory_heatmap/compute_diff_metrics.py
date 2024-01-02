@@ -244,7 +244,8 @@ def compute_diff_metrics(titles: List[str], diff_indices: List[int], plots_path:
     plot_emd_flow(model_team_flow, model_team_metrics, titles, plots_path, trajectory_filter_options)
 
     with open(plots_path / 'diff' / ('emd_' + str(trajectory_filter_options) + '.txt'), 'w') as f:
-        f.write("title, emd")
+        f.write("Title, EMD, Partial EMD, Total Variation Distance, KL Divergence, Symmetric KL Divergence, "
+                "Ratio Points\n")
         for title, team_metrics in model_team_metrics.items():
             model_metrics = sum_diff_metrics(team_metrics)
             f.write(f'{title}, {model_metrics.csv()}\n')
