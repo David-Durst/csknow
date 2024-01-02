@@ -29,8 +29,8 @@ namespace csknow::inference_manager {
                 if (playerToInferenceData.find(client.csgoId) == playerToInferenceData.end()) {
                     playerToInferenceData[client.csgoId] = {};
                     playerToInferenceData[client.csgoId].team = client.team;
-                    playerToInferenceData[client.csgoId].validData = false;
-                    playerToInferenceData[client.csgoId].ticksSinceLastInference = max_track_ticks;
+                    playerToInferenceData[client.csgoId].validUncertainDeltaPosProbabilities = false;
+                    playerToInferenceData[client.csgoId].validDeltaPosProbabilities = false;
                 }
 
             }
@@ -76,6 +76,7 @@ namespace csknow::inference_manager {
             at::Tensor output = uncertainDeltaPosModule.forward(inputs).toTuple()->elements()[1].toTensor();
 
             for (auto & [csgoId, inferenceData] : playerToInferenceData) {
+                playerToInferenceData[csgoId].validUncertainDeltaPosProbabilities = true;
                 playerToInferenceData[csgoId].uncertainDeltaPosProbabilities =
                         extractFeatureStoreDeltaPosResults(output, deltaPosValues, csgoId, inferenceData.team);
             }
@@ -84,6 +85,7 @@ namespace csknow::inference_manager {
             at::Tensor output = deltaPosModule.forward(inputs).toTuple()->elements()[1].toTensor();
 
             for (auto & [csgoId, inferenceData] : playerToInferenceData) {
+                playerToInferenceData[csgoId].validDeltaPosProbabilities = true;
                 playerToInferenceData[csgoId].deltaPosProbabilities =
                         extractFeatureStoreDeltaPosResults(output, deltaPosValues, csgoId, inferenceData.team);
             }
@@ -99,33 +101,6 @@ namespace csknow::inference_manager {
         }
 
         torch::NoGradGuard no_grad;
-        // sort clients by ticks since max inference
-        struct ClientAndTicks {
-            CSGOId csgoId;
-            size_t ticksSinceLastInference;
-        };
-        vector<ClientAndTicks> clientsToInfer;
-
-        for (auto & [csgoId, clientInferenceData] : playerToInferenceData) {
-            clientInferenceData.ticksSinceLastInference =
-                std::min(clientInferenceData.ticksSinceLastInference + 1, max_track_ticks);
-            clientsToInfer.push_back({csgoId, clientInferenceData.ticksSinceLastInference});
-        }
-
-        std::sort(clientsToInfer.begin(), clientsToInfer.end(),
-                  [](const ClientAndTicks & a, const ClientAndTicks & b) {
-            return a.ticksSinceLastInference > b.ticksSinceLastInference ||
-                (a.ticksSinceLastInference == b.ticksSinceLastInference && a.csgoId < b.csgoId);
-        });
-
-        clientsToInfer.resize(std::min(batch_size_per_model, clientsToInfer.size()));
-
-        vector<CSGOId> clients;
-        for (const auto & client : clientsToInfer) {
-            clients.push_back(client.csgoId);
-            playerToInferenceData[client.csgoId].validData = true;
-            playerToInferenceData[client.csgoId].ticksSinceLastInference = 0;
-        }
 
         auto start = std::chrono::system_clock::now();
         //runEngagementInference(clients);

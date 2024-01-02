@@ -110,7 +110,8 @@ namespace csknow::compute_nav_area {
         // if put in the model orders but not ready for this player, just stand still
         if (blackboard.inferenceManager.playerToInferenceData.find(treeThinker.csgoId) ==
             blackboard.inferenceManager.playerToInferenceData.end() ||
-            !blackboard.inferenceManager.playerToInferenceData.at(treeThinker.csgoId).validData) {
+            !blackboard.inferenceManager.playerToInferenceData.at(treeThinker.csgoId).validDeltaPosProbabilities ||
+            !blackboard.inferenceManager.playerToInferenceData.at(treeThinker.csgoId).validUncertainDeltaPosProbabilities) {
             curPriority.learnedTargetPos = false;
             curPriority.targetPos = state.getClient(treeThinker.csgoId).getFootPosForPlayer();
             curPriority.targetAreaId = curAreaId;

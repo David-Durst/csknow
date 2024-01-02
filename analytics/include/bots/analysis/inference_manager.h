@@ -25,9 +25,8 @@ namespace csknow::inference_manager {
     constexpr int ticks_per_seconds = 128;
 
     struct ClientInferenceData {
-        bool validData;
         TeamId team;
-        size_t ticksSinceLastInference;
+        bool validDeltaPosProbabilities, validUncertainDeltaPosProbabilities;
         csknow::inference_delta_pos::InferenceDeltaPosPlayerAtTickProbabilities deltaPosProbabilities,
             uncertainDeltaPosProbabilities;
     };
