@@ -15,6 +15,7 @@ from learn_bot.latent.analyze.plot_trajectory_heatmap.compute_diff_metrics impor
     compute_diff_metrics
 from learn_bot.latent.analyze.plot_trajectory_heatmap.filter_trajectories import TrajectoryFilterOptions, \
     region_constraints
+from learn_bot.latent.analyze.plot_trajectory_heatmap.render_diff_metric_bar_charts import render_diff_metric_bar_charts
 from learn_bot.latent.analyze.plot_trajectory_heatmap.render_diffs import plot_trajectory_diffs_to_image
 from learn_bot.latent.analyze.plot_trajectory_heatmap.render_trajectory_heatmaps import plot_trajectories_to_image
 from learn_bot.latent.analyze.plot_trajectory_heatmap.render_key_event_heatmap import plot_key_event_heatmaps
@@ -171,6 +172,8 @@ def run_trajectory_heatmaps(plot_only_first_hdf5_file_train_and_test: bool):
                                                   plot_only_first_hdf5_file_train_and_test)
         record_points_per_one_game_seconds_range(round_game_seconds)
     plot_points_per_game_seconds(plots_path)
+
+    render_diff_metric_bar_charts(plots_path)
 
 
 if __name__ == "__main__":
