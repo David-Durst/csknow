@@ -33,7 +33,7 @@ namespace csknow::inference_manager {
     };
 
     class InferenceManager {
-        bool ranDeltaPosInference = false, ranUncertainDeltaPosInference;
+        bool ranDeltaPosInference = false, ranUncertainDeltaPosInference = false;
         void runDeltaPosInference(bool uncertainModule);
         int overallModelToRun = 0;
     public:
