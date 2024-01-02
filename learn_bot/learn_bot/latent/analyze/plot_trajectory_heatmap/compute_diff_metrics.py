@@ -80,10 +80,12 @@ def sum_diff_metrics(diff_metrics_list: List[DiffMetrics]) -> DiffMetrics:
 
 
 def compute_kld(p: np.ndarray, q: np.ndarray) -> float:
-    q_nonzero_coordinates = q.nonzero()
-    q_nonzero = q[q_nonzero_coordinates[0], q_nonzero_coordinates[1]]
-    p_where_q_nonzero = p[q_nonzero_coordinates[0], q_nonzero_coordinates[1]]
-    return float(np.sum(p_where_q_nonzero * np.log(p_where_q_nonzero / q_nonzero)))
+    pq_nonzero_coordinates = (p * q).nonzero()
+    q_nonzero = q[pq_nonzero_coordinates[0], pq_nonzero_coordinates[1]]
+    p_nonzero = p[pq_nonzero_coordinates[0], pq_nonzero_coordinates[1]]
+    if np.min(q_nonzero) == 0.:
+        print('bad')
+    return float(np.sum(p_nonzero * np.log(p_nonzero / q_nonzero)))
 
 
 # compute emd with weights scaled to dist_b, treating that as baseline
@@ -128,8 +130,11 @@ def compute_one_distribution_pair_metrics(dist_a: ImageBuffers, dist_b: ImageBuf
         # while the inf.ed.ac.uk shows that EMD is defined if different sums, POT only supports weights that sum to 1
         a_sum = np.sum(a_non_zero_values)
         b_sum = np.sum(b_non_zero_values)
-        scaled_a_non_zero_values = a_non_zero_values / max(a_sum, b_sum)
-        scaled_b_non_zero_values = b_non_zero_values / max(a_sum, b_sum)
+        scaled_a_non_zero_values = a_non_zero_values / a_sum
+        scaled_b_non_zero_values = b_non_zero_values / b_sum
+        # scaled so that one is max 1, other is less than 1, enable partial wasserstein
+        partial_scaled_a_non_zero_values = a_non_zero_values / max(a_sum, b_sum)
+        partial_scaled_b_non_zero_values = b_non_zero_values / max(a_sum, b_sum)
 
         if plot_scaled:
             a_buffer_scaled = np.zeros(a_buffer_downsampled.shape, np.float)
@@ -146,11 +151,11 @@ def compute_one_distribution_pair_metrics(dist_a: ImageBuffers, dist_b: ImageBuf
         dist_matrix = ot.dist(a_non_zero_coords_np, b_non_zero_coords_np, metric='euclidean')
 
         # compute emd
-        partial_emd_matrix, partial_emd_dict = ot.partial.partial_wasserstein(scaled_a_non_zero_values,
-                                                                              scaled_b_non_zero_values,
-                                                                              dist_matrix, log=True, numItermax=1000000)
         emd_matrix, emd_dict = ot.emd(scaled_a_non_zero_values, scaled_b_non_zero_values,
                                       dist_matrix, log=True, numItermax=1000000)
+        partial_emd_matrix, partial_emd_dict = ot.partial.partial_wasserstein(partial_scaled_a_non_zero_values,
+                                                                              partial_scaled_b_non_zero_values,
+                                                                              dist_matrix, log=True, numItermax=1000000)
         total_variation = float(np.sum(np.abs(a_buffer - b_buffer)))
         kl_divergence = compute_kld(a_buffer, b_buffer)
         symmetric_kl_divergence = kl_divergence + compute_kld(b_buffer, a_buffer)
@@ -165,6 +170,7 @@ def compute_one_distribution_pair_metrics(dist_a: ImageBuffers, dist_b: ImageBuf
             fig.canvas.draw()
             model_team_flow[title_a].append(
                 Image.frombytes('RGB', fig.canvas.get_width_height(), fig.canvas.tostring_rgb()))
+
 
 title_font = ImageFont.truetype("arial.ttf", 12)
 
