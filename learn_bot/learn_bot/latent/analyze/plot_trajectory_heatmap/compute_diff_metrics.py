@@ -5,6 +5,7 @@ from typing import List, Dict
 import numpy as np
 import ot
 import ot.plot
+import torch
 from PIL import Image, ImageFont, ImageDraw
 from matplotlib import pyplot as plt
 from scipy.spatial.distance import cdist
@@ -80,12 +81,7 @@ def sum_diff_metrics(diff_metrics_list: List[DiffMetrics]) -> DiffMetrics:
 
 
 def compute_kld(p: np.ndarray, q: np.ndarray) -> float:
-    pq_nonzero_coordinates = (p * q).nonzero()
-    q_nonzero = q[pq_nonzero_coordinates[0], pq_nonzero_coordinates[1]]
-    p_nonzero = p[pq_nonzero_coordinates[0], pq_nonzero_coordinates[1]]
-    if np.min(q_nonzero) == 0.:
-        print('bad')
-    return float(np.sum(p_nonzero * np.log(p_nonzero / q_nonzero)))
+    return -torch.kl_div(torch.tensor(p.astype(np.float32)), torch.tensor(q.astype(np.float32))).sum()
 
 
 # compute emd with weights scaled to dist_b, treating that as baseline
@@ -93,7 +89,8 @@ def compute_one_distribution_pair_metrics(dist_a: ImageBuffers, dist_b: ImageBuf
                                           title_a: str, title_b: str,
                                           model_team_buffers: Dict[str, List[np.ndarray]],
                                           model_team_metrics: Dict[str, List[DiffMetrics]],
-                                          model_team_flow: Dict[str, List[Image.Image]]):
+                                          model_team_flow: Dict[str, List[Image.Image]],
+                                          complete_distribution: bool):
     if title_a in model_team_buffers:
         raise Exception("running diff with same source metric twice")
     model_team_buffers[title_a] = []
@@ -156,9 +153,13 @@ def compute_one_distribution_pair_metrics(dist_a: ImageBuffers, dist_b: ImageBuf
         partial_emd_matrix, partial_emd_dict = ot.partial.partial_wasserstein(partial_scaled_a_non_zero_values,
                                                                               partial_scaled_b_non_zero_values,
                                                                               dist_matrix, log=True, numItermax=1000000)
-        total_variation = float(np.sum(np.abs(a_buffer - b_buffer)))
-        kl_divergence = compute_kld(a_buffer, b_buffer)
-        symmetric_kl_divergence = kl_divergence + compute_kld(b_buffer, a_buffer)
+
+        a_buffer_for_non_distance_metrics = a_buffer if complete_distribution else a_buffer_downsampled
+        b_buffer_for_non_distance_metrics = b_buffer if complete_distribution else b_buffer_downsampled
+        total_variation = float(np.sum(np.abs(a_buffer_for_non_distance_metrics - b_buffer_for_non_distance_metrics)))
+        kl_divergence = compute_kld(a_buffer_for_non_distance_metrics, b_buffer_for_non_distance_metrics)
+        symmetric_kl_divergence = kl_divergence + compute_kld(b_buffer_for_non_distance_metrics,
+                                                              a_buffer_for_non_distance_metrics)
         model_team_metrics[title_a].append(DiffMetrics(emd_dict['cost'], partial_emd_dict['cost'],
                                                        total_variation, kl_divergence, symmetric_kl_divergence,
                                                        float(a_sum), float(b_sum), a_sum / b_sum))
@@ -232,12 +233,14 @@ def compute_diff_metrics(titles: List[str], diff_indices: List[int], plots_path:
     model_team_metrics: Dict[str, List[DiffMetrics]] = {}
     model_team_flow: Dict[str, List[Image.Image]] = {}
 
+    complete_distribution = str(trajectory_filter_options) == 'no_filter'
+
     with tqdm(total=len(titles) - 1, disable=False) as pbar:
         for i, title in enumerate(titles[1:]):
             diff_title = titles[diff_indices[i]]
             compute_one_distribution_pair_metrics(title_to_buffers[title], title_to_buffers[diff_title],
                                                   title, diff_title, model_team_buffers, model_team_metrics,
-                                                  model_team_flow)
+                                                  model_team_flow, complete_distribution)
             pbar.update(1)
 
     plot_emd_buffer(model_team_buffers, model_team_metrics, titles, plots_path, trajectory_filter_options)

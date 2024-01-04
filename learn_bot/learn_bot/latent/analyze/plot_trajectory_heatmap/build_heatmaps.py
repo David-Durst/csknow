@@ -31,15 +31,9 @@ class ImageBuffers:
     ct_buffer: np.ndarray
     t_buffer: np.ndarray
 
-    def __init__(self, line_buffer: bool):
-        if line_buffer:
-            self.ct_buffer = np.zeros(d2_img.size, dtype=np.intc)
-            self.t_buffer = np.zeros(d2_img.size, dtype=np.intc)
-        else:
-            width = d2_bottom_right_x - d2_top_left_x
-            height = d2_bottom_right_y - d2_top_left_y
-            self.ct_buffer = np.zeros([width, height], dtype=np.intc)
-            self.t_buffer = np.zeros([width, height], dtype=np.intc)
+    def __init__(self):
+        self.ct_buffer = np.zeros(d2_img.size, dtype=np.intc)
+        self.t_buffer = np.zeros(d2_img.size, dtype=np.intc)
 
     def get_buffer(self, ct_team) -> np.ndarray:
         if ct_team:
@@ -148,8 +142,8 @@ def get_debug_event_counting() -> bool:
 def plot_one_trajectory_dataset(loaded_model: LoadedModel, id_df: pd.DataFrame, vis_df: pd.DataFrame,
                                 dataset: np.ndarray, trajectory_filter_options: TrajectoryFilterOptions, title: str):
     if title not in title_to_line_buffers:
-        title_to_line_buffers[title] = ImageBuffers(True)
-        title_to_point_buffers[title] = ImageBuffers(False)
+        title_to_line_buffers[title] = ImageBuffers()
+        title_to_point_buffers[title] = ImageBuffers()
         title_to_num_points[title] = 0
 
     if trajectory_filter_options.trajectory_counter is None:
@@ -312,8 +306,8 @@ def plot_one_trajectory_dataset(loaded_model: LoadedModel, id_df: pd.DataFrame, 
             canvas_pos_xy = list(zip(list(canvas_pos_x_np), list(canvas_pos_y_np)))
 
             point_buffer = title_to_point_buffers[title].get_buffer(ct_team)
-            for xy in zip(x_pos, y_pos):
-                point_buffer[xy[0], xy[1]] += 1
+            for pos_xy in canvas_pos_xy:
+                point_buffer[pos_xy[0], pos_xy[1]] += 1
 
             line_buffer = title_to_line_buffers[title].get_buffer(ct_team)
             if trajectory_filter_options.filtering_key_events():
