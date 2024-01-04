@@ -103,7 +103,6 @@ def run_trajectory_heatmaps_one_filter_option(trajectory_filter_options: Traject
 
     title_strs = [human_title_str] + (rollout_extensions if rollout_extensions[0] != 'invalid'
                                       else [human_title_str + ' Save'])
-    # run this before plotting trajectories so get unscaled buffers
     compute_diff_metrics(title_strs, diff_indices, plots_path, trajectory_filter_options)
     plot_trajectories_to_image(title_strs, True, plots_path, trajectory_filter_options)
     plot_trajectory_diffs_to_image(title_strs, diff_indices, plots_path, trajectory_filter_options)

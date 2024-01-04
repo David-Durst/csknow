@@ -14,7 +14,7 @@ from tqdm import tqdm
 
 from learn_bot.latent.analyze.compare_trajectories.plot_trajectories_from_comparison import concat_horizontal, \
     concat_vertical
-from learn_bot.latent.analyze.plot_trajectory_heatmap.build_heatmaps import get_title_to_buffers, ImageBuffers, \
+from learn_bot.latent.analyze.plot_trajectory_heatmap.build_heatmaps import get_title_to_point_buffers, ImageBuffers, \
     get_title_to_num_trajectory_ids
 from learn_bot.latent.analyze.plot_trajectory_heatmap.filter_trajectories import TrajectoryFilterOptions
 
@@ -225,7 +225,7 @@ def plot_emd_flow(model_team_flow: Dict[str, List[Image.Image]], model_team_metr
 def compute_diff_metrics(titles: List[str], diff_indices: List[int], plots_path: Path,
                          trajectory_filter_options: TrajectoryFilterOptions):
     print(f'Computing earth movers distance for {", ".join(titles)}')
-    title_to_buffers = get_title_to_buffers()
+    title_to_buffers = get_title_to_point_buffers()
     #title_to_num_trajectory_ids = get_title_to_num_trajectory_ids()
 
     model_team_buffers: Dict[str, List[np.ndarray]] = {}

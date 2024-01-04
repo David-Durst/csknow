@@ -7,7 +7,7 @@ from PIL import Image, ImageDraw
 from learn_bot.latent.analyze.compare_trajectories.plot_trajectories_from_comparison import concat_horizontal, \
     concat_vertical
 from learn_bot.latent.analyze.compare_trajectories.plot_trajectories_and_events import title_font
-from learn_bot.latent.analyze.plot_trajectory_heatmap.build_heatmaps import get_title_to_buffers, \
+from learn_bot.latent.analyze.plot_trajectory_heatmap.build_heatmaps import get_title_to_line_buffers, \
     get_title_to_team_to_key_event_pos, get_debug_event_counting, get_title_to_key_events, get_title_to_num_points
 from learn_bot.latent.analyze.plot_trajectory_heatmap.filter_trajectories import TrajectoryFilterOptions
 from learn_bot.latent.analyze.test_traces.run_trace_visualization import d2_img, \
@@ -20,7 +20,7 @@ max_value = 0
 def plot_one_image_one_team(title: str, ct_team: bool, team_color: List, saturated_team_color: List,
                             base_img: Image.Image, custom_buffer: Optional[np.ndarray] = None):
 
-    title_to_buffers = get_title_to_buffers()
+    title_to_buffers = get_title_to_line_buffers()
     title_to_num_points = get_title_to_num_points()
 
     if custom_buffer is None:
@@ -61,7 +61,7 @@ def plot_one_image_one_team(title: str, ct_team: bool, team_color: List, saturat
 def scale_buffers_by_points(titles: List[str]):
     global scale_factor, max_value
 
-    title_to_buffers = get_title_to_buffers()
+    title_to_buffers = get_title_to_line_buffers()
     title_to_num_points = get_title_to_num_points()
 
     max_points_per_title = 0

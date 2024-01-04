@@ -6,7 +6,7 @@ from PIL import Image
 
 from learn_bot.latent.analyze.compare_trajectories.plot_trajectories_from_comparison import concat_horizontal, \
     concat_vertical
-from learn_bot.latent.analyze.plot_trajectory_heatmap.build_heatmaps import get_title_to_buffers
+from learn_bot.latent.analyze.plot_trajectory_heatmap.build_heatmaps import get_title_to_line_buffers
 from learn_bot.latent.analyze.plot_trajectory_heatmap.filter_trajectories import TrajectoryFilterOptions
 from learn_bot.latent.analyze.plot_trajectory_heatmap.render_trajectory_heatmaps import plot_one_image_one_team
 from learn_bot.latent.analyze.test_traces.run_trace_visualization import d2_img
@@ -18,7 +18,7 @@ saturated_negative_color_list = [162, 7, 146, 0]
 
 
 def plot_diff_one_image_one_team(title0: str, title1: str, ct_team: bool) -> Image.Image:
-    title_to_buffers = get_title_to_buffers()
+    title_to_buffers = get_title_to_line_buffers()
     buffer0 = title_to_buffers[title0].get_buffer(ct_team)
     buffer1 = title_to_buffers[title1].get_buffer(ct_team)
     delta_buffer = buffer0 - buffer1

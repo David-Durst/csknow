@@ -22,6 +22,7 @@ from learn_bot.latent.engagement.column_names import round_id_column, game_tick_
 from learn_bot.latent.load_model import LoadedModel
 from learn_bot.latent.order.column_names import team_strs
 from learn_bot.latent.place_area.column_names import specific_player_place_area_columns
+from learn_bot.latent.vis.draw_inference import d2_bottom_right_x, d2_bottom_right_y, d2_top_left_x, d2_top_left_y
 from learn_bot.libs.io_transforms import CPU_DEVICE_STR
 from learn_bot.libs.vec import Vec3
 
@@ -30,9 +31,15 @@ class ImageBuffers:
     ct_buffer: np.ndarray
     t_buffer: np.ndarray
 
-    def __init__(self):
-        self.ct_buffer = np.zeros(d2_img.size, dtype=np.intc)
-        self.t_buffer = np.zeros(d2_img.size, dtype=np.intc)
+    def __init__(self, line_buffer: bool):
+        if line_buffer:
+            self.ct_buffer = np.zeros(d2_img.size, dtype=np.intc)
+            self.t_buffer = np.zeros(d2_img.size, dtype=np.intc)
+        else:
+            width = d2_bottom_right_x - d2_top_left_x
+            height = d2_bottom_right_y - d2_top_left_y
+            self.ct_buffer = np.zeros([width, height], dtype=np.intc)
+            self.t_buffer = np.zeros([width, height], dtype=np.intc)
 
     def get_buffer(self, ct_team) -> np.ndarray:
         if ct_team:
@@ -42,7 +49,8 @@ class ImageBuffers:
 
 
 spread_radius = 2
-title_to_buffers: Dict[str, ImageBuffers] = {}
+title_to_line_buffers: Dict[str, ImageBuffers] = {}
+title_to_point_buffers: Dict[str, ImageBuffers] = {}
 title_to_num_trajectory_ids: Dict[str, int] = {}
 title_to_num_points: Dict[str, int] = {}
 title_to_lifetimes: Dict[str, List[float]] = {}
@@ -56,8 +64,12 @@ title_to_team_to_pos_dict = Dict[str, Dict[bool, Tuple[List[float], List[float]]
 title_to_team_to_key_event_pos: title_to_team_to_pos_dict = {}
 
 
-def get_title_to_buffers() -> Dict[str, ImageBuffers]:
-    return title_to_buffers
+def get_title_to_line_buffers() -> Dict[str, ImageBuffers]:
+    return title_to_line_buffers
+
+
+def get_title_to_point_buffers() -> Dict[str, ImageBuffers]:
+    return title_to_point_buffers
 
 
 def get_title_to_num_trajectory_ids() -> Dict[str, int]:
@@ -89,9 +101,11 @@ def get_title_to_team_to_key_event_pos() -> title_to_team_to_pos_dict:
 
 
 def clear_title_caches():
-    global title_to_buffers, title_to_num_trajectory_ids, title_to_num_points, title_to_lifetimes, title_to_speeds, \
+    global title_to_line_buffers, title_to_point_buffers, title_to_num_trajectory_ids, title_to_num_points, \
+        title_to_lifetimes, title_to_speeds, \
         title_to_shots_per_kill, title_to_key_events, title_to_team_to_key_event_pos
-    title_to_buffers = {}
+    title_to_line_buffers = {}
+    title_to_point_buffers = {}
     title_to_num_trajectory_ids = {}
     title_to_num_points = {}
     title_to_lifetimes = {}
@@ -133,8 +147,9 @@ def get_debug_event_counting() -> bool:
 
 def plot_one_trajectory_dataset(loaded_model: LoadedModel, id_df: pd.DataFrame, vis_df: pd.DataFrame,
                                 dataset: np.ndarray, trajectory_filter_options: TrajectoryFilterOptions, title: str):
-    if title not in title_to_buffers:
-        title_to_buffers[title] = ImageBuffers()
+    if title not in title_to_line_buffers:
+        title_to_line_buffers[title] = ImageBuffers(True)
+        title_to_point_buffers[title] = ImageBuffers(False)
         title_to_num_points[title] = 0
 
     if trajectory_filter_options.trajectory_counter is None:
@@ -296,11 +311,15 @@ def plot_one_trajectory_dataset(loaded_model: LoadedModel, id_df: pd.DataFrame, 
             canvas_pos_y_np = canvas_pos_np[1].astype(np.intc)
             canvas_pos_xy = list(zip(list(canvas_pos_x_np), list(canvas_pos_y_np)))
 
-            buffer = title_to_buffers[title].get_buffer(ct_team)
+            point_buffer = title_to_point_buffers[title].get_buffer(ct_team)
+            for xy in zip(x_pos, y_pos):
+                point_buffer[xy[0], xy[1]] += 1
+
+            line_buffer = title_to_line_buffers[title].get_buffer(ct_team)
             if trajectory_filter_options.filtering_key_events():
                 for i, pos_xy in enumerate(canvas_pos_xy):
-                    # drawing not useful as so few points and no lines connecting them, but good for computing EMD
-                    buffer[pos_xy[0], pos_xy[1]] += num_events_per_tick_with_event[i]
+                    # drawing not useful as so few points and no lines connecting them
+                    # line_buffer[pos_xy[0], pos_xy[1]] += num_events_per_tick_with_event[i]
                     if title not in title_to_team_to_key_event_pos:
                         title_to_team_to_key_event_pos[title] = {}
                     if ct_team not in title_to_team_to_key_event_pos[title]:
@@ -318,7 +337,7 @@ def plot_one_trajectory_dataset(loaded_model: LoadedModel, id_df: pd.DataFrame, 
                 for continuous_canvas_pos_xy in split_list_by_valid_points(canvas_pos_xy,
                                                                            trajectory_valid_discontinuities):
                     cur_player_d2_drw.line(xy=continuous_canvas_pos_xy, fill=1, width=5)
-                buffer += np.asarray(cur_player_d2_img)
+                line_buffer += np.asarray(cur_player_d2_img)
             title_to_num_points[title] += len(alive_trajectory_np)
             if trajectory_filter_options.compute_lifetimes:
                 if title not in title_to_lifetimes:
