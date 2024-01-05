@@ -6,6 +6,7 @@ from typing import List
 import numpy as np
 import pandas as pd
 from matplotlib import pyplot as plt
+from sklearn.metrics import ConfusionMatrixDisplay
 from tqdm import tqdm
 
 from learn_bot.latent.analyze.comparison_column_names import similarity_plots_path
@@ -159,19 +160,19 @@ last_c4_time_percent_col = "last C4 time percent in round"
 
 class TickSimilarityResults:
     num_not_labeled: int
-    correct_player_tick_label_5s: List[bool]
-    correct_player_tick_label_10s: List[bool]
-    correct_player_tick_label_20s: List[bool]
-    correct_player_tick_label_similarity: List[bool]
-    predicted_round_label_similarity_duplicated_per_player_tick: List[float]
+    player_tick_label_5s: List[bool]
+    player_tick_label_10s: List[bool]
+    player_tick_label_20s: List[bool]
+    player_tick_label_similarity: List[bool]
+    player_tick_label_ground_truth: List[bool]
 
     def __init__(self):
         self.num_not_labeled = 0
-        self.correct_player_tick_label_5s = []
-        self.correct_player_tick_label_10s = []
-        self.correct_player_tick_label_20s = []
-        self.correct_player_tick_label_similarity = []
-        self.predicted_round_label_similarity_duplicated_per_player_tick = []
+        self.player_tick_label_5s = []
+        self.player_tick_label_10s = []
+        self.player_tick_label_20s = []
+        self.player_tick_label_similarity = []
+        self.player_tick_label_ground_truth = []
 
 
 def per_tick_similarity_analysis(push_save_round_labels: PushSaveRoundLabels,
@@ -203,68 +204,96 @@ def per_tick_similarity_analysis(push_save_round_labels: PushSaveRoundLabels,
             is_test_round = round_id in test_group_ids
 
             ground_truth_round_similarity_label = push_save_round_labels.round_id_to_data[round_id].to_float_label()
-            ground_truth_tick_push_label = (fraction_of_round <= ground_truth_round_similarity_label).iloc[0]
+            ground_truth_tick_similarity_label = (fraction_of_round <= ground_truth_round_similarity_label).iloc[0]
 
             predicted_round_similarity_label = round_row[get_similarity_column(0)]
-            predicted_tick_push_label = (fraction_of_round <= predicted_round_similarity_label).iloc[0]
+            predicted_tick_similarity_label = (fraction_of_round <= predicted_round_similarity_label).iloc[0]
 
-            correct_player_tick_label_5s_alive_and_dead = list(
-                (round_row[decrease_distance_to_c4_5s_cols] > 0.5) == ground_truth_tick_push_label
-            )
-            correct_player_tick_label_10s_alive_and_dead = list(
-                (round_row[decrease_distance_to_c4_10s_cols] > 0.5) == ground_truth_tick_push_label
-            )
-            correct_player_tick_label_20s_alive_and_dead = list(
-                (round_row[decrease_distance_to_c4_20s_cols] > 0.5) == ground_truth_tick_push_label
-            )
+            player_tick_label_5s_alive_and_dead = list(round_row[decrease_distance_to_c4_5s_cols] > 0.5)
+            player_tick_label_10s_alive_and_dead = list(round_row[decrease_distance_to_c4_10s_cols] > 0.5)
+            player_tick_label_20s_alive_and_dead = list(round_row[decrease_distance_to_c4_20s_cols] > 0.5)
 
             # need to filter only to labels for players that are alive
             alive_player_indices = [i for i, alive in enumerate(list(round_row[alive_cols])) if alive]
-            correct_player_tick_label_5s = []
-            correct_player_tick_label_10s = []
-            correct_player_tick_label_20s = []
+            player_tick_label_5s = []
+            player_tick_label_10s = []
+            player_tick_label_20s = []
             for i in alive_player_indices:
-                correct_player_tick_label_5s.append(correct_player_tick_label_5s_alive_and_dead[i])
-                correct_player_tick_label_10s.append(correct_player_tick_label_10s_alive_and_dead[i])
-                correct_player_tick_label_20s.append(correct_player_tick_label_20s_alive_and_dead[i])
-
-            correct_tick_label_similarity = ground_truth_tick_push_label == predicted_tick_push_label
-            correct_player_tick_label_similarity = [correct_tick_label_similarity for _ in correct_player_tick_label_5s]
-            predicted_round_label_similarity_duplicated_per_player_tick = \
-                [predicted_tick_push_label for _ in correct_player_tick_label_5s]
+                player_tick_label_5s.append(player_tick_label_5s_alive_and_dead[i])
+                player_tick_label_10s.append(player_tick_label_10s_alive_and_dead[i])
+                player_tick_label_20s.append(player_tick_label_20s_alive_and_dead[i])
+            player_tick_label_similarity = [predicted_tick_similarity_label for _ in player_tick_label_5s]
+            player_tick_label_ground_truth = [ground_truth_tick_similarity_label for _ in player_tick_label_5s]
 
             if predicted_round_similarity_label < 0:
                 if is_test_round:
-                    test_result.num_not_labeled += len(correct_player_tick_label_5s)
+                    test_result.num_not_labeled += len(player_tick_label_5s)
                 else:
-                    train_result.num_not_labeled += len(correct_player_tick_label_5s)
+                    train_result.num_not_labeled += len(player_tick_label_5s)
                 continue
 
             if is_test_round:
                 result_to_update = test_result
             else:
                 result_to_update = train_result
-            result_to_update.correct_player_tick_label_5s += correct_player_tick_label_5s
-            result_to_update.correct_player_tick_label_10s += correct_player_tick_label_10s
-            result_to_update.correct_player_tick_label_20s += correct_player_tick_label_20s
-            result_to_update.correct_player_tick_label_similarity += correct_player_tick_label_similarity
-            result_to_update.predicted_round_label_similarity_duplicated_per_player_tick += \
-                predicted_round_label_similarity_duplicated_per_player_tick
+            result_to_update.player_tick_label_5s += player_tick_label_5s
+            result_to_update.player_tick_label_10s += player_tick_label_10s
+            result_to_update.player_tick_label_20s += player_tick_label_20s
+            result_to_update.player_tick_label_similarity += player_tick_label_similarity
+            result_to_update.player_tick_label_ground_truth += player_tick_label_ground_truth
             pbar.update(1)
 
-    train_5s_accuracy = sum(train_result.correct_player_tick_label_5s) / len(train_result.correct_player_tick_label_5s)
-    train_10s_accuracy = sum(train_result.correct_player_tick_label_10s) / len(train_result.correct_player_tick_label_10s)
-    train_20s_accuracy = sum(train_result.correct_player_tick_label_20s) / len(train_result.correct_player_tick_label_20s)
-    train_similarity_accuracy = sum(train_result.correct_player_tick_label_similarity) / len(train_result.correct_player_tick_label_similarity)
-    print(f"train 5s accuracy {train_5s_accuracy:.2f} train 10s accuracy {train_10s_accuracy:.2f} "
-          f"train 20s accuracy {train_20s_accuracy:.2f} train similarity accuracy {train_similarity_accuracy:.2f}")
 
-    test_5s_accuracy = sum(test_result.correct_player_tick_label_5s) / len(test_result.correct_player_tick_label_5s)
-    test_10s_accuracy = sum(test_result.correct_player_tick_label_10s) / len(test_result.correct_player_tick_label_10s)
-    test_20s_accuracy = sum(test_result.correct_player_tick_label_20s) / len(test_result.correct_player_tick_label_20s)
-    test_similarity_accuracy = sum(test_result.correct_player_tick_label_similarity) / len(test_result.correct_player_tick_label_similarity)
-    print(f"test 5s accuracy {test_5s_accuracy:.2f} test 10s accuracy {test_10s_accuracy:.2f} "
-          f"test 20s accuracy {test_20s_accuracy:.2f} test similarity accuracy {test_similarity_accuracy:.2f}")
+    fig = plt.figure(figsize=(4*fig_length, 2*fig_length), constrained_layout=True)
+    fig.suptitle('Per-Tick Push/Save Labels')
+    axs = fig.subplots(2, 4, squeeze=False)
+    ConfusionMatrixDisplay.from_predictions(train_result.player_tick_label_similarity,
+                                            train_result.player_tick_label_ground_truth,
+                                            display_labels=['Push', 'Save'], ax=axs[0, 0], normalize='all')
+    axs[0, 0].set_title('Train Nearest Neighbor')
+    ConfusionMatrixDisplay.from_predictions(train_result.player_tick_label_5s,
+                                            train_result.player_tick_label_ground_truth,
+                                            display_labels=['Push', 'Save'], ax=axs[0, 1], normalize='all')
+    axs[0, 1].set_title('Train 5s Distance Decrease')
+    ConfusionMatrixDisplay.from_predictions(train_result.player_tick_label_10s,
+                                            train_result.player_tick_label_ground_truth,
+                                            display_labels=['Push', 'Save'], ax=axs[0, 2], normalize='all')
+    axs[0, 2].set_title('Train 10s Distance Decrease')
+    ConfusionMatrixDisplay.from_predictions(train_result.player_tick_label_20s,
+                                            train_result.player_tick_label_ground_truth,
+                                            display_labels=['Push', 'Save'], ax=axs[0, 3], normalize='all')
+    axs[0, 3].set_title('Train 20s Distance Decrease')
+    ConfusionMatrixDisplay.from_predictions(test_result.player_tick_label_similarity,
+                                            test_result.player_tick_label_ground_truth,
+                                            display_labels=['Push', 'Save'], ax=axs[1, 0], normalize='all')
+    axs[1, 0].set_title('Test Nearest Neighbor')
+    ConfusionMatrixDisplay.from_predictions(test_result.player_tick_label_5s,
+                                            test_result.player_tick_label_ground_truth,
+                                            display_labels=['Push', 'Save'], ax=axs[1, 1], normalize='all')
+    axs[1, 1].set_title('Test 5s Distance Decrease')
+    ConfusionMatrixDisplay.from_predictions(test_result.player_tick_label_10s,
+                                            test_result.player_tick_label_ground_truth,
+                                            display_labels=['Push', 'Save'], ax=axs[1, 2], normalize='all')
+    axs[1, 2].set_title('Test 10s Distance Decrease')
+    ConfusionMatrixDisplay.from_predictions(test_result.player_tick_label_20s,
+                                            test_result.player_tick_label_ground_truth,
+                                            display_labels=['Push', 'Save'], ax=axs[1, 3], normalize='all')
+    axs[1, 3].set_title('Test 20s Distance Decrease')
+
+    plt.savefig(similarity_plots_path / 'similarity_confusionq.png')
+    #train_5s_accuracy = sum(train_result.correct_player_tick_label_5s) / len(train_result.correct_player_tick_label_5s)
+    #train_10s_accuracy = sum(train_result.correct_player_tick_label_10s) / len(train_result.correct_player_tick_label_10s)
+    #train_20s_accuracy = sum(train_result.correct_player_tick_label_20s) / len(train_result.correct_player_tick_label_20s)
+    #train_similarity_accuracy = sum(train_result.correct_player_tick_label_similarity) / len(train_result.correct_player_tick_label_similarity)
+    #print(f"train 5s accuracy {train_5s_accuracy:.2f} train 10s accuracy {train_10s_accuracy:.2f} "
+    #      f"train 20s accuracy {train_20s_accuracy:.2f} train similarity accuracy {train_similarity_accuracy:.2f}")
+
+    #test_5s_accuracy = sum(test_result.correct_player_tick_label_5s) / len(test_result.correct_player_tick_label_5s)
+    #test_10s_accuracy = sum(test_result.correct_player_tick_label_10s) / len(test_result.correct_player_tick_label_10s)
+    #test_20s_accuracy = sum(test_result.correct_player_tick_label_20s) / len(test_result.correct_player_tick_label_20s)
+    #test_similarity_accuracy = sum(test_result.correct_player_tick_label_similarity) / len(test_result.correct_player_tick_label_similarity)
+    #print(f"test 5s accuracy {test_5s_accuracy:.2f} test 10s accuracy {test_10s_accuracy:.2f} "
+    #      f"test 20s accuracy {test_20s_accuracy:.2f} test similarity accuracy {test_similarity_accuracy:.2f}")
 
 
 if __name__ == "__main__":
@@ -282,4 +311,4 @@ if __name__ == "__main__":
     assert '_28.hdf5' in str(hdf5_key)
 
     leave_one_out_similarity_analysis(push_save_round_labels, hdf5_wrapper, test_group_ids)
-    #per_tick_similarity_analysis(push_save_round_labels, hdf5_wrapper, test_group_ids)
+    per_tick_similarity_analysis(push_save_round_labels, hdf5_wrapper, test_group_ids)
