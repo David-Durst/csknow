@@ -25,66 +25,87 @@ from learn_bot.libs.multi_hdf5_wrapper import absolute_to_relative_train_test_ke
 fig_length = 6
 error_col = 'Push/Save Label Error'
 push_save_decile_col = 'Push/Save Predicted Label Decile'
+predicted_similarity_col = 'Predicted Round Push/Save Label'
+ground_truth_similarity_col = 'Ground Truth Round Push/Save Label'
+
+
+class RoundSimilarityResults:
+    num_not_labeled: int
+    predicted_similarity_label: List[float]
+    ground_truth_similarity_label: List[float]
+    predicted_decile: List[float]
+    abs_similarity_errors: List[float]
+
+    def __init__(self):
+        self.num_not_labeled = 0
+        self.predicted_similarity_label = []
+        self.ground_truth_similarity_label = []
+        self.predicted_decile = []
+        self.abs_similarity_errors = []
 
 
 def leave_one_out_similarity_analysis(push_save_round_labels: PushSaveRoundLabels,
                                       hdf5_wrapper: HDF5Wrapper, test_group_ids: List[int]):
     # compute accuracy for all round ids, recording if in test or train set
-    num_train_not_labeled = 0
-    train_abs_similarity_errors = []
-    train_push_decile = []
-    num_test_not_labeled = 0
-    test_abs_similarity_errors = []
-    test_push_decile = []
+    train_result = RoundSimilarityResults()
+    test_result = RoundSimilarityResults()
     round_ids_and_similarity_df = \
         hdf5_wrapper.id_df.groupby(round_id_column, as_index=False)[get_similarity_column(0)].first()
     for _, round_id_and_similarity_row in round_ids_and_similarity_df.iterrows():
         round_id = round_id_and_similarity_row[round_id_column]
         is_test_round = round_id in test_group_ids
         predicted_similarity_label = round_id_and_similarity_row[get_similarity_column(0)]
-        similarity_error = abs(predicted_similarity_label -
-                               push_save_round_labels.round_id_to_data[round_id].to_float_label())
+        ground_truth_similarity_label = push_save_round_labels.round_id_to_data[round_id].to_float_label()
+        similarity_error = abs(predicted_similarity_label - ground_truth_similarity_label)
         not_labeled = predicted_similarity_label < 0.
         if is_test_round:
             if not_labeled:
-                num_test_not_labeled += 1
+                test_result.num_not_labeled += 1
             else:
-                test_abs_similarity_errors.append(similarity_error)
-                test_push_decile.append(int(predicted_similarity_label * 10.) / 10.)
+                test_result.predicted_similarity_label.append(predicted_similarity_label)
+                test_result.ground_truth_similarity_label.append(ground_truth_similarity_label)
+                test_result.abs_similarity_errors.append(similarity_error)
+                test_result.predicted_decile.append(int(predicted_similarity_label * 10.) / 10.)
         else:
             if not_labeled:
-                num_train_not_labeled += 1
+                train_result.num_not_labeled += 1
             else:
-                train_abs_similarity_errors.append(similarity_error)
-                train_push_decile.append(int(predicted_similarity_label * 10.) / 10.)
+                train_result.predicted_similarity_label.append(predicted_similarity_label)
+                train_result.ground_truth_similarity_label.append(ground_truth_similarity_label)
+                train_result.abs_similarity_errors.append(similarity_error)
+                train_result.predicted_decile.append(int(predicted_similarity_label * 10.) / 10.)
 
     pd.set_option('display.float_format', lambda x: '%.2f' % x)
 
     # plot two histograms
-    train_errors_and_push_decile_df = pd.DataFrame.from_dict({error_col: train_abs_similarity_errors,
-                                                              push_save_decile_col: train_push_decile})
-    test_errors_and_push_decile_df = pd.DataFrame.from_dict({error_col: test_abs_similarity_errors,
-                                                             push_save_decile_col: test_push_decile})
+    train_result_df = pd.DataFrame.from_dict({
+        predicted_similarity_col: train_result.predicted_similarity_label,
+        ground_truth_similarity_col: train_result.ground_truth_similarity_label,
+        push_save_decile_col: train_result.predicted_decile,
+        error_col: train_result.abs_similarity_errors
+    })
+    test_result_df = pd.DataFrame.from_dict({
+        predicted_similarity_col: test_result.predicted_similarity_label,
+        ground_truth_similarity_col: test_result.ground_truth_similarity_label,
+        push_save_decile_col: test_result.predicted_decile,
+        error_col: test_result.abs_similarity_errors
+    })
     bins = [i * 0.1 for i in range(11)]
     fig = plt.figure(figsize=(5*fig_length, fig_length), constrained_layout=True)
     axs = fig.subplots(1, 5, squeeze=False)
     train_errors_and_push_decile_df_splits = [
-        train_errors_and_push_decile_df,
-        train_errors_and_push_decile_df[train_errors_and_push_decile_df[push_save_decile_col] == 0.],
-        train_errors_and_push_decile_df[
-            train_errors_and_push_decile_df[push_save_decile_col].between(0., 0.5, inclusive='neither')],
-        train_errors_and_push_decile_df[
-            train_errors_and_push_decile_df[push_save_decile_col].between(0.5, 1.0, inclusive='left')],
-        train_errors_and_push_decile_df[train_errors_and_push_decile_df[push_save_decile_col] == 1.]
+        train_result_df,
+        train_result_df[train_result_df[push_save_decile_col] == 0.],
+        train_result_df[train_result_df[push_save_decile_col].between(0., 0.5, inclusive='neither')],
+        train_result_df[train_result_df[push_save_decile_col].between(0.5, 1.0, inclusive='left')],
+        train_result_df[train_result_df[push_save_decile_col] == 1.]
     ]
     test_errors_and_push_decile_df_splits = [
-        test_errors_and_push_decile_df,
-        test_errors_and_push_decile_df[test_errors_and_push_decile_df[push_save_decile_col] == 0.],
-        test_errors_and_push_decile_df[
-            test_errors_and_push_decile_df[push_save_decile_col].between(0., 0.5, inclusive='neither')],
-        test_errors_and_push_decile_df[
-            test_errors_and_push_decile_df[push_save_decile_col].between(0.5, 1.0, inclusive='left')],
-        test_errors_and_push_decile_df[test_errors_and_push_decile_df[push_save_decile_col] == 1.]
+        test_result_df,
+        test_result_df[test_result_df[push_save_decile_col] == 0.],
+        test_result_df[test_result_df[push_save_decile_col].between(0., 0.5, inclusive='neither')],
+        test_result_df[test_result_df[push_save_decile_col].between(0.5, 1.0, inclusive='left')],
+        test_result_df[test_result_df[push_save_decile_col] == 1.]
     ]
     split_names = ['', ' Label == 0', ' 0 < Label < 0.5', ' 0.5 <= Label < 1.', ' Label == 1']
 
@@ -104,14 +125,33 @@ def leave_one_out_similarity_analysis(push_save_round_labels: PushSaveRoundLabel
                 histtype='bar', label=['Train', 'Test'], weights=[train_weights, test_weights])
         axs[0, i].set_ylim(0., 1.)
         train_description = 'Train\n' + train_abs_similarity_errors_series.describe().to_string() + \
-                            f'\n not labeled {num_train_not_labeled} '
+                            f'\n not labeled {train_result.num_not_labeled} '
         axs[0, i].text(0.2, 0.2, train_description, family='monospace')
         test_description = 'Test\n' + test_abs_similarity_errors_series.describe().to_string() + \
-                            f'\n not labeled {num_test_not_labeled} '
+                            f'\n not labeled {test_result.num_not_labeled} '
         axs[0, i].text(0.65, 0.2, test_description, family='monospace')
         axs[0, i].legend()
 
     plt.savefig(similarity_plots_path / 'similarity_errors.png')
+
+    fig = plt.figure(figsize=(2*fig_length, fig_length), constrained_layout=True)
+    axs = fig.subplots(1, 2, squeeze=False)
+    train_result_df.plot.scatter(ground_truth_similarity_col, predicted_similarity_col, ax=axs[0, 0])
+    axs[0, 0].set_ylim(0., 1.)
+    axs[0, 0].set_xlim(0., 1.)
+    axs[0, 0].set_title('Train Ground Truth vs Predicted Push/Save Labels')
+    train_description = 'Train Errors\n' + train_result_df[error_col].describe().to_string() + \
+                        f'\n not labeled {train_result.num_not_labeled} '
+    axs[0, 0].text(0.2, 0.2, train_description, family='monospace')
+    test_result_df.plot.scatter(ground_truth_similarity_col, predicted_similarity_col, ax=axs[0, 1])
+    axs[0, 1].set_ylim(0., 1.)
+    axs[0, 1].set_xlim(0., 1.)
+    axs[0, 1].set_title('Test Ground Truth vs Predicted Push/Save Labels')
+    test_description = 'Test Errors\n' + test_result_df[error_col].describe().to_string() + \
+                       f'\n not labeled {test_result.num_not_labeled} '
+    axs[0, 1].text(0.2, 0.2, test_description, family='monospace')
+
+    plt.savefig(similarity_plots_path / 'similarity_scatter.png')
 
 
 last_c4_time_percent_col = "last C4 time percent in round"
@@ -242,4 +282,4 @@ if __name__ == "__main__":
     assert '_28.hdf5' in str(hdf5_key)
 
     leave_one_out_similarity_analysis(push_save_round_labels, hdf5_wrapper, test_group_ids)
-    per_tick_similarity_analysis(push_save_round_labels, hdf5_wrapper, test_group_ids)
+    #per_tick_similarity_analysis(push_save_round_labels, hdf5_wrapper, test_group_ids)
