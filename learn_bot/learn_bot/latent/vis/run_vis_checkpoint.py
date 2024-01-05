@@ -22,7 +22,8 @@ load_data_options = LoadDataOptions(
     #similarity_dfs=[load_hdf5_to_pd(all_human_vs_human_28_similarity_hdf5_data_path)],
     load_similarity_data=True,
     limit_by_similarity=False,
-    train_test_split_file_name=train_test_split_file_name
+    train_test_split_file_name=train_test_split_file_name,
+    similarity_analysis=True
 )
 
 rollout_load_data_options = LoadDataOptions(
@@ -35,7 +36,6 @@ rollout_load_data_options = LoadDataOptions(
     add_manual_to_all_human_data=False,
     limit_manual_data_to_no_enemies_nav=False,
     custom_rollout_extension='_12_29_23_model_learned_no_time_with_partial_1474_rounds*'
-
 )
 
 def compute_num_points(load_data_result: LoadDataResult):

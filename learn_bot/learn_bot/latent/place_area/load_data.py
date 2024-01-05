@@ -207,10 +207,14 @@ class LoadDataResult:
             best_match_similarity_df = similarity_df[(similarity_df[best_match_id_col] == 0) &
                                                      ((similarity_df[metric_type_col] == b'Unconstrained DTW') |
                                                       (similarity_df[metric_type_col] == b'Slope Constrained DTW'))]
+        # don't worry about merging reording index, verified that same length data, but merge does it's own sort and
+        # index according to sort
+        # unmerged_tmp = best_match_similarity_df.copy()
         best_match_similarity_df = \
             best_match_similarity_df.merge(push_round_ids_and_percents_df, how='inner', on=best_fit_ground_truth_round_id_col)
-        best_match_similarity_df.sort_values([predicted_trace_batch_col, predicted_round_id_col, metric_type_col],
-                                             inplace=True)
+        # unsorted_tmp = best_match_similarity_df.copy()
+        best_match_similarity_df.sort_values([predicted_trace_batch_col, predicted_round_id_col, metric_type_col,
+                                              best_match_id_col], inplace=True)
 
         #for idx, row in best_match_similarity_df.iterrows():
         #    hdf5_filename = row[predicted_trace_batch_col].decode('utf-8')
@@ -226,7 +230,7 @@ class LoadDataResult:
             hdf5_round_id_and_similarity = \
                 best_match_similarity_df[best_match_similarity_df[predicted_trace_batch_col].str.decode('utf-8') ==
                                          str(hdf5_wrapper.hdf5_path.name)].loc[:, [predicted_round_id_col, best_fit_ground_truth_round_id_col,
-                                                                                   similarity_col, metric_type_col]] # for debugging
+                                                                                   similarity_col, metric_type_col, best_match_id_col]] # for debugging
             hdf5_round_id_to_similarity_dict = {}
             # only to use with analysis, where can skip a predicted round id because it equals ground truth round id
             predicted_round_ids_matched = []

@@ -33,6 +33,7 @@ ground_truth_similarity_col = 'Ground Truth Round Push/Save Label'
 
 class RoundSimilarityResults:
     num_not_labeled: int
+    round_id: List[int]
     predicted_similarity_label: List[float]
     ground_truth_similarity_label: List[float]
     predicted_decile: List[float]
@@ -41,6 +42,7 @@ class RoundSimilarityResults:
 
     def __init__(self):
         self.num_not_labeled = 0
+        self.round_id = []
         self.predicted_similarity_label = []
         self.ground_truth_similarity_label = []
         self.predicted_decile = []
@@ -66,6 +68,7 @@ def leave_one_out_similarity_analysis(push_save_round_labels: PushSaveRoundLabel
             if not_labeled:
                 test_result.num_not_labeled += 1
             else:
+                test_result.round_id.append(round_id)
                 test_result.predicted_similarity_label.append(predicted_similarity_label)
                 test_result.ground_truth_similarity_label.append(ground_truth_similarity_label)
                 test_result.abs_similarity_errors.append(similarity_error)
@@ -75,6 +78,7 @@ def leave_one_out_similarity_analysis(push_save_round_labels: PushSaveRoundLabel
             if not_labeled:
                 train_result.num_not_labeled += 1
             else:
+                train_result.round_id.append(round_id)
                 train_result.predicted_similarity_label.append(predicted_similarity_label)
                 train_result.ground_truth_similarity_label.append(ground_truth_similarity_label)
                 train_result.abs_similarity_errors.append(similarity_error)
@@ -85,6 +89,7 @@ def leave_one_out_similarity_analysis(push_save_round_labels: PushSaveRoundLabel
 
     # plot two histograms
     train_result_df = pd.DataFrame.from_dict({
+        round_id_column: train_result.round_id,
         predicted_similarity_col: train_result.predicted_similarity_label,
         ground_truth_similarity_col: train_result.ground_truth_similarity_label,
         predicted_decile_col: train_result.predicted_decile,
@@ -92,6 +97,7 @@ def leave_one_out_similarity_analysis(push_save_round_labels: PushSaveRoundLabel
         error_col: train_result.abs_similarity_errors
     })
     test_result_df = pd.DataFrame.from_dict({
+        round_id_column: test_result.round_id,
         predicted_similarity_col: test_result.predicted_similarity_label,
         ground_truth_similarity_col: test_result.ground_truth_similarity_label,
         predicted_decile_col: test_result.predicted_decile,
@@ -164,18 +170,25 @@ def leave_one_out_similarity_analysis(push_save_round_labels: PushSaveRoundLabel
     fig = plt.figure(figsize=(2*fig_length, fig_length), constrained_layout=True)
     fig.suptitle('Per Round Push/Save Labels')
     axs = fig.subplots(1, 2, squeeze=False)
-    ConfusionMatrixDisplay.from_predictions([int(d * 100) for d in train_result.predicted_decile],
-                                            [int(d * 100) for d in train_result.ground_truth_decile],
+    ConfusionMatrixDisplay.from_predictions([int(d * 100) for d in train_result.ground_truth_decile],
+                                            [int(d * 100) for d in train_result.predicted_decile],
                                             #display_labels=[i for i in range(11)],
                                             ax=axs[0, 0], normalize='all')
     axs[0, 0].set_title('Train Nearest Neighbor')
-    ConfusionMatrixDisplay.from_predictions([int(d * 100) for d in test_result.predicted_decile],
-                                            [int(d * 100) for d in test_result.ground_truth_decile],
+    ConfusionMatrixDisplay.from_predictions([int(d * 100) for d in test_result.ground_truth_decile],
+                                            [int(d * 100) for d in test_result.predicted_decile],
                                             #display_labels=[i for i in range(11)],
                                             ax=axs[0, 1], normalize='all')
     axs[0, 1].set_title('Test Nearest Neighbor')
 
     plt.savefig(similarity_plots_path / 'similarity_round_confusion.png')
+
+    print('rounds labeled push that are save')
+    result_df = pd.concat([train_result_df, test_result_df])
+    result_df.sort_values(round_id_column, inplace=True)
+    push_that_are_save = list(result_df[(result_df[predicted_similarity_col] == 1.) &
+                                        (result_df[ground_truth_similarity_col] == 0.)][round_id_column].astype('int'))
+    print(push_that_are_save)
 
 
 last_c4_time_percent_col = "last C4 time percent in round"
@@ -270,36 +283,36 @@ def per_tick_similarity_analysis(push_save_round_labels: PushSaveRoundLabels,
     fig = plt.figure(figsize=(4*fig_length, 2*fig_length), constrained_layout=True)
     fig.suptitle('Per Tick Push/Save Labels')
     axs = fig.subplots(2, 4, squeeze=False)
-    ConfusionMatrixDisplay.from_predictions(train_result.player_tick_label_similarity,
-                                            train_result.player_tick_label_ground_truth,
+    ConfusionMatrixDisplay.from_predictions(train_result.player_tick_label_ground_truth,
+                                            train_result.player_tick_label_similarity,
                                             display_labels=['Push', 'Save'], ax=axs[0, 0], normalize='all')
     axs[0, 0].set_title('Train Nearest Neighbor')
-    ConfusionMatrixDisplay.from_predictions(train_result.player_tick_label_5s,
-                                            train_result.player_tick_label_ground_truth,
+    ConfusionMatrixDisplay.from_predictions(train_result.player_tick_label_ground_truth,
+                                            train_result.player_tick_label_5s,
                                             display_labels=['Push', 'Save'], ax=axs[0, 1], normalize='all')
     axs[0, 1].set_title('Train 5s Distance Decrease')
-    ConfusionMatrixDisplay.from_predictions(train_result.player_tick_label_10s,
-                                            train_result.player_tick_label_ground_truth,
+    ConfusionMatrixDisplay.from_predictions(train_result.player_tick_label_ground_truth,
+                                            train_result.player_tick_label_10s,
                                             display_labels=['Push', 'Save'], ax=axs[0, 2], normalize='all')
     axs[0, 2].set_title('Train 10s Distance Decrease')
-    ConfusionMatrixDisplay.from_predictions(train_result.player_tick_label_20s,
-                                            train_result.player_tick_label_ground_truth,
+    ConfusionMatrixDisplay.from_predictions(train_result.player_tick_label_ground_truth,
+                                            train_result.player_tick_label_20s,
                                             display_labels=['Push', 'Save'], ax=axs[0, 3], normalize='all')
     axs[0, 3].set_title('Train 20s Distance Decrease')
-    ConfusionMatrixDisplay.from_predictions(test_result.player_tick_label_similarity,
-                                            test_result.player_tick_label_ground_truth,
+    ConfusionMatrixDisplay.from_predictions(test_result.player_tick_label_ground_truth,
+                                            test_result.player_tick_label_similarity,
                                             display_labels=['Push', 'Save'], ax=axs[1, 0], normalize='all')
     axs[1, 0].set_title('Test Nearest Neighbor')
-    ConfusionMatrixDisplay.from_predictions(test_result.player_tick_label_5s,
-                                            test_result.player_tick_label_ground_truth,
+    ConfusionMatrixDisplay.from_predictions(test_result.player_tick_label_ground_truth,
+                                            test_result.player_tick_label_5s,
                                             display_labels=['Push', 'Save'], ax=axs[1, 1], normalize='all')
     axs[1, 1].set_title('Test 5s Distance Decrease')
-    ConfusionMatrixDisplay.from_predictions(test_result.player_tick_label_10s,
-                                            test_result.player_tick_label_ground_truth,
+    ConfusionMatrixDisplay.from_predictions(test_result.player_tick_label_ground_truth,
+                                            test_result.player_tick_label_10s,
                                             display_labels=['Push', 'Save'], ax=axs[1, 2], normalize='all')
     axs[1, 2].set_title('Test 10s Distance Decrease')
-    ConfusionMatrixDisplay.from_predictions(test_result.player_tick_label_20s,
-                                            test_result.player_tick_label_ground_truth,
+    ConfusionMatrixDisplay.from_predictions(test_result.player_tick_label_ground_truth,
+                                            test_result.player_tick_label_20s,
                                             display_labels=['Push', 'Save'], ax=axs[1, 3], normalize='all')
     axs[1, 3].set_title('Test 20s Distance Decrease')
 
@@ -334,4 +347,4 @@ if __name__ == "__main__":
     assert '_28.hdf5' in str(hdf5_key)
 
     leave_one_out_similarity_analysis(push_save_round_labels, hdf5_wrapper, test_group_ids)
-    #per_tick_similarity_analysis(push_save_round_labels, hdf5_wrapper, test_group_ids)
+    per_tick_similarity_analysis(push_save_round_labels, hdf5_wrapper, test_group_ids)
