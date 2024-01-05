@@ -25,7 +25,8 @@ from learn_bot.libs.multi_hdf5_wrapper import absolute_to_relative_train_test_ke
 
 fig_length = 6
 error_col = 'Push/Save Label Error'
-push_save_decile_col = 'Push/Save Predicted Label Decile'
+predicted_decile_col = 'Predicted Label Decile'
+ground_truth_decile_col = 'Ground Truth Label Decile'
 predicted_similarity_col = 'Predicted Round Push/Save Label'
 ground_truth_similarity_col = 'Ground Truth Round Push/Save Label'
 
@@ -35,6 +36,7 @@ class RoundSimilarityResults:
     predicted_similarity_label: List[float]
     ground_truth_similarity_label: List[float]
     predicted_decile: List[float]
+    ground_truth_decile: List[float]
     abs_similarity_errors: List[float]
 
     def __init__(self):
@@ -42,6 +44,7 @@ class RoundSimilarityResults:
         self.predicted_similarity_label = []
         self.ground_truth_similarity_label = []
         self.predicted_decile = []
+        self.ground_truth_decile = []
         self.abs_similarity_errors = []
 
 
@@ -67,6 +70,7 @@ def leave_one_out_similarity_analysis(push_save_round_labels: PushSaveRoundLabel
                 test_result.ground_truth_similarity_label.append(ground_truth_similarity_label)
                 test_result.abs_similarity_errors.append(similarity_error)
                 test_result.predicted_decile.append(int(predicted_similarity_label * 10.) / 10.)
+                test_result.ground_truth_decile.append(int(ground_truth_similarity_label * 10.) / 10.)
         else:
             if not_labeled:
                 train_result.num_not_labeled += 1
@@ -75,6 +79,7 @@ def leave_one_out_similarity_analysis(push_save_round_labels: PushSaveRoundLabel
                 train_result.ground_truth_similarity_label.append(ground_truth_similarity_label)
                 train_result.abs_similarity_errors.append(similarity_error)
                 train_result.predicted_decile.append(int(predicted_similarity_label * 10.) / 10.)
+                train_result.ground_truth_decile.append(int(ground_truth_similarity_label * 10.) / 10.)
 
     pd.set_option('display.float_format', lambda x: '%.2f' % x)
 
@@ -82,13 +87,15 @@ def leave_one_out_similarity_analysis(push_save_round_labels: PushSaveRoundLabel
     train_result_df = pd.DataFrame.from_dict({
         predicted_similarity_col: train_result.predicted_similarity_label,
         ground_truth_similarity_col: train_result.ground_truth_similarity_label,
-        push_save_decile_col: train_result.predicted_decile,
+        predicted_decile_col: train_result.predicted_decile,
+        ground_truth_decile_col: train_result.ground_truth_decile,
         error_col: train_result.abs_similarity_errors
     })
     test_result_df = pd.DataFrame.from_dict({
         predicted_similarity_col: test_result.predicted_similarity_label,
         ground_truth_similarity_col: test_result.ground_truth_similarity_label,
-        push_save_decile_col: test_result.predicted_decile,
+        predicted_decile_col: test_result.predicted_decile,
+        ground_truth_decile_col: test_result.ground_truth_decile,
         error_col: test_result.abs_similarity_errors
     })
     bins = [i * 0.1 for i in range(11)]
@@ -96,17 +103,17 @@ def leave_one_out_similarity_analysis(push_save_round_labels: PushSaveRoundLabel
     axs = fig.subplots(1, 5, squeeze=False)
     train_errors_and_push_decile_df_splits = [
         train_result_df,
-        train_result_df[train_result_df[push_save_decile_col] == 0.],
-        train_result_df[train_result_df[push_save_decile_col].between(0., 0.5, inclusive='neither')],
-        train_result_df[train_result_df[push_save_decile_col].between(0.5, 1.0, inclusive='left')],
-        train_result_df[train_result_df[push_save_decile_col] == 1.]
+        train_result_df[train_result_df[predicted_decile_col] == 0.],
+        train_result_df[train_result_df[predicted_decile_col].between(0., 0.5, inclusive='neither')],
+        train_result_df[train_result_df[predicted_decile_col].between(0.5, 1.0, inclusive='left')],
+        train_result_df[train_result_df[predicted_decile_col] == 1.]
     ]
     test_errors_and_push_decile_df_splits = [
         test_result_df,
-        test_result_df[test_result_df[push_save_decile_col] == 0.],
-        test_result_df[test_result_df[push_save_decile_col].between(0., 0.5, inclusive='neither')],
-        test_result_df[test_result_df[push_save_decile_col].between(0.5, 1.0, inclusive='left')],
-        test_result_df[test_result_df[push_save_decile_col] == 1.]
+        test_result_df[test_result_df[predicted_decile_col] == 0.],
+        test_result_df[test_result_df[predicted_decile_col].between(0., 0.5, inclusive='neither')],
+        test_result_df[test_result_df[predicted_decile_col].between(0.5, 1.0, inclusive='left')],
+        test_result_df[test_result_df[predicted_decile_col] == 1.]
     ]
     split_names = ['', ' Label == 0', ' 0 < Label < 0.5', ' 0.5 <= Label < 1.', ' Label == 1']
 
@@ -153,6 +160,22 @@ def leave_one_out_similarity_analysis(push_save_round_labels: PushSaveRoundLabel
     axs[0, 1].text(0.2, 0.2, test_description, family='monospace')
 
     plt.savefig(similarity_plots_path / 'similarity_scatter.png')
+
+    fig = plt.figure(figsize=(2*fig_length, fig_length), constrained_layout=True)
+    fig.suptitle('Per Round Push/Save Labels')
+    axs = fig.subplots(1, 2, squeeze=False)
+    ConfusionMatrixDisplay.from_predictions([int(d * 100) for d in train_result.predicted_decile],
+                                            [int(d * 100) for d in train_result.ground_truth_decile],
+                                            #display_labels=[i for i in range(11)],
+                                            ax=axs[0, 0], normalize='all')
+    axs[0, 0].set_title('Train Nearest Neighbor')
+    ConfusionMatrixDisplay.from_predictions([int(d * 100) for d in test_result.predicted_decile],
+                                            [int(d * 100) for d in test_result.ground_truth_decile],
+                                            #display_labels=[i for i in range(11)],
+                                            ax=axs[0, 1], normalize='all')
+    axs[0, 1].set_title('Test Nearest Neighbor')
+
+    plt.savefig(similarity_plots_path / 'similarity_round_confusion.png')
 
 
 last_c4_time_percent_col = "last C4 time percent in round"
@@ -245,7 +268,7 @@ def per_tick_similarity_analysis(push_save_round_labels: PushSaveRoundLabels,
 
 
     fig = plt.figure(figsize=(4*fig_length, 2*fig_length), constrained_layout=True)
-    fig.suptitle('Per-Tick Push/Save Labels')
+    fig.suptitle('Per Tick Push/Save Labels')
     axs = fig.subplots(2, 4, squeeze=False)
     ConfusionMatrixDisplay.from_predictions(train_result.player_tick_label_similarity,
                                             train_result.player_tick_label_ground_truth,
@@ -280,7 +303,7 @@ def per_tick_similarity_analysis(push_save_round_labels: PushSaveRoundLabels,
                                             display_labels=['Push', 'Save'], ax=axs[1, 3], normalize='all')
     axs[1, 3].set_title('Test 20s Distance Decrease')
 
-    plt.savefig(similarity_plots_path / 'similarity_confusionq.png')
+    plt.savefig(similarity_plots_path / 'similarity_tick_confusion.png')
     #train_5s_accuracy = sum(train_result.correct_player_tick_label_5s) / len(train_result.correct_player_tick_label_5s)
     #train_10s_accuracy = sum(train_result.correct_player_tick_label_10s) / len(train_result.correct_player_tick_label_10s)
     #train_20s_accuracy = sum(train_result.correct_player_tick_label_20s) / len(train_result.correct_player_tick_label_20s)
@@ -311,4 +334,4 @@ if __name__ == "__main__":
     assert '_28.hdf5' in str(hdf5_key)
 
     leave_one_out_similarity_analysis(push_save_round_labels, hdf5_wrapper, test_group_ids)
-    per_tick_similarity_analysis(push_save_round_labels, hdf5_wrapper, test_group_ids)
+    #per_tick_similarity_analysis(push_save_round_labels, hdf5_wrapper, test_group_ids)
