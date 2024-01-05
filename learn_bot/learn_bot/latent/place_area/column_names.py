@@ -59,9 +59,9 @@ class PlayerPlaceAreaColumns:
     pos: list[str]
     prior_pos: list[str]
     vel: list[str]
-    decrease_distance_to_c4_5s: list[str]
-    decrease_distance_to_c4_10s: list[str]
-    decrease_distance_to_c4_20s: list[str]
+    decrease_distance_to_c4_5s: str
+    decrease_distance_to_c4_10s: str
+    decrease_distance_to_c4_20s: str
     cur_place: list[str]
     #prior_place: list[str]
     area_grid_cell_in_place: list[str]
