@@ -228,6 +228,8 @@ class LoadDataResult:
                                          str(hdf5_wrapper.hdf5_path.name)].loc[:, [predicted_round_id_col, best_fit_ground_truth_round_id_col,
                                                                                    similarity_col, metric_type_col]] # for debugging
             hdf5_round_id_to_similarity_dict = {}
+            # only to use with analysis, where can skip a predicted round id because it equals ground truth round id
+            predicted_round_ids_matched = []
             for _, row in hdf5_round_id_and_similarity.iterrows():
                 # since Slope constrained comes first, skip if already present to prevent overwrite
                 predicted_round_id = row[predicted_round_id_col]
@@ -236,9 +238,13 @@ class LoadDataResult:
                     if similarity_analysis and predicted_round_id == row[best_fit_ground_truth_round_id_col]:
                         continue
                     hdf5_round_id_to_similarity_dict[predicted_round_id] = row[similarity_col]
+                    predicted_round_ids_matched.append(predicted_round_id)
             round_ids_in_hdf5 = hdf5_wrapper.id_df[round_id_column].unique()
             similarity_round_ids = hdf5_round_id_and_similarity[predicted_round_id_col].unique()
-            round_ids_not_matched = [r for r in round_ids_in_hdf5 if r not in similarity_round_ids]
+            if similarity_analysis:
+                round_ids_not_matched = [r for r in round_ids_in_hdf5 if r not in predicted_round_ids_matched]
+            else:
+                round_ids_not_matched = [r for r in round_ids_in_hdf5 if r not in similarity_round_ids]
             #print(f"{hdf5_wrapper.hdf5_path.name}: not matched round ids: {round_ids_not_matched}")
             total_rounds += len(round_ids_in_hdf5)
             num_rounds_not_matched += len(round_ids_not_matched)
