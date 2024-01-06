@@ -491,7 +491,6 @@ load_data_options = LoadDataOptions(
     #hand_labeled_push_round_ids=[all_human_28_second_filter_good_rounds],
     #similarity_dfs=[load_hdf5_to_pd(all_human_vs_human_28_similarity_hdf5_data_path)],
     load_similarity_data=True,
-    limit_by_similarity=False,
     train_test_split_file_name=train_test_split_file_name
 )
 

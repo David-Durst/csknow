@@ -13,7 +13,7 @@ from learn_bot.latent.analyze.comparison_column_names import similarity_plots_pa
 from learn_bot.latent.engagement.column_names import round_id_column, tick_id_column
 from learn_bot.latent.order.column_names import c4_time_left_percent
 from learn_bot.latent.place_area.column_names import get_similarity_column, specific_player_place_area_columns, \
-    float_c4_cols, hdf5_id_columns
+    float_c4_cols, hdf5_id_columns, get_tick_similarity_column
 from learn_bot.latent.place_area.load_data import LoadDataResult
 from learn_bot.latent.place_area.push_save_label import PushSaveRoundLabels
 from learn_bot.latent.train_paths import default_save_push_round_labels_path
@@ -224,16 +224,16 @@ def per_tick_similarity_analysis(push_save_round_labels: PushSaveRoundLabels,
     cols_to_get = alive_cols + decrease_distance_to_c4_5s_cols + decrease_distance_to_c4_10s_cols + \
         decrease_distance_to_c4_20s_cols + hdf5_id_columns
     df = load_hdf5_to_pd(hdf5_wrapper.hdf5_path, cols_to_get=cols_to_get)
+    df[get_similarity_column(0)] = hdf5_wrapper.id_df[get_similarity_column(0)]
+    df[get_tick_similarity_column(0)] = hdf5_wrapper.id_df[get_tick_similarity_column(0)]
 
     id_df = hdf5_wrapper.id_df.copy()
     round_ids_similarity_first_last_tick_id_df = \
         id_df.groupby(round_id_column, as_index=False).agg(
             first_tick=(tick_id_column, 'first'),
             last_tick=(tick_id_column, 'last'),
-            sim=(get_similarity_column(0), 'first'),
             num_ticks=(tick_id_column, 'count')
         )
-    round_ids_similarity_first_last_tick_id_df.rename({'sim': get_similarity_column(0)}, axis=1, inplace=True)
     for _, round_row in round_ids_similarity_first_last_tick_id_df.iterrows():
         if round_row['num_ticks'] != 1 + round_row['last_tick'] - round_row['first_tick']:
             print('missing tick in round')
@@ -253,7 +253,7 @@ def per_tick_similarity_analysis(push_save_round_labels: PushSaveRoundLabels,
             ground_truth_tick_similarity_label = fraction_of_round <= ground_truth_round_similarity_label
 
             predicted_round_similarity_label = tick_row[get_similarity_column(0)]
-            predicted_tick_similarity_label = fraction_of_round <= predicted_round_similarity_label
+            predicted_tick_similarity_label = tick_row[get_tick_similarity_column(0)]
 
             player_tick_label_5s_alive_and_dead = list(tick_row[decrease_distance_to_c4_5s_cols] > 0.5)
             player_tick_label_10s_alive_and_dead = list(tick_row[decrease_distance_to_c4_10s_cols] > 0.5)

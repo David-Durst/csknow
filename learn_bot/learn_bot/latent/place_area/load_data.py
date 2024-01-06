@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+import time
 from pathlib import Path
 from typing import List, Callable, Optional, Dict
 
@@ -7,9 +8,9 @@ import pandas as pd
 from learn_bot.latent.analyze.comparison_column_names import predicted_trace_batch_col, \
     best_fit_ground_truth_round_id_col, predicted_round_id_col, best_match_id_col, metric_type_col, \
     all_human_vs_human_28_similarity_hdf5_data_path
-from learn_bot.latent.engagement.column_names import game_id_column, round_id_column
+from learn_bot.latent.engagement.column_names import game_id_column, round_id_column, tick_id_column
 from learn_bot.latent.place_area.column_names import hdf5_id_columns, test_success_col, get_similarity_column, \
-    vis_only_columns, default_similarity_columns
+    vis_only_columns, default_similarity_columns, get_tick_similarity_column
 from learn_bot.latent.place_area.create_test_data import create_zeros_train_data, create_similarity_data
 from learn_bot.latent.place_area.push_save_label import PushSaveRoundLabels
 from learn_bot.latent.train_paths import default_save_push_round_labels_path
@@ -54,7 +55,6 @@ class LoadDataOptions:
     #hand_labeled_push_round_ids: Optional[List[List[int]]] = None
     #similarity_dfs: Optional[List[pd.DataFrame]] = None
     # limit or add feature based on matches
-    limit_by_similarity: bool = True
     limit_manual_data_to_only_enemies_no_nav: bool = False
     # train test split file name
     train_test_split_file_name: Optional[str] = None
@@ -154,12 +154,15 @@ class LoadDataResult:
                                                    vis_cols=vis_only_columns)
         # load similarity
         if not load_data_options.use_synthetic_data and load_data_options.load_similarity_data:
+            start_similarity_time = time.time()
             similarity_dfs = [load_hdf5_to_pd(all_human_vs_human_28_similarity_hdf5_data_path)]
             hand_labeled_push_round_ids = [PushSaveRoundLabels(default_save_push_round_labels_path)]
             for i in range(len(similarity_dfs)):
-                self.load_similarity_columns_and_limit_from_hand_labeled_push_rounds(
+                self.load_similarity_columns_from_hand_labeled_push_rounds(
                     similarity_dfs[i], hand_labeled_push_round_ids[i],
-                    load_data_options.limit_by_similarity, i, load_data_options.similarity_analysis)
+                    i, load_data_options.similarity_analysis)
+                self.generate_tick_similarity_columns(i)
+            print(f"similarity load time {time.time() - start_similarity_time}")
         else:
             self.fill_empty_similarity_columns()
         if load_data_options.use_all_human_data and load_data_options.custom_limit_fn is not None:
@@ -185,10 +188,9 @@ class LoadDataResult:
             self.multi_hdf5_wrapper.hdf5_wrappers[i].add_extra_column(column_name,
                                                                       add_column_fns[i](self.multi_hdf5_wrapper.hdf5_wrappers[i].id_df))
 
-    def load_similarity_columns_and_limit_from_hand_labeled_push_rounds(self, similarity_df: pd.DataFrame,
-                                                                        hand_labeled_push_rounds: PushSaveRoundLabels,
-                                                                        limit: bool, similarity_index: int,
-                                                                        similarity_analysis: bool):
+    def load_similarity_columns_from_hand_labeled_push_rounds(self, similarity_df: pd.DataFrame,
+                                                              hand_labeled_push_rounds: PushSaveRoundLabels,
+                                                              similarity_index: int, similarity_analysis: bool):
         similarity_col = get_similarity_column(similarity_index)
         # build dataframe from hand-labeled round id to similarity score: 1 if push, 0 if save,
         # float for start push and end save
@@ -227,10 +229,13 @@ class LoadDataResult:
         total_rounds = 0
         num_rounds_not_matched = 0
         for i, hdf5_wrapper in enumerate(self.multi_hdf5_wrapper.hdf5_wrappers):
+            # get best match similarity for this hdf5
             hdf5_round_id_and_similarity = \
                 best_match_similarity_df[best_match_similarity_df[predicted_trace_batch_col].str.decode('utf-8') ==
                                          str(hdf5_wrapper.hdf5_path.name)].loc[:, [predicted_round_id_col, best_fit_ground_truth_round_id_col,
                                                                                    similarity_col, metric_type_col, best_match_id_col]] # for debugging
+
+            # compute similarity per round
             hdf5_round_id_to_similarity_dict = {}
             # only to use with analysis, where can skip a predicted round id because it equals ground truth round id
             predicted_round_ids_matched = []
@@ -243,6 +248,8 @@ class LoadDataResult:
                         continue
                     hdf5_round_id_to_similarity_dict[predicted_round_id] = row[similarity_col]
                     predicted_round_ids_matched.append(predicted_round_id)
+
+            # fill in similarity for rounds that lack a label
             round_ids_in_hdf5 = hdf5_wrapper.id_df[round_id_column].unique()
             similarity_round_ids = hdf5_round_id_and_similarity[predicted_round_id_col].unique()
             if similarity_analysis:
@@ -257,15 +264,33 @@ class LoadDataResult:
                     hdf5_round_id_to_similarity_dict[r] = -1.
                 else:
                     hdf5_round_id_to_similarity_dict[r] = 0.5
+
+            # make functions for generating round-based similarity data per tick
             # https://stackoverflow.com/questions/2295290/what-do-lambda-function-closures-capture
             similarity_fns.append(lambda df, round_id_to_similarity_dict=hdf5_round_id_to_similarity_dict: df[round_id_column].map(round_id_to_similarity_dict))
 
         #print(f"num non matched rounds: {num_rounds_not_matched} / {total_rounds}, {num_rounds_not_matched / total_rounds:.3f}")
-        if limit:
-            raise Exception("trying to use old limiting code that isn't valid now that similarity is a float")
-            #self.limit(similarity_fns)
         self.add_column(similarity_fns, get_similarity_column(similarity_index))
 
+    def generate_tick_similarity_columns(self, similarity_index: int):
+        similarity_col = get_similarity_column(similarity_index)
+        tick_similarity_col = get_tick_similarity_column(similarity_index)
+
+        for i, hdf5_wrapper in enumerate(self.multi_hdf5_wrapper.hdf5_wrappers):
+            id_df = hdf5_wrapper.id_df.copy()
+            round_ids_similarity_first_last_tick_id_df = \
+                id_df.groupby(round_id_column, as_index=False).agg(
+                    first_tick=(tick_id_column, 'first'),
+                    last_tick=(tick_id_column, 'last'),
+                    num_ticks=(tick_id_column, 'count')
+                )
+            for _, round_row in round_ids_similarity_first_last_tick_id_df.iterrows():
+                if round_row['num_ticks'] != 1 + round_row['last_tick'] - round_row['first_tick']:
+                    print('missing tick in round')
+            id_df = id_df.merge(round_ids_similarity_first_last_tick_id_df, on=round_id_column)
+            fraction_of_round = (id_df[tick_id_column] - id_df['first_tick']) / \
+                                (1 + id_df['last_tick'] - id_df['first_tick'])
+            hdf5_wrapper.id_df[tick_similarity_col] = fraction_of_round <= id_df[similarity_col]
 
     def fill_empty_similarity_columns(self):
         for similarity_index in range(default_similarity_columns):
@@ -273,3 +298,4 @@ class LoadDataResult:
             for i, hdf5_wrapper in enumerate(self.multi_hdf5_wrapper.hdf5_wrappers):
                 similarity_fns.append(lambda df: df[round_id_column] != df[round_id_column])
             self.add_column(similarity_fns, get_similarity_column(similarity_index))
+            self.add_column(similarity_fns, get_tick_similarity_column(similarity_index))

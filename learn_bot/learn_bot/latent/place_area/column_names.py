@@ -265,5 +265,8 @@ def get_similarity_column(idx: int) -> str:
     return f'similarity {idx}'
 
 
+def get_tick_similarity_column(idx: int) -> str:
+    return f'tick similarity {idx}'
+
 # system depends on 1 similarity columns, in future should be more flexible
 default_similarity_columns = 1
