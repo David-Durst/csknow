@@ -1,6 +1,8 @@
+import json
 from dataclasses import dataclass
 from enum import Enum, IntEnum
 from pathlib import Path
+from pprint import pprint, pformat
 from typing import Dict, Optional
 
 
@@ -54,7 +56,7 @@ class PushSaveRoundLabels:
 
     def save(self, p:Path):
         with open(p, 'w') as f:
-            f.write(str(self.to_pod_dict()))
+            f.write(pformat(self.to_pod_dict(), indent=4))
 
     def to_pod_dict(self) -> Dict[int, Dict]:
         return {k: {
