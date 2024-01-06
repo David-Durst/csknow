@@ -16,10 +16,10 @@ namespace csknow::compute_nav_area {
         // compute area probabilities
         const csknow::inference_delta_pos::InferenceDeltaPosPlayerAtTickProbabilities & deltaPosProbabilities =
                 blackboard.inferenceManager.playerToInferenceData.at(csgoId).deltaPosProbabilities;
-        const csknow::inference_delta_pos::InferenceDeltaPosPlayerAtTickProbabilities & uncertainDeltaPosProbabilities =
-                blackboard.inferenceManager.playerToInferenceData.at(csgoId).uncertainDeltaPosProbabilities;
+        //const csknow::inference_delta_pos::InferenceDeltaPosPlayerAtTickProbabilities & uncertainDeltaPosProbabilities =
+        //        blackboard.inferenceManager.playerToInferenceData.at(csgoId).uncertainDeltaPosProbabilities;
         vector<float> probabilities = deltaPosProbabilities.radialVelProbabilities;
-        vector<float> uncertainProbabilities = uncertainDeltaPosProbabilities.radialVelProbabilities;
+        //vector<float> uncertainProbabilities = uncertainDeltaPosProbabilities.radialVelProbabilities;
         const ServerState::Client & curClient = state.getClient(csgoId);
 
         size_t deltaPosOption = 0;
@@ -28,8 +28,9 @@ namespace csknow::compute_nav_area {
         double weightSoFar = 0.;
         modelNavData.deltaPosProbs.clear();
         for (size_t i = 0; i < probabilities.size(); i++) {
-            weightSoFar += probabilities[i] * (1 - percent_uncertainty_blend) +
-                    uncertainProbabilities[i] * percent_uncertainty_blend;
+            //weightSoFar += probabilities[i] * (1 - percent_uncertainty_blend) +
+            //        uncertainProbabilities[i] * percent_uncertainty_blend;
+            weightSoFar += probabilities[i];
             modelNavData.deltaPosProbs.push_back(probabilities[i]);
             if (probSample < weightSoFar && !setDeltaPosOption) {
                 deltaPosOption = i;
@@ -110,8 +111,8 @@ namespace csknow::compute_nav_area {
         // if put in the model orders but not ready for this player, just stand still
         if (blackboard.inferenceManager.playerToInferenceData.find(treeThinker.csgoId) ==
             blackboard.inferenceManager.playerToInferenceData.end() ||
-            !blackboard.inferenceManager.playerToInferenceData.at(treeThinker.csgoId).validDeltaPosProbabilities ||
-            !blackboard.inferenceManager.playerToInferenceData.at(treeThinker.csgoId).validUncertainDeltaPosProbabilities) {
+            !blackboard.inferenceManager.playerToInferenceData.at(treeThinker.csgoId).validDeltaPosProbabilities /* ||
+            !blackboard.inferenceManager.playerToInferenceData.at(treeThinker.csgoId).validUncertainDeltaPosProbabilities*/) {
             curPriority.learnedTargetPos = false;
             curPriority.targetPos = state.getClient(treeThinker.csgoId).getFootPosForPlayer();
             curPriority.targetAreaId = curAreaId;
