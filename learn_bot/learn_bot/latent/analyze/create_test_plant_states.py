@@ -71,9 +71,9 @@ def create_test_plant_states():
         df[hdf5_key_column] = str(absolute_to_relative_train_test_key(hdf5_wrapper.hdf5_path))
         start_df = df[df[plant_tick_id_column] == df[tick_id_column]]
         if filter_for_push:
-            start_df = start_df[start_df[get_similarity_column(0)] > 0.5]
+            start_df = start_df[start_df[get_similarity_column(0)] == 1.]
         elif filter_for_save:
-            start_df = start_df[start_df[get_similarity_column(0)] < 0.5]
+            start_df = start_df[start_df[get_similarity_column(0)] == 0.]
         total_save_or_push_rounds += len(start_df)
         test_start_df = start_df[~start_df[round_id_column].isin(train_test_split.train_group_ids)].copy()
         test_start_df[num_ct_alive_column] = test_start_df[ct_alive_cols].sum(axis=1)
@@ -111,8 +111,18 @@ def create_test_plant_states():
     test_plant_states_path = \
         load_data_result.multi_hdf5_wrapper.train_test_split_path.parent / test_plant_states_file_name
     save_pd_to_hdf5(test_plant_states_path, concat_test_start_df)
-    print(f"num test rounds {len(concat_test_start_df)}")
+    filter_type = ""
+    if filter_for_push:
+        filter_type = "push "
+    elif filter_for_save:
+        filter_type = "save "
+    print(f"{filter_type}num test rounds {len(concat_test_start_df)}, total rounds {total_save_or_push_rounds}")
 
 
 if __name__ == "__main__":
+    filter_for_push = True
+    filter_for_save = False
+    create_test_plant_states()
+    filter_for_push = False
+    filter_for_save = True
     create_test_plant_states()
