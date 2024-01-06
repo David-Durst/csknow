@@ -8,7 +8,7 @@
 
 namespace csknow::compute_nav_area {
 
-    constexpr float percent_uncertainty_blend = 0.20;
+    //constexpr float percent_uncertainty_blend = 0.20;
 
     void ComputeModelNavAreaNode::computeDeltaPosProbabilistic(const ServerState & state, Priority & curPriority,
                                                                CSGOId csgoId, ModelNavData & modelNavData) {
