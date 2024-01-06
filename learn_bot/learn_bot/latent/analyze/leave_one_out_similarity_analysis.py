@@ -10,7 +10,7 @@ from sklearn.metrics import ConfusionMatrixDisplay
 from tqdm import tqdm
 
 from learn_bot.latent.analyze.comparison_column_names import similarity_plots_path
-from learn_bot.latent.engagement.column_names import round_id_column
+from learn_bot.latent.engagement.column_names import round_id_column, tick_id_column
 from learn_bot.latent.order.column_names import c4_time_left_percent
 from learn_bot.latent.place_area.column_names import get_similarity_column, specific_player_place_area_columns, \
     float_c4_cols, hdf5_id_columns
@@ -191,7 +191,8 @@ def leave_one_out_similarity_analysis(push_save_round_labels: PushSaveRoundLabel
     print(push_that_are_save)
 
 
-last_c4_time_percent_col = "last C4 time percent in round"
+first_tick_id_in_round_col = "first tick id in round"
+last_tick_id_in_round_col = "last tick id in round"
 
 
 class TickSimilarityResults:
@@ -221,36 +222,45 @@ def per_tick_similarity_analysis(push_save_round_labels: PushSaveRoundLabels,
                                         for player_place_area_columns in specific_player_place_area_columns]
     alive_cols = [player_place_area_columns.alive for player_place_area_columns in specific_player_place_area_columns]
     cols_to_get = alive_cols + decrease_distance_to_c4_5s_cols + decrease_distance_to_c4_10s_cols + \
-        decrease_distance_to_c4_20s_cols + float_c4_cols + hdf5_id_columns
+        decrease_distance_to_c4_20s_cols + hdf5_id_columns
     df = load_hdf5_to_pd(hdf5_wrapper.hdf5_path, cols_to_get=cols_to_get)
 
     id_df = hdf5_wrapper.id_df.copy()
-    id_df[last_c4_time_percent_col] = df[c4_time_left_percent[0]]
-    round_ids_similarity_last_c4_time_df = \
-        id_df.groupby(round_id_column, as_index=False)[[get_similarity_column(0), last_c4_time_percent_col]].last()
-    df = df.merge(round_ids_similarity_last_c4_time_df, on=round_id_column)
+    round_ids_similarity_first_last_tick_id_df = \
+        id_df.groupby(round_id_column, as_index=False).agg(
+            first_tick=(tick_id_column, 'first'),
+            last_tick=(tick_id_column, 'last'),
+            sim=(get_similarity_column(0), 'first'),
+            num_ticks=(tick_id_column, 'count')
+        )
+    round_ids_similarity_first_last_tick_id_df.rename({'sim': get_similarity_column(0)}, axis=1, inplace=True)
+    for _, round_row in round_ids_similarity_first_last_tick_id_df.iterrows():
+        if round_row['num_ticks'] != 1 + round_row['last_tick'] - round_row['first_tick']:
+            print('missing tick in round')
+    df = df.merge(round_ids_similarity_first_last_tick_id_df, on=round_id_column)
 
     train_result = TickSimilarityResults()
     test_result = TickSimilarityResults()
 
     with tqdm(total=len(df), disable=False) as pbar:
-        for _, round_row in df.iterrows():
-            round_id = round_row[round_id_column]
-            fraction_of_round = (1. - round_row[c4_time_left_percent]) / (1. - round_row[last_c4_time_percent_col])
+        for _, tick_row in df.iterrows():
+            round_id = tick_row[round_id_column]
+            fraction_of_round = (tick_row[tick_id_column] - tick_row['first_tick']) / \
+                                (1 + tick_row['last_tick'] - tick_row['first_tick'])
             is_test_round = round_id in test_group_ids
 
             ground_truth_round_similarity_label = push_save_round_labels.round_id_to_data[round_id].to_float_label()
-            ground_truth_tick_similarity_label = (fraction_of_round <= ground_truth_round_similarity_label).iloc[0]
+            ground_truth_tick_similarity_label = fraction_of_round <= ground_truth_round_similarity_label
 
-            predicted_round_similarity_label = round_row[get_similarity_column(0)]
-            predicted_tick_similarity_label = (fraction_of_round <= predicted_round_similarity_label).iloc[0]
+            predicted_round_similarity_label = tick_row[get_similarity_column(0)]
+            predicted_tick_similarity_label = fraction_of_round <= predicted_round_similarity_label
 
-            player_tick_label_5s_alive_and_dead = list(round_row[decrease_distance_to_c4_5s_cols] > 0.5)
-            player_tick_label_10s_alive_and_dead = list(round_row[decrease_distance_to_c4_10s_cols] > 0.5)
-            player_tick_label_20s_alive_and_dead = list(round_row[decrease_distance_to_c4_20s_cols] > 0.5)
+            player_tick_label_5s_alive_and_dead = list(tick_row[decrease_distance_to_c4_5s_cols] > 0.5)
+            player_tick_label_10s_alive_and_dead = list(tick_row[decrease_distance_to_c4_10s_cols] > 0.5)
+            player_tick_label_20s_alive_and_dead = list(tick_row[decrease_distance_to_c4_20s_cols] > 0.5)
 
             # need to filter only to labels for players that are alive
-            alive_player_indices = [i for i, alive in enumerate(list(round_row[alive_cols])) if alive]
+            alive_player_indices = [i for i, alive in enumerate(list(tick_row[alive_cols])) if alive]
             player_tick_label_5s = []
             player_tick_label_10s = []
             player_tick_label_20s = []
