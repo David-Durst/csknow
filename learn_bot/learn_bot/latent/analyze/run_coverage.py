@@ -18,21 +18,15 @@ pos_columns = flatten_list(per_player_pos_columns)
 alive_columns = [player_place_area_columns.alive for player_place_area_columns in specific_player_place_area_columns]
 first_tick_in_round_col = 'first tick in round'
 
-
-def get_alive_positions_df(loaded_model: LoadedModel, first_tick_in_round: bool) -> pd.DataFrame:
-    df = load_hdf5_to_pd(loaded_model.dataset.data_hdf5s[loaded_model.cur_hdf5_index].hdf5_path,
-                         cols_to_get=pos_columns + alive_columns)
-    if first_tick_in_round:
-        id_df = loaded_model.get_cur_id_df().copy()
-        round_ids_first_last_tick_id_df = \
-            id_df.groupby(round_id_column, as_index=False).agg(
-                first_tick=(tick_id_column, 'first'),
-                num_ticks=(tick_id_column, 'count')
-            )
-        id_df = id_df.merge(round_ids_first_last_tick_id_df, on=round_id_column)
-        return df[id_df['first_tick'] == id_df[tick_id_column]]
-    else:
-        return df
+def get_round_starts_np(loaded_model: LoadedModel) -> pd.DataFrame:
+    id_df = loaded_model.get_cur_id_df().copy()
+    round_ids_first_last_tick_id_df = \
+        id_df.groupby(round_id_column, as_index=False).agg(
+            first_tick=(tick_id_column, 'first'),
+            num_ticks=(tick_id_column, 'count')
+        )
+    id_df = id_df.merge(round_ids_first_last_tick_id_df, on=round_id_column)
+    return loaded_model.cur_dataset.X[id_df['first_tick'] == id_df[tick_id_column]]
 
 
 def compute_coverage_metrics(loaded_model: LoadedModel, start_positions: bool):
@@ -49,15 +43,19 @@ def compute_coverage_metrics(loaded_model: LoadedModel, start_positions: bool):
             for i, hdf5_wrapper in enumerate(loaded_model.dataset.data_hdf5s):
                 #print(f"Processing hdf5 {i + 1} / {len(loaded_model.dataset.data_hdf5s)}: {hdf5_wrapper.hdf5_path}")
                 loaded_model.cur_hdf5_index = i
-                loaded_model.load_cur_hdf5_as_pd(load_cur_dataset=False)
+                loaded_model.load_cur_dataset_only()
 
-                df = get_alive_positions_df(loaded_model, start_positions)
-                num_ticks += len(df)
-                for player_columns in specific_player_place_area_columns:
-                    num_alive_pats += df[player_columns.alive].sum()
-                    alive_df = df[loaded_model.cur_loaded_df[player_columns.alive].astype('bool')]
-                    x_pos = alive_df[player_columns.pos[0]].to_numpy()
-                    y_pos = alive_df[player_columns.pos[1]].to_numpy()
+                if start_positions:
+                    X_np = get_round_starts_np(loaded_model)
+                else:
+                    X_np = loaded_model.cur_dataset.X
+                num_ticks += len(X_np)
+                for player_index in range(len(specific_player_place_area_columns)):
+                    alive_np = X_np[:, loaded_model.model.alive_columns[player_index]]
+                    num_alive_pats += alive_np.astype(np.float64).sum()
+                    X_alive_np = X_np[alive_np > 0.5]
+                    x_pos = X_alive_np[:, loaded_model.model.nested_players_pos_columns_tensor[player_index, 0, 0]]
+                    y_pos = X_alive_np[:, loaded_model.model.nested_players_pos_columns_tensor[player_index, 0, 1]]
                     if x_pos_bins is None:
                         sum_pos_heatmap, x_pos_bins, y_pos_bins = np.histogram2d(x_pos, y_pos, bins=125,
                                                                                  range=[[d2_min[0], d2_max[0]], [d2_min[1], d2_max[1]]])
@@ -75,7 +73,10 @@ def compute_coverage_metrics(loaded_model: LoadedModel, start_positions: bool):
 
 
     fig = plt.figure(figsize=(10, 10), constrained_layout=True)
-    fig.suptitle("Data Set Coverage Of de_dust2 Map", fontsize=16)
+    if start_positions:
+        fig.suptitle("Starting Data Set Coverage Of de_dust2 Map", fontsize=16)
+    else:
+        fig.suptitle("Data Set Coverage Of de_dust2 Map", fontsize=16)
     ax = fig.subplots(1, 1)
 
     sum_pos_heatmap = sum_pos_heatmap.T
