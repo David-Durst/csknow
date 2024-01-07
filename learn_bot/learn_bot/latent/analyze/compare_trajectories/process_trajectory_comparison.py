@@ -1,4 +1,4 @@
-from typing import List, Dict, Tuple
+from typing import List, Dict, Tuple, Union
 
 import pandas as pd
 from learn_bot.latent.analyze.comparison_column_names import *
@@ -33,7 +33,7 @@ def generate_bins(min_bin_start: int, max_bin_end: int, bin_width: int) -> List[
     return [b for b in range(min_bin_start, max_bin_end + bin_width, bin_width)]
 
 
-def plot_hist(ax: plt.Axes, data: pd.Series, bins: List[int]):
+def plot_hist(ax: plt.Axes, data: pd.Series, bins: List[Union[int,float]]):
     ax.hist(data.values, bins=bins, weights=np.ones(len(data)) / len(data))
     ax.grid(visible=True)
     # ax.yaxis.set_major_formatter(PercentFormatter(1))

@@ -120,29 +120,29 @@ def compute_plant_statistics():
     fig_length = 6
     pd.set_option('display.float_format', lambda x: '%.2f' % x)
     fig = plt.figure(figsize=(fig_length, 2*fig_length), constrained_layout=True)
-    fig.suptitle('Per Tick Push/Save Labels')
     axs = fig.subplots(2, 1, squeeze=False)
 
-    plot_hist(axs[0, 0], players_per_round_df['ct per round'], [1, 2, 3, 4, 5, 6])
+    plot_hist(axs[0, 0], players_per_round_df['ct per round'], [0.5, 1.5, 2.5, 3.5, 4.5, 5.5])
     axs[0, 0].set_title('Offensive Players Per Round')
     axs[0, 0].set_xlabel('Number of Players')
     axs[0, 0].set_ylabel('Percent of Rounds')
     axs[0, 0].text(3, 0.2, players_per_round_df['ct per round'].describe().to_string())
     axs[0, 0].set_ylim(0, 1)
+    axs[0, 0].set_xlim(0, 6)
 
-    plot_hist(axs[1, 0], players_per_round_df['t per round'], [1, 2, 3, 4, 5, 6])
+    plot_hist(axs[1, 0], players_per_round_df['t per round'], [0.5, 1.5, 2.5, 3.5, 4.5, 5.5])
     axs[1, 0].set_title('Defensive Players Per Round')
     axs[1, 0].set_xlabel('Number of Players')
     axs[1, 0].set_ylabel('Percent of Rounds')
     axs[1, 0].text(3, 0.2, players_per_round_df['t per round'].describe().to_string())
     axs[1, 0].set_ylim(0, 1)
+    axs[1, 0].set_xlim(0, 6)
 
     plt.savefig(Path(__file__).parent / 'plots' / 'players_per_round.png')
     plt.close(fig)
 
     # round lengths
     fig = plt.figure(figsize=(fig_length, fig_length), constrained_layout=True)
-    fig.suptitle('Per Tick Push/Save Labels')
     ax = plt.gca()
 
     seconds_per_round_bins = generate_bins(0, int(ceil(max(seconds_per_round_series))), 5)
