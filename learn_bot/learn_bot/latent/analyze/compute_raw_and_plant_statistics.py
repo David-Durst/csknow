@@ -4,11 +4,12 @@ from typing import List
 import pandas as pd
 from tqdm import tqdm
 
-from learn_bot.latent.engagement.column_names import game_id_column, round_id_column
+from learn_bot.latent.engagement.column_names import game_id_column, round_id_column, tick_id_column
 from learn_bot.latent.load_model import load_model_file
 from learn_bot.latent.place_area.column_names import specific_player_place_area_columns
 from learn_bot.latent.place_area.load_data import LoadDataResult
 from learn_bot.latent.vis.run_vis_checkpoint import load_data_options
+from learn_bot.libs.hdf5_to_pd import load_hdf5_to_pd
 
 all_statistics_data_path = Path(__file__).parent / '..' / '..' / '..' / '..' / 'analytics' / 'all_train_outputs' / 'all_statistics.csv'
 all_players_data_path = Path(__file__).parent / '..' / '..' / '..' / '..' / 'analytics' / 'all_train_outputs' / 'all_players.csv'
@@ -55,6 +56,10 @@ def compute_plant_statistics():
             num_games += loaded_model.get_cur_id_df()[game_id_column].nunique()
             num_rounds += loaded_model.get_cur_id_df()[round_id_column].nunique()
             num_ticks += len(loaded_model.get_cur_id_df())
+
+            loaded_model.model.players_pos_columns
+
+            df = load_hdf5_to_pd(loaded_model.dataset.data_hdf5s[i].hdf5_path, cols_to_get=cols_to_get)
 
             vis_df = loaded_model.get_cur_vis_df()
             player_ids: List[int] = []

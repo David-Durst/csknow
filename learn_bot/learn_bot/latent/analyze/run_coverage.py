@@ -3,14 +3,39 @@ import pickle
 from pathlib import Path
 
 import numpy as np
+import pandas as pd
 from matplotlib import pyplot as plt
 from matplotlib.colors import LogNorm
 
 from learn_bot.latent.place_area.simulation.simulator import *
+from learn_bot.libs.hdf5_to_pd import load_hdf5_to_pd
 
 coverage_pickle_path = Path(__file__).parent / 'plots' / 'coverage.pickle'
 
-def compute_coverage_metrics(loaded_model: LoadedModel):
+per_player_pos_columns = \
+    [player_place_area_columns.pos for player_place_area_columns in specific_player_place_area_columns]
+pos_columns = flatten_list(per_player_pos_columns)
+alive_columns = [player_place_area_columns.alive for player_place_area_columns in specific_player_place_area_columns]
+first_tick_in_round_col = 'first tick in round'
+
+
+def get_alive_positions_df(loaded_model: LoadedModel, first_tick_in_round: bool) -> pd.DataFrame:
+    df = load_hdf5_to_pd(loaded_model.dataset.data_hdf5s[loaded_model.cur_hdf5_index].hdf5_path,
+                         cols_to_get=pos_columns + alive_columns)
+    if first_tick_in_round:
+        id_df = loaded_model.get_cur_id_df().copy()
+        round_ids_first_last_tick_id_df = \
+            id_df.groupby(round_id_column, as_index=False).agg(
+                first_tick=(tick_id_column, 'first'),
+                num_ticks=(tick_id_column, 'count')
+            )
+        id_df = id_df.merge(round_ids_first_last_tick_id_df, on=round_id_column)
+        return df[id_df['first_tick'] == id_df[tick_id_column]]
+    else:
+        return df
+
+
+def compute_coverage_metrics(loaded_model: LoadedModel, start_positions: bool):
     num_ticks = 0
     num_alive_pats = 0
 
@@ -20,23 +45,26 @@ def compute_coverage_metrics(loaded_model: LoadedModel):
 
     os.makedirs(coverage_pickle_path.parent, exist_ok=True)
     if True:
-        for i, hdf5_wrapper in enumerate(loaded_model.dataset.data_hdf5s):
-            print(f"Processing hdf5 {i + 1} / {len(loaded_model.dataset.data_hdf5s)}: {hdf5_wrapper.hdf5_path}")
-            loaded_model.cur_hdf5_index = i
-            loaded_model.load_cur_hdf5_as_pd(load_cur_dataset=False)
+        with tqdm(total=len(loaded_model.dataset.data_hdf5s), disable=False) as pbar:
+            for i, hdf5_wrapper in enumerate(loaded_model.dataset.data_hdf5s):
+                #print(f"Processing hdf5 {i + 1} / {len(loaded_model.dataset.data_hdf5s)}: {hdf5_wrapper.hdf5_path}")
+                loaded_model.cur_hdf5_index = i
+                loaded_model.load_cur_hdf5_as_pd(load_cur_dataset=False)
 
-            num_ticks += len(loaded_model.cur_loaded_df)
-            for player_columns in specific_player_place_area_columns:
-                num_alive_pats += loaded_model.cur_loaded_df[player_columns.alive].sum()
-                alive_df = loaded_model.cur_loaded_df[loaded_model.cur_loaded_df[player_columns.alive].astype('bool')]
-                x_pos = alive_df[player_columns.pos[0]].to_numpy()
-                y_pos = alive_df[player_columns.pos[1]].to_numpy()
-                if x_pos_bins is None:
-                    sum_pos_heatmap, x_pos_bins, y_pos_bins = np.histogram2d(x_pos, y_pos, bins=125,
-                                                                             range=[[d2_min[0], d2_max[0]], [d2_min[1], d2_max[1]]])
-                else:
-                    pos_heatmap, _, _ = np.histogram2d(x_pos, y_pos, bins=[x_pos_bins, y_pos_bins])
-                    sum_pos_heatmap += pos_heatmap
+                df = get_alive_positions_df(loaded_model, start_positions)
+                num_ticks += len(df)
+                for player_columns in specific_player_place_area_columns:
+                    num_alive_pats += df[player_columns.alive].sum()
+                    alive_df = df[loaded_model.cur_loaded_df[player_columns.alive].astype('bool')]
+                    x_pos = alive_df[player_columns.pos[0]].to_numpy()
+                    y_pos = alive_df[player_columns.pos[1]].to_numpy()
+                    if x_pos_bins is None:
+                        sum_pos_heatmap, x_pos_bins, y_pos_bins = np.histogram2d(x_pos, y_pos, bins=125,
+                                                                                 range=[[d2_min[0], d2_max[0]], [d2_min[1], d2_max[1]]])
+                    else:
+                        pos_heatmap, _, _ = np.histogram2d(x_pos, y_pos, bins=[x_pos_bins, y_pos_bins])
+                        sum_pos_heatmap += pos_heatmap
+                pbar.update(1)
         with open(coverage_pickle_path, "wb") as outfile:
             # "wb" argument opens the file in binary mode
             pickle.dump((sum_pos_heatmap, x_pos_bins, y_pos_bins), outfile)
@@ -59,8 +87,9 @@ def compute_coverage_metrics(loaded_model: LoadedModel):
     cbar = fig.colorbar(heatmap_im, ax=ax)
     cbar.ax.set_ylabel('Number of Per-Player Data Points', rotation=270, labelpad=15, fontsize=14)
 
+    file_name = 'start_coverage.png' if first_tick_in_round_col else 'all_tick_coverage.png'
 
-    plt.savefig(Path(__file__).parent / 'plots' / 'coverage.png')
+    plt.savefig(Path(__file__).parent / 'plots' / file_name)
 
     print(f"num ticks {num_ticks}, num alive player at ticks {num_alive_pats}")
 
@@ -68,4 +97,7 @@ def compute_coverage_metrics(loaded_model: LoadedModel):
 if __name__ == "__main__":
     load_data_result = LoadDataResult(load_data_options)
     loaded_model = load_model_file(load_data_result, use_test_data_only=False)
-    compute_coverage_metrics(loaded_model)
+    print('computing coverage with all data')
+    compute_coverage_metrics(loaded_model, False)
+    print('computing coverage with just starts')
+    compute_coverage_metrics(loaded_model, True)
