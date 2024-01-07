@@ -295,7 +295,9 @@ class LoadDataResult:
     def fill_empty_similarity_columns(self):
         for similarity_index in range(default_similarity_columns):
             similarity_fns: List[Optional[SimilarityFn]] = []
+            tick_similarity_fns: List[Optional[SimilarityFn]] = []
             for i, hdf5_wrapper in enumerate(self.multi_hdf5_wrapper.hdf5_wrappers):
-                similarity_fns.append(lambda df: df[round_id_column] != df[round_id_column])
+                similarity_fns.append(lambda df: df[round_id_column] * 0.)
+                tick_similarity_fns.append(lambda df: df[round_id_column] != df[round_id_column])
             self.add_column(similarity_fns, get_similarity_column(similarity_index))
-            self.add_column(similarity_fns, get_tick_similarity_column(similarity_index))
+            self.add_column(tick_similarity_fns, get_tick_similarity_column(similarity_index))
