@@ -5,7 +5,7 @@ import pandas as pd
 import torch
 from torch.utils.data import Dataset
 
-from learn_bot.latent.place_area.column_names import get_base_similarity_column
+from learn_bot.latent.place_area.column_names import get_base_similarity_column, get_tick_similarity_column
 from learn_bot.libs.io_transforms import IOColumnTransformers, column_names_to_index_list
 from pathlib import Path
 from learn_bot.latent.engagement.column_names import *
@@ -19,7 +19,7 @@ class LatentSubsetHDF5Dataset(Dataset):
         # convert player id's to indexes
         self.X = X
         self.Y = Y
-        self.similarity_columns = [c for c in id_df.columns if get_base_similarity_column() in c]
+        self.similarity_columns = [get_tick_similarity_column(0)]
         self.similarity_tensor = torch.tensor(id_df.loc[:, self.similarity_columns].to_numpy()).float()
 
     def __len__(self):
