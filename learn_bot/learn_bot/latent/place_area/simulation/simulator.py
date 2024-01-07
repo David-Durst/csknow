@@ -229,7 +229,8 @@ load_data_options = LoadDataOptions(
     #small_good_rounds=[small_human_good_rounds, all_human_28_second_filter_good_rounds],
     #similarity_dfs=[load_hdf5_to_pd(all_human_vs_small_human_similarity_hdf5_data_path),
     #                load_hdf5_to_pd(all_human_vs_human_28_similarity_hdf5_data_path)],
-    train_test_split_file_name=train_test_split_file_name
+    train_test_split_file_name=train_test_split_file_name,
+    load_similarity_data=True
 )
 
 nav_data = None
