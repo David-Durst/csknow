@@ -1,3 +1,5 @@
+import datetime
+from pathlib import Path
 from typing import Set, Callable, List
 
 from learn_bot.latent.place_area.push_save_label import PushSaveRoundLabels, PushSaveRoundData, PushSaveLabel
@@ -61,6 +63,9 @@ def vis(loaded_model: LoadedModel, inference_fn: Callable[[LoadedModel], None], 
     cur_round_number: int = -1
     cur_tick: int = -1
     cur_tick_index: int = -1
+    save_images_during_play: bool = False
+    save_images_path: Path = Path("")
+    made_images_path: bool = False
     selected_df = loaded_model.load_round_df_from_cur_dataset(cur_round_id, use_sim_dataset=use_sim_dataset)
     pred_selected_df: pd.DataFrame = loaded_model.cur_inference_df
     id_df: pd.DataFrame = loaded_model.get_cur_id_df()
@@ -168,29 +173,47 @@ def vis(loaded_model: LoadedModel, inference_fn: Callable[[LoadedModel], None], 
         nonlocal play_active, num_play_updates_sleeping
         play_active = not play_active
         if play_active:
-            play_button.configure(bg='green')
+            play_button.configure(bg='green', activebackground='light green')
             # technically not sleeping, but need to increment by 1 so -= 1 math works out
-            num_play_updates_sleeping += 1
+            #num_play_updates_sleeping += 1
             play_update()
         else:
-            play_button.configure(bg=orig_player_button_color)
-
+            play_button.configure(bg=orig_player_button_color, activebackground=orig_player_active_button_color)
 
     def play_update():
         nonlocal num_play_updates_sleeping
-        num_play_updates_sleeping -= 1
-        if play_active and num_play_updates_sleeping == 0:
+        #num_play_updates_sleeping -= 1
+        if play_active:# and num_play_updates_sleeping == 0:
             step_forward_clicked()
-            num_play_updates_sleeping += 1
+            #num_play_updates_sleeping += 1
             play_button.after(63, play_update)
 
+    def save_while_playing_clicked():
+        nonlocal save_images_during_play, save_images_path, made_images_path
+        save_images_during_play = not save_images_during_play
+        now = datetime.datetime.now()
+        now_str = now.strftime("%m_%d_%Y__%H_%M_%S")
+        save_images_path = Path(__file__).parent / '..' / 'analyze' / 'plots' / ('vis_' + now_str)
+        made_images_path = False
+        if save_images_during_play:
+            save_images_during_play_button.configure(bg='green', activebackground='light green')
+        else:
+            save_images_during_play_button.configure(bg=orig_player_button_color,
+                                                     activebackground=orig_player_active_button_color)
 
     def step_forward_clicked():
         nonlocal cur_tick_index
+        if play_active and save_images_during_play:
+            if not made_images_path:
+                save_images_path.mkdir(parents=True, exist_ok=True)
+            img = itk.getimage(img_label.image)
+            img.save(save_images_path / (str(cur_tick) + '.png'))
         if cur_tick_index < len(ticks) - 1:
             cur_tick_index += 1
             tick_slider.set(cur_tick_index)
             tick_slider_changed(cur_tick_index)
+        elif play_active:
+            play_clicked()
 
     def pred_toggle_clicked():
         nonlocal draw_pred
@@ -344,9 +367,12 @@ def vis(loaded_model: LoadedModel, inference_fn: Callable[[LoadedModel], None], 
     back_step_button.pack(side="left")
     play_button = tk.Button(tick_slider_frame, text="|>", command=play_clicked)
     orig_player_button_color = play_button.cget("background")
+    orig_player_active_button_color = play_button.cget("activebackground")
     play_button.pack(side="left")
     forward_step_button = tk.Button(tick_slider_frame, text=">>", command=step_forward_clicked)
     forward_step_button.pack(side="left")
+    save_images_during_play_button = tk.Button(tick_slider_frame, text="Save", command=save_while_playing_clicked)
+    save_images_during_play_button.pack(side="left")
 
     # creating vis control frame
     distribution_control_frame = tk.Frame(window)
