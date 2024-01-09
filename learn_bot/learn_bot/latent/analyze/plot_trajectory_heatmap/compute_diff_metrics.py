@@ -226,8 +226,8 @@ def plot_emd_flow(model_team_flow: Dict[str, List[Image.Image]], model_team_metr
 def compute_diff_metrics(titles: List[str], diff_indices: List[int], plots_path: Path,
                          trajectory_filter_options: TrajectoryFilterOptions):
     print(f'Computing earth movers distance for {", ".join(titles)}')
-    #title_to_buffers = get_title_to_point_buffers()
-    title_to_buffers = get_title_to_line_buffers()
+    title_to_buffers = get_title_to_point_buffers()
+    #title_to_buffers = get_title_to_line_buffers()
     #title_to_num_trajectory_ids = get_title_to_num_trajectory_ids()
 
     model_team_buffers: Dict[str, List[np.ndarray]] = {}

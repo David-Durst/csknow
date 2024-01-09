@@ -139,6 +139,17 @@ def get_debug_event_counting() -> bool:
     return debug_event_counting
 
 
+def plot_gaussian(buffer: np.ndarray, row: int, col: int, num_points: int):
+    for r in range(row-1, row+2):
+        for c in range(col-1, col+2):
+            weight = num_points
+            if r == row:
+                weight *= 2
+            if c == col:
+                weight *= 2
+            buffer[min(max(r, 0), buffer.shape[0]-1), min(max(c, 0), buffer.shape[1]-1)] += weight
+
+
 def plot_one_trajectory_dataset(loaded_model: LoadedModel, id_df: pd.DataFrame, vis_df: pd.DataFrame,
                                 dataset: np.ndarray, trajectory_filter_options: TrajectoryFilterOptions, title: str):
     if title not in title_to_line_buffers:
@@ -306,14 +317,13 @@ def plot_one_trajectory_dataset(loaded_model: LoadedModel, id_df: pd.DataFrame, 
             canvas_pos_xy = list(zip(list(canvas_pos_x_np), list(canvas_pos_y_np)))
 
             point_buffer = title_to_point_buffers[title].get_buffer(ct_team)
-            for pos_xy in canvas_pos_xy:
-                point_buffer[pos_xy[0], pos_xy[1]] += 1
 
             line_buffer = title_to_line_buffers[title].get_buffer(ct_team)
             if trajectory_filter_options.filtering_key_events():
                 for i, pos_xy in enumerate(canvas_pos_xy):
                     # drawing not useful as so few points and no lines connecting them
-                    # line_buffer[pos_xy[0], pos_xy[1]] += num_events_per_tick_with_event[i]
+                    #plot_gaussian(point_buffer, pos_xy[1], pos_xy[0], num_events_per_tick_with_event[i])
+                    point_buffer[pos_xy[1], pos_xy[0]] += num_events_per_tick_with_event[i]
                     if title not in title_to_team_to_key_event_pos:
                         title_to_team_to_key_event_pos[title] = {}
                     if ct_team not in title_to_team_to_key_event_pos[title]:
@@ -323,6 +333,9 @@ def plot_one_trajectory_dataset(loaded_model: LoadedModel, id_df: pd.DataFrame, 
                         title_to_team_to_key_event_pos[title][ct_team][0].append(x_pos[i])
                         title_to_team_to_key_event_pos[title][ct_team][1].append(y_pos[i])
             else:
+                for pos_xy in canvas_pos_xy:
+                    #plot_gaussian(point_buffer, pos_xy[1], pos_xy[0], 1)
+                    point_buffer[pos_xy[1], pos_xy[0]] += 1
                 cur_player_d2_img = Image.new("L", d2_img.size, color=0)
                 # blending occurs across images, so want to keep same number of images (1 per player trajectory)
                 # no matter how many discontinuities occur in each player's trajectory
