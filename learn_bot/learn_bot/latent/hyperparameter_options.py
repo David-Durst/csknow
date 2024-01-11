@@ -32,6 +32,7 @@ class HyperparameterOptions:
     output_mask: OutputMaskType = OutputMaskType.NoMask
     weight_not_move_loss: Optional[float] = None
     drop_history_probability: Optional[float] = None
+    ignore_future_outputs: bool = False
     comment: str = ""
 
     def __str__(self):
@@ -42,7 +43,8 @@ class HyperparameterOptions:
                f"l_{self.layers}_h_{self.heads}_n_{self.noise_var}_" \
                f"ros_{self.rollout_seconds}_ct_{str(self.control_type)}_pm_{str(self.player_mask_type)}_" \
                f"mpi_{self.mask_partial_info}_om_{str(self.output_mask)}_" \
-               f"w_{self.weight_not_move_loss}_dh_{self.drop_history_probability}_c_{self.comment}"
+               f"w_{self.weight_not_move_loss}_dh_{self.drop_history_probability}_" \
+               f"ifo_{self.ignore_future_outputs}_c_{self.comment}"
 
     def get_checkpoints_path(self) -> Path:
         return checkpoints_path / str(self)

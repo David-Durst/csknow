@@ -100,6 +100,14 @@ def compute_total_mask_statistics(Y, num_players, output_mask, total_mask_statis
     total_mask_statistics.num_player_points += output_mask.shape[0]
 
 
+def make_future_predictions_zero(Y, pred):
+    pred_transformed = get_transformed_outputs(pred)
+    pred_transformed[:, 0, 1:, :] = 0.
+    Y_nested = rearrange(Y, 'b (p t d) -> b p t d', p=pred_transformed.shape[1], t=pred_transformed.shape[2],
+                         d=pred_transformed.shape[3])
+    Y_nested[:, 0, 1:, :] = 0.
+
+
 # https://discuss.pytorch.org/t/how-to-combine-multiple-criterions-to-a-loss-function/348/4
 def compute_loss(model: TransformerNestedHiddenLatentModel, pred, Y, X_orig: Optional, X_rollout: Optional,
                  duplicated_last, num_players, output_mask, weight_not_move_loss: Optional[float]) -> LatentLosses:

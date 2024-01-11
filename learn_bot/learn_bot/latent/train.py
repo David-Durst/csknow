@@ -37,7 +37,7 @@ from learn_bot.libs.io_transforms import CUDA_DEVICE_STR
 from learn_bot.latent.accuracy_and_loss import compute_loss, compute_accuracy_and_delta_diff, \
     finish_accuracy_and_delta_diff, \
     CPU_DEVICE_STR, LatentLosses, duplicated_name_str, compute_output_mask, TotalMaskStatistics, \
-    compute_total_mask_statistics
+    compute_total_mask_statistics, make_future_predictions_zero
 from learn_bot.libs.multi_hdf5_wrapper import MultiHDF5Wrapper
 from tqdm import tqdm
 from dataclasses import dataclass
@@ -52,12 +52,12 @@ class TrainType(Enum):
 default_hyperparameter_options = HyperparameterOptions()
 hyperparameter_option_range = [HyperparameterOptions(num_input_time_steps=1, control_type=ControlType.SimilarityControl),
                                HyperparameterOptions(num_input_time_steps=3, control_type=ControlType.SimilarityControl),
-                               HyperparameterOptions(num_input_time_steps=1, control_type=ControlType.TimeControl),
-                               HyperparameterOptions(num_input_time_steps=1, control_type=ControlType.NoControl),
                                HyperparameterOptions(num_input_time_steps=1, control_type=ControlType.SimilarityControl,
                                                      mask_partial_info=True),
-                               HyperparameterOptions(num_input_time_steps=3, control_type=ControlType.SimilarityControl,
-                                                     mask_partial_info=True),
+                               HyperparameterOptions(num_input_time_steps=1, control_type=ControlType.SimilarityControl,
+                                                     ignore_future_outputs=True),
+                               HyperparameterOptions(num_input_time_steps=1, control_type=ControlType.TimeControl),
+                               HyperparameterOptions(num_input_time_steps=1, control_type=ControlType.NoControl),
                                HyperparameterOptions(num_input_time_steps=1, control_type=ControlType.NoControl),
                                HyperparameterOptions(num_input_time_steps=1, internal_width=128, layers=2, control_type=ControlType.TimeControl),
                                HyperparameterOptions(num_input_time_steps=1, layers=8, heads=8, bc_epochs=40, learning_rate=1e-5, control_type=ControlType.TimeControl),
@@ -279,6 +279,7 @@ def train(train_type: TrainType, multi_hdf5_wrapper: MultiHDF5Wrapper,
                         duplicated_last_flattened = duplicated_last
                         output_mask = compute_output_mask(model, X, hyperparameter_options.output_mask)
                     else:
+                        assert False
                         rollout_batch_result = \
                             rollout_simulate(X, Y, similarity, duplicated_last, indices, model,
                                              hyperparameter_options.percent_rollout_steps_predicted(total_epochs))
@@ -288,6 +289,9 @@ def train(train_type: TrainType, multi_hdf5_wrapper: MultiHDF5Wrapper,
                         Y_flattened = rollout_batch_result.Y_flattened
                         duplicated_last_flattened = rollout_batch_result.duplicated_last_flattened
                         output_mask = compute_output_mask(model, X_flattened_orig, hyperparameter_options.output_mask)
+
+                    if hyperparameter_options.ignore_future_outputs:
+                        make_future_predictions_zero(Y_flattened, pred_flattened)
 
                     model.noise_var = -1.
                     model.drop_history = False
