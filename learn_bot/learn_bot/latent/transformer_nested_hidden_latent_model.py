@@ -119,6 +119,10 @@ class TransformerNestedHiddenLatentModel(nn.Module):
                       'p t -> (p t)', p=self.num_players, t=num_input_time_steps).tolist()
         self.players_seconds_to_hit_enemy = \
             range_list_to_index_list(cts.get_name_ranges(True, True, contained_str="player seconds"))
+        self.players_hurt = \
+            range_list_to_index_list(cts.get_name_ranges(True, True, contained_str="player hurt"))
+        self.players_fire = \
+            range_list_to_index_list(cts.get_name_ranges(True, True, contained_str="player fire"))
         self.players_visibility = \
             range_list_to_index_list(cts.get_name_ranges(True, True, contained_str="player enemy visible"))
 
@@ -241,6 +245,8 @@ class TransformerNestedHiddenLatentModel(nn.Module):
             x[:, self.time_control_columns] = 0.
         if self.mask_partial_info:
             x[:, self.players_visibility] = 0.
+            x[:, self.players_hurt] = 0.
+            x[:, self.players_fire] = 0.
 
         x[:, self.health_columns] = 0.
         x[:, self.armor_columns] = 0.
