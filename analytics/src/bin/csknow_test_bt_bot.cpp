@@ -35,7 +35,7 @@
 //#define LOG_STATE
 
 int main(int argc, char * argv[]) {
-    if (argc != 9 && argc != 10) {
+    if (argc != 9 && argc != 10 && argc != 11) {
         std::cout << "please call this code with 8 or 9 arguments: \n"
             << "1. path/to/maps\n"
             << "2. path/to/data\n"
@@ -46,6 +46,7 @@ int main(int argc, char * argv[]) {
             << "7. 1 for all csknow bots, ct for ct only csknow bots, t for t only csknow bots, 0 for for no csknow bots\n"
             << "8. y for traces, n for normal bots, b for prebaked rounds, br for prebaked rounds with position randomization"
             << "(optional) 9. situation to run (if none provided, then run all)"
+            << "(optional) 10. set if using remixed situations"
             << std::endl;
         return 1;
     }
@@ -53,8 +54,12 @@ int main(int argc, char * argv[]) {
         roundsTestStr = argv[6], botStop = argv[7], tracesStr = argv[8];
 
     int situationId = -1;
-    if (argc == 10) {
+    if (argc >= 10) {
         situationId = std::stoi(argv[9]);
+    }
+    string testPlantStatesFileName = "push_only_test_plant_states.hdf5";
+    if (argc >= 11) {
+        testPlantStatesFileName = "remix_" + testPlantStatesFileName;
     }
 
     bool runTest = roundsTestStr == "t" || roundsTestStr == "tl";
@@ -77,7 +82,7 @@ int main(int argc, char * argv[]) {
         plantStatesResult.loadFromPython(savedDatasetsDir + "/non_confound_test_plant_states.hdf5", true);
     }
     else {
-        plantStatesResult.loadFromPython(savedDatasetsDir + "/push_only_test_plant_states.hdf5", false);
+        plantStatesResult.loadFromPython(savedDatasetsDir + "/" + testPlantStatesFileName, false);
     }
     ScriptsRunner roundScriptsRunner(createRoundScripts(plantStatesResult, situationId, false, 0), false, 0);
     csknow::tests::trace::TracesData traceData(savedDatasetsDir + "/traces.hdf5");
