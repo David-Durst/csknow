@@ -24,10 +24,11 @@ remix_push_only_test_plant_states_file_name = 'remix_push_only_test_plant_states
 
 num_defensive_setups = 2
 num_offensive_setups = 4
-
+planted_a_col = "planted a"
 
 def remix_test_plant_rounds():
-    test_plant_states_pd = get_test_plant_states_pd(push_only=True)
+    test_plant_states_pd = get_test_plant_states_pd(push_only=True).copy()
+    test_plant_states_pd[planted_a_col] = test_plant_states_pd[c4_pos_cols[0]] > 0
     add_num_alive_columns(test_plant_states_pd)
 
     pd.set_option('display.max_colwidth', None)
@@ -35,13 +36,22 @@ def remix_test_plant_rounds():
     #t_columns = [c for c in test_plant_states_pd.columns if ' T ' in c or ' t ' in c]
 
     defensive_df = test_plant_states_pd.sample(n=num_defensive_setups, random_state=43)
-    offensive_df = test_plant_states_pd.sample(n=num_offensive_setups, random_state=84)
 
     defensive_df = defensive_df.loc[defensive_df.index.repeat(num_offensive_setups)]
     defensive_df.reset_index(inplace=True)
-    offensive_df.reset_index(inplace=True)
+
+    offensive_planted_a_df = test_plant_states_pd[test_plant_states_pd[planted_a_col]].sample(
+        n=num_offensive_setups, random_state=84)
+    offensive_planted_a_df.reset_index(inplace=True)
+    offensive_planted_b_df = test_plant_states_pd[~test_plant_states_pd[planted_a_col]].sample(
+        n=num_offensive_setups, random_state=84)
+    offensive_planted_b_df.reset_index(inplace=True)
 
     for idx, defensive_row in defensive_df.iterrows():
+        if defensive_row[planted_a_col]:
+            offensive_df = offensive_planted_a_df
+        else:
+            offensive_df = offensive_planted_b_df
         offensive_idx = idx % len(offensive_df)
         defensive_df.loc[idx, ct_columns] = offensive_df.loc[offensive_idx, ct_columns]
 
