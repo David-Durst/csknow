@@ -15,7 +15,7 @@ get_script_dir () {
 get_script_dir
 
 
-run_csknow_rounds() {
+run_csknow_prebaked_rounds() {
     new_demos=()
     for j in {0..0}
     do
