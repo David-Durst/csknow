@@ -45,6 +45,16 @@ def remix_test_plant_rounds():
         offensive_idx = idx % len(offensive_df)
         defensive_df.loc[idx, ct_columns] = offensive_df.loc[offensive_idx, ct_columns]
 
+    alive_cols = []
+    helmet_cols = []
+    for player_place_area_columns in specific_player_place_area_columns:
+        alive_cols.append(player_place_area_columns.alive)
+        helmet_cols.append(player_place_area_columns.player_helmet)
+    for alive_col in alive_cols:
+        defensive_df.loc[:, alive_col] = defensive_df.loc[:, alive_col].astype('bool')
+    for helmet_col in helmet_cols:
+        defensive_df.loc[:, helmet_col] = defensive_df.loc[:, helmet_col].astype('bool')
+
     save_pd_to_hdf5(train_test_split_folder_path / remix_push_only_test_plant_states_file_name,
                     defensive_df)
 
