@@ -91,8 +91,10 @@ def run_trajectory_heatmaps_one_filter_option(trajectory_filter_options: Traject
                                               plot_only_first_hdf5_file_train_and_test: bool):
     clear_title_caches()
 
-    run_one_dataset_trajectory_heatmap(True, human_title_str, trajectory_filter_options,
-                                       plot_only_first_hdf5_file_train_and_test=plot_only_first_hdf5_file_train_and_test)
+    # using diff_indices being empty to indicate no human data, as nothing to cmopare to
+    if len(diff_indices) != 0:
+        run_one_dataset_trajectory_heatmap(True, human_title_str, trajectory_filter_options,
+                                           plot_only_first_hdf5_file_train_and_test=plot_only_first_hdf5_file_train_and_test)
     if rollout_extensions[0] == 'invalid':
         run_one_dataset_trajectory_heatmap(True, human_title_str + ' Save', trajectory_filter_options,
                                            push_only_human_data=False,
@@ -101,10 +103,15 @@ def run_trajectory_heatmaps_one_filter_option(trajectory_filter_options: Traject
         for rollout_extension in rollout_extensions:
             run_one_dataset_trajectory_heatmap(False, rollout_extension, trajectory_filter_options)
 
-    title_strs = [human_title_str] + (rollout_extensions if rollout_extensions[0] != 'invalid'
-                                      else [human_title_str + ' Save'])
-    compute_diff_metrics(title_strs, diff_indices, plots_path, trajectory_filter_options)
+    if len(diff_indices) == 0:
+        title_strs = rollout_extension
+    else:
+        title_strs = [human_title_str] + (rollout_extensions if rollout_extensions[0] != 'invalid'
+                                          else [human_title_str + ' Save'])
     plot_trajectories_to_image(title_strs, True, plots_path, trajectory_filter_options)
+    if len(diff_indices) == 0:
+        return
+    compute_diff_metrics(title_strs, diff_indices, plots_path, trajectory_filter_options)
     plot_trajectory_diffs_to_image(title_strs, diff_indices, plots_path, trajectory_filter_options)
     compute_metrics(trajectory_filter_options, plots_path)
     plot_key_event_heatmaps(get_title_to_team_to_key_event_pos(), trajectory_filter_options, plots_path)
@@ -114,11 +121,14 @@ def run_trajectory_heatmaps(plot_only_first_hdf5_file_train_and_test: bool):
     rollout_extensions = sys.argv[2].split(',')
     # indices for plots to diff with (first plot is human data, which all rollout extensions come after, so offset indexing by 1)
     if len(sys.argv) >= 4:
-        diff_indices = [int(x) for x in sys.argv[3].split(',')]
+        if sys.argv[3] == 'no_diff':
+            diff_indices = []
+        else:
+            diff_indices = [int(x) for x in sys.argv[3].split(',')]
     elif rollout_extensions[0] == 'invalid':
         diff_indices = [0 for _ in range(len(rollout_extensions))]
     else:
-        raise Exception('must provide diff indices if not just plotting human data')
+        raise Exception('must provide diff indices if not just plotting human data and not setting no_diff')
     # may have multiple calls with same first rollout extension, this enables separating their folders
     rollout_prefix = ""
     if len(sys.argv) == 5:
@@ -133,6 +143,9 @@ def run_trajectory_heatmaps(plot_only_first_hdf5_file_train_and_test: bool):
                                                                       compute_shots_per_kill=True),
                                               rollout_extensions, diff_indices, plots_path,
                                               plot_only_first_hdf5_file_train_and_test)
+
+    if len(diff_indices) == 0:
+        return
 
     # plot distributions during key events
     run_trajectory_heatmaps_one_filter_option(TrajectoryFilterOptions(compute_speeds=True, only_kill=True),

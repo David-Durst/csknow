@@ -17,7 +17,7 @@ get_script_dir
 
 run_csknow_rounds() {
     new_demos=()
-    for i in {0..0}
+    for j in {0..0}
     do
         cd ${script_dir}/../../learn_bot/
         echo "model"
@@ -27,12 +27,12 @@ run_csknow_rounds() {
         ./scripts/deploy_latent_models_specific.sh $model 
         #./scripts/deploy_uncertain_models_specific.sh $uncertain_model 
         cd ${script_dir}/../build
-        echo "most recent demo file before $model_type $i"
+        echo "most recent demo file before $model_type $j"
         new_demo=$(ls -tp /home/steam/csgo-ds/csgo/*.dem | grep -v /$ | head -1)
         new_demo_no_path=$(basename $new_demo)
         echo $new_demo
         new_demos+=($new_demo_no_path)
-        ./csknow_test_bt_bot ${script_dir}/../nav /home/steam/csgo-ds/csgo/addons/sourcemod/bot-link-data ${script_dir}/../ ${script_dir}/../../learn_bot/models ${script_dir}/../../learn_bot/learn_bot/libs/saved_train_test_splits $bot_type $custom_bots n $i remix
+        ./csknow_test_bt_bot ${script_dir}/../nav /home/steam/csgo-ds/csgo/addons/sourcemod/bot-link-data ${script_dir}/../ ${script_dir}/../../learn_bot/models ${script_dir}/../../learn_bot/learn_bot/libs/saved_train_test_splits $bot_type $custom_bots n $j remix
         sleep 40
         date
     done
