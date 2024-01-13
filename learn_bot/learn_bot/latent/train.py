@@ -57,7 +57,7 @@ hyperparameter_option_range = [HyperparameterOptions(num_input_time_steps=1, con
                                HyperparameterOptions(num_input_time_steps=1, control_type=ControlType.SimilarityControl,
                                                      ignore_future_outputs=True),
                                HyperparameterOptions(num_input_time_steps=1, control_type=ControlType.SimilarityControl,
-                                                     player_mask_type=PlayerMaskType.EveryoneMask),
+                                                     player_mask_type=PlayerMaskType.EveryoneMask, bc_epochs=40),
                                HyperparameterOptions(num_input_time_steps=1, control_type=ControlType.TimeControl),
                                HyperparameterOptions(num_input_time_steps=1, control_type=ControlType.NoControl),
                                HyperparameterOptions(num_input_time_steps=1, control_type=ControlType.NoControl),
