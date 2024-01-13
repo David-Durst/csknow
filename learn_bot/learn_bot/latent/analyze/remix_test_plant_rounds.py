@@ -23,7 +23,7 @@ from learn_bot.libs.pd_printing import set_pd_print_options
 remix_push_only_test_plant_states_file_name = 'remix_push_only_test_plant_states.hdf5'
 
 num_defensive_setups = 2
-num_offensive_setups = 4
+num_offensive_setups = 50
 planted_a_col = "planted a"
 
 def remix_test_plant_rounds():
