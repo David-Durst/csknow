@@ -54,6 +54,7 @@ def remix_test_plant_rounds():
         defensive_df.loc[:, alive_col] = defensive_df.loc[:, alive_col].astype('bool')
     for helmet_col in helmet_cols:
         defensive_df.loc[:, helmet_col] = defensive_df.loc[:, helmet_col].astype('bool')
+    defensive_df.loc[:, "c4 defused"] = False
 
     save_pd_to_hdf5(train_test_split_folder_path / remix_push_only_test_plant_states_file_name,
                     defensive_df)
