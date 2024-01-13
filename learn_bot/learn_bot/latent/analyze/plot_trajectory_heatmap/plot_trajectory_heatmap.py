@@ -104,7 +104,7 @@ def run_trajectory_heatmaps_one_filter_option(trajectory_filter_options: Traject
             run_one_dataset_trajectory_heatmap(False, rollout_extension, trajectory_filter_options)
 
     if len(diff_indices) == 0:
-        title_strs = rollout_extension
+        title_strs = rollout_extensions
     else:
         title_strs = [human_title_str] + (rollout_extensions if rollout_extensions[0] != 'invalid'
                                           else [human_title_str + ' Save'])

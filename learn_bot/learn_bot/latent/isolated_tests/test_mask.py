@@ -64,6 +64,7 @@ for i in range(num_tokens):
 
 print_matrix_values = False
 
+print("testing self mask")
 enc_out0 = transformer_encoder(in0, mask=src_tgt_mask)
 enc_out0_duplicate = transformer_encoder(in0, mask=src_tgt_mask)
 enc_out1 = transformer_encoder(in1, mask=src_tgt_mask)
@@ -77,6 +78,25 @@ if print_matrix_values:
 print("enc_out0 == enc_out1")
 print(enc_out0 == enc_out1)
 print(torch.sum(enc_out0 == enc_out1))
+print("expect 30 (all but first row as only first player changed and everyone masked out)")
+
+print("")
+
+print("testing self and dead mask")
+enc_combined_out0 = transformer_encoder(in0, mask=combined_mask)
+enc_combined_out0_duplicate = transformer_encoder(in0, mask=combined_mask)
+enc_combined_out1 = transformer_encoder(in2, mask=combined_mask)
+print("enc_combined_out0 equals enc_combined_out0_duplicate")
+print(torch.equal(enc_combined_out0, enc_combined_out0_duplicate))
+if print_matrix_values:
+    print("enc_combined_out0")
+    print(enc_combined_out0)
+    print("enc_combined_out1")
+    print(enc_combined_out1)
+print("enc_combined_out0 == enc_combined_out1")
+print(enc_combined_out0 == enc_combined_out1)
+print(torch.sum(enc_combined_out0 == enc_combined_out1))
+print("expect 20 (all but two rows as only those players changed and everyone masked out)")
 
 print("")
 

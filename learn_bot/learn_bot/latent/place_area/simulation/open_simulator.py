@@ -467,6 +467,11 @@ def run_analysis(loaded_model: LoadedModel, all_data_loaded_model: LoadedModel):
     print('\n'.join(mask_result_strs))
     print('\n'.join(mask_result_latex_strs))
 
+    with open(simulation_plots_path / 'result.txt', 'w') as f:
+        f.write('\n'.join(mask_result_strs))
+        f.write('\n')
+        f.write('\n'.join(mask_result_latex_strs))
+
     plt.savefig(simulation_plots_path / 'ade_fde_by_mask.png')
 
 
