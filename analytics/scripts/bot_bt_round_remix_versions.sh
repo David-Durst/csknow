@@ -17,7 +17,7 @@ get_script_dir
 
 run_csknow_rounds() {
     new_demos=()
-    for j in {0..0}
+    for j in {0..3}
     do
         cd ${script_dir}/../../learn_bot/
         echo "model"
