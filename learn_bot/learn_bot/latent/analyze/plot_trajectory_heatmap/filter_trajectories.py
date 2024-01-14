@@ -15,6 +15,9 @@ class TeamBasedStartConstraint:
     t_region: AABB
     num_allowed_out_ct: int
     num_allowed_out_t: int
+    # allow option to make it a requirement that at least one in one
+    min_num_required_in_ct: Optional[int] = None
+    min_num_required_in_t: Optional[int] = None
 
 @dataclass
 class TrajectoryFilterOptions:
@@ -117,6 +120,7 @@ region_constraints: Dict[str, AABB] = {
 }
 
 # large chunks of the map
+anywhere_constraint = AABB(Vec3(-5000, -5000, 0), Vec3(5000, 5000, 0))
 above_mid_constraint = AABB(Vec3(-5000, 2000, 0), Vec3(5000, 5000, 0))
 a_not_long_constraint = AABB(Vec3(150, 2250, 0), Vec3(5000, 5000, 0))
 a_long_constraint = AABB(Vec3(150, -5000, 0), Vec3(5000, 2000, 0))
@@ -136,4 +140,46 @@ c4_a_ct_spawn_t_long = TeamBasedStartConstraint(
     num_allowed_out_ct=0,
     num_allowed_out_t=1
 )
-team_based_region_constraints: List[TeamBasedStartConstraint] = [c4_a_ct_spawn_t_not_long, c4_a_ct_spawn_t_long]
+a_not_long_not_cat_constraint = AABB(Vec3(750, 2100, 0), Vec3(5000, 5000, 0))
+below_mid_constraint = AABB(Vec3(-5000, -5000, 0), Vec3(5000, 625, 0))
+c4_a_ct_long_t_site = TeamBasedStartConstraint(
+    name="C4 A CT Long T Site",
+    bomb_planted_a=True,
+    ct_region=below_mid_constraint,
+    t_region=a_not_long_not_cat_constraint,
+    num_allowed_out_ct=0,
+    num_allowed_out_t=0
+)
+c4_a_ct_spawn_t_site = TeamBasedStartConstraint(
+    name="C4 A CT Spawn T Site",
+    bomb_planted_a=True,
+    ct_region=above_mid_constraint,
+    t_region=a_not_long_not_cat_constraint,
+    num_allowed_out_ct=0,
+    num_allowed_out_t=0
+)
+b_entire_site_constraint = AABB(Vec3(-5000, 1620, 0), Vec3(-1340, 5000, 0))
+tuns_constraint = AABB(Vec3(-5000, -5000, 0), Vec3(-673, 1600, 0))
+c4_b_ct_bslope_t_site = TeamBasedStartConstraint(
+    name="C4 B CT BSlope T Site",
+    bomb_planted_a=False,
+    ct_region=above_mid_constraint,
+    t_region=b_entire_site_constraint,
+    num_allowed_out_ct=0,
+    num_allowed_out_t=0
+)
+c4_b_ct_tuns_t_site = TeamBasedStartConstraint(
+    name="C4 B CT Tuns T Site",
+    bomb_planted_a=False,
+    ct_region=tuns_constraint,
+    t_region=b_entire_site_constraint,
+    num_allowed_out_ct=0,
+    num_allowed_out_t=0,
+    min_num_required_in_ct=1
+)
+team_based_region_constraints: List[TeamBasedStartConstraint] = [
+    #c4_a_ct_spawn_t_not_long, c4_a_ct_spawn_t_long,
+    #c4_a_ct_long_t_site, c4_a_ct_spawn_t_site,
+    #c4_b_ct_bslope_t_site, c4_b_ct_tuns_t_site
+    c4_b_ct_tuns_t_site
+]

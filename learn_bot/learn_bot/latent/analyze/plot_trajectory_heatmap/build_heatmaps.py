@@ -196,6 +196,8 @@ def plot_one_trajectory_dataset(loaded_model: LoadedModel, id_df: pd.DataFrame, 
         # early terminate if requiring all players to be in regions and one fails
         num_out_bounds_ct = 0
         num_out_bounds_t = 0
+        num_in_bounds_ct = 0
+        num_in_bounds_t = 0
         if trajectory_filter_options.team_based_all_start_in_region is not None:
             # make sure bomb planted in in right place for filter
             planted_a = trajectory_np[0, loaded_model.model.c4_planted_columns[0]]
@@ -222,9 +224,24 @@ def plot_one_trajectory_dataset(loaded_model: LoadedModel, id_df: pd.DataFrame, 
                         num_out_bounds_ct += 1
                     else:
                         num_out_bounds_t += 1
-            if num_out_bounds_ct > trajectory_filter_options.team_based_all_start_in_region.num_allowed_out_ct or \
-                    num_out_bounds_t > trajectory_filter_options.team_based_all_start_in_region.num_allowed_out_t:
-                continue
+                else:
+                    if ct_team:
+                        num_in_bounds_ct += 1
+                    else:
+                        num_in_bounds_t += 1
+
+            if trajectory_filter_options.team_based_all_start_in_region.min_num_required_in_ct is None:
+                if num_out_bounds_ct > trajectory_filter_options.team_based_all_start_in_region.num_allowed_out_ct:
+                    continue
+            else:
+                if num_in_bounds_ct < trajectory_filter_options.team_based_all_start_in_region.min_num_required_in_ct:
+                    continue
+            if trajectory_filter_options.team_based_all_start_in_region.min_num_required_in_t is None:
+                if num_out_bounds_t > trajectory_filter_options.team_based_all_start_in_region.num_allowed_out_t:
+                    continue
+            else:
+                if num_in_bounds_t < trajectory_filter_options.team_based_all_start_in_region.min_num_required_in_t:
+                    continue
 
         # restrict to start of round if filtering based on time
         if trajectory_filter_options.round_game_seconds is not None:

@@ -26,7 +26,7 @@ for demo in $1; do
     cd ../analytics
     ./scripts/create_rollout_other_datasets.sh $2_$i
     cd ../learn_bot
-    python -m learn_bot.latent.analyze.compare_trajectories.plot_trajectories_independently 11_15_2023__15_31_15_iw_256_bc_20_pr_0_fr_0_b_1024_it_1_ot_3_lr_4e-05_wd_0.0_l_4_h_4_n_20.0_ros_2.0_ct_SimilarityControl_pm_NoMask_nm_False_om_NoMask_w_None_dh_None_c_just_human_all 0 _$2_$i _$2
+    python -m learn_bot.latent.analyze.compare_trajectories.plot_trajectories_independently 01_11_2024__00_46_41_iw_256_bc_20_pr_0_fr_0_b_1024_it_1_ot_3_lr_4e-05_wd_0.0_l_4_h_4_n_20.0_ros_2.0_ct_SimilarityControl_pm_NoMask_mpi_True_om_NoMask_w_None_dh_None_ifo_False_c_just_human_all 0 _$2_$i _$2
     cd ../s3_manager
     ((i+=1))
 done
