@@ -1,5 +1,8 @@
+import types
 from enum import Enum
-from typing import List, Callable
+from typing import List, Callable, Optional
+
+import torch
 
 from learn_bot.latent.engagement.column_names import max_enemies
 from learn_bot.latent.order.column_names import team_strs, player_team_str, all_prior_and_cur_ticks, \
@@ -313,6 +316,27 @@ class TransformerNestedHiddenLatentModel(nn.Module):
         prob_output = self.prob_output(latent / temperature)
         # output 0 is batch, 1 is players, 2 is output time step, 3 is probabilities/logits
         return latent, prob_output, one_hot_prob_to_index(prob_output)
+
+    def add_input_logging(self, layer_index: int):
+        encoder_layer = self.transformer_encoder.layers[layer_index]
+        encoder_layer._sa_block = types.MethodType(_sa_block_with_attention, encoder_layer)
+
+
+last_attention_output: Optional[torch.Tensor] = None
+
+
+def _sa_block_with_attention(self, x: torch.Tensor, attn_mask: Optional[torch.Tensor],
+                             key_padding_mask: Optional[torch.Tensor]) -> torch.Tensor:
+    global last_attention_output
+    x, last_attention_output = self.self_attn(x, x, x,
+                                              attn_mask=attn_mask,
+                                              key_padding_mask=key_padding_mask,
+                                              need_weights=True)
+    return self.dropout1(x)
+
+
+def get_last_attention_output() -> Optional[torch.Tensor]:
+    return last_attention_output
 
 
 def combine_padding_sequence_masks(sequence_mask: torch.Tensor, padding_mask: torch.Tensor, num_heads: int,

@@ -2,6 +2,9 @@ import datetime
 from pathlib import Path
 from typing import Set, Callable, List
 
+from matplotlib import pyplot as plt
+
+from learn_bot.latent.analyze.compare_trajectories.plot_trajectories_from_comparison import concat_horizontal
 from learn_bot.latent.place_area.push_save_label import PushSaveRoundLabels, PushSaveRoundData, PushSaveLabel
 from learn_bot.libs.pd_printing import set_pd_print_options
 from learn_bot.latent.place_area.column_names import *
@@ -68,6 +71,8 @@ def vis(loaded_model: LoadedModel, inference_fn: Callable[[LoadedModel], None], 
     made_images_path: bool = False
     selected_df = loaded_model.load_round_df_from_cur_dataset(cur_round_id, use_sim_dataset=use_sim_dataset)
     pred_selected_df: pd.DataFrame = loaded_model.cur_inference_df
+    draw_attention: bool = False
+    attention_masks: pd.DataFrame = loaded_model.cur_attention_masks
     id_df: pd.DataFrame = loaded_model.get_cur_id_df()
     draw_pred: bool = True
     draw_max: bool = True
@@ -155,6 +160,15 @@ def vis(loaded_model: LoadedModel, inference_fn: Callable[[LoadedModel], None], 
 
         details_text_var.set(players_status.status + "\n\n" + players_status.temporal)
         d2_img_copy.alpha_composite(d2_overlay_im)
+        
+        if draw_attention:
+            attention_mask = attention_masks[cur_tick_index]
+            plt.imshow(attention_mask, cmap='hot', interpolation='nearest')
+            fig = plt.gcf()
+            d2_img_copy = concat_horizontal([
+                d2_img_copy, Image.frombytes('RGB', fig.canvas.get_width_height(), fig.canvas.tostring_rgb())
+            ])
+
         updated_d2_photo_img = itk.PhotoImage(d2_img_copy)
         img_label.configure(image=updated_d2_photo_img)
         img_label.image = updated_d2_photo_img
@@ -233,6 +247,11 @@ def vis(loaded_model: LoadedModel, inference_fn: Callable[[LoadedModel], None], 
         draw_max = not draw_max
         tick_slider_changed(cur_tick_index)
 
+    def toggle_draw_attention():
+        nonlocal draw_attention
+        draw_attention = not draw_attention
+        tick_slider_changed(cur_tick_index)
+
     def radial_vel_time_step_slider_changed(new_radial_vel_time_step):
         tick_slider_changed(cur_tick_index)
 
@@ -258,7 +277,7 @@ def vis(loaded_model: LoadedModel, inference_fn: Callable[[LoadedModel], None], 
 
     # state setters
     def change_round_dependent_data():
-        nonlocal selected_df, id_df, pred_selected_df, cur_round_id, ticks, game_ticks
+        nonlocal selected_df, id_df, pred_selected_df, attention_masks, cur_round_id, ticks, game_ticks
         vis_only_df = loaded_model.get_cur_vis_df()
         make_index_column(vis_only_df)
         selected_df = loaded_model.load_round_df_from_cur_dataset(cur_round_id, vis_only_df,
@@ -269,6 +288,7 @@ def vis(loaded_model: LoadedModel, inference_fn: Callable[[LoadedModel], None], 
         id_df = loaded_model.get_cur_id_df().loc[cur_round_condition]
         pred_selected_df = loaded_model.cur_inference_df.loc[cur_round_condition]
         pred_selected_df = pred_selected_df.reset_index(drop=True)
+        attention_masks = loaded_model.cur_attention_masks[cur_round_condition]
 
         ticks = selected_df.loc[:, 'tick id'].tolist()
         game_ticks = selected_df.loc[:, 'game tick number'].tolist()
@@ -383,6 +403,8 @@ def vis(loaded_model: LoadedModel, inference_fn: Callable[[LoadedModel], None], 
     print_row_button.pack(side="left")
     distribution_toggle_button = tk.Button(distribution_control_frame, text="toggle max/distribution", command=toggle_distribution_clicked)
     distribution_toggle_button.pack(side="left")
+    attention_toggle_button = tk.Button(distribution_control_frame, text="toggle attention", command=toggle_draw_attention)
+    attention_toggle_button.pack(side="left")
     player_distributions_label = tk.Label(distribution_control_frame, text="players to show")
     player_distributions_label.pack(side="left")
     player_distributions_var = tk.StringVar(value="*")
