@@ -3,7 +3,7 @@ from typing import List, Callable
 
 from learn_bot.latent.engagement.column_names import max_enemies
 from learn_bot.latent.order.column_names import team_strs, player_team_str, all_prior_and_cur_ticks, \
-    num_radial_ticks
+    num_radial_ticks, c4_plant_a_col
 from learn_bot.latent.place_area.column_names import specific_player_place_area_columns, num_radial_bins, \
     walking_modifier, ducking_modifier, default_similarity_columns
 from learn_bot.latent.place_area.pos_abs_from_delta_grid_or_radial import NavData, \
@@ -87,6 +87,8 @@ class TransformerNestedHiddenLatentModel(nn.Module):
         # transformed/transformed doesn't matter since no angles and all categorical variables are
         # "distirbution" type meaning pre one hot encoded
         all_c4_columns_ranges = range_list_to_index_list(cts.get_name_ranges(True, True, contained_str="c4"))
+        # this get all three c4 planted cols since they are one-hot encoded categorical variable
+        self.c4_planted_columns = range_list_to_index_list(cts.get_name_ranges(True, True, contained_str=c4_plant_a_col))
         #_, c4_columns_names = cts.get_name_ranges(True, True, contained_str="c4", include_names=True)
         c4_decrease_distance_columns_ranges = range_list_to_index_list(cts.get_name_ranges(True, True, contained_str="decrease distance to c4"))
         non_player_c4_columns_ranges = [i for i in all_c4_columns_ranges if i not in c4_decrease_distance_columns_ranges]

@@ -14,7 +14,7 @@ from learn_bot.latent.analyze.comparison_column_names import similarity_plots_pa
 from learn_bot.latent.analyze.plot_trajectory_heatmap.compute_diff_metrics import \
     compute_diff_metrics
 from learn_bot.latent.analyze.plot_trajectory_heatmap.filter_trajectories import TrajectoryFilterOptions, \
-    region_constraints
+    region_constraints, team_based_region_constraints
 from learn_bot.latent.analyze.plot_trajectory_heatmap.render_diff_metric_bar_charts import render_diff_metric_bar_charts
 from learn_bot.latent.analyze.plot_trajectory_heatmap.render_diffs import plot_trajectory_diffs_to_image
 from learn_bot.latent.analyze.plot_trajectory_heatmap.render_trajectory_heatmaps import plot_trajectories_to_image
@@ -139,30 +139,37 @@ def run_trajectory_heatmaps(plot_only_first_hdf5_file_train_and_test: bool):
 
     os.makedirs(plots_path / 'diff', exist_ok=True)
 
-    run_trajectory_heatmaps_one_filter_option(TrajectoryFilterOptions(compute_speeds=True, compute_lifetimes=True,
-                                                                      compute_shots_per_kill=True),
-                                              rollout_extensions, diff_indices, plots_path,
-                                              plot_only_first_hdf5_file_train_and_test)
+    #run_trajectory_heatmaps_one_filter_option(TrajectoryFilterOptions(compute_speeds=True, compute_lifetimes=True,
+    #                                                                  compute_shots_per_kill=True),
+    #                                          rollout_extensions, diff_indices, plots_path,
+    #                                          plot_only_first_hdf5_file_train_and_test)
 
-    if len(diff_indices) == 0:
-        return
+    #if len(diff_indices) == 0:
+    #    return
 
-    # plot distributions during key events
-    run_trajectory_heatmaps_one_filter_option(TrajectoryFilterOptions(compute_speeds=True, only_kill=True),
-                                              rollout_extensions, diff_indices, plots_path,
-                                              plot_only_first_hdf5_file_train_and_test)
+    ## plot distributions during key events
+    #run_trajectory_heatmaps_one_filter_option(TrajectoryFilterOptions(compute_speeds=True, only_kill=True),
+    #                                          rollout_extensions, diff_indices, plots_path,
+    #                                          plot_only_first_hdf5_file_train_and_test)
 
-    run_trajectory_heatmaps_one_filter_option(TrajectoryFilterOptions(compute_speeds=True, only_killed=True),
-                                              rollout_extensions, diff_indices, plots_path,
-                                              plot_only_first_hdf5_file_train_and_test)
+    #run_trajectory_heatmaps_one_filter_option(TrajectoryFilterOptions(compute_speeds=True, only_killed=True),
+    #                                          rollout_extensions, diff_indices, plots_path,
+    #                                          plot_only_first_hdf5_file_train_and_test)
 
-    run_trajectory_heatmaps_one_filter_option(TrajectoryFilterOptions(compute_speeds=True, only_killed_or_end=True),
-                                              rollout_extensions, diff_indices, plots_path,
-                                              plot_only_first_hdf5_file_train_and_test)
+    #run_trajectory_heatmaps_one_filter_option(TrajectoryFilterOptions(compute_speeds=True, only_killed_or_end=True),
+    #                                          rollout_extensions, diff_indices, plots_path,
+    #                                          plot_only_first_hdf5_file_train_and_test)
 
-    run_trajectory_heatmaps_one_filter_option(TrajectoryFilterOptions(compute_speeds=True, only_shots=True),
-                                              rollout_extensions, diff_indices, plots_path,
-                                              plot_only_first_hdf5_file_train_and_test)
+    #run_trajectory_heatmaps_one_filter_option(TrajectoryFilterOptions(compute_speeds=True, only_shots=True),
+    #                                          rollout_extensions, diff_indices, plots_path,
+    #                                          plot_only_first_hdf5_file_train_and_test)
+
+    for team_based_region_constraint in team_based_region_constraints:
+        run_trajectory_heatmaps_one_filter_option(TrajectoryFilterOptions(team_based_all_start_in_region=team_based_region_constraint),
+                                                  rollout_extensions, diff_indices, plots_path,
+                                                  plot_only_first_hdf5_file_train_and_test)
+
+    exit(0)
 
     for region_constraint_str, region_constraint in region_constraints.items():
         # haven't had luck seeing anything interesting with just one player
@@ -190,7 +197,7 @@ def run_trajectory_heatmaps(plot_only_first_hdf5_file_train_and_test: bool):
 
 if __name__ == "__main__":
     run_trajectory_heatmaps(False)
-    if sys.argv[2] == 'invalid':
+    if False and sys.argv[2] == 'invalid':
         title_to_loaded_model = {}
         title_to_hdf5_to_round_ids = {}
         run_trajectory_heatmaps(True)

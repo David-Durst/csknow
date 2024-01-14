@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Set, Optional, Dict
+from typing import Set, Optional, Dict, List
 
 import numpy as np
 import pandas as pd
@@ -7,6 +7,14 @@ import pandas as pd
 from learn_bot.latent.place_area.pos_abs_from_delta_grid_or_radial import AABB
 from learn_bot.libs.vec import Vec3
 
+@dataclass
+class TeamBasedStartConstraint:
+    name: str
+    bomb_planted_a: bool
+    ct_region: AABB
+    t_region: AABB
+    num_allowed_out_ct: int
+    num_allowed_out_t: int
 
 @dataclass
 class TrajectoryFilterOptions:
@@ -16,6 +24,7 @@ class TrajectoryFilterOptions:
     player_starts_in_region: Optional[AABB] = None
     region_name: Optional[str] = None
     include_all_players_when_one_in_region: bool = False
+    team_based_all_start_in_region: Optional[TeamBasedStartConstraint] = None
     round_game_seconds: Optional[range] = None
     only_kill: bool = False
     only_killed: bool = False
@@ -28,8 +37,13 @@ class TrajectoryFilterOptions:
     def __str__(self):
         compound_name = ''
         if self.player_starts_in_region is not None:
-            compound_name += self.region_name.lower().replace(' ', '_') + \
-                             ('_all' if self.include_all_players_when_one_in_region else '_one')
+            compound_name += self.region_name.lower().replace(' ', '_')
+            if self.include_all_players_when_one_in_region:
+                compound_name += '_all'
+            else:
+                compound_name += '_one'
+        if self.team_based_all_start_in_region is not None:
+            compound_name += self.team_based_all_start_in_region.name.lower().replace(' ', '_')
         if self.round_game_seconds is not None:
             if compound_name != '':
                 compound_name += '_'
@@ -63,6 +77,7 @@ class TrajectoryFilterOptions:
 
 default_trajectory_filter_options = TrajectoryFilterOptions()
 
+# specific areas
 a_long_constraint = AABB(Vec3(1122, 700, 0), Vec3(1850, 1295, 0))
 a_cat_constraint = AABB(Vec3(200, 1300, 0), Vec3(570, 2000, 0))
 a_site_constraint = AABB(Vec3(970, 2310, 0), Vec3(1220, 2630, 0))
@@ -75,6 +90,7 @@ b_backplat_constraint = AABB(Vec3(-2150, 2450, 0), Vec3(-1720, 3180, 0))
 b_site_constraint = AABB(Vec3(-1720, 2390, 0), Vec3(-1360, 2870, 0))
 b_car_constraint = AABB(Vec3(-1755, 1600, 0), Vec3(-1375, 1960, 0))
 b_tuns_constraint = AABB(Vec3(-2190, 960, 0), Vec3(-1500, 1435, 0))
+
 
 a_long_constraint_str = 'A Long'
 a_cat_constraint_str = 'A Cat'
@@ -99,3 +115,25 @@ region_constraints: Dict[str, AABB] = {
     b_car_constraint_str: b_car_constraint,
     b_tuns_constraint_str: b_tuns_constraint,
 }
+
+# large chunks of the map
+above_mid_constraint = AABB(Vec3(-5000, 2000, 0), Vec3(5000, 5000, 0))
+a_not_long_constraint = AABB(Vec3(150, 2250, 0), Vec3(5000, 5000, 0))
+a_long_constraint = AABB(Vec3(150, -5000, 0), Vec3(5000, 2000, 0))
+c4_a_ct_spawn_t_not_long = TeamBasedStartConstraint(
+    name="C4 A CT Spawn T Not Long",
+    bomb_planted_a=True,
+    ct_region=above_mid_constraint,
+    t_region=a_not_long_constraint,
+    num_allowed_out_ct=0,
+    num_allowed_out_t=0
+)
+c4_a_ct_spawn_t_long = TeamBasedStartConstraint(
+    name="C4 A CT Spawn T Long",
+    bomb_planted_a=True,
+    ct_region=above_mid_constraint,
+    t_region=a_long_constraint,
+    num_allowed_out_ct=0,
+    num_allowed_out_t=1
+)
+team_based_region_constraints: List[TeamBasedStartConstraint] = [c4_a_ct_spawn_t_not_long, c4_a_ct_spawn_t_long]
