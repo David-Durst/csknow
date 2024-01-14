@@ -120,14 +120,15 @@ region_constraints: Dict[str, AABB] = {
 }
 
 # large chunks of the map
-anywhere_constraint = AABB(Vec3(-5000, -5000, 0), Vec3(5000, 5000, 0))
-above_mid_constraint = AABB(Vec3(-5000, 2000, 0), Vec3(5000, 5000, 0))
-a_not_long_constraint = AABB(Vec3(150, 2250, 0), Vec3(5000, 5000, 0))
-a_long_constraint = AABB(Vec3(150, -5000, 0), Vec3(5000, 2000, 0))
+anywhere_constraint = AABB(Vec3(-5000, -5000, -5000), Vec3(5000, 5000, 5000))
+above_mid_constraint = AABB(Vec3(-5000, 2000, -5000), Vec3(5000, 5000, 5000))
+from_spawn_constraint = AABB(Vec3(-296, 1983, -5000), Vec3(1267, 2800, 50))
+a_not_long_constraint = AABB(Vec3(150, 2250, -5000), Vec3(5000, 5000, 5000))
+a_long_constraint = AABB(Vec3(150, -5000, -5000), Vec3(5000, 2000, 5000))
 c4_a_ct_spawn_t_not_long = TeamBasedStartConstraint(
     name="C4 A CT Spawn T Not Long",
     bomb_planted_a=True,
-    ct_region=above_mid_constraint,
+    ct_region=from_spawn_constraint,
     t_region=a_not_long_constraint,
     num_allowed_out_ct=0,
     num_allowed_out_t=0
@@ -135,13 +136,13 @@ c4_a_ct_spawn_t_not_long = TeamBasedStartConstraint(
 c4_a_ct_spawn_t_long = TeamBasedStartConstraint(
     name="C4 A CT Spawn T Long",
     bomb_planted_a=True,
-    ct_region=above_mid_constraint,
+    ct_region=from_spawn_constraint,
     t_region=a_long_constraint,
     num_allowed_out_ct=0,
     num_allowed_out_t=1
 )
-a_not_long_not_cat_constraint = AABB(Vec3(750, 2100, 0), Vec3(5000, 5000, 0))
-below_mid_constraint = AABB(Vec3(-5000, -5000, 0), Vec3(5000, 625, 0))
+a_not_long_not_cat_constraint = AABB(Vec3(750, 2100, -5000), Vec3(5000, 5000, 5000))
+below_mid_constraint = AABB(Vec3(-5000, -5000, -5000), Vec3(5000, 625, 5000))
 c4_a_ct_long_t_site = TeamBasedStartConstraint(
     name="C4 A CT Long T Site",
     bomb_planted_a=True,
@@ -158,8 +159,8 @@ c4_a_ct_spawn_t_site = TeamBasedStartConstraint(
     num_allowed_out_ct=0,
     num_allowed_out_t=0
 )
-b_entire_site_constraint = AABB(Vec3(-5000, 1620, 0), Vec3(-1340, 5000, 0))
-tuns_constraint = AABB(Vec3(-5000, -5000, 0), Vec3(-673, 1600, 0))
+b_entire_site_constraint = AABB(Vec3(-5000, 1620, -5000), Vec3(-1340, 5000, 5000))
+tuns_constraint = AABB(Vec3(-5000, -5000, -5000), Vec3(-673, 1600, 5000))
 c4_b_ct_bslope_t_site = TeamBasedStartConstraint(
     name="C4 B CT BSlope T Site",
     bomb_planted_a=False,
@@ -178,8 +179,7 @@ c4_b_ct_tuns_t_site = TeamBasedStartConstraint(
     min_num_required_in_ct=1
 )
 team_based_region_constraints: List[TeamBasedStartConstraint] = [
-    #c4_a_ct_spawn_t_not_long, c4_a_ct_spawn_t_long,
+    c4_a_ct_spawn_t_not_long, c4_a_ct_spawn_t_long,
     #c4_a_ct_long_t_site, c4_a_ct_spawn_t_site,
     #c4_b_ct_bslope_t_site, c4_b_ct_tuns_t_site
-    c4_b_ct_tuns_t_site
 ]

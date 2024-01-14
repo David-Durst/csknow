@@ -207,41 +207,30 @@ def plot_one_trajectory_dataset(loaded_model: LoadedModel, id_df: pd.DataFrame, 
                     (planted_b and trajectory_filter_options.team_based_all_start_in_region.bomb_planted_a):
                 continue
 
+            # default is true as will and all of below conditions
+            all_players_in_region = trajectory_np[:, 0] == trajectory_np[:, 0]
+
             for player_index, player_place_area_columns in enumerate(specific_player_place_area_columns):
                 # dead players can't fail a starting condition test
-                if not trajectory_np[0, loaded_model.model.alive_columns[player_index]]:
-                    continue
                 ct_team = team_strs[0] in player_place_area_columns.player_id
-                player_pos_x = trajectory_np[0, loaded_model.model.nested_players_pos_columns_tensor[player_index, 0, 0]]
-                player_pos_y = trajectory_np[0, loaded_model.model.nested_players_pos_columns_tensor[player_index, 0, 1]]
+                player_pos_x_np = trajectory_np[:, loaded_model.model.nested_players_pos_columns_tensor[player_index, 0, 0]]
+                player_pos_y_np = trajectory_np[:, loaded_model.model.nested_players_pos_columns_tensor[player_index, 0, 1]]
+                player_pos_z_np = trajectory_np[:, loaded_model.model.nested_players_pos_columns_tensor[player_index, 0, 2]]
                 constraint_aabb = trajectory_filter_options.team_based_all_start_in_region.ct_region if ct_team \
                     else trajectory_filter_options.team_based_all_start_in_region.t_region
-                if (player_pos_x < constraint_aabb.min.x) or \
-                    (player_pos_x > constraint_aabb.max.x) or \
-                    (player_pos_y < constraint_aabb.min.y) or \
-                    (player_pos_y > constraint_aabb.max.y):
-                    if ct_team:
-                        num_out_bounds_ct += 1
-                    else:
-                        num_out_bounds_t += 1
-                else:
-                    if ct_team:
-                        num_in_bounds_ct += 1
-                    else:
-                        num_in_bounds_t += 1
+                all_players_in_region = all_players_in_region & (
+                        (trajectory_np[:, loaded_model.model.alive_columns[player_index]] < 0.5) |
+                        ((player_pos_x_np >= constraint_aabb.min.x) &
+                         (player_pos_x_np <= constraint_aabb.max.x) &
+                         (player_pos_y_np >= constraint_aabb.min.y) &
+                         (player_pos_y_np <= constraint_aabb.max.y) &
+                         (player_pos_z_np >= constraint_aabb.min.z) &
+                         (player_pos_z_np <= constraint_aabb.max.z)))
 
-            if trajectory_filter_options.team_based_all_start_in_region.min_num_required_in_ct is None:
-                if num_out_bounds_ct > trajectory_filter_options.team_based_all_start_in_region.num_allowed_out_ct:
-                    continue
-            else:
-                if num_in_bounds_ct < trajectory_filter_options.team_based_all_start_in_region.min_num_required_in_ct:
-                    continue
-            if trajectory_filter_options.team_based_all_start_in_region.min_num_required_in_t is None:
-                if num_out_bounds_t > trajectory_filter_options.team_based_all_start_in_region.num_allowed_out_t:
-                    continue
-            else:
-                if num_in_bounds_t < trajectory_filter_options.team_based_all_start_in_region.min_num_required_in_t:
-                    continue
+            # let any moment be the start of when all players are in region
+            all_players_been_in_region = np.cumsum(all_players_in_region) > 0
+            trajectory_np = trajectory_np[all_players_been_in_region]
+            #trajectory_np = trajectory_np[all_players_in_region]
 
         # restrict to start of round if filtering based on time
         if trajectory_filter_options.round_game_seconds is not None:

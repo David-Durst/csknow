@@ -91,22 +91,25 @@ def run_trajectory_heatmaps_one_filter_option(trajectory_filter_options: Traject
                                               plot_only_first_hdf5_file_train_and_test: bool):
     clear_title_caches()
 
-    # using diff_indices being empty to indicate no human data, as nothing to cmopare to
-    if len(diff_indices) != 0:
+    # using diff_indices being empty (with no invalid) to indicate no human data, as nothing to cmopare to
+    if len(diff_indices) > 0 or rollout_extensions[0] == 'invalid':
         run_one_dataset_trajectory_heatmap(True, human_title_str, trajectory_filter_options,
                                            plot_only_first_hdf5_file_train_and_test=plot_only_first_hdf5_file_train_and_test)
-    if rollout_extensions[0] == 'invalid':
+    if rollout_extensions[0] == 'invalid_save':
         run_one_dataset_trajectory_heatmap(True, human_title_str + ' Save', trajectory_filter_options,
                                            push_only_human_data=False,
                                            plot_only_first_hdf5_file_train_and_test=plot_only_first_hdf5_file_train_and_test)
-    else:
+    elif rollout_extensions[0] != 'invalid':
         for rollout_extension in rollout_extensions:
             run_one_dataset_trajectory_heatmap(False, rollout_extension, trajectory_filter_options)
 
     if len(diff_indices) == 0:
-        title_strs = rollout_extensions
+        if rollout_extensions[0] == 'invalid':
+            title_strs = [human_title_str]
+        else:
+            title_strs = rollout_extensions
     else:
-        title_strs = [human_title_str] + (rollout_extensions if rollout_extensions[0] != 'invalid'
+        title_strs = [human_title_str] + (rollout_extensions if rollout_extensions[0] != 'invalid_save'
                                           else [human_title_str + ' Save'])
     plot_trajectories_to_image(title_strs, True, plots_path, trajectory_filter_options)
     if len(diff_indices) == 0:
@@ -126,6 +129,8 @@ def run_trajectory_heatmaps(plot_only_first_hdf5_file_train_and_test: bool):
         else:
             diff_indices = [int(x) for x in sys.argv[3].split(',')]
     elif rollout_extensions[0] == 'invalid':
+        diff_indices = []
+    elif rollout_extensions[0] == 'invalid_save':
         diff_indices = [0 for _ in range(len(rollout_extensions))]
     else:
         raise Exception('must provide diff indices if not just plotting human data and not setting no_diff')
