@@ -4,8 +4,7 @@ from typing import List, Optional, Dict
 import numpy as np
 from PIL import Image, ImageDraw
 
-from learn_bot.latent.analyze.compare_trajectories.plot_trajectories_from_comparison import concat_horizontal, \
-    concat_vertical
+from learn_bot.libs.pil_helpers import concat_horizontal, concat_vertical
 from learn_bot.latent.analyze.compare_trajectories.plot_trajectories_and_events import title_font
 from learn_bot.latent.analyze.plot_trajectory_heatmap.build_heatmaps import get_title_to_line_buffers, \
     get_title_to_team_to_key_event_pos, get_debug_event_counting, get_title_to_key_events, get_title_to_num_points

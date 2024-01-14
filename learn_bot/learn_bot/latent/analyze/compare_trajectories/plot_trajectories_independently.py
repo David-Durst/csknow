@@ -7,8 +7,7 @@ import pandas as pd
 from PIL import Image
 
 from learn_bot.latent.analyze.compare_trajectories.plot_trajectories_and_events import plot_trajectory_dfs_and_event
-from learn_bot.latent.analyze.compare_trajectories.plot_trajectories_from_comparison import \
-    concat_horizontal
+from learn_bot.libs.pil_helpers import concat_horizontal
 from learn_bot.latent.analyze.compare_trajectories.process_trajectory_comparison import ComparisonConfig
 from learn_bot.libs.pd_printing import set_pd_print_options
 from learn_bot.latent.analyze.compare_trajectories.region_constraints.compute_constraint_metrics import check_constraint_metrics, \

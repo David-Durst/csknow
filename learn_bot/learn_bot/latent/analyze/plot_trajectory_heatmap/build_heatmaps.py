@@ -10,8 +10,7 @@ import torch
 from PIL import Image, ImageDraw
 
 from learn_bot.latent.analyze.compare_trajectories.plot_trajectories_and_events import title_font
-from learn_bot.latent.analyze.compare_trajectories.plot_trajectories_from_comparison import concat_horizontal, \
-    concat_vertical
+from learn_bot.libs.pil_helpers import concat_horizontal, concat_vertical
 from learn_bot.latent.analyze.knn.plot_min_distance_rounds import game_tick_rate
 from learn_bot.latent.analyze.plot_trajectory_heatmap.filter_trajectories import TrajectoryFilterOptions
 from learn_bot.latent.analyze.plot_trajectory_heatmap.split_discontinuities import \

@@ -13,8 +13,7 @@ from scipy.optimize import linear_sum_assignment
 from skimage.measure import block_reduce
 from tqdm import tqdm
 
-from learn_bot.latent.analyze.compare_trajectories.plot_trajectories_from_comparison import concat_horizontal, \
-    concat_vertical
+from learn_bot.libs.pil_helpers import concat_horizontal, concat_vertical
 from learn_bot.latent.analyze.plot_trajectory_heatmap.build_heatmaps import get_title_to_point_buffers, ImageBuffers, \
     get_title_to_num_trajectory_ids, get_title_to_line_buffers
 from learn_bot.latent.analyze.plot_trajectory_heatmap.filter_trajectories import TrajectoryFilterOptions

@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import List, Set
 
 import pandas as pd
-from PIL import Image, ImageFont
+from PIL import Image
 
 from learn_bot.latent.analyze.compare_trajectories.filter_trajectory_key_events import FilterEventType, \
     KeyAreas, KeyAreaTeam
@@ -17,6 +17,7 @@ from learn_bot.latent.analyze.comparison_column_names import metric_type_col, be
 from learn_bot.latent.engagement.column_names import round_id_column, round_number_column
 from learn_bot.latent.load_model import LoadedModel
 from learn_bot.latent.place_area.pos_abs_from_delta_grid_or_radial import AABB
+from learn_bot.libs.pil_helpers import concat_horizontal, concat_vertical
 from learn_bot.libs.vec import Vec3
 
 plot_n_most_similar = 1
@@ -132,24 +133,6 @@ def plot_predicted_trajectory_per_team(predicted_trajectory_dfs: List[pd.DataFra
     return result
 
 
-def concat_horizontal(ims: List[Image.Image]) -> Image.Image:
-    dst = Image.new('RGB', (sum([im.width for im in ims]), ims[0].height))
-    offset = 0
-    for im in ims:
-        dst.paste(im, (offset, 0))
-        offset += im.width
-    return dst
-
-
-def concat_vertical(ims: List[Image.Image]) -> Image.Image:
-    dst = Image.new('RGB', (ims[0].width, sum([im.height for im in ims])))
-    offset = 0
-    for im in ims:
-        dst.paste(im, (0, offset))
-        offset += im.height
-    return dst
-
-
 def concat_trajectory_plots(trajectory_plots: List[TrajectoryPlots], similarity_plots_path: Path,
                             config: ComparisonConfig) -> TrajectoryPlots:
     result = TrajectoryPlots()
@@ -165,7 +148,8 @@ def concat_trajectory_plots(trajectory_plots: List[TrajectoryPlots], similarity_
         result.filtered_areas.append(concat_horizontal([t.filtered_areas[i] for t in trajectory_plots]))
         #result.filtered_areas[-1].save(similarity_plots_path / (config.metric_cost_file_name + '_area_' +
         #                                                        key_area_names[i] + '.png'))
-        result.filtered_fire_and_areas.append(concat_horizontal([t.filtered_fire_and_areas[i] for t in trajectory_plots]))
+        result.filtered_fire_and_areas.append(
+            concat_horizontal([t.filtered_fire_and_areas[i] for t in trajectory_plots]))
         #result.filtered_fire_and_areas[-1].save(similarity_plots_path / (config.metric_cost_file_name +
         #                                                                 '_fire_and_area_' +
         #                                                                 key_area_names[i] + '.png'))

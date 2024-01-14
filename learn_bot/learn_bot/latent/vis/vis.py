@@ -2,9 +2,11 @@ import datetime
 from pathlib import Path
 from typing import Set, Callable, List
 
+import numpy as np
 from matplotlib import pyplot as plt
+from skimage.measure import block_reduce
 
-from learn_bot.latent.analyze.compare_trajectories.plot_trajectories_from_comparison import concat_horizontal
+from learn_bot.libs.pil_helpers import concat_horizontal
 from learn_bot.latent.place_area.push_save_label import PushSaveRoundLabels, PushSaveRoundData, PushSaveLabel
 from learn_bot.libs.pd_printing import set_pd_print_options
 from learn_bot.latent.place_area.column_names import *
@@ -72,6 +74,7 @@ def vis(loaded_model: LoadedModel, inference_fn: Callable[[LoadedModel], None], 
     selected_df = loaded_model.load_round_df_from_cur_dataset(cur_round_id, use_sim_dataset=use_sim_dataset)
     pred_selected_df: pd.DataFrame = loaded_model.cur_inference_df
     draw_attention: bool = False
+    attention_image = None
     attention_masks: pd.DataFrame = loaded_model.cur_attention_masks
     id_df: pd.DataFrame = loaded_model.get_cur_id_df()
     draw_pred: bool = True
@@ -113,7 +116,7 @@ def vis(loaded_model: LoadedModel, inference_fn: Callable[[LoadedModel], None], 
             round_slider_changed(cur_round_index)
 
     def tick_slider_changed(cur_tick_index_str):
-        nonlocal cur_tick, cur_tick_index, cur_round_number, d2_img, d2_img_draw, img_label, draw_max
+        nonlocal cur_tick, cur_tick_index, cur_round_number, d2_img, d2_img_draw, img_label, draw_max, attention_image
         if selected_df.empty:
             print("why empty selected_df?")
             return
@@ -160,11 +163,15 @@ def vis(loaded_model: LoadedModel, inference_fn: Callable[[LoadedModel], None], 
 
         details_text_var.set(players_status.status + "\n\n" + players_status.temporal)
         d2_img_copy.alpha_composite(d2_overlay_im)
-        
+
         if draw_attention:
-            attention_mask = attention_masks[cur_tick_index]
-            plt.imshow(attention_mask, cmap='hot', interpolation='nearest')
+            attention_mask = block_reduce(attention_masks[cur_tick_index], (3, 3), np.sum)
+            if attention_image is None:
+                attention_image = plt.imshow(attention_mask, cmap='hot', interpolation='nearest')
+            else:
+                attention_image.set_array(attention_mask)
             fig = plt.gcf()
+            fig.canvas.draw()
             d2_img_copy = concat_horizontal([
                 d2_img_copy, Image.frombytes('RGB', fig.canvas.get_width_height(), fig.canvas.tostring_rgb())
             ])
