@@ -8,7 +8,7 @@ from matplotlib import pyplot as plt
 
 from learn_bot.latent.analyze.compare_trajectories.process_trajectory_comparison import plot_hist, generate_bins
 from learn_bot.latent.analyze.plot_trajectory_heatmap.compute_teamwork_metrics import \
-    get_title_to_num_teammates_to_enemy_vis_on_death
+    get_title_to_num_teammates_to_enemy_vis_on_death, get_title_to_num_enemies_to_my_team_vis_on_death
 from learn_bot.latent.analyze.plot_trajectory_heatmap.filter_trajectories import TrajectoryFilterOptions
 from learn_bot.latent.analyze.plot_trajectory_heatmap.build_heatmaps import get_title_to_speeds, \
     get_title_to_lifetimes, get_title_to_shots_per_kill
@@ -84,6 +84,10 @@ def compute_metrics(trajectory_filter_options: TrajectoryFilterOptions, plots_pa
         compute_one_grouped_metric_histograms(get_title_to_num_teammates_to_enemy_vis_on_death(), 'Teammate Saw Enemy On Death',
                                               'Teammates', 0.1, 1., 'Min Time of Alive Teammates (s)',
                                               plots_path / ('teammate_vis_' + str(trajectory_filter_options) + '.png'))
+        compute_one_grouped_metric_histograms(get_title_to_num_enemies_to_my_team_vis_on_death(),
+                                              'Enemy Saw My Team On Death',
+                                              'Enemies', 0.1, 1., 'Min Time of Alive Enemies (s)',
+                                              plots_path / ('enemy_vis_' + str(trajectory_filter_options) + '.png'))
     if trajectory_filter_options.compute_speeds:
         # airstrafing can get you above normal weapon max speed
         compute_one_metric_histograms(get_title_to_speeds(), 'Weapon/Scoped Scaled Speed', 0.1, 1., 'Percent Max Speed',

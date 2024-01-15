@@ -19,7 +19,7 @@ from learn_bot.latent.analyze.plot_trajectory_heatmap.render_diff_metric_bar_cha
 from learn_bot.latent.analyze.plot_trajectory_heatmap.render_diffs import plot_trajectory_diffs_to_image
 from learn_bot.latent.analyze.plot_trajectory_heatmap.render_trajectory_heatmaps import plot_trajectories_to_image
 from learn_bot.latent.analyze.plot_trajectory_heatmap.render_key_event_heatmap import plot_key_event_heatmaps
-from learn_bot.latent.analyze.plot_trajectory_heatmap.compute_metrics import compute_metrics
+from learn_bot.latent.analyze.plot_trajectory_heatmap.render_in_game_stats import compute_metrics
 from learn_bot.latent.analyze.plot_trajectory_heatmap.build_heatmaps import plot_one_trajectory_dataset, \
     clear_title_caches, get_title_to_team_to_key_event_pos
 from learn_bot.latent.analyze.plot_trajectory_heatmap.plot_points_per_game_seconds_bar_chart import \
