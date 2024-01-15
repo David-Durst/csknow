@@ -141,8 +141,8 @@ namespace csknow::feature_store {
             vector<float> secondsUntilNextHitEnemy, secondsAfterPriorHitEnemy;
             vector<float> health, armor;
             vector<bool> helmet;
+            vector<int64_t> areaId, areaIndex;
             // control inputs
-            vector<int64_t> areaIndex;
             vector<bool> decreaseDistanceToC4Over5s, decreaseDistanceToC4Over10s, decreaseDistanceToC4Over20s;
             //vector<float> distanceToASite, distanceToBSite;
             //array<vector<float>, num_orders_per_site> distanceToNearestAOrderNavArea, distanceToNearestBOrderNavArea;

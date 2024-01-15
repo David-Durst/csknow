@@ -111,6 +111,8 @@ namespace csknow::feature_store {
             columnCTData[i].armor.resize(size, 0.);
             columnTData[i].helmet.resize(size, 0.);
             columnCTData[i].helmet.resize(size, 0.);
+            columnTData[i].areaId.resize(size, INVALID_ID);
+            columnCTData[i].areaId.resize(size, INVALID_ID);
             columnTData[i].areaIndex.resize(size, INVALID_ID);
             columnCTData[i].areaIndex.resize(size, INVALID_ID);
             columnTData[i].decreaseDistanceToC4Over5s.resize(size, false);
@@ -368,6 +370,8 @@ namespace csknow::feature_store {
                 columnCTData[i].armor[rowIndex] = 0.;
                 columnTData[i].helmet[rowIndex] = false;
                 columnCTData[i].helmet[rowIndex] = false;
+                columnTData[i].areaId[rowIndex] = INVALID_ID;
+                columnCTData[i].areaId[rowIndex] = INVALID_ID;
                 columnTData[i].areaIndex[rowIndex] = INVALID_ID;
                 columnCTData[i].areaIndex[rowIndex] = INVALID_ID;
                 columnTData[i].decreaseDistanceToC4Over5s[rowIndex] = false;
@@ -596,6 +600,7 @@ namespace csknow::feature_store {
             columnData[columnIndex].health[internalTickIndex] = static_cast<float>(btTeamPlayerData.health) / 100.;
             columnData[columnIndex].armor[internalTickIndex] = static_cast<float>(btTeamPlayerData.armor) / 100.;
             columnData[columnIndex].helmet[internalTickIndex] = btTeamPlayerData.helmet;
+            columnData[columnIndex].areaId[internalTickIndex] = btTeamPlayerData.curArea;
             columnData[columnIndex].areaIndex[internalTickIndex] = btTeamPlayerData.curAreaIndex;
             columnData[columnIndex].weaponId[internalTickIndex] = btTeamPlayerData.weaponId;
             columnData[columnIndex].scoped[internalTickIndex] = btTeamPlayerData.scoped;
@@ -1465,6 +1470,10 @@ namespace csknow::feature_store {
                                    columnData[columnPlayer].armor, hdf5FlatCreateProps);
                 file.createDataSet("/data/player helmet " + columnTeam + " " + iStr,
                                    columnData[columnPlayer].helmet, hdf5FlatCreateProps);
+                file.createDataSet("/data/player area id " + columnTeam + " " + iStr,
+                                   columnData[columnPlayer].areaId, hdf5FlatCreateProps);
+                file.createDataSet("/data/player area index " + columnTeam + " " + iStr,
+                                   columnData[columnPlayer].areaIndex, hdf5FlatCreateProps);
                 file.createDataSet("/data/player decrease distance to c4 over 5s " + columnTeam + " " + iStr,
                                    columnData[columnPlayer].decreaseDistanceToC4Over5s, hdf5FlatCreateProps);
                 file.createDataSet("/data/player decrease distance to c4 over 10s " + columnTeam + " " + iStr,

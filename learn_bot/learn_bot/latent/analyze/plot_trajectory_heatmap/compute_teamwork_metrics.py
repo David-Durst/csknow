@@ -12,6 +12,8 @@ title_to_num_teammates_to_distance_to_teammate_on_death: Dict[str, Dict[int, Lis
 title_to_num_enemies_to_my_team_vis_on_death: Dict[str, Dict[int, List[float]]] = {}
 title_to_num_enemies_to_distance_to_enemy_on_death: Dict[str, Dict[int, List[float]]] = {}
 title_to_blocking_events: Dict[str, List[float]] = {}
+title_to_num_multi_engagements: Dict[str, List[float]] = {}
+title_to_num_teammates_to_distance_multi_engagements: Dict[str, Dict[int, List[float]]] = {}
 
 
 def get_title_to_num_teammates_to_enemy_vis_on_death() -> Dict[str, Dict[int, List[float]]]:
@@ -34,15 +36,25 @@ def get_title_to_blocking_events() -> Dict[str, List[float]]:
     return title_to_blocking_events
 
 
+def get_title_to_num_multi_engagements() -> Dict[str, List[float]]:
+    return title_to_num_multi_engagements
+
+
+def get_title_to_num_teammates_to_distance_multi_engagements() -> Dict[str, Dict[int, List[float]]]:
+    return title_to_num_teammates_to_distance_multi_engagements
+
+
 def clear_teamwork_title_caches():
     global title_to_num_teammates_to_enemy_vis_on_death, title_to_num_enemies_to_my_team_vis_on_death, \
         title_to_num_teammates_to_distance_to_teammate_on_death, title_to_num_enemies_to_distance_to_enemy_on_death, \
-        title_to_blocking_events
+        title_to_blocking_events, title_to_num_multi_engagements, title_to_num_teammates_to_distance_multi_engagements
     title_to_num_teammates_to_enemy_vis_on_death = {}
     title_to_num_enemies_to_my_team_vis_on_death = {}
     title_to_num_teammates_to_distance_to_teammate_on_death = {}
     title_to_num_enemies_to_distance_to_enemy_on_death = {}
     title_to_blocking_events = {}
+    title_to_num_multi_engagements = {}
+    title_to_num_teammates_to_distance_multi_engagements = {}
 
 
 def compute_on_death_metrics(loaded_model: LoadedModel, trajectory_np: np.ndarray, trajectory_vis_df: pd.DataFrame,
@@ -146,6 +158,18 @@ def compute_any_time_metrics(loaded_model: LoadedModel, trajectory_np: np.ndarra
         cur_player_alive = trajectory_np[:, loaded_model.model.alive_columns[player_index]]
         cur_player_pos = trajectory_np[:,
             loaded_model.model.nested_players_pos_columns_tensor[player_index, 0]].astype(np.float64)
+        cur_player_seen_enemy_fov = trajectory_np[:, loaded_model.model.players_visibility_fov[player_index]]
+
+        ct_team = team_strs[0] in player_place_area_columns.player_id
+        if ct_team:
+            teammate_range = range(0, loaded_model.model.num_players_per_team)
+        else:
+            teammate_range = range(loaded_model.model.num_players_per_team, loaded_model.model.num_players)
+        teammate_alive_columns = [loaded_model.model.alive_columns[i] for i
+                                  in teammate_range
+                                  if i != player_index]
+        num_teammates_alive_np = trajectory_np[:, teammate_alive_columns].sum(axis=1)
+
         for other_player_index, other_player_place_area_columns in enumerate(specific_player_place_area_columns):
             # make sure not the same player and alive
             if other_player_index == player_index:
@@ -158,7 +182,8 @@ def compute_any_time_metrics(loaded_model: LoadedModel, trajectory_np: np.ndarra
                 loaded_model.model.nested_players_pos_columns_tensor[other_player_index, 0]].astype(np.float64)
             distance = np.sum((cur_player_pos - other_player_pos) ** 2.0, axis=1) ** 0.5
             # not blocking if either player dead
-            distance[~((cur_player_alive > 0.5) & (other_player_alive > 0.5))] = 1000.
+            both_players_alive = (cur_player_alive > 0.5) & (other_player_alive > 0.5)
+            distance[~both_players_alive] = 1000.
             blocking_events = float(np.sum(distance < 50.))
             # tmp cap as one round is weird
             if blocking_events > 40.:
@@ -168,6 +193,22 @@ def compute_any_time_metrics(loaded_model: LoadedModel, trajectory_np: np.ndarra
                 if title not in title_to_blocking_events:
                     title_to_blocking_events[title] = []
                 title_to_blocking_events[title].append(blocking_events)
+
+            other_player_seen_enemy_fov = trajectory_np[:, loaded_model.model.players_visibility_fov[other_player_index]]
+            both_players_seen_enemy = (cur_player_seen_enemy_fov < 1.) & (other_player_seen_enemy_fov < 1.)
+            multi_engagement_distances = distance[both_players_seen_enemy & both_players_alive]
+
+            for engagement_index in range(len(multi_engagement_distances)):
+                num_teammates_alive = num_teammates_alive_np[engagement_index]
+                if title not in title_to_num_teammates_to_distance_multi_engagements:
+                    title_to_num_teammates_to_distance_multi_engagements[title] = {}
+                if num_teammates_alive not in title_to_num_teammates_to_distance_multi_engagements[title]:
+                    title_to_num_teammates_to_distance_multi_engagements[title][num_teammates_alive] = []
+                title_to_num_teammates_to_distance_multi_engagements[title][num_teammates_alive].append(multi_engagement_distances[engagement_index])
+
+            if title not in title_to_num_multi_engagements:
+                title_to_num_multi_engagements[title] = []
+            title_to_num_multi_engagements[title].append(len(multi_engagement_distances))
 
 
 def compute_teamwork_metrics(loaded_model: LoadedModel, trajectory_np: np.ndarray, trajectory_vis_df: pd.DataFrame,

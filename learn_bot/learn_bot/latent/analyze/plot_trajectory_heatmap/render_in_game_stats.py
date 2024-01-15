@@ -10,7 +10,8 @@ from learn_bot.latent.analyze.compare_trajectories.process_trajectory_comparison
 from learn_bot.latent.analyze.plot_trajectory_heatmap.compute_teamwork_metrics import \
     get_title_to_num_teammates_to_enemy_vis_on_death, get_title_to_num_enemies_to_my_team_vis_on_death, \
     get_title_to_num_teammates_to_distance_to_teammate_on_death, get_title_to_num_enemies_to_distance_to_enemy_on_death, \
-    get_title_to_blocking_events
+    get_title_to_blocking_events, get_title_to_num_multi_engagements, \
+    get_title_to_num_teammates_to_distance_multi_engagements
 from learn_bot.latent.analyze.plot_trajectory_heatmap.filter_trajectories import TrajectoryFilterOptions
 from learn_bot.latent.analyze.plot_trajectory_heatmap.build_heatmaps import get_title_to_speeds, \
     get_title_to_lifetimes, get_title_to_shots_per_kill
@@ -97,10 +98,17 @@ def compute_metrics(trajectory_filter_options: TrajectoryFilterOptions, plots_pa
                                               plots_path / ('teammate_distances_' + str(trajectory_filter_options) + '.png'))
         compute_one_grouped_metric_histograms(get_title_to_num_enemies_to_distance_to_enemy_on_death(),
                                               'Enemy Distances On Death',
-                                              'Enemies', 100, 1000, 'Enemy Distances (Hammer Units',
+                                              'Enemies', 100, 1000, 'Enemy Distances (Hammer Units)',
                                               plots_path / ('enemy_distances_' + str(trajectory_filter_options) + '.png'))
+        compute_one_grouped_metric_histograms(get_title_to_num_teammates_to_distance_multi_engagements(),
+                                              'Distance On Multi Engagements',
+                                              'Teammates', 100, 1000, 'Teammate Distances (Hammer Units)',
+                                              plots_path / ('distances_multi_engagements_' + str(trajectory_filter_options) + '.png'))
         compute_one_metric_histograms(get_title_to_blocking_events(), 'Blocking Events', 1, 30., 'Blocking Events Per Round',
                                       plots_path / ('blocking_' + str(trajectory_filter_options) + '.png'))
+        compute_one_metric_histograms(get_title_to_num_multi_engagements(), 'Num Multi-Engagements', 1, 30.,
+                                      'Num Multi-Engagements Per Round',
+                                      plots_path / ('num_multi_engagements_' + str(trajectory_filter_options) + '.png'))
     if trajectory_filter_options.compute_speeds:
         # airstrafing can get you above normal weapon max speed
         compute_one_metric_histograms(get_title_to_speeds(), 'Weapon/Scoped Scaled Speed', 0.1, 1., 'Percent Max Speed',
