@@ -10,6 +10,8 @@ import torch
 from PIL import Image, ImageDraw
 
 from learn_bot.latent.analyze.compare_trajectories.plot_trajectories_and_events import title_font
+from learn_bot.latent.analyze.plot_trajectory_heatmap.compute_teamwork_metrics import compute_teamwork_metrics, \
+    clear_teamwork_title_caches
 from learn_bot.libs.pil_helpers import concat_horizontal, concat_vertical
 from learn_bot.latent.analyze.knn.plot_min_distance_rounds import game_tick_rate
 from learn_bot.latent.analyze.plot_trajectory_heatmap.filter_trajectories import TrajectoryFilterOptions
@@ -106,6 +108,7 @@ def clear_title_caches():
     title_to_shots_per_kill = {}
     title_to_key_events = {}
     title_to_team_to_key_event_pos = {}
+    clear_teamwork_title_caches()
 
 
 # data validation function, making sure I didn't miss any kill/killed/shots events
@@ -191,6 +194,10 @@ def plot_one_trajectory_dataset(loaded_model: LoadedModel, id_df: pd.DataFrame, 
         trajectory_id_df = id_df[trajectory_id_col == trajectory_id]
         trajectory_vis_df = vis_df[trajectory_id_col == trajectory_id]
         first_game_tick_number = trajectory_id_df[game_tick_number_column].iloc[0]
+
+        # if no filter, compute the teamwork metrics
+        if trajectory_filter_options.is_no_filter():
+            compute_teamwork_metrics(loaded_model, trajectory_np, trajectory_vis_df, title)
 
         # early terminate if requiring all players to be in regions and one fails
         num_out_bounds_ct = 0

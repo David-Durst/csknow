@@ -77,6 +77,9 @@ class TrajectoryFilterOptions:
     def computing_metrics(self) -> bool:
         return self.compute_speeds or self.compute_lifetimes or self.compute_shots_per_kill
 
+    def is_no_filter(self) -> bool:
+        return str(self) == 'no_filter'
+
 
 default_trajectory_filter_options = TrajectoryFilterOptions()
 

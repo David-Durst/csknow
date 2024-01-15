@@ -130,6 +130,8 @@ class TransformerNestedHiddenLatentModel(nn.Module):
             range_list_to_index_list(cts.get_name_ranges(True, True, contained_str="player fire"))
         self.players_visibility = \
             range_list_to_index_list(cts.get_name_ranges(True, True, contained_str="player enemy visible"))
+        self.players_visibility_fov = \
+            range_list_to_index_list(cts.get_name_ranges(True, True, contained_str="player enemy visible in last 5s fov"))
 
         self.players_all_temporal_columns = all_players_pos_columns + all_players_nearest_crosshair_to_enemy_columns
         self.players_non_temporal_columns = flatten_list([
