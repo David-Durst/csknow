@@ -1,8 +1,22 @@
 from enum import Enum, unique, auto, IntEnum
+from typing import List
 
 import torch
 
 from learn_bot.latent.place_area.pos_abs_from_delta_grid_or_radial import data_ticks_per_second, data_ticks_per_sim_tick
+
+place_names: List[str] = [
+    "BombsiteB", "Catwalk", "TopofMid", "ExtendedA", "TRamp", "BombsiteA", "TunnelStairs", "TSpawn", "OutsideTunnel",
+    "UnderA", "Short", "UpperTunnel", "CTSpawn", "LongA", "LongDoors", "OutsideLong", "LowerTunnel", "Hole",
+    "ShortStairs", "Side", "MidDoors", "BDoors", "Ramp", "ARamp", "Pit", "Middle"
+]
+
+
+def lookup_place_name(place_index: int) -> str:
+    if place_index < len(place_names):
+        return place_names[place_index]
+    else:
+        return "UNDEFINED"
 
 num_seconds_per_loop = 5
 num_time_steps = data_ticks_per_second // data_ticks_per_sim_tick * num_seconds_per_loop

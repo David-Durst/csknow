@@ -62,6 +62,15 @@ def get_player_index_on_team_column(player_index: int, team_str: str) -> list[st
 def get_player_ctteam_column(player_index: int, team_str: str) -> str:
     return "player ctTeam " + team_str + " " + str(player_index)
 
+def get_player_area_id_column(player_index: int, team_str: str) -> str:
+    return "player area id " + team_str + " " + str(player_index)
+
+def get_player_area_index_column(player_index: int, team_str: str) -> str:
+    return "player area index " + team_str + " " + str(player_index)
+
+def get_player_place_index_column(player_index: int, team_str: str) -> str:
+    return "player place index " + team_str + " " + str(player_index)
+
 def get_player_alive_column(player_index: int, team_str: str) -> str:
     return "alive " + team_str + " " + str(player_index)
 

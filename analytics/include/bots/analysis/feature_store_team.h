@@ -142,6 +142,7 @@ namespace csknow::feature_store {
             vector<float> health, armor;
             vector<bool> helmet;
             vector<int64_t> areaId, areaIndex;
+            vector<uint16_t> placeIndex;
             // control inputs
             vector<bool> decreaseDistanceToC4Over5s, decreaseDistanceToC4Over10s, decreaseDistanceToC4Over20s;
             //vector<float> distanceToASite, distanceToBSite;

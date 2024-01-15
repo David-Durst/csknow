@@ -78,6 +78,9 @@ class PlayerPlaceAreaColumns:
                                                                                 uniform_space=True)
         self.index_on_team = get_player_index_on_team_column(player_index, team_str)
         self.ct_team = get_player_ctteam_column(player_index, team_str)
+        self.area_id = get_player_area_id_column(player_index, team_str)
+        self.area_index = get_player_area_index_column(player_index, team_str)
+        self.place_index = get_player_place_index_column(player_index, team_str)
         self.alive = get_player_alive_column(player_index, team_str)
         self.distance_to_a_site = "distance to a site " + player_team_str(team_str, player_index)
         self.distance_to_b_site = "distance to b site " + player_team_str(team_str, player_index)
@@ -197,7 +200,8 @@ class PlayerPlaceAreaColumns:
         return result
 
     def get_vis_only_columns(self) -> list[str]:
-        return [self.player_id, self.player_hurt_next_tick, self.player_kill_next_tick, self.player_killed_next_tick,
+        return [self.player_id, self.area_id, self.area_index, self.place_index,
+                self.player_hurt_next_tick, self.player_kill_next_tick, self.player_killed_next_tick,
                 self.player_shots_cur_tick, self.player_weapon_id, self.player_scoped, self.player_helmet] \
             + self.vel + self.view_angle
 
