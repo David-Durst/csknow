@@ -1,5 +1,5 @@
 from enum import Enum, unique, auto, IntEnum
-from typing import List
+from typing import List, Dict
 
 import torch
 
@@ -10,6 +10,7 @@ place_names: List[str] = [
     "UnderA", "Short", "UpperTunnel", "CTSpawn", "LongA", "LongDoors", "OutsideLong", "LowerTunnel", "Hole",
     "ShortStairs", "Side", "MidDoors", "BDoors", "Ramp", "ARamp", "Pit", "Middle"
 ]
+place_name_to_index: Dict[str, int] = {s: i for i, s in enumerate(place_names)}
 
 
 def lookup_place_name(place_index: int) -> str:
