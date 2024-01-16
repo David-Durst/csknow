@@ -1,5 +1,6 @@
 from math import ceil
 from pathlib import Path
+from pprint import pformat
 from typing import List, Dict, Set, Union, Optional
 
 import numpy as np
@@ -9,7 +10,7 @@ from matplotlib import pyplot as plt
 from learn_bot.latent.analyze.compare_trajectories.process_trajectory_comparison import plot_hist, generate_bins
 from learn_bot.latent.analyze.plot_trajectory_heatmap.compute_teamwork_metrics import \
     get_title_to_places_to_round_counts, print_most_common_team_places, print_key_team_places, get_key_places_by_title, \
-    get_all_places_by_title, num_players_col, ct_team_col, all_key_places, grouped_key_places
+    get_all_places_by_title, num_players_col, ct_team_col, all_key_places, grouped_key_places, get_title_to_num_alive
 from learn_bot.latent.analyze.plot_trajectory_heatmap.filter_trajectories import TrajectoryFilterOptions
 from learn_bot.latent.analyze.plot_trajectory_heatmap.build_heatmaps import get_title_to_speeds, \
     get_title_to_lifetimes, get_title_to_shots_per_kill
@@ -115,6 +116,7 @@ def plot_most_common_places_by_title(plot_file_path: Path):
 
 def plot_key_places(plot_path: Path):
     set_pd_print_options()
+    title_to_num_alive = get_title_to_num_alive()
     for group, key_places in grouped_key_places.items():
         # plot key places
         key_places_by_title = get_key_places_by_title(key_places)
@@ -122,6 +124,53 @@ def plot_key_places(plot_path: Path):
         plt.savefig(plot_path / (group.lower().replace(' ', '_') + '.png'), bbox_inches='tight')
 
         titles = key_places_by_title.columns.tolist()
+
+        title_to_total_ticks = {}
+        title_to_total_rounds = {}
+        title_to_num_players_percent_of_ticks = {}
+        title_to_num_players_total_rounds = {}
+        title_to_num_players_rounds_in_group = {}
+        title_to_num_players_percent_of_rounds = {}
+        for title in titles:
+            # get overall data per title
+            title_to_total_ticks[title] = title_to_num_alive[title].num_overall_ticks
+            title_to_total_rounds[title] = title_to_num_alive[title].num_overall_rounds
+            title_to_num_players_rounds_in_group[title] = key_places_by_title[title].sum()
+
+            # get data that requires looking up by team in aggregate metrics
+            if key_places[0].ct_team:
+                title_to_num_players_percent_of_ticks[title] = \
+                    title_to_num_alive[title].num_ct_alive_to_num_ticks[key_places[0].num_players()] / \
+                    title_to_total_ticks[title]
+                title_to_num_players_total_rounds[title] = \
+                    title_to_num_alive[title].num_ct_alive_to_num_rounds[key_places[0].num_players()]
+            else:
+                title_to_num_players_percent_of_ticks[title] = \
+                    title_to_num_alive[title].num_t_alive_to_num_ticks[key_places[0].num_players()] / \
+                    title_to_total_ticks[title]
+                title_to_num_players_total_rounds[title] = \
+                    title_to_num_alive[title].num_t_alive_to_num_rounds[key_places[0].num_players()]
+
+            # this depends on data already looked up by team
+            title_to_num_players_percent_of_rounds[title] = \
+                title_to_num_players_rounds_in_group[title] / title_to_num_players_total_rounds[title]
+
+        plot_name = group.lower().replace(' ', '_') + '_pct'
+        with open(plot_path / (plot_name + '_num_rounds_ticks.txt'), 'w') as f:
+            f.write('total ticks\n')
+            f.write(pformat(title_to_total_ticks, indent=4))
+            f.write('total rounds\n')
+            f.write(pformat(title_to_total_rounds, indent=4))
+            f.write('total num players percent of ticks\n')
+            f.write(pformat(title_to_num_players_percent_of_ticks, indent=4))
+            f.write('total num players total rounds\n')
+            f.write(pformat(title_to_num_players_total_rounds, indent=4))
+            f.write('total num players rounds in group\n')
+            f.write(pformat(title_to_num_players_rounds_in_group, indent=4))
+            f.write('total num players percent rounds in group\n')
+            f.write(pformat(title_to_num_players_percent_of_rounds, indent=4))
+
+
         if len(titles) > 1:
             #title_to_percent_diff: Dict[str, pd.Series] = {}
             #for title in titles[1:]:
@@ -150,7 +199,6 @@ def plot_key_places(plot_path: Path):
             plt.xticks(rotation=90)
             #title_to_percent_mad_diff_series = pd.Series(title_to_percent_mad_diff)
             #title_to_percent_mad_diff_series.plot(kind='bar')
-            plot_name = group.lower().replace(' ', '_') + '_pct'
             plt.savefig(plot_path / (plot_name + '.png'), bbox_inches='tight')
             with open(plot_path / (plot_name + '.txt'), 'w') as f:
                 f.write(str(title_to_percent_diff_df.describe()))

@@ -182,9 +182,37 @@ def print_key_team_places(team_place_counts: Dict[TeamPlaces, int]):
             print(f"{str(key_place)}: {0}")
 
 
+class PlayersAliveData:
+    num_ct_alive_to_num_ticks = Dict[int, int]
+    num_ct_alive_to_num_rounds = Dict[int, int]
+    num_t_alive_to_num_ticks = Dict[int, int]
+    num_t_alive_to_num_rounds = Dict[int, int]
+    num_overall_ticks = int
+    num_overall_rounds = int
+
+    def __init__(self):
+        self.num_ct_alive_to_num_ticks = {}
+        self.num_ct_alive_to_num_rounds = {}
+        self.num_t_alive_to_num_ticks = {}
+        self.num_t_alive_to_num_rounds = {}
+        for i in range(len(specific_player_place_area_columns) // 2):
+            self.num_ct_alive_to_num_ticks[i] = 0
+            self.num_ct_alive_to_num_rounds[i] = 0
+            self.num_t_alive_to_num_ticks[i] = 0
+            self.num_t_alive_to_num_rounds[i] = 0
+        self.num_overall_ticks = 0
+        self.num_overall_rounds = 0
+
+
+title_to_num_alive: Dict[str, PlayersAliveData] = {}
+
+
 def get_title_to_places_to_round_counts() -> Dict[str, Dict[TeamPlaces, int]]:
     return title_to_places_to_round_counts
 
+
+def get_title_to_num_alive() -> Dict[str, PlayersAliveData]:
+    return title_to_num_alive
 
 #def get_title_to_num_teammates_to_enemy_vis_on_death() -> Dict[str, Dict[int, List[float]]]:
 #    return title_to_num_teammates_to_enemy_vis_on_death
@@ -215,8 +243,9 @@ def get_title_to_places_to_round_counts() -> Dict[str, Dict[TeamPlaces, int]]:
 
 
 def clear_teamwork_title_caches():
-    global title_to_places_to_round_counts
+    global title_to_places_to_round_counts, title_to_num_alive
     title_to_places_to_round_counts = {}
+    title_to_num_alive = {}
     #global title_to_num_teammates_to_enemy_vis_on_death, title_to_num_enemies_to_my_team_vis_on_death, \
     #    title_to_num_teammates_to_distance_to_teammate_on_death, title_to_num_enemies_to_distance_to_enemy_on_death, \
     #    title_to_blocking_events, title_to_num_multi_engagements, title_to_num_teammates_to_distance_multi_engagements
@@ -231,13 +260,18 @@ def clear_teamwork_title_caches():
 
 def compute_round_metrics(loaded_model: LoadedModel, trajectory_np: np.ndarray, trajectory_vis_df: pd.DataFrame,
                              title: str):
+    if title not in title_to_num_alive:
+        title_to_num_alive[title] = PlayersAliveData()
+    title_to_num_alive[title].num_overall_ticks += len(trajectory_np)
+    title_to_num_alive[title].num_overall_rounds += 1
+
     planted_a_np = trajectory_np[:, loaded_model.model.c4_planted_columns[0]] > 0.5
     for ct_team in [True, False]:
         if ct_team:
             team_range = range(0, loaded_model.model.num_players_per_team)
         else:
             team_range = range(loaded_model.model.num_players_per_team, loaded_model.model.num_players)
-        #alive_columns = [loaded_model.model.alive_columns[i] for i in team_range]
+        alive_columns = [loaded_model.model.alive_columns[i] for i in team_range]
 
         place_columns = [specific_player_place_area_columns[i].place_index for i in team_range]
         places_np = trajectory_vis_df.loc[:, place_columns].to_numpy()
@@ -254,6 +288,16 @@ def compute_round_metrics(loaded_model: LoadedModel, trajectory_np: np.ndarray, 
             if team_place not in title_to_places_to_round_counts[title]:
                 title_to_places_to_round_counts[title][team_place] = 0
             title_to_places_to_round_counts[title][team_place] += 1
+
+        for i in range(loaded_model.model.num_players_per_team):
+            num_ticks_with_i_alive = (trajectory_np[:, alive_columns].sum(axis=1) == i).sum()
+            if num_ticks_with_i_alive > 0:
+                if ct_team:
+                    title_to_num_alive[title].num_ct_alive_to_num_ticks[i] += num_ticks_with_i_alive
+                    title_to_num_alive[title].num_ct_alive_to_num_rounds[i] += 1
+                else:
+                    title_to_num_alive[title].num_t_alive_to_num_ticks[i] += num_ticks_with_i_alive
+                    title_to_num_alive[title].num_t_alive_to_num_rounds[i] += 1
 
 
 
