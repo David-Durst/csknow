@@ -111,7 +111,7 @@ defense_spread = [
 all_key_places_str = 'All Places'
 all_key_places = offense_two_man_flanks + offense_two_man_executes + defense_default + defense_together_off + defense_spread
 grouped_key_places: Dict[str, List[TeamPlaces]] = {
-    offense_two_man_executes_str: offense_two_man_flanks,
+    offense_two_man_flanks_str: offense_two_man_flanks,
     offense_two_man_executes_str: offense_two_man_executes,
     defense_default_str: defense_default,
     defense_together_off_str: defense_together_off,
@@ -135,7 +135,8 @@ def get_key_places_by_title(key_places: List[TeamPlaces]) -> pd.DataFrame:
     key_place_counts: List[pd.Series] = []
     for title, team_place_count in title_to_places_to_round_counts.items():
         titles.append(title)
-        key_place_counts.append(get_key_place_counts(key_places, team_place_count))
+        # need to fill in empty places (one title may have them not in another) so dataframe is rectangular
+        key_place_counts.append(get_key_place_counts(team_place_count, key_places))
     return pd.concat(key_place_counts, axis=1, keys=titles)
 
 num_players_col = 'Number of Players'

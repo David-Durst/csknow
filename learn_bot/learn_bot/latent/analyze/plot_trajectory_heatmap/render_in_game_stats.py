@@ -120,13 +120,24 @@ def plot_key_places(plot_path: Path):
         plt.savefig(plot_path / (group.lower().replace(' ', '_') + '.png'), bbox_inches='tight')
 
         titles = key_places_by_title.columns.tolist()
-        title_to_percent_mad_diff: Dict[str, float] = {}
-        for title in titles[1:]:
-            title_to_percent_mad_diff[title] = \
-                ((key_places_by_title[titles[0]] - key_places_by_title[title]) / key_places_by_title[titles[0]]).abs().mean()
-        title_to_percent_mad_diff_series = pd.Series(title_to_percent_mad_diff)
-        title_to_percent_mad_diff_series.plot(kind='bar')
-        plt.savefig(plot_path / (group.lower().replace(' ', '_') + '_pct.png'), bbox_inches='tight')
+        if len(titles) > 1:
+            plt.clf()
+            plt.close()
+            title_to_percent_mad_diff: Dict[str, float] = {}
+            for title in titles[1:]:
+                title_to_percent_mad_diff[title] = \
+                    ((key_places_by_title[titles[0]] - key_places_by_title[title]) / key_places_by_title[titles[0]]).abs().mean()
+            fig, ax = plt.subplots()
+            ax.bar(title_to_percent_mad_diff.keys(), title_to_percent_mad_diff.values())
+            ax.set_ylabel('Percent MAD')
+            ax.set_title(f"{group} {title} Percent MAD")
+            plt.xticks(rotation=90)
+            #title_to_percent_mad_diff_series = pd.Series(title_to_percent_mad_diff)
+            #title_to_percent_mad_diff_series.plot(kind='bar')
+            plt.savefig(plot_path / (group.lower().replace(' ', '_') + '_pct.png'), bbox_inches='tight')
+            print(group)
+            print(key_places_by_title)
+            print(pd.Series(title_to_percent_mad_diff))
 
 
 def compute_metrics(trajectory_filter_options: TrajectoryFilterOptions, plots_path: Path):
