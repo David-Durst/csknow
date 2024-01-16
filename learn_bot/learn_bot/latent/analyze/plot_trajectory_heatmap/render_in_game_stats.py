@@ -129,8 +129,10 @@ def plot_key_places(plot_path: Path):
         title_to_total_rounds = {}
         title_to_num_players_percent_of_ticks = {}
         title_to_num_players_total_rounds = {}
+        title_to_num_players_at_start_total_rounds = {}
         title_to_num_players_rounds_in_group = {}
         title_to_num_players_percent_of_rounds = {}
+        title_to_num_players_percent_of_start_rounds = {}
         for title in titles:
             # get overall data per title
             title_to_total_ticks[title] = title_to_num_alive[title].num_overall_ticks
@@ -144,31 +146,41 @@ def plot_key_places(plot_path: Path):
                     title_to_total_ticks[title]
                 title_to_num_players_total_rounds[title] = \
                     title_to_num_alive[title].num_ct_alive_to_num_rounds[key_places[0].num_players()]
+                title_to_num_players_at_start_total_rounds[title] = \
+                    title_to_num_alive[title].num_ct_alive_at_start_to_num_rounds[key_places[0].num_players()]
             else:
                 title_to_num_players_percent_of_ticks[title] = \
                     title_to_num_alive[title].num_t_alive_to_num_ticks[key_places[0].num_players()] / \
                     title_to_total_ticks[title]
                 title_to_num_players_total_rounds[title] = \
                     title_to_num_alive[title].num_t_alive_to_num_rounds[key_places[0].num_players()]
+                title_to_num_players_at_start_total_rounds[title] = \
+                    title_to_num_alive[title].num_t_alive_at_start_to_num_rounds[key_places[0].num_players()]
 
             # this depends on data already looked up by team
             title_to_num_players_percent_of_rounds[title] = \
                 title_to_num_players_rounds_in_group[title] / title_to_num_players_total_rounds[title]
+            title_to_num_players_percent_of_start_rounds[title] = \
+                title_to_num_players_rounds_in_group[title] / title_to_num_players_at_start_total_rounds[title]
 
         plot_name = group.lower().replace(' ', '_') + '_pct'
         with open(plot_path / (plot_name + '_num_rounds_ticks.txt'), 'w') as f:
             f.write('total ticks\n')
             f.write(pformat(title_to_total_ticks, indent=4))
-            f.write('total rounds\n')
+            f.write('\ntotal rounds\n')
             f.write(pformat(title_to_total_rounds, indent=4))
-            f.write('total num players percent of ticks\n')
+            f.write('\ntotal num players percent of ticks\n')
             f.write(pformat(title_to_num_players_percent_of_ticks, indent=4))
-            f.write('total num players total rounds\n')
+            f.write('\nnum players total rounds\n')
             f.write(pformat(title_to_num_players_total_rounds, indent=4))
-            f.write('total num players rounds in group\n')
+            f.write('\nnum players at start total rounds\n')
+            f.write(pformat(title_to_num_players_at_start_total_rounds, indent=4))
+            f.write('\ntotal num players rounds in group\n')
             f.write(pformat(title_to_num_players_rounds_in_group, indent=4))
-            f.write('total num players percent rounds in group\n')
+            f.write('\npercent num players rounds in group\n')
             f.write(pformat(title_to_num_players_percent_of_rounds, indent=4))
+            f.write('\npercent num players rounds at start in group\n')
+            f.write(pformat(title_to_num_players_percent_of_start_rounds, indent=4))
 
 
         if len(titles) > 1:

@@ -193,13 +193,17 @@ class PlayersAliveData:
     def __init__(self):
         self.num_ct_alive_to_num_ticks = {}
         self.num_ct_alive_to_num_rounds = {}
+        self.num_ct_alive_at_start_to_num_rounds = {}
         self.num_t_alive_to_num_ticks = {}
         self.num_t_alive_to_num_rounds = {}
+        self.num_t_alive_at_start_to_num_rounds = {}
         for i in range(len(specific_player_place_area_columns) // 2):
             self.num_ct_alive_to_num_ticks[i] = 0
             self.num_ct_alive_to_num_rounds[i] = 0
+            self.num_ct_alive_at_start_to_num_rounds[i] = 0
             self.num_t_alive_to_num_ticks[i] = 0
             self.num_t_alive_to_num_rounds[i] = 0
+            self.num_t_alive_at_start_to_num_rounds[i] = 0
         self.num_overall_ticks = 0
         self.num_overall_rounds = 0
 
@@ -290,6 +294,12 @@ def compute_round_metrics(loaded_model: LoadedModel, trajectory_np: np.ndarray, 
             title_to_places_to_round_counts[title][team_place] += 1
 
         for i in range(loaded_model.model.num_players_per_team):
+            i_alive_at_start = trajectory_np[0, alive_columns].sum() == i
+            if i_alive_at_start:
+                if ct_team:
+                    title_to_num_alive[title].num_ct_alive_at_start_to_num_rounds[i] += 1
+                else:
+                    title_to_num_alive[title].num_t_alive_at_start_to_num_rounds[i] += 1
             num_ticks_with_i_alive = (trajectory_np[:, alive_columns].sum(axis=1) == i).sum()
             if num_ticks_with_i_alive > 0:
                 if ct_team:
