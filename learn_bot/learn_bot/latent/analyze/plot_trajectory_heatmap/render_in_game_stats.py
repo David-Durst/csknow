@@ -8,7 +8,8 @@ from matplotlib import pyplot as plt
 
 from learn_bot.latent.analyze.compare_trajectories.process_trajectory_comparison import plot_hist, generate_bins
 from learn_bot.latent.analyze.plot_trajectory_heatmap.compute_teamwork_metrics import \
-    get_title_to_places_to_round_counts, print_most_common_team_places, print_key_team_places, get_key_places_by_title
+    get_title_to_places_to_round_counts, print_most_common_team_places, print_key_team_places, get_key_places_by_title, \
+    get_all_places_by_title, num_players_col, ct_team_col
 from learn_bot.latent.analyze.plot_trajectory_heatmap.filter_trajectories import TrajectoryFilterOptions
 from learn_bot.latent.analyze.plot_trajectory_heatmap.build_heatmaps import get_title_to_speeds, \
     get_title_to_lifetimes, get_title_to_shots_per_kill
@@ -79,9 +80,41 @@ def compute_one_grouped_metric_histograms(title_to_groups_to_values: Dict[str, D
             axs[title_index, group_index].set_xlabel(x_label)
     plt.savefig(plot_file_path)
 
+# want number of places with (1) 2 or 3 players and (2) by team - 4 rows
+# first row is 2 players, CT
+# second row is 2 players, T
+# third row is 3 players, CT
+# fourth row is 3 players, T
+# columns are titles
+def plot_most_common_places_by_title(plot_file_path: Path):
+    key_places_by_title = get_key_places_by_title()
+    places_by_title = get_all_places_by_title()
+
+    titles = key_places_by_title.columns.tolist()
+    num_options = 4
+    fig = plt.figure(figsize=(fig_length * len(titles), fig_length * num_options), constrained_layout=True)
+    axs = fig.subplots(num_options, len(titles), squeeze=False)
+    num_players_options = [2, 2, 3, 3]
+    ct_team_options = [True, False, True, False]
+    for option_index in range(num_options):
+        for title_index, title in enumerate(titles):
+            num_players_option = num_players_options[option_index]
+            ct_team_option = ct_team_options[option_index]
+            sorted_places_by_title = places_by_title.sort_values(by=title, ascending=False)
+            sorted_places_by_title = sorted_places_by_title[
+                (sorted_places_by_title[num_players_col] == num_players_option) &
+                (sorted_places_by_title[ct_team_col] == ct_team_option)]
+            sorted_places_by_title = sorted_places_by_title.iloc[:4]
+            sorted_places_by_title.loc[:, titles].plot(kind='bar', rot=45, title=f"{title} "
+                                                                                 f"{num_players_option} Players "
+                                                                                 f"{'CT' if ct_team_option else 'T'}",
+                                                       ax=axs[option_index, title_index])
+    plt.savefig(plot_file_path)
+
 
 def compute_metrics(trajectory_filter_options: TrajectoryFilterOptions, plots_path: Path):
     if trajectory_filter_options.is_no_filter():
+        plot_most_common_places_by_title(plots_path / 'most_popular_places.png')
         key_places_by_title = get_key_places_by_title()
         key_places_by_title.plot(kind='bar', rot=45, title='Rounds With Team Formations')
         plt.savefig(plots_path / 'key_places.png', bbox_inches='tight')

@@ -41,6 +41,9 @@ class TeamPlaces:
         planted_str = 'A' if self.planted_a else 'B'
         return f"{ct_str} {planted_str} {','.join([place_names[p] for p in self.places])}"
 
+    def num_players(self) -> int:
+        return len(self.places)
+
 
 title_to_places_to_round_counts: Dict[str, Dict[TeamPlaces, int]] = {}
 
@@ -81,14 +84,38 @@ def get_key_places_by_title() -> pd.DataFrame:
         key_place_counts.append(get_key_place_counts(team_place_count))
     return pd.concat(key_place_counts, axis=1, keys=titles)
 
+num_players_col = 'Number of Players'
+ct_team_col = 'CT Team'
+planted_a_col = 'Planted A'
 
-#def get_all_places_by_title() -> pd.DataFrame:
-#    title_to_place_count: List[str] = []
-#    all_places =
-#    for title, team_place_count in title_to_places_to_round_counts.items():
-#        titles.append(title)
-#        key_place_counts.append(get_key_place_counts(team_place_count))
-#    return pd.concat(key_place_counts, axis=1, keys=titles)
+
+def get_all_places_by_title() -> pd.DataFrame:
+    # get all places (as some may be in one title and nother others)
+    all_places: Set[TeamPlaces] = set()
+    for _, team_place_count in title_to_places_to_round_counts.items():
+        for team_place, round_count in team_place_count.items():
+            all_places.add(team_place)
+    title_to_places_str_to_round_count: Dict[str, Dict[str, int]] = {}
+    for title, team_place_count in title_to_places_to_round_counts.items():
+        title_to_places_str_to_round_count[title] = {}
+        for place in all_places:
+            if place in team_place_count:
+                title_to_places_str_to_round_count[title][str(place)] = team_place_count[place]
+            else:
+                title_to_places_str_to_round_count[title][str(place)] = 0
+    title_to_place_count_series = {title: pd.Series(place_counts) for title, place_counts in
+                                   title_to_places_str_to_round_count.items()}
+    places_to_num_players: Dict[str, int] = {}
+    places_to_ct: Dict[str, bool] = {}
+    places_to_planted_a: Dict[str, bool] = {}
+    for place in all_places:
+        places_to_num_players[str(place)] = place.num_players()
+        places_to_ct[str(place)] = place.ct_team
+        places_to_planted_a[str(place)] = place.planted_a
+    title_to_place_count_series[num_players_col] = pd.Series(places_to_num_players)
+    title_to_place_count_series[ct_team_col] = pd.Series(places_to_ct)
+    title_to_place_count_series[planted_a_col] = pd.Series(places_to_planted_a)
+    return pd.concat(title_to_place_count_series.values(), axis=1, keys=title_to_place_count_series.keys())
 
 
 def print_key_team_places(team_place_counts: Dict[TeamPlaces, int]):
