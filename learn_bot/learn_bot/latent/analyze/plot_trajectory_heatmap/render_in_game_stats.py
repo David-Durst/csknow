@@ -9,7 +9,7 @@ from matplotlib import pyplot as plt
 from learn_bot.latent.analyze.compare_trajectories.process_trajectory_comparison import plot_hist, generate_bins
 from learn_bot.latent.analyze.plot_trajectory_heatmap.compute_teamwork_metrics import \
     get_title_to_places_to_round_counts, print_most_common_team_places, print_key_team_places, get_key_places_by_title, \
-    get_all_places_by_title, num_players_col, ct_team_col
+    get_all_places_by_title, num_players_col, ct_team_col, all_key_places, grouped_key_places
 from learn_bot.latent.analyze.plot_trajectory_heatmap.filter_trajectories import TrajectoryFilterOptions
 from learn_bot.latent.analyze.plot_trajectory_heatmap.build_heatmaps import get_title_to_speeds, \
     get_title_to_lifetimes, get_title_to_shots_per_kill
@@ -87,7 +87,7 @@ def compute_one_grouped_metric_histograms(title_to_groups_to_values: Dict[str, D
 # fourth row is 3 players, T
 # columns are titles
 def plot_most_common_places_by_title(plot_file_path: Path):
-    key_places_by_title = get_key_places_by_title()
+    key_places_by_title = get_key_places_by_title(all_key_places)
     places_by_title = get_all_places_by_title()
 
     titles = key_places_by_title.columns.tolist()
@@ -112,12 +112,30 @@ def plot_most_common_places_by_title(plot_file_path: Path):
     plt.savefig(plot_file_path)
 
 
+def plot_key_places(plot_path: Path):
+    for group, key_places in grouped_key_places.items():
+        # plot key places
+        key_places_by_title = get_key_places_by_title(key_places)
+        key_places_by_title.plot(kind='bar', rot=90, title=group)
+        plt.savefig(plot_path / (group.lower().replace(' ', '_') + '.png'), bbox_inches='tight')
+
+        titles = key_places_by_title.columns.tolist()
+        title_to_percent_mad_diff: Dict[str, float] = {}
+        for title in titles[1:]:
+            title_to_percent_mad_diff[title] = \
+                ((key_places_by_title[titles[0]] - key_places_by_title[title]) / key_places_by_title[titles[0]]).abs().mean()
+        title_to_percent_mad_diff_series = pd.Series(title_to_percent_mad_diff)
+        title_to_percent_mad_diff_series.plot(kind='bar')
+        plt.savefig(plot_path / (group.lower().replace(' ', '_') + '_pct.png'), bbox_inches='tight')
+
+
 def compute_metrics(trajectory_filter_options: TrajectoryFilterOptions, plots_path: Path):
     if trajectory_filter_options.is_no_filter():
-        plot_most_common_places_by_title(plots_path / 'most_popular_places.png')
-        key_places_by_title = get_key_places_by_title()
-        key_places_by_title.plot(kind='bar', rot=45, title='Rounds With Team Formations')
-        plt.savefig(plots_path / 'key_places.png', bbox_inches='tight')
+        #plot_most_common_places_by_title(plots_path / 'most_popular_places.png')
+        #key_places_by_title = get_key_places_by_title()
+        #key_places_by_title.plot(kind='bar', rot=90, title='Rounds With Team Formations')
+        #plt.savefig(plots_path / 'key_places.png', bbox_inches='tight')
+        plot_key_places(plots_path)
     #if trajectory_filter_options.is_no_filter():
         #compute_one_grouped_metric_histograms(get_title_to_num_teammates_to_enemy_vis_on_death(), 'Teammate Saw Enemy On Death',
         #                                      'Teammates', 0.1, 1., 'Min Time of Alive Teammates (s)',

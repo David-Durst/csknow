@@ -54,19 +54,73 @@ def print_most_common_team_places(team_place_counts: Dict[TeamPlaces, int]):
     print('\n'.join([f"{str(tp)}: {v}" for tp, v in sorted_place_counts[:20]]))
 
 
-key_places = [
-    TeamPlaces(True, True, ['ShortStairs', 'LongDoors', 'CTSpawn']),
-    TeamPlaces(True, True, ['ShortStairs', 'LongDoors']),
-    TeamPlaces(False, True, ['BombsiteA', 'LongA', 'ExtendedA']),
-    TeamPlaces(False, True, ['ExtendedA', 'ExtendedA']),
-    TeamPlaces(True, False, ['BDoors', 'BDoors', 'UpperTunnel']),
+# offense
+offense_two_man_flanks_str = 'Offense Flanks'
+offense_two_man_flanks = [
+    TeamPlaces(True, True, ['ShortStairs', 'LongA']),
+    TeamPlaces(True, True, ['ShortStairs', 'CTSpawn']),
+    TeamPlaces(True, True, ['CTSpawn', 'LongA']),
     TeamPlaces(True, False, ['BDoors', 'UpperTunnel']),
-    TeamPlaces(False, False, ['BombsiteB', 'UpperTunnel']),
-    TeamPlaces(False, False, ['BDoors', 'Hole']),
+    TeamPlaces(True, False, ['Hole', 'UpperTunnel']),
+]
+offense_two_man_executes_str = 'Offense Executes'
+offense_two_man_executes = [
+    TeamPlaces(True, True, ['ExtendedA', 'UnderA']),
+    TeamPlaces(True, True, ['ExtendedA', 'LongA']),
+    TeamPlaces(True, True, ['UnderA', 'LongA']),
+    TeamPlaces(True, False, ['BombsiteB', 'Hole']),
+    TeamPlaces(True, False, ['BombsiteB', 'BombsiteB']),
 ]
 
+# defense
+defense_default_str = 'Defense Default'
+defense_default = [
+    # default a
+    TeamPlaces(False, True, ['BombsiteA', 'BombsiteA']),
+    TeamPlaces(False, True, ['BombsiteA', 'ARamp']),
+    # default B
+    TeamPlaces(False, False, ['BombsiteB', 'BombsiteB']),
+    TeamPlaces(False, False, ['BombsiteB', 'UpperTunnel']),
+]
+defense_together_off_str = 'Defense Together Off'
+defense_together_off = [
+    # a together but off
+    TeamPlaces(False, True, ['LongA', 'LongA']),
+    TeamPlaces(False, True, ['ExtendedA', 'ExtendedA']),
+    # together but off
+    TeamPlaces(False, False, ['BDoors', 'BDoors']),
+    TeamPlaces(False, False, ['BDoors', 'Hole']),
+    TeamPlaces(False, False, ['UpperTunnel', 'UpperTunnel']),
+]
+defense_spread_str = 'Defense Spread'
+defense_spread = [
+    # spread out
+    TeamPlaces(False, True, ['BombsiteA', 'LongA', 'ExtendedA']),
+    TeamPlaces(False, True, ['BombsiteA', 'BombsiteA', 'LongA']),
+    # spread out
+    TeamPlaces(False, False, ['BombsiteB', 'BDoors', 'UpperTunnel']),
+    TeamPlaces(False, False, ['BombsiteB', 'BombsiteB', 'UpperTunnel']),
+]
+#key_places = [
+#    #TeamPlaces(True, True, ['ShortStairs', 'LongDoors', 'CTSpawn']),
+#    #TeamPlaces(True, True, ['ShortStairs', 'LongDoors']),
+#    #TeamPlaces(True, True, ['ShortStairs', 'ShortStairs', 'UnderA']),
+#    #TeamPlaces(True, True, ['ShortStairs', 'ShortStairs', 'LongDoors']),
+#    #TeamPlaces(True, True, ['ShortStairs', 'LongDoors']),
+#]
+all_key_places_str = 'All Places'
+all_key_places = offense_two_man_flanks + offense_two_man_executes + defense_default + defense_together_off + defense_spread
+grouped_key_places: Dict[str, List[TeamPlaces]] = {
+    offense_two_man_executes_str: offense_two_man_flanks,
+    offense_two_man_executes_str: offense_two_man_executes,
+    defense_default_str: defense_default,
+    defense_together_off_str: defense_together_off,
+    defense_spread_str: defense_spread,
+    all_key_places_str: all_key_places
+}
 
-def get_key_place_counts(team_place_counts: Dict[TeamPlaces, int]) -> pd.Series:
+
+def get_key_place_counts(team_place_counts: Dict[TeamPlaces, int], key_places: List[TeamPlaces]) -> pd.Series:
     key_team_place_counts = {}
     for key_place in key_places:
         if key_place in team_place_counts:
@@ -76,12 +130,12 @@ def get_key_place_counts(team_place_counts: Dict[TeamPlaces, int]) -> pd.Series:
     return pd.Series(key_team_place_counts)
 
 
-def get_key_places_by_title() -> pd.DataFrame:
+def get_key_places_by_title(key_places: List[TeamPlaces]) -> pd.DataFrame:
     titles: List[str] = []
     key_place_counts: List[pd.Series] = []
     for title, team_place_count in title_to_places_to_round_counts.items():
         titles.append(title)
-        key_place_counts.append(get_key_place_counts(team_place_count))
+        key_place_counts.append(get_key_place_counts(key_places, team_place_count))
     return pd.concat(key_place_counts, axis=1, keys=titles)
 
 num_players_col = 'Number of Players'
@@ -119,7 +173,7 @@ def get_all_places_by_title() -> pd.DataFrame:
 
 
 def print_key_team_places(team_place_counts: Dict[TeamPlaces, int]):
-    for key_place in key_places:
+    for key_place in all_key_places:
         if key_place in team_place_counts:
             print(f"{str(key_place)}: {team_place_counts[key_place]}")
         else:
