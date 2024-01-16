@@ -13,6 +13,7 @@ from learn_bot.latent.analyze.plot_trajectory_heatmap.compute_teamwork_metrics i
 from learn_bot.latent.analyze.plot_trajectory_heatmap.filter_trajectories import TrajectoryFilterOptions
 from learn_bot.latent.analyze.plot_trajectory_heatmap.build_heatmaps import get_title_to_speeds, \
     get_title_to_lifetimes, get_title_to_shots_per_kill
+from learn_bot.libs.pd_printing import set_pd_print_options
 
 fig_length = 6
 
@@ -113,6 +114,7 @@ def plot_most_common_places_by_title(plot_file_path: Path):
 
 
 def plot_key_places(plot_path: Path):
+    set_pd_print_options()
     for group, key_places in grouped_key_places.items():
         # plot key places
         key_places_by_title = get_key_places_by_title(key_places)
@@ -121,12 +123,26 @@ def plot_key_places(plot_path: Path):
 
         titles = key_places_by_title.columns.tolist()
         if len(titles) > 1:
-            plt.clf()
-            plt.close()
+            #title_to_percent_diff: Dict[str, pd.Series] = {}
+            #for title in titles[1:]:
+            #    title_to_percent_diff[title] = \
+            #        ((key_places_by_title[titles[0]] - key_places_by_title[title]) / key_places_by_title[titles[0]]).abs()
+            #title_to_percent_diff_df = pd.concat(title_to_percent_diff.values(), axis=1, keys=title_to_percent_diff.keys())
+            #title_to_percent_diff_df.plot(kind='box')
+            #plt.title(f"{group} Percent Diff to {titles[0]}")
+            ##title_to_percent_mad_diff_series = pd.Series(title_to_percent_mad_diff)
+            ##title_to_percent_mad_diff_series.plot(kind='bar')
+            #plt.savefig(plot_path / (group.lower().replace(' ', '_') + '_pct.png'), bbox_inches='tight')
+
             title_to_percent_mad_diff: Dict[str, float] = {}
+            title_to_abs_percent_diff: Dict[str, pd.Series] = {}
             for title in titles[1:]:
                 title_to_percent_mad_diff[title] = \
                     ((key_places_by_title[titles[0]] - key_places_by_title[title]) / key_places_by_title[titles[0]]).abs().mean()
+                title_to_abs_percent_diff[title] = \
+                    ((key_places_by_title[titles[0]] - key_places_by_title[title]) / key_places_by_title[titles[0]]).abs()
+            title_to_percent_diff_df = pd.concat(title_to_abs_percent_diff.values(), axis=1,
+                                                 keys=title_to_abs_percent_diff.keys())
             fig, ax = plt.subplots()
             ax.bar(title_to_percent_mad_diff.keys(), title_to_percent_mad_diff.values())
             ax.set_ylabel('Percent MAD')
@@ -134,9 +150,12 @@ def plot_key_places(plot_path: Path):
             plt.xticks(rotation=90)
             #title_to_percent_mad_diff_series = pd.Series(title_to_percent_mad_diff)
             #title_to_percent_mad_diff_series.plot(kind='bar')
-            plt.savefig(plot_path / (group.lower().replace(' ', '_') + '_pct.png'), bbox_inches='tight')
+            plot_name = group.lower().replace(' ', '_') + '_pct'
+            plt.savefig(plot_path / (plot_name + '.png'), bbox_inches='tight')
+            with open(plot_path / ('summary_' + plot_name + '.txt'), 'w') as f:
+                f.write(str(title_to_percent_diff_df.describe()))
             print(group)
-            print(key_places_by_title)
+            #print(key_places_by_title)
             print(pd.Series(title_to_percent_mad_diff))
 
 
