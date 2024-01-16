@@ -97,6 +97,7 @@ defense_spread = [
     # spread out
     TeamPlaces(False, True, ['BombsiteA', 'LongA', 'ExtendedA']),
     TeamPlaces(False, True, ['BombsiteA', 'BombsiteA', 'LongA']),
+    TeamPlaces(False, True, ['BombsiteA', 'ARamp', 'LongA']),
     # spread out
     TeamPlaces(False, False, ['BombsiteB', 'BDoors', 'UpperTunnel']),
     TeamPlaces(False, False, ['BombsiteB', 'BombsiteB', 'UpperTunnel']),

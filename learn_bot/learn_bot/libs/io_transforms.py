@@ -715,6 +715,14 @@ class IOColumnTransformers:
 
         return result
 
+    def get_index_name_dict(self, input: bool, transformed: bool, separate_distribution_cols: bool = False) -> Dict[int, str]:
+        name_range_dict = self.get_name_ranges_dict(input, transformed, separate_distribution_cols)
+        result: Dict[int, str] = {}
+        for n, r in name_range_dict.items():
+            for i in r:
+                result[i] = n
+        return result
+
     @cache
     def get_name_ranges_in_time_range(self, input: bool, transformed: bool,
                                       time_offset_range: range, include_non_temporal: bool,

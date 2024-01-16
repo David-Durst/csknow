@@ -94,11 +94,12 @@ class TransformerNestedHiddenLatentModel(nn.Module):
         self.c4_planted_columns = range_list_to_index_list(cts.get_name_ranges(True, True, contained_str=c4_plant_a_col))
         #_, c4_columns_names = cts.get_name_ranges(True, True, contained_str="c4", include_names=True)
         c4_decrease_distance_columns_ranges = range_list_to_index_list(cts.get_name_ranges(True, True, contained_str="decrease distance to c4"))
-        non_player_c4_columns_ranges = [i for i in all_c4_columns_ranges if i not in c4_decrease_distance_columns_ranges]
+        self.non_player_c4_columns_ranges = [i for i in all_c4_columns_ranges if i not in c4_decrease_distance_columns_ranges]
         #baiting_columns_ranges = range_list_to_index_list(cts.get_name_ranges(True, True, contained_str="baiting"))
-        players_columns = [non_player_c4_columns_ranges +  #baiting_columns_ranges +
+        players_columns = [self.non_player_c4_columns_ranges +  #baiting_columns_ranges +
                            range_list_to_index_list(cts.get_name_ranges(True, True, contained_str=" " + player_team_str(team_str, player_index)))
                            for team_str in team_strs for player_index in range(max_enemies)]
+        self.columns_dict = cts.get_index_name_dict(True, True, True)
         #players_columns_names = [cts.get_name_ranges(True, True, contained_str=" " + player_team_str(team_str, player_index), include_names=True)[1]
         #                         for team_str in team_strs for player_index in range(max_enemies)]
         self.num_players = len(players_columns)
@@ -254,6 +255,7 @@ class TransformerNestedHiddenLatentModel(nn.Module):
             x[:, self.players_visibility] = 0.
             x[:, self.players_hurt] = 0.
             x[:, self.players_fire] = 0.
+            x[:, self.players_nearest_crosshair_to_enemy_columns] = 0.
 
         x[:, self.health_columns] = 0.
         x[:, self.armor_columns] = 0.
