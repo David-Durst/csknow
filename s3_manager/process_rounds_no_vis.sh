@@ -21,7 +21,8 @@ for demo in $1; do
     python disable.py rollout
     # try both servers
     scp steam@54.219.195.192:csgo-ds/csgo/$demo $2_$i.dem
-    #scp steam@54.215.94.224:csgo-ds/csgo/$demo $2_$i.dem
+    scp steam@54.215.94.224:csgo-ds/csgo/$demo $2_$i.dem
+    scp steam@52.52.132.137:csgo-ds/csgo/$demo $2_$i.dem
     python upload.py rollout $2_$i.dem
     cd ../demo_parser
     go run cmd/main.go -ro -dn _$2_$i
