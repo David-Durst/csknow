@@ -118,7 +118,7 @@ def find_rounds_without_confounds():
                                               (randomized_result_df[c4_pos_cols[0]] > 0)].iloc[0:2]
     b_three_ct_three_t = randomized_result_df[(randomized_result_df[num_ct_alive_column] == 3) &
                                               (randomized_result_df[num_t_alive_column] == 3) &
-                                              (randomized_result_df[c4_pos_cols[0]] < 0)].iloc[0:2]
+                                              (randomized_result_df[c4_pos_cols[0]] < 0)].iloc[0:3]
     #a_two_ct_one_t = randomized_result_df[(randomized_result_df[num_ct_alive_column] == 2) &
     #                                      (randomized_result_df[num_t_alive_column] == 1) &
     #                                      (randomized_result_df[c4_pos_cols[0]] > 0)].iloc[[0]]
