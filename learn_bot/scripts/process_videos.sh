@@ -1,7 +1,7 @@
 set -x
 cut_video() {
-    #ffmpeg -i ${videos_path}/${src_video} -ss ${start_time} -to ${end_time} -hide_banner -loglevel error -y -async 1 -strict -2 ${videos_path}/${dst_video}
-    ffmpeg -i ${videos_path}/${src_video} -ss ${start_time} -to ${end_time} -y -async 1 -strict -2 ${videos_path}/${dst_video}
+    ffmpeg -i ${videos_path}/${src_video} -ss ${start_time} -to ${end_time} -hide_banner -loglevel error -y -async 1 -strict -2 ${videos_path}/${dst_video}
+    #ffmpeg -i ${videos_path}/${src_video} -ss ${start_time} -to ${end_time} -y -async 1 -strict -2 ${videos_path}/${dst_video}
 }
 
 #learned videos
@@ -10,50 +10,50 @@ learned_main_video="learned_main.mkv"
 
 # example 1
 src_video=$learned_main_video
-start_time="00:00:09.150"
-end_time="00:00:49.317"
+start_time="00:00:02.367"
+end_time="00:00:07.800"
 dst_video="example-1-learned.mp4"
 cut_video
 
 # example 2
-start_time="00:00:50.500"
-end_time="00:01:03.850"
+start_time="00:00:17.900"
+end_time="00:00:30.500"
 dst_video="example-2-learned.mp4"
 cut_video
 
 # example 3
-start_time="00:01:16.417"
-end_time="00:01:30.833"
+start_time="00:00:41.417"
+end_time="00:00:59.267"
 dst_video="example-3-learned.mp4"
 cut_video
 
 # example 4
-start_time="00:01:40.933"
-end_time="00:02:16.500"
+start_time="00:01:07.500"
+end_time="00:01:21.517"
 dst_video="example-4-learned.mp4"
 cut_video
 
 # example 5
-start_time="00:02:22.167"
-end_time="00:02:33.417"
+start_time="00:01:29.633"
+end_time="00:01:45.467"
 dst_video="example-5-learned.mp4"
 cut_video
 
 # example 6
-start_time="00:02:38.267"
-end_time="00:03:03.733"
+start_time="00:01:51.000"
+end_time="00:02:31.317"
 dst_video="example-6-learned.mp4"
 cut_video
 
 # example 7
-start_time="00:03:10.067"
-end_time="00:03:50.350"
+start_time="00:02:32.300"
+end_time="00:03:01.850"
 dst_video="example-7-learned.mp4"
 cut_video
 
 # example 8
-start_time="00:03:51.400"
-end_time="00:04:01.067"
+start_time="00:03:02.717"
+end_time="00:03:43.117"
 dst_video="example-8-learned.mp4"
 cut_video
 
@@ -116,49 +116,49 @@ default_main_video="default_main.mkv"
 
 # example 1
 src_video=$default_main_video
-start_time="00:00:03.550"
-end_time="00:00:22"
+start_time="00:00:09.417"
+end_time="00:00:30.917"
 dst_video="example-1-default.mp4"
 cut_video
 
 # example 2
-start_time="00:00:28.400"
-end_time="00:00:45"
+start_time="00:00:31.800"
+end_time="00:00:56.167"
 dst_video="example-2-default.mp4"
 cut_video
 
 # example 3
-start_time="00:00:54.283"
-end_time="00:01:19"
+start_time="00:00:56.817"
+end_time="00:01:27.533"
 dst_video="example-3-default.mp4"
 cut_video
 
 # example 4
-start_time="00:01:32.517"
-end_time="00:01:57"
+start_time="00:01:28.233"
+end_time="00:01:47.933"
 dst_video="example-4-default.mp4"
 cut_video
 
 # example 5
-start_time="00:01:58.367"
-end_time="00:02:19.583"
+start_time="00:01:57.167"
+end_time="00:02:13.383"
 dst_video="example-5-default.mp4"
 cut_video
 
 # example 6
-start_time="00:02:28.233"
-end_time="00:02:40"
+start_time="00:02:14.150"
+end_time="00:02:52.283"
 dst_video="example-6-default.mp4"
 cut_video
 
 # example 7
-start_time="00:02:47.150"
-end_time="00:03:26.233"
+start_time="00:02:53.083"
+end_time="00:03:10.433"
 dst_video="example-7-default.mp4"
 cut_video
 
 # example 8
-start_time="00:03:26.950"
-end_time="00:03:33.450"
+start_time="00:03:11.117"
+end_time="00:03:33.767"
 dst_video="example-8-default.mp4"
 cut_video

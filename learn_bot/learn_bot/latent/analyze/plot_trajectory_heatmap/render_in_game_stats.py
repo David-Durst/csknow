@@ -48,40 +48,6 @@ def compute_one_metric_histograms(title_to_values: Dict[str, List[float]], metri
     plt.savefig(plot_file_path)
 
 
-def compute_one_grouped_metric_histograms(title_to_groups_to_values: Dict[str, Dict[int, List[float]]], metric_title: str,
-                                          group_title: str, bin_width: Union[int, float], smallest_max: float,
-                                          x_label: str, plot_file_path: Path):
-    num_titles = len(title_to_groups_to_values.keys())
-    unique_groups: Set[int] = set()
-    for _, group_to_values in title_to_groups_to_values.items():
-        for group in group_to_values.keys():
-            unique_groups.add(group)
-    fig = plt.figure(figsize=(fig_length * len(unique_groups), fig_length * num_titles), constrained_layout=True)
-    axs = fig.subplots(num_titles, len(unique_groups), squeeze=False)
-
-    # get the max value for histogram (if bigger than smaller max), min wil be 0 always
-    max_observed = smallest_max
-    for _, group_to_values in title_to_groups_to_values.items():
-        for _, values in group_to_values.items():
-            max_observed = max(max_observed, max(values))
-
-    if bin_width < 1.:
-        num_bins = int(ceil(max_observed / bin_width))
-        # add 1 as need left edge of every bin and right edge of last bin
-        bins = [i * bin_width for i in range(num_bins + 1)]
-    else:
-        bins = generate_bins(0, int(ceil(max_observed)), bin_width)
-    for title_index, (title, group_to_values) in enumerate(title_to_groups_to_values.items()):
-        for group_index, group in enumerate(unique_groups):
-            if group not in group_to_values:
-                continue
-            plot_hist(axs[title_index, group_index], pd.Series(group_to_values[group]), bins)
-            axs[title_index, group_index].set_xlim(0., max_observed)
-            axs[title_index, group_index].set_ylim(0., 1.)
-            axs[title_index, group_index].set_title(title + " " + metric_title + " " + group_title + " " + str(group))
-            axs[title_index, group_index].set_xlabel(x_label)
-    plt.savefig(plot_file_path)
-
 # want number of places with (1) 2 or 3 players and (2) by team - 4 rows
 # first row is 2 players, CT
 # second row is 2 players, T
@@ -226,31 +192,6 @@ def compute_metrics(trajectory_filter_options: TrajectoryFilterOptions, plots_pa
         #key_places_by_title.plot(kind='bar', rot=90, title='Rounds With Team Formations')
         #plt.savefig(plots_path / 'key_places.png', bbox_inches='tight')
         plot_key_places(plots_path)
-    #if trajectory_filter_options.is_no_filter():
-        #compute_one_grouped_metric_histograms(get_title_to_num_teammates_to_enemy_vis_on_death(), 'Teammate Saw Enemy On Death',
-        #                                      'Teammates', 0.1, 1., 'Min Time of Alive Teammates (s)',
-        #                                      plots_path / ('teammate_vis_' + str(trajectory_filter_options) + '.png'))
-        #compute_one_grouped_metric_histograms(get_title_to_num_enemies_to_my_team_vis_on_death(),
-        #                                      'Enemy Saw My Team On Death',
-        #                                      'Enemies', 0.1, 1., 'Min Time of Alive Enemies (s)',
-        #                                      plots_path / ('enemy_vis_' + str(trajectory_filter_options) + '.png'))
-        #compute_one_grouped_metric_histograms(get_title_to_num_teammates_to_distance_to_teammate_on_death(),
-        #                                      'Teammate Distances On Death',
-        #                                      'Teammates', 100, 1000, 'Teammate Distances (Hammer Units)',
-        #                                      plots_path / ('teammate_distances_' + str(trajectory_filter_options) + '.png'))
-        #compute_one_grouped_metric_histograms(get_title_to_num_enemies_to_distance_to_enemy_on_death(),
-        #                                      'Enemy Distances On Death',
-        #                                      'Enemies', 100, 1000, 'Enemy Distances (Hammer Units)',
-        #                                      plots_path / ('enemy_distances_' + str(trajectory_filter_options) + '.png'))
-        #compute_one_grouped_metric_histograms(get_title_to_num_teammates_to_distance_multi_engagements(),
-        #                                      'Distance On Multi Engagements',
-        #                                      'Teammates', 100, 1000, 'Teammate Distances (Hammer Units)',
-        #                                      plots_path / ('distances_multi_engagements_' + str(trajectory_filter_options) + '.png'))
-        #compute_one_metric_histograms(get_title_to_blocking_events(), 'Blocking Events', 1, 30., 'Blocking Events Per Round',
-        #                              plots_path / ('blocking_' + str(trajectory_filter_options) + '.png'))
-        #compute_one_metric_histograms(get_title_to_num_multi_engagements(), 'Num Multi-Engagements', 1, 30.,
-        #                              'Num Multi-Engagements Per Round',
-        #                              plots_path / ('num_multi_engagements_' + str(trajectory_filter_options) + '.png'))
     if trajectory_filter_options.compute_speeds:
         # airstrafing can get you above normal weapon max speed
         compute_one_metric_histograms(get_title_to_speeds(), 'Weapon/Scoped Scaled Speed', 0.1, 1., 'Percent Max Speed',
