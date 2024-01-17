@@ -25,7 +25,7 @@ game_tick_length_column = 'game tick length'
 num_ct_alive_column = 'num ct alive'
 num_t_alive_column = 'num t alive'
 
-min_round_seconds = 5
+min_round_seconds = 10
 game_tick_rate = 128
 
 def add_num_alive_columns(df: pd.DataFrame):
@@ -48,7 +48,7 @@ def find_rounds_without_confounds():
     set_pd_print_options()
     pd.set_option('display.max_colwidth', None)
     hdf5_to_round_ids = get_hdf5_to_test_round_ids(push_only=True)[1]
-    test_plant_states_pd = get_test_plant_states_pd(push_only=True)
+    test_plant_states_pd = get_test_plant_states_pd(push_only=True).copy()
     make_index_column(test_plant_states_pd)
     test_plant_states_pd[plant_state_index_column] = test_plant_states_pd['index']
     push_no_grenade_round_dicts: List[Dict] = []
@@ -110,31 +110,31 @@ def find_rounds_without_confounds():
     print(len(result_with_plant_state_index_df))
     randomized_result_df = result_with_plant_state_index_df.sample(frac=1, random_state=42)
     a_four_ct = randomized_result_df[(randomized_result_df[num_ct_alive_column] == 4) &
-                                     (randomized_result_df[c4_pos_cols[0]] > 0)].iloc[[0]]
+                                     (randomized_result_df[c4_pos_cols[0]] > 0)].iloc[0:3]
     b_four_ct = randomized_result_df[(randomized_result_df[num_ct_alive_column] == 4) &
-                                     (randomized_result_df[c4_pos_cols[0]] < 0)].iloc[[0]]
+                                     (randomized_result_df[c4_pos_cols[0]] < 0)].iloc[0:2]
     a_three_ct_three_t = randomized_result_df[(randomized_result_df[num_ct_alive_column] == 3) &
                                               (randomized_result_df[num_t_alive_column] == 3) &
-                                              (randomized_result_df[c4_pos_cols[0]] > 0)].iloc[[0]]
+                                              (randomized_result_df[c4_pos_cols[0]] > 0)].iloc[0:2]
     b_three_ct_three_t = randomized_result_df[(randomized_result_df[num_ct_alive_column] == 3) &
                                               (randomized_result_df[num_t_alive_column] == 3) &
-                                              (randomized_result_df[c4_pos_cols[0]] < 0)].iloc[[0]]
-    a_two_ct_one_t = randomized_result_df[(randomized_result_df[num_ct_alive_column] == 2) &
-                                          (randomized_result_df[num_t_alive_column] == 1) &
-                                          (randomized_result_df[c4_pos_cols[0]] > 0)].iloc[[0]]
-    b_two_ct_one_t = randomized_result_df[(randomized_result_df[num_ct_alive_column] == 2) &
-                                          (randomized_result_df[num_t_alive_column] == 1) &
-                                          (randomized_result_df[c4_pos_cols[0]] < 0)].iloc[[0]]
-    a_one_ct_two_t = randomized_result_df[(randomized_result_df[num_ct_alive_column] == 1) &
-                                          (randomized_result_df[num_t_alive_column] == 2) &
-                                          (randomized_result_df[c4_pos_cols[0]] > 0)].iloc[[0]]
-    b_one_ct_two_t = randomized_result_df[(randomized_result_df[num_ct_alive_column] == 1) &
-                                          (randomized_result_df[num_t_alive_column] == 2) &
-                                          (randomized_result_df[c4_pos_cols[0]] < 0)].iloc[[0]]
+                                              (randomized_result_df[c4_pos_cols[0]] < 0)].iloc[0:2]
+    #a_two_ct_one_t = randomized_result_df[(randomized_result_df[num_ct_alive_column] == 2) &
+    #                                      (randomized_result_df[num_t_alive_column] == 1) &
+    #                                      (randomized_result_df[c4_pos_cols[0]] > 0)].iloc[[0]]
+    #b_two_ct_one_t = randomized_result_df[(randomized_result_df[num_ct_alive_column] == 2) &
+    #                                      (randomized_result_df[num_t_alive_column] == 1) &
+    #                                      (randomized_result_df[c4_pos_cols[0]] < 0)].iloc[[0]]
+    #a_one_ct_two_t = randomized_result_df[(randomized_result_df[num_ct_alive_column] == 1) &
+    #                                      (randomized_result_df[num_t_alive_column] == 2) &
+    #                                      (randomized_result_df[c4_pos_cols[0]] > 0)].iloc[[0]]
+    #b_one_ct_two_t = randomized_result_df[(randomized_result_df[num_ct_alive_column] == 1) &
+    #                                      (randomized_result_df[num_t_alive_column] == 2) &
+    #                                      (randomized_result_df[c4_pos_cols[0]] < 0)].iloc[[0]]
     selected_result_df = pd.concat([a_four_ct, b_four_ct,
-                                    a_three_ct_three_t, b_three_ct_three_t,
-                                    a_two_ct_one_t, b_two_ct_one_t,
-                                    a_one_ct_two_t, b_one_ct_two_t])
+                                    a_three_ct_three_t, b_three_ct_three_t])
+                                    #a_two_ct_one_t, b_two_ct_one_t,
+                                    #a_one_ct_two_t, b_one_ct_two_t])
     print(selected_result_df)
     print(selected_result_df.to_csv())
     print("cp " + " ".join(selected_result_df[demo_file_column].tolist()) +
