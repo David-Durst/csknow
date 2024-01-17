@@ -7,59 +7,53 @@ cut_video() {
 #learned videos
 videos_path="/home/durst/Videos/kdenlive/questionnaire/learned"
 learned_main_video="learned_main.mkv"
-learned_5_fix_video="learned_5_fix.mkv"
-learned_7_fix_video="learned_7_fix.mkv"
 
 # example 1
 src_video=$learned_main_video
-start_time="00:00:10.817"
-end_time="00:00:22"
+start_time="00:00:09.150"
+end_time="00:00:49.317"
 dst_video="example-1-learned.mp4"
 cut_video
-exit 0
+
 # example 2
-start_time="00:00:32.883"
-end_time="00:00:50"
+start_time="00:00:50.500"
+end_time="00:01:03.850"
 dst_video="example-2-learned.mp4"
 cut_video
 
 # example 3
-start_time="00:00:57.667"
-end_time="00:01:14.767"
+start_time="00:01:16.417"
+end_time="00:01:30.833"
 dst_video="example-3-learned.mp4"
 cut_video
 
 # example 4
-start_time="00:01:24.933"
-end_time="00:02:05.333"
+start_time="00:01:40.933"
+end_time="00:02:16.500"
 dst_video="example-4-learned.mp4"
 cut_video
 
 # example 5
-src_video=$learned_5_fix_video
-start_time="00:01:27.050"
-end_time="00:01:42.050"
+start_time="00:02:22.167"
+end_time="00:02:33.417"
 dst_video="example-5-learned.mp4"
 cut_video
 
 # example 6
-src_video=$learned_main_video
-start_time="00:02:47.583"
-end_time="00:02:58.983"
+start_time="00:02:38.267"
+end_time="00:03:03.733"
 dst_video="example-6-learned.mp4"
 cut_video
 
 # example 7
-src_video=$learned_7_fix_video
-start_time="00:00:38.933"
-end_time="00:01:20.217"
+start_time="00:03:10.067"
+end_time="00:03:50.350"
 dst_video="example-7-learned.mp4"
 cut_video
 
 # example 8
-src_video=$learned_main_video
-start_time="00:03:48.233"
-end_time="00:03:52.500"
+start_time="00:03:51.400"
+end_time="00:04:01.067"
 dst_video="example-8-learned.mp4"
 cut_video
 
@@ -69,50 +63,50 @@ handcrafted_main_video="handcrafted_main.mkv"
 
 # example 1
 src_video=$handcrafted_main_video
-start_time="00:00:04.483"
-end_time="00:00:10.167"
+start_time="00:00:04.800"
+end_time="00:00:18.600"
 dst_video="example-1-handcrafted.mp4"
 cut_video
 
 # example 2
-start_time="00:00:28.150"
-end_time="00:00:33"
+start_time="00:00:28.983"
+end_time="00:00:37"
 dst_video="example-2-handcrafted.mp4"
 cut_video
 
 # example 3
-start_time="00:00:46.567"
-end_time="00:00:52.350"
+start_time="00:00:51.617"
+end_time="00:00:59"
 dst_video="example-3-handcrafted.mp4"
 cut_video
 
 # example 4
-start_time="00:00:53.317"
-end_time="00:01:33.700"
+start_time="00:01:12.767"
+end_time="00:01:17.617"
 dst_video="example-4-handcrafted.mp4"
 cut_video
 
 # example 5
-start_time="00:01:34.517"
-end_time="00:01:38"
+start_time="00:01:32.267"
+end_time="00:01:35.500"
 dst_video="example-5-handcrafted.mp4"
 cut_video
 
 # example 6
-start_time="00:01:49.700"
-end_time="00:01:53.683"
+start_time="00:01:36.433"
+end_time="00:01:48"
 dst_video="example-6-handcrafted.mp4"
 cut_video
 
 # example 7
-start_time="00:01:54.517"
-end_time="00:02:04.133"
+start_time="00:02:03.717"
+end_time="00:02:11.117"
 dst_video="example-7-handcrafted.mp4"
 cut_video
 
 # example 8
-start_time="00:02:05"
-end_time="00:02:06.550"
+start_time="00:02:12.067"
+end_time="00:02:52.333"
 dst_video="example-8-handcrafted.mp4"
 cut_video
 
