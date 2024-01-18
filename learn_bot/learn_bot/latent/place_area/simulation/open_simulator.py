@@ -21,7 +21,7 @@ from learn_bot.latent.analyze.plot_trajectory_heatmap.filter_trajectories import
 from learn_bot.latent.analyze.plot_trajectory_heatmap.build_heatmaps import plot_one_trajectory_dataset
 from learn_bot.latent.analyze.plot_trajectory_heatmap.render_trajectory_heatmaps import plot_trajectories_to_image
 from learn_bot.libs.pd_printing import set_pd_print_options
-from learn_bot.latent.engagement.column_names import round_id_column
+from learn_bot.latent.engagement.column_names import round_id_column, game_tick_number_column
 from learn_bot.latent.load_model import load_model_file
 from learn_bot.latent.place_area.column_names import specific_player_place_area_columns
 from learn_bot.latent.place_area.load_data import LoadDataResult
@@ -204,8 +204,8 @@ pred_vs_orig_total_delta_column = 'pred vs orig total delta'
 
 @dataclass
 class DisplacementErrors:
-    player_trajectory_ades: List[float] = field(default_factory=list)
-    player_trajectory_fdes: List[float] = field(default_factory=list)
+    entire_trajectory_errors_sum_over_player_time: List[float] = field(default_factory=list)
+    end_trajectory_errors_sum_over_player: List[float] = field(default_factory=list)
 
 
 def compute_trajectory_counter(id_df, round_lengths):
@@ -223,6 +223,10 @@ def compute_trajectory_counter(id_df, round_lengths):
     # new trajectory for each ground truth starting point
     trajectory_counter = ground_truth_tick_indicators.cumsum()
     return trajectory_counter
+
+
+num_time_steps_column = 'num time steps'
+num_players_column = 'num players'
 
 
 # compute indices in open rollout that are actually predicted
@@ -244,10 +248,11 @@ def compare_predicted_rollout_indices(loaded_model: LoadedModel,
 
     result = DisplacementErrors()
 
-    round_and_delta_df = id_df.loc[:, [round_id_column, index_in_trajectory_column, trajectory_counter_column]]
+    round_and_delta_df = id_df.loc[:, [round_id_column, index_in_trajectory_column, trajectory_counter_column,
+                                       game_tick_number_column]]
 
-    players_trajectory_ades: List[pd.DataFrame] = []
-    players_trajectory_fdes: List[pd.DataFrame] = []
+    players_trajectory_entire_errors: List[pd.DataFrame] = []
+    players_trajectory_final_errors: List[pd.DataFrame] = []
 
     # compute deltas
     for column_index in range(len(specific_player_place_area_columns)):
@@ -267,6 +272,8 @@ def compare_predicted_rollout_indices(loaded_model: LoadedModel,
             (pred_vs_orig_delta_x ** 2. + pred_vs_orig_delta_y ** 2. + pred_vs_orig_delta_z ** 2.) ** 0.5
 
         # ignore ends of trajectories where no ground truth command
+        # ONLY NEEDED WHEN RELYING ON GROUND_TRUTH_CMD to get CMDS, everything else either just repeats positions
+        # or predicts
         output_columns_per_player = loaded_model.cur_dataset.Y.shape[1] // loaded_model.model.num_players
         has_ground_truth_command = np.sum(loaded_model.cur_dataset.Y[:,
                                           (output_columns_per_player*column_index):
@@ -274,10 +281,12 @@ def compare_predicted_rollout_indices(loaded_model: LoadedModel,
         if not include_steps_without_actions:
             has_ground_truth_command = has_ground_truth_command | True
 
+        # FOR FDE - compute last entry in each trajectory where player is alive and have ground truth to compare to
         # last if counter in trajectory equals max index - need to recompute this for every player
         # as last will be different if die in middle of trajectory
         id_df[index_in_trajectory_if_alive_column] = id_df[index_in_trajectory_column]
         player_alive_series = pd.Series(loaded_model.cur_dataset.X[:, alive_column_index] == 1)
+        # this replaces are all entries where dead or no ground truth to compare to with -1, so get last good one to compare to
         id_df[index_in_trajectory_if_alive_column].where(player_alive_series & has_ground_truth_command, -1, inplace=True)
         id_df[last_pred_column] = \
             id_df.groupby(trajectory_counter_column)[index_in_trajectory_if_alive_column].transform('max')
@@ -298,20 +307,25 @@ def compare_predicted_rollout_indices(loaded_model: LoadedModel,
         # get ade by averaging within trajectories only. This will enable looking at per-trajectory ADE distribution.
         # Aggregating across trajectories prevent that type of distributional analysis.
         # Same round_id across all ticks in a trajectory, so just take first
-        player_trajectory_ades = all_pred_steps_df.groupby(trajectory_counter_column, as_index=False).agg(
-            {round_id_column: 'first', pred_vs_orig_total_delta_column: 'mean'})
-        player_trajectory_fdes = final_pred_step_df.groupby(trajectory_counter_column, as_index=False).agg(
-            {round_id_column: 'first', pred_vs_orig_total_delta_column: 'mean'})
+        player_trajectory_entire_errors = all_pred_steps_df.groupby(trajectory_counter_column, as_index=False).agg(
+            {round_id_column: 'first', pred_vs_orig_total_delta_column: 'sum', game_tick_number_column: 'count'})
+        player_trajectory_entire_errors.rename(columns={game_tick_number_column: num_time_steps_column}, inplace=True)
+        player_trajectory_final_errors = final_pred_step_df.groupby(trajectory_counter_column, as_index=False).agg(
+            {round_id_column: 'first', pred_vs_orig_total_delta_column: 'sum'})
         player_valid_round_ids = []
         for round_index, round_id in enumerate(round_lengths.round_ids):
+            # ignore players that weren't predicted and don't want to include them in ADE/FDE computations
+            # this ignores T players when only evaluating CT player predictions (or vice versa)
+            # not for when masking out all players' predictions when interpolating or doing ground truth cmd/position
+            # and still include thme in ADE/FDE computations
             if include_ground_truth_players_in_afde or player_enable_mask is None or \
                     player_enable_mask[round_index, column_index * compute_mask_elements_per_player(loaded_model)]:
                 player_valid_round_ids.append(round_id)
-        players_trajectory_ades.append(player_trajectory_ades[player_trajectory_ades[round_id_column]
-                                       .isin(player_valid_round_ids)])
-        players_trajectory_fdes.append(player_trajectory_fdes[player_trajectory_fdes[round_id_column]
-                                       .isin(player_valid_round_ids)])
-        if len(players_trajectory_ades[-1]) != len(players_trajectory_fdes[-1]):
+        players_trajectory_entire_errors.append(player_trajectory_entire_errors[player_trajectory_entire_errors[round_id_column]
+                                                .isin(player_valid_round_ids)])
+        players_trajectory_final_errors.append(player_trajectory_final_errors[player_trajectory_final_errors[round_id_column]
+                                               .isin(player_valid_round_ids)])
+        if len(players_trajectory_entire_errors[-1]) != len(players_trajectory_final_errors[-1]):
             print('length mismatch')
         # 2500 possible (not bug) - can go 250 per second for 5 seconds is 1250, mul by 2 because pred and orig can go
         # in opposite directions
@@ -327,12 +341,16 @@ def compare_predicted_rollout_indices(loaded_model: LoadedModel,
         #                    .loc[:, [pred_vs_orig_total_delta_column]]
         #    print('invalid max')
 
-    players_trajectory_ades_df = pd.concat(players_trajectory_ades)
-    players_trajectory_fdes_df = pd.concat(players_trajectory_fdes)
-    result.player_trajectory_ades = players_trajectory_ades_df.groupby(trajectory_counter_column) \
-        .mean()[pred_vs_orig_total_delta_column]
-    result.player_trajectory_fdes = players_trajectory_fdes_df.groupby(trajectory_counter_column) \
-        .mean()[pred_vs_orig_total_delta_column]
+    players_trajectory_entire_errors_df = pd.concat(players_trajectory_entire_errors)
+    players_trajectory_final_errors_df = pd.concat(players_trajectory_final_errors)
+    result.entire_trajectory_errors_sum_over_player_time = players_trajectory_entire_errors_df.groupby(trajectory_counter_column).sum()[agg(
+        {round_id_column: 'count', pred_vs_orig_total_delta_column: 'sum', num_time_steps_column: 'first'})
+    result.entire_trajectory_errors_sum_over_player_time = players_trajectory_entire_errors_df.groupby(trajectory_counter_column).agg(
+        {round_id_column: 'count', pred_vs_orig_total_delta_column: 'sum', num_time_steps_column: 'first'})
+    result.entire_trajectory_errors_sum_over_player_time.rename(column={round_id_column: num_players_column}, inplace=True)
+    result.end_trajectory_errors_sum_over_player = players_trajectory_final_errors_df.groupby(trajectory_counter_column).agg(
+        {round_id_column: 'count', pred_vs_orig_total_delta_column: 'sum'})
+    result.end_trajectory_errors_sum_over_player.rename(column={round_id_column: num_players_column}, inplace=True)
 
     return result
 
@@ -366,7 +384,8 @@ possible_mask_configs_to_plot = [PlayerMaskConfig.GROUND_TRUTH_POSITION,
 def run_analysis_per_mask(loaded_model: LoadedModel, all_data_loaded_model: LoadedModel,
                           player_mask_config: PlayerMaskConfig) -> \
         Tuple[pd.Series, pd.Series]:
-    displacement_errors = DisplacementErrors()
+    player_trajectory_ades: List[float] = []
+    player_trajectory_fdes: List[float] = []
     mask_iterations = num_iterations if player_mask_config not in deterministic_configs else 1
     for i, hdf5_wrapper in enumerate(loaded_model.dataset.data_hdf5s):
         #if i > 3:
@@ -401,14 +420,14 @@ def run_analysis_per_mask(loaded_model: LoadedModel, all_data_loaded_model: Load
                                             str(player_mask_config))
             per_iteration_displacement_errors.append(hdf5_displacement_errors)
 
-        per_iteration_ade: List[List[float]] = [de.player_trajectory_ades for de in per_iteration_displacement_errors]
-        displacement_errors.player_trajectory_ades += list(np.min(np.array(per_iteration_ade), axis=0))
+        per_iteration_ade: List[List[float]] = [de.entire_trajectory_errors_sum_over_player_time for de in per_iteration_displacement_errors]
+        player_trajectory_ades += list(np.min(np.array(per_iteration_ade), axis=0))
 
         per_iteration_fde: List[List[float]] = [de.player_trajectory_fdes for de in per_iteration_displacement_errors]
-        displacement_errors.player_trajectory_fdes += list(np.min(np.array(per_iteration_fde), axis=0))
+        player_trajectory_fdes += list(np.min(np.array(per_iteration_fde), axis=0))
 
-    ades = pd.Series(displacement_errors.player_trajectory_ades)
-    fdes = pd.Series(displacement_errors.player_trajectory_fdes)
+    ades = pd.Series(player_trajectory_ades)
+    fdes = pd.Series(player_trajectory_fdes)
 
     return ades, fdes
 
