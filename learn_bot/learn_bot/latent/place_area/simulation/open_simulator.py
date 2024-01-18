@@ -4,7 +4,7 @@ from dataclasses import field, dataclass
 from enum import IntEnum
 from math import floor
 from pathlib import Path
-from typing import List, Callable, Tuple, Dict
+from typing import List, Callable, Tuple, Dict, Optional
 
 import numpy as np
 import pandas as pd
@@ -204,8 +204,10 @@ pred_vs_orig_total_delta_column = 'pred vs orig total delta'
 
 @dataclass
 class DisplacementErrors:
-    entire_trajectory_errors_sum_over_player_time: List[float] = field(default_factory=list)
-    end_trajectory_errors_sum_over_player: List[float] = field(default_factory=list)
+    entire_trajectory_errors_sum_over_player_time: Optional[pd.Series] = None
+    final_trajectory_errors_sum_over_player: Optional[pd.Series] = None
+    num_players_per_trajectory: Optional[pd.Series] = None
+    num_time_steps_per_trajectory: Optional[pd.Series] = None
 
 
 def compute_trajectory_counter(id_df, round_lengths):
@@ -343,14 +345,14 @@ def compare_predicted_rollout_indices(loaded_model: LoadedModel,
 
     players_trajectory_entire_errors_df = pd.concat(players_trajectory_entire_errors)
     players_trajectory_final_errors_df = pd.concat(players_trajectory_final_errors)
-    result.entire_trajectory_errors_sum_over_player_time = players_trajectory_entire_errors_df.groupby(trajectory_counter_column).sum()[agg(
-        {round_id_column: 'count', pred_vs_orig_total_delta_column: 'sum', num_time_steps_column: 'first'})
-    result.entire_trajectory_errors_sum_over_player_time = players_trajectory_entire_errors_df.groupby(trajectory_counter_column).agg(
-        {round_id_column: 'count', pred_vs_orig_total_delta_column: 'sum', num_time_steps_column: 'first'})
-    result.entire_trajectory_errors_sum_over_player_time.rename(column={round_id_column: num_players_column}, inplace=True)
-    result.end_trajectory_errors_sum_over_player = players_trajectory_final_errors_df.groupby(trajectory_counter_column).agg(
-        {round_id_column: 'count', pred_vs_orig_total_delta_column: 'sum'})
-    result.end_trajectory_errors_sum_over_player.rename(column={round_id_column: num_players_column}, inplace=True)
+    result.entire_trajectory_errors_sum_over_player_time = players_trajectory_entire_errors_df.groupby(trajectory_counter_column) \
+        .sum()[pred_vs_orig_total_delta_column]
+    result.final_trajectory_errors_sum_over_player = players_trajectory_final_errors_df.groupby(trajectory_counter_column) \
+        .sum()[pred_vs_orig_total_delta_column]
+    result.num_players_per_trajectory = players_trajectory_entire_errors_df.groupby(trajectory_counter_column) \
+        .count()[round_id_column]
+    result.num_time_steps_per_trajectory = players_trajectory_entire_errors_df.groupby(trajectory_counter_column) \
+        .first()[num_time_steps_column]
 
     return result
 
@@ -411,7 +413,7 @@ def run_analysis_per_mask(loaded_model: LoadedModel, all_data_loaded_model: Load
             hdf5_displacement_errors = compare_predicted_rollout_indices(loaded_model, player_enable_mask,
                                                                          player_mask_config in mask_all_configs,
                                                                          player_mask_config == PlayerMaskConfig.GROUND_TRUTH_CMD)
-            if iteration == 0 and player_mask_config in possible_mask_configs_to_plot:
+            if False and iteration == 0 and player_mask_config in possible_mask_configs_to_plot:
                 trajectory_counter = compute_trajectory_counter(loaded_model.get_cur_id_df(), round_lengths)
                 plot_one_trajectory_dataset(loaded_model, loaded_model.get_cur_id_df(),
                                             loaded_model.get_cur_vis_df(),
@@ -420,11 +422,21 @@ def run_analysis_per_mask(loaded_model: LoadedModel, all_data_loaded_model: Load
                                             str(player_mask_config))
             per_iteration_displacement_errors.append(hdf5_displacement_errors)
 
-        per_iteration_ade: List[List[float]] = [de.entire_trajectory_errors_sum_over_player_time for de in per_iteration_displacement_errors]
-        player_trajectory_ades += list(np.min(np.array(per_iteration_ade), axis=0))
+        per_iteration_sum_entire_trajectory_errors: np.ndarray = \
+            np.stack([de.entire_trajectory_errors_sum_over_player_time.to_numpy()
+                      for de in per_iteration_displacement_errors])
+        player_trajectory_ades += list(np.min(per_iteration_sum_entire_trajectory_errors, axis=0) / (
+            per_iteration_displacement_errors[0].num_players_per_trajectory.to_numpy() *
+            per_iteration_displacement_errors[0].num_time_steps_per_trajectory.to_numpy()
+        ))
 
-        per_iteration_fde: List[List[float]] = [de.player_trajectory_fdes for de in per_iteration_displacement_errors]
-        player_trajectory_fdes += list(np.min(np.array(per_iteration_fde), axis=0))
+        per_iteration_sum_final_trajectory_errors: np.ndarray = \
+            np.stack([de.final_trajectory_errors_sum_over_player.to_numpy()
+                      for de in per_iteration_displacement_errors])
+        player_trajectory_fdes += list(
+            np.min(per_iteration_sum_final_trajectory_errors, axis=0) /
+            per_iteration_displacement_errors[0].num_players_per_trajectory.to_numpy()
+        )
 
     ades = pd.Series(player_trajectory_ades)
     fdes = pd.Series(player_trajectory_fdes)
@@ -449,15 +461,15 @@ def run_analysis(loaded_model: LoadedModel, all_data_loaded_model: LoadedModel):
     mask_result_latex_strs = ["Simulation Type & minSADE Mean & minSADE Std Dev & minSFDE Mean & minSFDE Std Dev \\\\",
                               "\\hline"]
     player_mask_configs = [PlayerMaskConfig.ALL,
-                           PlayerMaskConfig.CT, PlayerMaskConfig.T,
-                           #PlayerMaskConfig.LAST_ALIVE,
-                           PlayerMaskConfig.STARTING_CMD,
-                           PlayerMaskConfig.STARTING_POSITION,
-                           PlayerMaskConfig.INTERPOLATION_ROLLOUT_POSITION,
-                           PlayerMaskConfig.INTERPOLATION_ROUND_POSITION,
-                           PlayerMaskConfig.NN_POSITION,
-                           PlayerMaskConfig.GROUND_TRUTH_CMD,
-                           PlayerMaskConfig.GROUND_TRUTH_POSITION,
+                           #PlayerMaskConfig.CT, PlayerMaskConfig.T,
+                           ##PlayerMaskConfig.LAST_ALIVE,
+                           #PlayerMaskConfig.STARTING_CMD,
+                           #PlayerMaskConfig.STARTING_POSITION,
+                           #PlayerMaskConfig.INTERPOLATION_ROLLOUT_POSITION,
+                           #PlayerMaskConfig.INTERPOLATION_ROUND_POSITION,
+                           #PlayerMaskConfig.NN_POSITION,
+                           #PlayerMaskConfig.GROUND_TRUTH_CMD,
+                           #PlayerMaskConfig.GROUND_TRUTH_POSITION,
                            PlayerMaskConfig.RANDOM_CMD]
     ades_per_mask_config: List[pd.Series] = []
     fdes_per_mask_config: List[pd.Series] = []
@@ -479,7 +491,7 @@ def run_analysis(loaded_model: LoadedModel, all_data_loaded_model: LoadedModel):
     os.makedirs(plots_path, exist_ok=True)
     # compute here so only plot subset of configs in this run
     mask_config_plot_titles = [str(mc) for mc in possible_mask_configs_to_plot if mc in player_mask_configs]
-    plot_trajectories_to_image(mask_config_plot_titles, True, plots_path, default_trajectory_filter_options)
+    #plot_trajectories_to_image(mask_config_plot_titles, True, plots_path, default_trajectory_filter_options)
 
     plot_ade_fde(player_mask_configs, ades_per_mask_config, axs[0], True)
     plot_ade_fde(player_mask_configs, fdes_per_mask_config, axs[1], False)
