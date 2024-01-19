@@ -34,7 +34,7 @@ def generate_bins(min_bin_start: int, max_bin_end: int, bin_width: int) -> List[
 
 
 def plot_hist(ax: plt.Axes, data: pd.Series, bins: List[Union[int,float]]):
-    ax.hist(data.values, bins=bins, weights=np.ones(len(data)) / len(data))
+    ax.hist(data.values, bins=bins, weights=np.ones(len(data)) / len(data), color="#3f8f35", edgecolor="#3f8f35")
     ax.grid(visible=True)
     # ax.yaxis.set_major_formatter(PercentFormatter(1))
 

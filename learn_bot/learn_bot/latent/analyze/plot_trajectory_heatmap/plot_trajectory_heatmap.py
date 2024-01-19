@@ -66,6 +66,8 @@ def run_one_dataset_trajectory_heatmap(use_all_human_data: bool, title: str,
 
     with tqdm(total=len(loaded_model.dataset.data_hdf5s), disable=False) as pbar:
         for i, hdf5_wrapper in enumerate(loaded_model.dataset.data_hdf5s):
+            if i > 3:
+                break
             if plot_only_first_hdf5_file_train_and_test and i > 0:
                 break
             if use_all_human_data:
