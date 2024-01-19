@@ -58,15 +58,21 @@ title_rename_dict = {
 
 def compute_one_metric_grid_histograms(title_to_values: Dict[str, List[float]], metric_title: str,
                                        bin_width: Union[int, float], max_bin_end: float, y_max: float,
-                                       x_label: str, x_ticks: List, y_label: str, y_ticks: List, plot_file_path: Path):
+                                       x_label: str, x_ticks: List, y_label: Optional[str],
+                                       y_ticks: List, plot_file_path: Path):
     if len(title_to_values) != 4:
         return
     local_fig_length = 4
     fig = plt.figure(figsize=(local_fig_length * 2, local_fig_length * 2), constrained_layout=True)
     axs = fig.subplots(2, 2, squeeze=False, sharex=True, sharey=True)
 
-    fig.supxlabel(x_label, x=0.52, fontsize=15)
-    fig.supylabel(y_label, fontsize=15)
+    if y_label is not None:
+        fig.suptitle(metric_title, x=0.52, fontsize=18)
+        fig.supxlabel(x_label, x=0.52, fontsize=15)
+        fig.supylabel(y_label, fontsize=15)
+    else:
+        fig.suptitle(metric_title, fontsize=18)
+        fig.supxlabel(x_label, fontsize=15)
 
     if bin_width < 1.:
         num_bins = int(ceil(max_bin_end / bin_width))
@@ -75,7 +81,6 @@ def compute_one_metric_grid_histograms(title_to_values: Dict[str, List[float]], 
     else:
         bins = generate_bins(0, int(ceil(max_bin_end)), bin_width)
     ax_index = 0
-    fig.suptitle(metric_title, x=0.52, fontsize=18)
     for title, values in title_to_values.items():
         renamed_title = title
         if title in title_rename_dict:
@@ -256,9 +261,9 @@ def compute_metrics(trajectory_filter_options: TrajectoryFilterOptions, plots_pa
     if trajectory_filter_options.compute_lifetimes:
         # small timing mismatch can get 41 seconds on bomb timer
         compute_one_metric_grid_histograms(get_title_to_lifetimes(), 'Lifetimes', 5, 40.,
-                                           0.6, 'Lifetime Length (s)', [0, 10, 20, 30, 40], 'Percent', [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6],
+                                           0.6, 'Lifetime Length (s)', [0, 10, 20, 30, 40], None, [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6],
                                            plots_path / ('lifetimes_' + str(trajectory_filter_options) + '.pdf'))
     if trajectory_filter_options.compute_shots_per_kill:
         compute_one_metric_grid_histograms(get_title_to_shots_per_kill(), 'Shots Per Kill', 1, 30.,
-                                           0.3, 'Shots', [0, 10, 20, 30], 'Percent', [0, 0.1, 0.2, 0.3],
+                                           0.3, 'Shots', [0, 10, 20, 30], None, [0, 0.1, 0.2, 0.3],
                                            plots_path / ('shots_per_kill_' + str(trajectory_filter_options) + '.pdf'))
