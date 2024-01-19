@@ -66,6 +66,8 @@ def run_one_dataset_trajectory_heatmap(use_all_human_data: bool, title: str,
 
     with tqdm(total=len(loaded_model.dataset.data_hdf5s), disable=False) as pbar:
         for i, hdf5_wrapper in enumerate(loaded_model.dataset.data_hdf5s):
+            #if i > 3:
+            #    continue
             if plot_only_first_hdf5_file_train_and_test and i > 0:
                 break
             if use_all_human_data:
@@ -144,10 +146,10 @@ def run_trajectory_heatmaps(plot_only_first_hdf5_file_train_and_test: bool):
 
     os.makedirs(plots_path / 'diff', exist_ok=True)
 
-    run_trajectory_heatmaps_one_filter_option(TrajectoryFilterOptions(compute_speeds=True, compute_lifetimes=True,
-                                                                      compute_shots_per_kill=True),
-                                              rollout_extensions, diff_indices, plots_path,
-                                              plot_only_first_hdf5_file_train_and_test)
+    #run_trajectory_heatmaps_one_filter_option(TrajectoryFilterOptions(compute_speeds=True, compute_lifetimes=True,
+    #                                                                  compute_shots_per_kill=True),
+    #                                          rollout_extensions, diff_indices, plots_path,
+    #                                          plot_only_first_hdf5_file_train_and_test)
 
     if len(diff_indices) == 0:
         return
