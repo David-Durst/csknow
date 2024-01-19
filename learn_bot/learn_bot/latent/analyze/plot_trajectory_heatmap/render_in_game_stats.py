@@ -180,9 +180,9 @@ def plot_key_places(plot_path: Path):
             plt.savefig(plot_path / (plot_name + '.png'), bbox_inches='tight')
             with open(plot_path / (plot_name + '.txt'), 'w') as f:
                 f.write(str(title_to_percent_diff_df.describe()))
-            print(group)
+            #print(group)
             #print(key_places_by_title)
-            print(pd.Series(title_to_percent_mad_diff))
+            #print(pd.Series(title_to_percent_mad_diff))
 
 
 def compute_metrics(trajectory_filter_options: TrajectoryFilterOptions, plots_path: Path):

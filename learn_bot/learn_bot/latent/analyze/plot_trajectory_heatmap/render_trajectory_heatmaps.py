@@ -4,7 +4,8 @@ from typing import List, Optional, Dict
 import numpy as np
 from PIL import Image, ImageDraw
 
-from learn_bot.libs.pil_helpers import concat_horizontal, concat_vertical
+from learn_bot.libs.pil_helpers import concat_horizontal, concat_vertical, concat_horizontal_vertical_with_extra, \
+    repeated_paste_horizontal
 from learn_bot.latent.analyze.compare_trajectories.plot_trajectories_and_events import title_font
 from learn_bot.latent.analyze.plot_trajectory_heatmap.build_heatmaps import get_title_to_line_buffers, \
     get_title_to_team_to_key_event_pos, get_debug_event_counting, get_title_to_key_events, get_title_to_num_points
@@ -15,6 +16,8 @@ from learn_bot.latent.analyze.test_traces.run_trace_visualization import d2_img,
 scale_factor = 0
 max_value = 0
 
+a_example_path = Path(__file__).parent / '..' / 'a_site_example.jpg'
+b_example_path = Path(__file__).parent / '..' / 'b_site_example.jpg'
 
 def plot_one_image_one_team(title: str, ct_team: bool, team_color: List, saturated_team_color: List,
                             base_img: Image.Image, custom_buffer: Optional[np.ndarray] = None):
@@ -47,14 +50,14 @@ def plot_one_image_one_team(title: str, ct_team: bool, team_color: List, saturat
     uint8_color_buffer = np.uint8(color_buffer)
     base_img.alpha_composite(Image.fromarray(uint8_color_buffer, 'RGBA'))
 
-    title_drw = ImageDraw.Draw(base_img)
-    if custom_buffer is None:
-        title_text = title + f", \n Num Points Both Teams {title_to_num_points[title]} Scale Factor {scale_factor}"
-    else:
-        title_text = title
-    _, _, w, h = title_drw.textbbox((0, 0), title_text, font=title_font)
-    title_drw.text(((d2_img.width - w) / 2, (d2_img.height * 0.1 - h) / 2),
-                   title_text, fill=(255, 255, 255, 255), font=title_font)
+    #title_drw = ImageDraw.Draw(base_img)
+    #if custom_buffer is None:
+    #    title_text = title + f", \n Num Points Both Teams {title_to_num_points[title]} Scale Factor {scale_factor}"
+    #else:
+    #    title_text = title
+    #_, _, w, h = title_drw.textbbox((0, 0), title_text, font=title_font)
+    #title_drw.text(((d2_img.width - w) / 2, (d2_img.height * 0.1 - h) / 2),
+    #               title_text, fill=(255, 255, 255, 255), font=title_font)
 
 
 def scale_buffers_by_points(titles: List[str]):
@@ -120,6 +123,8 @@ def plot_trajectories_to_image(titles: List[str], plot_teams_separately: bool, p
         return
 
     title_images: List[Image.Image] = []
+    ct_title_images: List[Image.Image] = []
+    t_title_images: List[Image.Image] = []
     scale_buffers_by_points(titles)
 
     for title in titles:
@@ -130,12 +135,14 @@ def plot_trajectories_to_image(titles: List[str], plot_teams_separately: bool, p
             plot_one_image_one_team(title, True, bot_ct_color_list, saturated_ct_color_list, base_ct_d2_img)
             base_ct_d2_img.thumbnail([1000, 1000], Image.ANTIALIAS)
             images_per_title.append(base_ct_d2_img)
+            ct_title_images.append(base_ct_d2_img)
 
             # image with just t
             base_t_d2_img = d2_img.copy().convert("RGBA")
             plot_one_image_one_team(title, False, bot_t_color_list, saturated_t_color_list, base_t_d2_img)
             base_t_d2_img.thumbnail([1000, 1000], Image.ANTIALIAS)
             images_per_title.append(base_t_d2_img)
+            t_title_images.append(base_t_d2_img)
             title_images.append(concat_horizontal(images_per_title))
         else:
             # image with everyone
@@ -143,6 +150,38 @@ def plot_trajectories_to_image(titles: List[str], plot_teams_separately: bool, p
             plot_one_image_one_team(title, True, bot_ct_color_list, saturated_ct_color_list, base_both_d2_img)
             plot_one_image_one_team(title, False, bot_t_color_list, saturated_t_color_list, base_both_d2_img)
             title_images.append(base_both_d2_img)
+
+    if len(titles) == 4 and trajectory_filter_options.is_no_filter():
+        extra_height_for_highlights = 93
+        in_game_image_height = 700
+        in_game_image_width = 1246
+        complete_image_with_highlights = concat_horizontal_vertical_with_extra(ct_title_images,
+                                                                               t_title_images, 0,
+                                                                               in_game_image_height + extra_height_for_highlights)
+        ct_focus_ims: List[Image.Image] = []
+        for im in ct_title_images:
+            focus_im = im.crop((663, 182, 842, 270))
+            focus_im = focus_im.resize((481, 237), Image.ANTIALIAS)
+            ct_focus_ims.append(focus_im)
+        repeated_paste_horizontal(complete_image_with_highlights, ct_focus_ims, 573, 783, 1000)
+
+        a_example_im = Image.open(a_example_path)
+        a_example_im = a_example_im.resize((in_game_image_width, in_game_image_height), Image.Resampling.LANCZOS)
+        complete_image_with_highlights.paste(a_example_im, (1000 - in_game_image_width // 2,
+                                                            2000 + extra_height_for_highlights))
+
+        t_focus_ims: List[Image.Image] = []
+        for im in t_title_images:
+            focus_im = im.crop((101, 141, 250, 363))
+            focus_im = focus_im.resize((291, 436), Image.ANTIALIAS)
+            t_focus_ims.append(focus_im)
+        repeated_paste_horizontal(complete_image_with_highlights, t_focus_ims, 707, 1654, 1000)
+
+        b_example_im = Image.open(b_example_path)
+        b_example_im = b_example_im.resize((in_game_image_width, in_game_image_height), Image.Resampling.LANCZOS)
+        complete_image_with_highlights.paste(b_example_im, (3000 - in_game_image_width // 2,
+                                                            2000 + extra_height_for_highlights))
+        complete_image_with_highlights.save(plots_path / 'complete_with_highlights.png')
 
     complete_image = concat_vertical(title_images)
     complete_image.save(plots_path / (str(trajectory_filter_options) + '.png'))
