@@ -155,32 +155,38 @@ def plot_trajectories_to_image(titles: List[str], plot_teams_separately: bool, p
         extra_height_for_highlights = 93
         in_game_image_height = 700
         in_game_image_width = 1246
+        extra_width_spacing = 50
+        extra_height_spacing = 50
         complete_image_with_highlights = concat_horizontal_vertical_with_extra(ct_title_images,
                                                                                t_title_images, 0,
-                                                                               in_game_image_height + extra_height_for_highlights)
+                                                                               in_game_image_height +
+                                                                               # height spacing for in-engine images
+                                                                               extra_height_for_highlights + extra_height_spacing,
+                                                                               extra_width_spacing,
+                                                                               extra_height_spacing)
         ct_focus_ims: List[Image.Image] = []
         for im in ct_title_images:
             focus_im = im.crop((663, 182, 842, 270))
             focus_im = focus_im.resize((481, 237), Image.ANTIALIAS)
             ct_focus_ims.append(focus_im)
-        repeated_paste_horizontal(complete_image_with_highlights, ct_focus_ims, 573, 783, 1000)
+        repeated_paste_horizontal(complete_image_with_highlights, ct_focus_ims, 573, 783, 1000 + extra_width_spacing)
 
         a_example_im = Image.open(a_example_path)
         a_example_im = a_example_im.resize((in_game_image_width, in_game_image_height), Image.Resampling.LANCZOS)
-        complete_image_with_highlights.paste(a_example_im, (1000 - in_game_image_width // 2,
-                                                            2000 + extra_height_for_highlights))
+        complete_image_with_highlights.paste(a_example_im, (1000 + extra_width_spacing // 2 - in_game_image_width // 2,
+                                                            2000 + 2 * extra_height_spacing + extra_height_for_highlights))
 
         t_focus_ims: List[Image.Image] = []
         for im in t_title_images:
             focus_im = im.crop((101, 141, 250, 363))
             focus_im = focus_im.resize((291, 436), Image.ANTIALIAS)
             t_focus_ims.append(focus_im)
-        repeated_paste_horizontal(complete_image_with_highlights, t_focus_ims, 707, 1654, 1000)
+        repeated_paste_horizontal(complete_image_with_highlights, t_focus_ims, 707, 1000 + extra_height_spacing + 654, 1000 + extra_width_spacing)
 
         b_example_im = Image.open(b_example_path)
         b_example_im = b_example_im.resize((in_game_image_width, in_game_image_height), Image.Resampling.LANCZOS)
-        complete_image_with_highlights.paste(b_example_im, (3000 - in_game_image_width // 2,
-                                                            2000 + extra_height_for_highlights))
+        complete_image_with_highlights.paste(b_example_im, (3 * (1000 + extra_width_spacing) - extra_width_spacing // 2 - in_game_image_width // 2,
+                                                            2000 + 2 * extra_height_spacing + extra_height_for_highlights))
         complete_image_with_highlights.save(plots_path / 'complete_with_highlights.png')
 
     complete_image = concat_vertical(title_images)
