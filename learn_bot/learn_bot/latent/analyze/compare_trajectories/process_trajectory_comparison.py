@@ -1,6 +1,8 @@
 from typing import List, Dict, Tuple, Union
 
 import pandas as pd
+from matplotlib.ticker import PercentFormatter
+
 from learn_bot.latent.analyze.comparison_column_names import *
 import matplotlib.pyplot as plt
 import numpy as np
@@ -36,7 +38,7 @@ def generate_bins(min_bin_start: int, max_bin_end: int, bin_width: int) -> List[
 def plot_hist(ax: plt.Axes, data: pd.Series, bins: List[Union[int,float]]):
     ax.hist(data.values, bins=bins, weights=np.ones(len(data)) / len(data), color="#3f8f35", edgecolor="#3f8f35")
     ax.grid(visible=True)
-    # ax.yaxis.set_major_formatter(PercentFormatter(1))
+    ax.yaxis.set_major_formatter(PercentFormatter(1, decimals=0))
 
 
 def percentile_filter_series(data: pd.Series, low_pct_to_remove=0.01, high_pct_to_remove=0.01) -> pd.Series:

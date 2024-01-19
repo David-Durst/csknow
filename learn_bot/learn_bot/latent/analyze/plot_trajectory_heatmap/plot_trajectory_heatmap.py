@@ -66,8 +66,6 @@ def run_one_dataset_trajectory_heatmap(use_all_human_data: bool, title: str,
 
     with tqdm(total=len(loaded_model.dataset.data_hdf5s), disable=False) as pbar:
         for i, hdf5_wrapper in enumerate(loaded_model.dataset.data_hdf5s):
-            if i > 3:
-                break
             if plot_only_first_hdf5_file_train_and_test and i > 0:
                 break
             if use_all_human_data:
@@ -151,8 +149,6 @@ def run_trajectory_heatmaps(plot_only_first_hdf5_file_train_and_test: bool):
                                               rollout_extensions, diff_indices, plots_path,
                                               plot_only_first_hdf5_file_train_and_test)
 
-    quit(0)
-
     if len(diff_indices) == 0:
         return
 
@@ -160,6 +156,9 @@ def run_trajectory_heatmaps(plot_only_first_hdf5_file_train_and_test: bool):
     run_trajectory_heatmaps_one_filter_option(TrajectoryFilterOptions(compute_speeds=True, only_kill=True),
                                               rollout_extensions, diff_indices, plots_path,
                                               plot_only_first_hdf5_file_train_and_test)
+
+    quit(0)
+
 
     run_trajectory_heatmaps_one_filter_option(TrajectoryFilterOptions(compute_speeds=True, only_killed=True),
                                               rollout_extensions, diff_indices, plots_path,

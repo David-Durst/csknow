@@ -20,7 +20,7 @@ def clear_event_counters():
 
 def create_heatmap(title: str, ct_team: bool, title_to_team_to_heatmap: Dict[str, Dict],
                    x_pos: List[float], y_pos: List[float]) -> Tuple[np.ndarray, np.ndarray]:
-    heatmap, x_bins, y_bins = np.histogram2d(x_pos, y_pos, bins=50,
+    heatmap, x_bins, y_bins = np.histogram2d(x_pos, y_pos, bins=25,
                                              range=[[d2_min[0], d2_max[0]], [d2_min[1], d2_max[1]]])
     if title not in title_to_num_y_points_less_than_1000:
         title_to_num_y_points_less_than_1000[title] = 0

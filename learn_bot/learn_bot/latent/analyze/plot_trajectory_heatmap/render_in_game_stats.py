@@ -91,8 +91,8 @@ def compute_one_metric_grid_histograms(title_to_values: Dict[str, List[float]], 
 
         ax.set_xticks(x_ticks)
         ax.set_yticks(y_ticks)
-        ax.tick_params(axis="x", labelsize=12)
-        ax.tick_params(axis="y", labelsize=12)
+        ax.tick_params(axis="x", labelsize=15)
+        ax.tick_params(axis="y", labelsize=15)
 
         # remove right/top spine
         ax.spines['top'].set_visible(False)
@@ -255,9 +255,10 @@ def compute_metrics(trajectory_filter_options: TrajectoryFilterOptions, plots_pa
                                       plots_path / ('speeds_' + str(trajectory_filter_options) + '.png'))
     if trajectory_filter_options.compute_lifetimes:
         # small timing mismatch can get 41 seconds on bomb timer
-        compute_one_metric_histograms(get_title_to_lifetimes(), 'Lifetimes', 5, 40., 'Lifetime Length (s)',
-                                      plots_path / ('lifetimes_' + str(trajectory_filter_options) + '.png'))
+        compute_one_metric_grid_histograms(get_title_to_lifetimes(), 'Lifetimes', 5, 40.,
+                                           0.6, 'Lifetime Length (s)', [0, 10, 20, 30, 40], 'Percent', [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6],
+                                           plots_path / ('lifetimes_' + str(trajectory_filter_options) + '.pdf'))
     if trajectory_filter_options.compute_shots_per_kill:
         compute_one_metric_grid_histograms(get_title_to_shots_per_kill(), 'Shots Per Kill', 1, 30.,
-                                           0.3, 'Shots', [0, 10, 20, 30], 'Fraction', [0, 0.1, 0.2, 0.3],
+                                           0.3, 'Shots', [0, 10, 20, 30], 'Percent', [0, 0.1, 0.2, 0.3],
                                            plots_path / ('shots_per_kill_' + str(trajectory_filter_options) + '.pdf'))
