@@ -169,7 +169,7 @@ def plot_trajectories_to_image(titles: List[str], plot_teams_separately: bool, p
             focus_im = im.crop((663, 182, 842, 270))
             focus_im = focus_im.resize((481, 237), Image.ANTIALIAS)
             ct_focus_ims.append(focus_im)
-        repeated_paste_horizontal(complete_image_with_highlights, ct_focus_ims, 573, 783, 1000 + extra_width_spacing)
+        repeated_paste_horizontal(complete_image_with_highlights, ct_focus_ims, 548, 783, 1000 + extra_width_spacing)
 
         a_example_im = Image.open(a_example_path)
         a_example_im = a_example_im.resize((in_game_image_width, in_game_image_height), Image.Resampling.LANCZOS)
@@ -181,7 +181,7 @@ def plot_trajectories_to_image(titles: List[str], plot_teams_separately: bool, p
             focus_im = im.crop((101, 141, 250, 363))
             focus_im = focus_im.resize((291, 436), Image.ANTIALIAS)
             t_focus_ims.append(focus_im)
-        repeated_paste_horizontal(complete_image_with_highlights, t_focus_ims, 707, 1000 + extra_height_spacing + 654, 1000 + extra_width_spacing)
+        repeated_paste_horizontal(complete_image_with_highlights, t_focus_ims, 732, 1000 + extra_height_spacing + 654, 1000 + extra_width_spacing)
 
         b_example_im = Image.open(b_example_path)
         b_example_im = b_example_im.resize((in_game_image_width, in_game_image_height), Image.Resampling.LANCZOS)
