@@ -10,14 +10,6 @@ from learn_bot.latent.place_area.column_names import specific_player_place_area_
 from learn_bot.latent.place_area.simulation.constants import place_name_to_index, place_names
 
 
-#title_to_num_teammates_to_enemy_vis_on_death: Dict[str, Dict[int, List[float]]] = {}
-#title_to_num_teammates_to_distance_to_teammate_on_death: Dict[str, Dict[int, List[float]]] = {}
-#title_to_num_enemies_to_my_team_vis_on_death: Dict[str, Dict[int, List[float]]] = {}
-#title_to_num_enemies_to_distance_to_enemy_on_death: Dict[str, Dict[int, List[float]]] = {}
-#title_to_blocking_events: Dict[str, List[float]] = {}
-#title_to_num_multi_engagements: Dict[str, List[float]] = {}
-#title_to_num_teammates_to_distance_multi_engagements: Dict[str, Dict[int, List[float]]] = {}
-
 class TeamPlaces:
     ct_team: bool
     planted_a: bool
@@ -220,48 +212,44 @@ def get_title_to_places_to_round_counts() -> Dict[str, Dict[TeamPlaces, int]]:
 def get_title_to_num_alive() -> Dict[str, PlayersAliveData]:
     return title_to_num_alive
 
-#def get_title_to_num_teammates_to_enemy_vis_on_death() -> Dict[str, Dict[int, List[float]]]:
-#    return title_to_num_teammates_to_enemy_vis_on_death
-#
-#
-#def get_title_to_num_enemies_to_my_team_vis_on_death() -> Dict[str, Dict[int, List[float]]]:
-#    return title_to_num_enemies_to_my_team_vis_on_death
-#
-#
-#def get_title_to_num_teammates_to_distance_to_teammate_on_death() -> Dict[str, Dict[int, List[float]]]:
-#    return title_to_num_teammates_to_distance_to_teammate_on_death
-#
-#
-#def get_title_to_num_enemies_to_distance_to_enemy_on_death() -> Dict[str, Dict[int, List[float]]]:
-#    return title_to_num_enemies_to_distance_to_enemy_on_death
-#
-#
-#def get_title_to_blocking_events() -> Dict[str, List[float]]:
-#    return title_to_blocking_events
-#
-#
-#def get_title_to_num_multi_engagements() -> Dict[str, List[float]]:
-#    return title_to_num_multi_engagements
-#
-#
-#def get_title_to_num_teammates_to_distance_multi_engagements() -> Dict[str, Dict[int, List[float]]]:
-#    return title_to_num_teammates_to_distance_multi_engagements
+
+ct_on_a_site_places = set([place_name_to_index[s] for s in ["BombsiteA", "ExtendedA", "ARamp"]])
+t_under_a_site_place = place_name_to_index["UnderA"]
+ct_on_b_site_places = set([place_name_to_index[s] for s in ["BombsiteB", "UpperTunnel"]])
+t_outside_b_site_place = place_name_to_index["BDoors"]
+
+title_to_opportunities_for_a_site_mistake: Dict[str, int]
+title_to_num_a_site_mistakes: Dict[str, int]
+title_to_opportunities_for_b_site_mistake: Dict[str, int]
+title_to_num_b_site_mistakes: Dict[str, int]
+
+
+def get_title_to_opportunities_for_a_site_mistake():
+    return title_to_opportunities_for_a_site_mistake
+
+
+def get_title_to_num_a_site_mistakes():
+    return title_to_num_a_site_mistakes
+
+
+def get_title_to_opportunities_for_b_site_mistake():
+    return title_to_opportunities_for_b_site_mistake
+
+
+def get_title_to_num_b_site_mistakes():
+    return title_to_num_b_site_mistakes
 
 
 def clear_teamwork_title_caches():
-    global title_to_places_to_round_counts, title_to_num_alive
+    global title_to_places_to_round_counts, title_to_num_alive, \
+        title_to_opportunities_for_a_site_mistake, title_to_num_a_site_mistakes, \
+        title_to_opportunities_for_b_site_mistake, title_to_num_b_site_mistakes
     title_to_places_to_round_counts = {}
     title_to_num_alive = {}
-    #global title_to_num_teammates_to_enemy_vis_on_death, title_to_num_enemies_to_my_team_vis_on_death, \
-    #    title_to_num_teammates_to_distance_to_teammate_on_death, title_to_num_enemies_to_distance_to_enemy_on_death, \
-    #    title_to_blocking_events, title_to_num_multi_engagements, title_to_num_teammates_to_distance_multi_engagements
-    #title_to_num_teammates_to_enemy_vis_on_death = {}
-    #title_to_num_enemies_to_my_team_vis_on_death = {}
-    #title_to_num_teammates_to_distance_to_teammate_on_death = {}
-    #title_to_num_enemies_to_distance_to_enemy_on_death = {}
-    #title_to_blocking_events = {}
-    #title_to_num_multi_engagements = {}
-    #title_to_num_teammates_to_distance_multi_engagements = {}
+    title_to_opportunities_for_a_site_mistake = {}
+    title_to_num_a_site_mistakes = {}
+    title_to_opportunities_for_b_site_mistake = {}
+    title_to_num_b_site_mistakes = {}
 
 
 def compute_round_metrics(loaded_model: LoadedModel, trajectory_np: np.ndarray, trajectory_vis_df: pd.DataFrame,
@@ -272,6 +260,7 @@ def compute_round_metrics(loaded_model: LoadedModel, trajectory_np: np.ndarray, 
     title_to_num_alive[title].num_overall_rounds += 1
 
     planted_a_np = trajectory_np[:, loaded_model.model.c4_planted_columns[0]] > 0.5
+    team_to_tick_to_place: Dict[bool, List[TeamPlaces]] = {True: [], False: []}
     for ct_team in [True, False]:
         if ct_team:
             team_range = range(0, loaded_model.model.num_players_per_team)
@@ -292,6 +281,7 @@ def compute_round_metrics(loaded_model: LoadedModel, trajectory_np: np.ndarray, 
             if team_place not in tick_team_places:
                 tick_team_places[team_place] = 0
             tick_team_places[team_place] += 1
+            team_to_tick_to_place[ct_team].append(team_place)
 
         if title not in title_to_places_to_round_counts:
             title_to_places_to_round_counts[title] = {}
@@ -322,6 +312,33 @@ def compute_round_metrics(loaded_model: LoadedModel, trajectory_np: np.ndarray, 
                 else:
                     title_to_num_alive[title].num_t_alive_to_num_ticks[i] += num_ticks_with_i_alive
                     title_to_num_alive[title].num_t_alive_to_num_rounds[i] += 1
+
+    if title not in title_to_opportunities_for_a_site_mistake:
+        title_to_opportunities_for_a_site_mistake[title] = 0
+        title_to_num_a_site_mistakes[title] = 0
+        title_to_opportunities_for_b_site_mistake[title] = 0
+        title_to_num_b_site_mistakes[title] = 0
+    for i in range(len(trajectory_np) - 1):
+        cur_ct_place = team_to_tick_to_place[True][i]
+        next_ct_place = team_to_tick_to_place[True][i + 1]
+        cur_t_place = team_to_tick_to_place[False][i]
+
+        cur_ct_only_on_a = set(cur_ct_place.places).issubset(ct_on_a_site_places)
+        next_ct_under_a = t_under_a_site_place in next_ct_place.places
+        cur_t_under_a = t_under_a_site_place in cur_t_place.places
+
+        cur_ct_only_on_b = set(cur_ct_place.places).issubset(ct_on_b_site_places)
+        next_ct_outside_b = t_outside_b_site_place in next_ct_place.places
+        cur_t_outside_b = t_outside_b_site_place in cur_t_place.places
+
+        if cur_ct_only_on_a and cur_t_under_a:
+            title_to_opportunities_for_a_site_mistake[title] += 1
+        if cur_ct_only_on_a and next_ct_under_a and cur_t_under_a:
+            title_to_num_a_site_mistakes[title] += 1
+        if cur_ct_only_on_b and cur_t_outside_b:
+            title_to_opportunities_for_b_site_mistake[title] += 1
+        if cur_ct_only_on_b and next_ct_outside_b and cur_t_outside_b:
+            title_to_num_b_site_mistakes[title] += 1
 
 
 

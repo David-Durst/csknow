@@ -11,7 +11,9 @@ from learn_bot.latent.analyze.compare_trajectories.process_trajectory_comparison
 from learn_bot.latent.analyze.plot_trajectory_heatmap.title_rename_dict import title_rename_dict
 from learn_bot.latent.analyze.plot_trajectory_heatmap.compute_teamwork_metrics import \
     get_title_to_places_to_round_counts, print_most_common_team_places, print_key_team_places, get_key_places_by_title, \
-    get_all_places_by_title, num_players_col, ct_team_col, all_key_places, grouped_key_places, get_title_to_num_alive
+    get_all_places_by_title, num_players_col, ct_team_col, all_key_places, grouped_key_places, get_title_to_num_alive, \
+    get_title_to_opportunities_for_a_site_mistake, get_title_to_num_a_site_mistakes, get_title_to_num_b_site_mistakes, \
+    get_title_to_opportunities_for_b_site_mistake
 from learn_bot.latent.analyze.plot_trajectory_heatmap.filter_trajectories import TrajectoryFilterOptions
 from learn_bot.latent.analyze.plot_trajectory_heatmap.build_heatmaps import get_title_to_speeds, \
     get_title_to_lifetimes, get_title_to_shots_per_kill
@@ -248,6 +250,18 @@ def compute_metrics(trajectory_filter_options: TrajectoryFilterOptions, plots_pa
         #key_places_by_title.plot(kind='bar', rot=90, title='Rounds With Team Formations')
         #plt.savefig(plots_path / 'key_places.png', bbox_inches='tight')
         plot_key_places(plots_path)
+
+        #print('a opportunities')
+        #print(get_title_to_opportunities_for_a_site_mistake())
+        #print('a mistakes')
+        #print(get_title_to_num_a_site_mistakes())
+
+        #print('b opportunities')
+        #print(get_title_to_opportunities_for_b_site_mistake())
+        #print('b mistakes')
+        #print(get_title_to_num_b_site_mistakes())
+
+
     if trajectory_filter_options.compute_speeds:
         # airstrafing can get you above normal weapon max speed
         compute_one_metric_histograms(get_title_to_speeds(), 'Weapon/Scoped Scaled Speed', 0.1, 1., 'Percent Max Speed',
