@@ -214,7 +214,8 @@ def get_title_to_num_alive() -> Dict[str, PlayersAliveData]:
 
 
 t_on_a_site_places = set([place_name_to_index[s] for s in ["BombsiteA", "ExtendedA"]])
-ct_a_site_from_spawn_long = set([place_name_to_index[s] for s in ["LongA", "CTSpawn", "UnderA"]])
+ct_a_site_from_spawn_long = set([place_name_to_index[s] for s in ["CTSpawn", "UnderA"]])
+ct_a_site_from_spawn_long_ramp = set([place_name_to_index[s] for s in ["CTSpawn", "UnderA", "ARamp"]])
 ct_under_a_site_place = place_name_to_index["UnderA"]
 
 t_away_cat_a_site_places = set([place_name_to_index[s] for s in ["BombsiteA", "ARamp", "Ramp"]])
@@ -367,33 +368,40 @@ def compute_round_metrics(loaded_model: LoadedModel, trajectory_np: np.ndarray, 
         next_t_place = team_to_tick_to_place[False][i + 1]
         cur_ct_place = team_to_tick_to_place[True][i]
 
-        #cur_t_only_on_a = set(cur_t_place.places).issubset(t_on_a_site_places)
+        cur_t_only_on_a = set(cur_t_place.places).issubset(t_on_a_site_places)
+        cur_ct_attacking_a = len(set(cur_ct_place.places).intersection(ct_a_site_from_spawn_long)) > 0
+
         next_t_under_a = ct_under_a_site_place in next_t_place.places
-        #cur_ct_attack_a_spawn_long = set(cur_ct_place.places).issubset(ct_a_site_from_spawn_long)
-        cur_t_away_cat_a = set(cur_t_place.places).issubset(t_away_cat_a_site_places)
-        next_t_extended_a = ct_extended_a_site_place in next_t_place.places
+        #cur_t_away_cat_a = set(cur_t_place.places).issubset(t_away_cat_a_site_places)
+        #next_t_extended_a = ct_extended_a_site_place in next_t_place.places
         #cur_ct_attack_a_spawn_cat = set(cur_ct_place.places).isdisjoint(t_away_cat_a_site_places) and \
         #                            ct_under_a_site_place in cur_ct_place.places
-        cur_ct_attack_a_spawn_cat = ct_under_a_site_place in cur_ct_place.places
+        #cur_ct_attack_a_spawn_cat = ct_under_a_site_place in cur_ct_place.places
 
         cur_t_only_on_b = set(cur_t_place.places).issubset(t_on_b_site_places)
         next_t_outside_b = ct_outside_b_site_place in next_t_place.places
         cur_ct_outside_b = ct_outside_b_site_place in cur_ct_place.places
 
-        #if cur_t_only_on_a and cur_ct_attack_a_spawn_long:
-        #    title_to_opportunities_for_a_site_mistake[title] += 1
-        #if cur_t_only_on_a and next_t_under_a and cur_ct_attack_a_spawn_long:
-        #    title_to_num_a_site_mistakes[title] += 1
-        if cur_t_away_cat_a and cur_ct_attack_a_spawn_cat:
+        if cur_t_only_on_a and cur_ct_attacking_a:
             title_to_opportunities_for_a_site_mistake[title] += 1
             if not had_a_round_mistake_opportunity:
                 title_to_opportunities_for_a_site_round_mistake[title] += 1
             had_a_round_mistake_opportunity = True
-        if cur_t_away_cat_a and next_t_under_a and cur_ct_attack_a_spawn_cat:
+        if cur_t_only_on_a and cur_ct_attacking_a and next_t_under_a:
             title_to_num_a_site_mistakes[title] += 1
             if not made_a_round_mistake:
                 title_to_num_a_site_round_mistakes[title] += 1
             made_a_round_mistake = True
+        #if cur_t_away_cat_a and cur_ct_attack_a_spawn_cat:
+        #    title_to_opportunities_for_a_site_mistake[title] += 1
+        #    if not had_a_round_mistake_opportunity:
+        #        title_to_opportunities_for_a_site_round_mistake[title] += 1
+        #    had_a_round_mistake_opportunity = True
+        #if cur_t_away_cat_a and next_t_under_a and cur_ct_attack_a_spawn_cat:
+        #    title_to_num_a_site_mistakes[title] += 1
+        #    if not made_a_round_mistake:
+        #        title_to_num_a_site_round_mistakes[title] += 1
+        #    made_a_round_mistake = True
         if cur_t_only_on_b and cur_ct_outside_b:
             title_to_opportunities_for_b_site_mistake[title] += 1
             if not had_b_round_mistake_opportunity:
