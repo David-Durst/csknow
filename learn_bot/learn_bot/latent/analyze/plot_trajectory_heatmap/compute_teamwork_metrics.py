@@ -216,41 +216,72 @@ def get_title_to_num_alive() -> Dict[str, PlayersAliveData]:
 t_on_a_site_places = set([place_name_to_index[s] for s in ["BombsiteA", "ExtendedA"]])
 ct_a_site_from_spawn_long = set([place_name_to_index[s] for s in ["LongA", "CTSpawn", "UnderA"]])
 ct_under_a_site_place = place_name_to_index["UnderA"]
+
+t_away_cat_a_site_places = set([place_name_to_index[s] for s in ["BombsiteA", "ARamp", "Ramp"]])
+ct_a_site_from_spawn_cat = set([place_name_to_index[s] for s in ["ExtendedA", "Short", "ShortStairs", "UnderA", "CTSpawn"]])
+ct_extended_a_site_place = place_name_to_index["ExtendedA"]
+
 t_on_b_site_places = set([place_name_to_index[s] for s in ["BombsiteB", "UpperTunnel"]])
 ct_outside_b_site_place = place_name_to_index["BDoors"]
 
 title_to_opportunities_for_a_site_mistake: Dict[str, int]
+title_to_opportunities_for_a_site_round_mistake: Dict[str, int]
 title_to_num_a_site_mistakes: Dict[str, int]
+title_to_num_a_site_round_mistakes: Dict[str, int]
 title_to_opportunities_for_b_site_mistake: Dict[str, int]
+title_to_opportunities_for_b_site_round_mistake: Dict[str, int]
 title_to_num_b_site_mistakes: Dict[str, int]
+title_to_num_b_site_round_mistakes: Dict[str, int]
 
 
 def get_title_to_opportunities_for_a_site_mistake():
     return title_to_opportunities_for_a_site_mistake
 
 
+def get_title_to_opportunities_for_a_site_round_mistake():
+    return title_to_opportunities_for_a_site_round_mistake
+
+
 def get_title_to_num_a_site_mistakes():
     return title_to_num_a_site_mistakes
+
+
+def get_title_to_num_a_site_round_mistakes():
+    return title_to_num_a_site_round_mistakes
 
 
 def get_title_to_opportunities_for_b_site_mistake():
     return title_to_opportunities_for_b_site_mistake
 
 
+def get_title_to_opportunities_for_b_site_round_mistake():
+    return title_to_opportunities_for_b_site_round_mistake
+
+
 def get_title_to_num_b_site_mistakes():
     return title_to_num_b_site_mistakes
+
+
+def get_title_to_num_b_site_round_mistakes():
+    return title_to_num_b_site_round_mistakes
 
 
 def clear_teamwork_title_caches():
     global title_to_places_to_round_counts, title_to_num_alive, \
         title_to_opportunities_for_a_site_mistake, title_to_num_a_site_mistakes, \
-        title_to_opportunities_for_b_site_mistake, title_to_num_b_site_mistakes
+        title_to_opportunities_for_b_site_mistake, title_to_num_b_site_mistakes, \
+        title_to_opportunities_for_a_site_round_mistake, title_to_num_a_site_round_mistakes, \
+        title_to_opportunities_for_b_site_round_mistake, title_to_num_b_site_round_mistakes
     title_to_places_to_round_counts = {}
     title_to_num_alive = {}
     title_to_opportunities_for_a_site_mistake = {}
+    title_to_opportunities_for_a_site_round_mistake = {}
     title_to_num_a_site_mistakes = {}
+    title_to_num_a_site_round_mistakes = {}
     title_to_opportunities_for_b_site_mistake = {}
+    title_to_opportunities_for_b_site_round_mistake = {}
     title_to_num_b_site_mistakes = {}
+    title_to_num_b_site_round_mistakes = {}
 
 
 def compute_round_metrics(loaded_model: LoadedModel, trajectory_np: np.ndarray, trajectory_vis_df: pd.DataFrame,
@@ -316,30 +347,63 @@ def compute_round_metrics(loaded_model: LoadedModel, trajectory_np: np.ndarray, 
 
     if title not in title_to_opportunities_for_a_site_mistake:
         title_to_opportunities_for_a_site_mistake[title] = 0
+        title_to_opportunities_for_a_site_round_mistake[title] = 0
+
         title_to_num_a_site_mistakes[title] = 0
+        title_to_num_a_site_round_mistakes[title] = 0
+
         title_to_opportunities_for_b_site_mistake[title] = 0
+        title_to_opportunities_for_b_site_round_mistake[title] = 0
+
         title_to_num_b_site_mistakes[title] = 0
+        title_to_num_b_site_round_mistakes[title] = 0
+
+    had_a_round_mistake_opportunity = False
+    made_a_round_mistake = False
+    had_b_round_mistake_opportunity = False
+    made_b_round_mistake = False
     for i in range(len(trajectory_np) - 1):
         cur_t_place = team_to_tick_to_place[False][i]
         next_t_place = team_to_tick_to_place[False][i + 1]
         cur_ct_place = team_to_tick_to_place[True][i]
 
-        cur_t_only_on_a = set(cur_t_place.places).issubset(t_on_a_site_places)
+        #cur_t_only_on_a = set(cur_t_place.places).issubset(t_on_a_site_places)
         next_t_under_a = ct_under_a_site_place in next_t_place.places
-        cur_ct_attack_a_spawn_long = set(cur_ct_place.places).issubset(ct_a_site_from_spawn_long)
+        #cur_ct_attack_a_spawn_long = set(cur_ct_place.places).issubset(ct_a_site_from_spawn_long)
+        cur_t_away_cat_a = set(cur_t_place.places).issubset(t_away_cat_a_site_places)
+        next_t_extended_a = ct_extended_a_site_place in next_t_place.places
+        #cur_ct_attack_a_spawn_cat = set(cur_ct_place.places).isdisjoint(t_away_cat_a_site_places) and \
+        #                            ct_under_a_site_place in cur_ct_place.places
+        cur_ct_attack_a_spawn_cat = ct_under_a_site_place in cur_ct_place.places
 
         cur_t_only_on_b = set(cur_t_place.places).issubset(t_on_b_site_places)
         next_t_outside_b = ct_outside_b_site_place in next_t_place.places
         cur_ct_outside_b = ct_outside_b_site_place in cur_ct_place.places
 
-        if cur_t_only_on_a and cur_ct_attack_a_spawn_long:
+        #if cur_t_only_on_a and cur_ct_attack_a_spawn_long:
+        #    title_to_opportunities_for_a_site_mistake[title] += 1
+        #if cur_t_only_on_a and next_t_under_a and cur_ct_attack_a_spawn_long:
+        #    title_to_num_a_site_mistakes[title] += 1
+        if cur_t_away_cat_a and cur_ct_attack_a_spawn_cat:
             title_to_opportunities_for_a_site_mistake[title] += 1
-        if cur_t_only_on_a and next_t_under_a and cur_ct_attack_a_spawn_long:
+            if not had_a_round_mistake_opportunity:
+                title_to_opportunities_for_a_site_round_mistake[title] += 1
+            had_a_round_mistake_opportunity = True
+        if cur_t_away_cat_a and next_t_under_a and cur_ct_attack_a_spawn_cat:
             title_to_num_a_site_mistakes[title] += 1
+            if not made_a_round_mistake:
+                title_to_num_a_site_round_mistakes[title] += 1
+            made_a_round_mistake = True
         if cur_t_only_on_b and cur_ct_outside_b:
             title_to_opportunities_for_b_site_mistake[title] += 1
+            if not had_b_round_mistake_opportunity:
+                title_to_opportunities_for_b_site_round_mistake[title] += 1
+            had_b_round_mistake_opportunity = True
         if cur_t_only_on_b and next_t_outside_b and cur_ct_outside_b:
             title_to_num_b_site_mistakes[title] += 1
+            if not made_b_round_mistake:
+                title_to_num_b_site_round_mistakes[title] += 1
+            made_b_round_mistake = True
 
 
 

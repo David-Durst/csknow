@@ -14,7 +14,9 @@ from learn_bot.latent.analyze.plot_trajectory_heatmap.compute_teamwork_metrics i
     get_title_to_places_to_round_counts, print_most_common_team_places, print_key_team_places, get_key_places_by_title, \
     get_all_places_by_title, num_players_col, ct_team_col, all_key_places, grouped_key_places, get_title_to_num_alive, \
     get_title_to_opportunities_for_a_site_mistake, get_title_to_num_a_site_mistakes, get_title_to_num_b_site_mistakes, \
-    get_title_to_opportunities_for_b_site_mistake
+    get_title_to_opportunities_for_b_site_mistake, get_title_to_opportunities_for_a_site_round_mistake, \
+    get_title_to_num_a_site_round_mistakes, get_title_to_num_b_site_round_mistakes, \
+    get_title_to_opportunities_for_b_site_round_mistake
 from learn_bot.latent.analyze.plot_trajectory_heatmap.filter_trajectories import TrajectoryFilterOptions
 from learn_bot.latent.analyze.plot_trajectory_heatmap.build_heatmaps import get_title_to_speeds, \
     get_title_to_lifetimes, get_title_to_shots_per_kill
@@ -267,13 +269,21 @@ def compute_metrics(trajectory_filter_options: TrajectoryFilterOptions, plots_pa
 
         print('a opportunities')
         print(get_title_to_opportunities_for_a_site_mistake())
+        print('a round opportunities')
+        print(get_title_to_opportunities_for_a_site_round_mistake())
         print('a mistakes')
         print(get_title_to_num_a_site_mistakes())
+        print('a round mistakes')
+        print(get_title_to_num_a_site_round_mistakes())
 
         print('b opportunities')
         print(get_title_to_opportunities_for_b_site_mistake())
+        print('b round opportunities')
+        print(get_title_to_opportunities_for_b_site_round_mistake())
         print('b mistakes')
         print(get_title_to_num_b_site_mistakes())
+        print('b round mistakes')
+        print(get_title_to_num_b_site_round_mistakes())
 
 
     if trajectory_filter_options.compute_speeds:
@@ -285,15 +295,11 @@ def compute_metrics(trajectory_filter_options: TrajectoryFilterOptions, plots_pa
         compute_one_metric_grid_histograms(get_title_to_lifetimes(), 'Lifetimes', 5, 40.,
                                            0.6, 'Lifetime Length (s)', [0, 10, 20, 30, 40], None, [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6],
                                            plots_path / ('lifetimes_' + str(trajectory_filter_options) + '.pdf'))
-        print('start lifetimes emd')
         compute_one_metric_emd(get_title_to_lifetimes(),
                                plots_path / ('lifetimes_' + str(trajectory_filter_options) + '.txt'))
-        print('end lifetimes emd')
     if trajectory_filter_options.compute_shots_per_kill:
         compute_one_metric_grid_histograms(get_title_to_shots_per_kill(), 'Shots Per Kill', 1, 30.,
                                            0.3, 'Shots', [0, 10, 20, 30], None, [0, 0.1, 0.2, 0.3],
                                            plots_path / ('shots_per_kill_' + str(trajectory_filter_options) + '.pdf'))
-        print('start shots per kill emd')
         compute_one_metric_emd(get_title_to_shots_per_kill(),
                                plots_path / ('shots_per_kill_' + str(trajectory_filter_options) + '.txt'))
-        print('end shots per kill emd')

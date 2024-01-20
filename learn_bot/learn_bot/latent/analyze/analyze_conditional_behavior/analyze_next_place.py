@@ -11,8 +11,14 @@ from learn_bot.latent.place_area.load_data import LoadDataResult
 from learn_bot.latent.place_area.simulation.constants import place_names, place_name_to_index
 from learn_bot.latent.vis import run_vis_checkpoint
 
-t_on_a_site_places = set([place_name_to_index[s] for s in ["BombsiteA"]])
+t_on_a_site_places = set([place_name_to_index[s] for s in ["BombsiteA", "ExtendedA"]])
+ct_a_site_from_spawn_long = set([place_name_to_index[s] for s in ["LongA", "CTSpawn", "UnderA"]])
 ct_under_a_site_place = place_name_to_index["UnderA"]
+
+t_away_cat_a_site_places = set([place_name_to_index[s] for s in ["BombsiteA", "ARamp", "Ramp"]])
+ct_a_site_from_spawn_cat = set([place_name_to_index[s] for s in ["ExtendedA", "Short", "ShortStairs", "UnderA", "CTSpawn"]])
+ct_extended_a_site_place = place_name_to_index["ExtendedA"]
+
 t_on_b_site_places = set([place_name_to_index[s] for s in ["BombsiteB", "UpperTunnel"]])
 ct_outside_b_site_place = place_name_to_index["BDoors"]
 
@@ -69,18 +75,30 @@ def analyze_next_place():
                                                 [int(i) for i in tick_places if i < len(place_names)])
                         team_to_tick_to_place[ct_team].append(team_place)
 
-                for j in [0]:#range(len(trajectory_np) - 1):
+                for j in range(len(trajectory_np) - 1):
                     cur_t_place = team_to_tick_to_place[False][j]
-                    next_t_place = team_to_tick_to_place[False][j]
+                    next_t_place = team_to_tick_to_place[False][j+1]
                     cur_ct_place = team_to_tick_to_place[True][j]
 
-                    cur_t_only_on_a = set(cur_t_place.places).issubset(t_on_a_site_places)
+                    # cur_t_only_on_a = set(cur_t_place.places).issubset(t_on_a_site_places)
                     next_t_under_a = ct_under_a_site_place in next_t_place.places
-                    cur_ct_under_a = ct_under_a_site_place in cur_ct_place.places
+                    # cur_ct_attack_a_spawn_long = set(cur_ct_place.places).issubset(ct_a_site_from_spawn_long)
+                    cur_t_away_cat_a = set(cur_t_place.places).issubset(t_away_cat_a_site_places)
+                    next_t_extended_a = ct_extended_a_site_place in next_t_place.places
+                    cur_ct_attack_a_spawn_cat = set(cur_ct_place.places).isdisjoint(t_away_cat_a_site_places) and \
+                                                ct_under_a_site_place in cur_ct_place.places
 
-                    if cur_t_only_on_a and cur_ct_under_a:
+                    #cur_t_only_on_a = set(cur_t_place.places).issubset(t_on_a_site_places)
+                    #next_t_under_a = ct_under_a_site_place in next_t_place.places
+                    #cur_ct_under_a = ct_under_a_site_place in cur_ct_place.places
+
+                    #if cur_t_only_on_a and cur_ct_under_a:
+                    #    a_mistake_opportunities.add((dataset_index, hdf5_key, trajectory_id))
+                    #if cur_t_only_on_a and cur_ct_under_a and next_t_under_a:
+                    #    a_mistakes.add((dataset_index, hdf5_key, trajectory_id))
+                    if cur_t_away_cat_a and cur_ct_attack_a_spawn_cat:
                         a_mistake_opportunities.add((dataset_index, hdf5_key, trajectory_id))
-                    if cur_t_only_on_a and cur_ct_under_a and next_t_under_a:
+                    if cur_t_away_cat_a and next_t_under_a and cur_ct_attack_a_spawn_cat:
                         a_mistakes.add((dataset_index, hdf5_key, trajectory_id))
 
                     cur_t_only_on_b = set(cur_t_place.places).issubset(t_on_b_site_places)
@@ -91,10 +109,12 @@ def analyze_next_place():
 
             pbar.update(1)
     print('opportunities')
-    print(len(a_mistake_opportunities))
+    #print(len(a_mistake_opportunities))
     print(a_mistake_opportunities)
+    print('mistakes')
+    print(a_mistakes)
     print("")
-    print(b_mistake_opportunities)
+    #print(b_mistake_opportunities)
     #print('mistakes')
     #print(a_mistakes)
 
