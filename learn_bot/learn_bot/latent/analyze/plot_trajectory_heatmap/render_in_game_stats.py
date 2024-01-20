@@ -5,6 +5,7 @@ from typing import List, Dict, Set, Union, Optional
 
 import numpy as np
 import pandas as pd
+import scipy
 from matplotlib import pyplot as plt
 
 from learn_bot.latent.analyze.compare_trajectories.process_trajectory_comparison import plot_hist, generate_bins
@@ -105,6 +106,19 @@ def compute_one_metric_grid_histograms(title_to_values: Dict[str, List[float]], 
 
         ax_index += 1
     plt.savefig(plot_file_path)
+
+
+def compute_one_metric_emd(title_to_values: Dict[str, List[float]], plot_file_path: Path):
+    if 'Human' not in title_to_values.keys():
+        return
+    non_human_titles = [t for t in title_to_values.keys() if t != 'Human']
+    title_to_emd: Dict[str, float] = {}
+    for t in non_human_titles:
+        title_to_emd[t] = scipy.stats.wasserstein_distance(title_to_values['Human'], title_to_values[t])
+    with open(plot_file_path, 'w') as f:
+        f.write(pformat(title_to_emd, indent=4))
+
+
 
 # want number of places with (1) 2 or 3 players and (2) by team - 4 rows
 # first row is 2 players, CT
@@ -271,7 +285,15 @@ def compute_metrics(trajectory_filter_options: TrajectoryFilterOptions, plots_pa
         compute_one_metric_grid_histograms(get_title_to_lifetimes(), 'Lifetimes', 5, 40.,
                                            0.6, 'Lifetime Length (s)', [0, 10, 20, 30, 40], None, [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6],
                                            plots_path / ('lifetimes_' + str(trajectory_filter_options) + '.pdf'))
+        print('start lifetimes emd')
+        compute_one_metric_emd(get_title_to_lifetimes(),
+                               plots_path / ('lifetimes_' + str(trajectory_filter_options) + '.txt'))
+        print('end lifetimes emd')
     if trajectory_filter_options.compute_shots_per_kill:
         compute_one_metric_grid_histograms(get_title_to_shots_per_kill(), 'Shots Per Kill', 1, 30.,
                                            0.3, 'Shots', [0, 10, 20, 30], None, [0, 0.1, 0.2, 0.3],
                                            plots_path / ('shots_per_kill_' + str(trajectory_filter_options) + '.pdf'))
+        print('start shots per kill emd')
+        compute_one_metric_emd(get_title_to_shots_per_kill(),
+                               plots_path / ('shots_per_kill_' + str(trajectory_filter_options) + '.txt'))
+        print('end shots per kill emd')
