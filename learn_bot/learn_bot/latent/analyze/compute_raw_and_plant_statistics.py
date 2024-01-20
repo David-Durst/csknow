@@ -120,26 +120,38 @@ def compute_plant_statistics():
     fig_length = 6
     pd.set_option('display.float_format', lambda x: '%.2f' % x)
     fig = plt.figure(figsize=(fig_length, 2*fig_length), constrained_layout=True)
-    axs = fig.subplots(2, 1, squeeze=False)
+    axs = fig.subplots(3, 1, squeeze=False)
 
+    # plot ct per round
     plot_hist(axs[0, 0], players_per_round_df['ct per round'], [0.5, 1.5, 2.5, 3.5, 4.5, 5.5])
     axs[0, 0].set_title('Offensive Players Per Round')
-    axs[0, 0].set_xlabel('Number of Players')
-    axs[0, 0].set_ylabel('Percent of Rounds')
-    axs[0, 0].text(3, 0.2, players_per_round_df['ct per round'].describe().to_string())
-    axs[0, 0].set_ylim(0, 1)
-    axs[0, 0].set_xlim(0, 6)
+    axs[0, 0].set_xlabel('Players')
+    axs[0, 0].set_ylabel('Percent')
+    #axs[0, 0].text(3, 0.2, players_per_round_df['ct per round'].describe().to_string())
+    axs[0, 0].set_ylim(0, 0.4)
+    axs[0, 0].set_xlim(0.5, 5.5)
 
+    axs[0, 0].set_xticks([1, 2, 3, 4, 5])
+    axs[0, 0].set_yticks([0, 0.1, 0.2, 0.3, 0.4])
+    axs[0, 0].tick_params(axis="x", labelsize=15)
+    axs[0, 0].tick_params(axis="y", labelsize=15)
+
+    # remove right/top spine
+    axs[0, 0].spines['top'].set_visible(False)
+    axs[0, 0].spines['right'].set_visible(False)
+
+    # remove veritcal grid lines, make horizontal dotted
+    axs[0, 0].yaxis.grid(True, color='#EEEEEE', dashes=[4, 1])
+    axs[0, 0].xaxis.grid(False)
+
+    # plot t per round
     plot_hist(axs[1, 0], players_per_round_df['t per round'], [0.5, 1.5, 2.5, 3.5, 4.5, 5.5])
     axs[1, 0].set_title('Defensive Players Per Round')
-    axs[1, 0].set_xlabel('Number of Players')
-    axs[1, 0].set_ylabel('Percent of Rounds')
-    axs[1, 0].text(3, 0.2, players_per_round_df['t per round'].describe().to_string())
-    axs[1, 0].set_ylim(0, 1)
+    axs[1, 0].set_xlabel('Players')
+    axs[1, 0].set_ylabel('Percent')
+    #axs[1, 0].text(3, 0.2, players_per_round_df['t per round'].describe().to_string())
+    axs[1, 0].set_ylim(0, 0.4)
     axs[1, 0].set_xlim(0, 6)
-
-    plt.savefig(Path(__file__).parent / 'plots' / 'players_per_round.png')
-    plt.close(fig)
 
     # round lengths
     fig = plt.figure(figsize=(fig_length, fig_length), constrained_layout=True)
@@ -149,11 +161,11 @@ def compute_plant_statistics():
     plot_hist(ax, seconds_per_round_series, seconds_per_round_bins)
     ax.set_title('Round Lengths')
     ax.set_xlabel('Length (s)')
-    ax.set_ylabel('Percent of Rounds')
+    ax.set_ylabel('Percent')
     ax.text(3, 0.2, seconds_per_round_series.describe().to_string())
-    ax.set_ylim(0, 1)
+    ax.set_ylim(0, 0.4)
 
-    plt.savefig(Path(__file__).parent / 'plots' / 'round_lengths.png')
+    plt.savefig(Path(__file__).parent / 'plots' / 'plant_statistics.pdf')
     plt.close(fig)
 
     print(f'num players {len(players_set)}, num games {num_games}, num rounds {num_rounds}, '
