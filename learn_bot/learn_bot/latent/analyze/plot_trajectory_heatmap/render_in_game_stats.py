@@ -251,15 +251,15 @@ def compute_metrics(trajectory_filter_options: TrajectoryFilterOptions, plots_pa
         #plt.savefig(plots_path / 'key_places.png', bbox_inches='tight')
         plot_key_places(plots_path)
 
-        #print('a opportunities')
-        #print(get_title_to_opportunities_for_a_site_mistake())
-        #print('a mistakes')
-        #print(get_title_to_num_a_site_mistakes())
+        print('a opportunities')
+        print(get_title_to_opportunities_for_a_site_mistake())
+        print('a mistakes')
+        print(get_title_to_num_a_site_mistakes())
 
-        #print('b opportunities')
-        #print(get_title_to_opportunities_for_b_site_mistake())
-        #print('b mistakes')
-        #print(get_title_to_num_b_site_mistakes())
+        print('b opportunities')
+        print(get_title_to_opportunities_for_b_site_mistake())
+        print('b mistakes')
+        print(get_title_to_num_b_site_mistakes())
 
 
     if trajectory_filter_options.compute_speeds:

@@ -213,10 +213,11 @@ def get_title_to_num_alive() -> Dict[str, PlayersAliveData]:
     return title_to_num_alive
 
 
-ct_on_a_site_places = set([place_name_to_index[s] for s in ["BombsiteA", "ExtendedA", "ARamp"]])
-t_under_a_site_place = place_name_to_index["UnderA"]
-ct_on_b_site_places = set([place_name_to_index[s] for s in ["BombsiteB", "UpperTunnel"]])
-t_outside_b_site_place = place_name_to_index["BDoors"]
+t_on_a_site_places = set([place_name_to_index[s] for s in ["BombsiteA", "ExtendedA"]])
+ct_a_site_from_spawn_long = set([place_name_to_index[s] for s in ["LongA", "CTSpawn", "UnderA"]])
+ct_under_a_site_place = place_name_to_index["UnderA"]
+t_on_b_site_places = set([place_name_to_index[s] for s in ["BombsiteB", "UpperTunnel"]])
+ct_outside_b_site_place = place_name_to_index["BDoors"]
 
 title_to_opportunities_for_a_site_mistake: Dict[str, int]
 title_to_num_a_site_mistakes: Dict[str, int]
@@ -319,25 +320,25 @@ def compute_round_metrics(loaded_model: LoadedModel, trajectory_np: np.ndarray, 
         title_to_opportunities_for_b_site_mistake[title] = 0
         title_to_num_b_site_mistakes[title] = 0
     for i in range(len(trajectory_np) - 1):
-        cur_ct_place = team_to_tick_to_place[True][i]
-        next_ct_place = team_to_tick_to_place[True][i + 1]
         cur_t_place = team_to_tick_to_place[False][i]
+        next_t_place = team_to_tick_to_place[False][i + 1]
+        cur_ct_place = team_to_tick_to_place[True][i]
 
-        cur_ct_only_on_a = set(cur_ct_place.places).issubset(ct_on_a_site_places)
-        next_ct_under_a = t_under_a_site_place in next_ct_place.places
-        cur_t_under_a = t_under_a_site_place in cur_t_place.places
+        cur_t_only_on_a = set(cur_t_place.places).issubset(t_on_a_site_places)
+        next_t_under_a = ct_under_a_site_place in next_t_place.places
+        cur_ct_attack_a_spawn_long = set(cur_ct_place.places).issubset(ct_a_site_from_spawn_long)
 
-        cur_ct_only_on_b = set(cur_ct_place.places).issubset(ct_on_b_site_places)
-        next_ct_outside_b = t_outside_b_site_place in next_ct_place.places
-        cur_t_outside_b = t_outside_b_site_place in cur_t_place.places
+        cur_t_only_on_b = set(cur_t_place.places).issubset(t_on_b_site_places)
+        next_t_outside_b = ct_outside_b_site_place in next_t_place.places
+        cur_ct_outside_b = ct_outside_b_site_place in cur_ct_place.places
 
-        if cur_ct_only_on_a and cur_t_under_a:
+        if cur_t_only_on_a and cur_ct_attack_a_spawn_long:
             title_to_opportunities_for_a_site_mistake[title] += 1
-        if cur_ct_only_on_a and next_ct_under_a and cur_t_under_a:
+        if cur_t_only_on_a and next_t_under_a and cur_ct_attack_a_spawn_long:
             title_to_num_a_site_mistakes[title] += 1
-        if cur_ct_only_on_b and cur_t_outside_b:
+        if cur_t_only_on_b and cur_ct_outside_b:
             title_to_opportunities_for_b_site_mistake[title] += 1
-        if cur_ct_only_on_b and next_ct_outside_b and cur_t_outside_b:
+        if cur_t_only_on_b and next_t_outside_b and cur_ct_outside_b:
             title_to_num_b_site_mistakes[title] += 1
 
 

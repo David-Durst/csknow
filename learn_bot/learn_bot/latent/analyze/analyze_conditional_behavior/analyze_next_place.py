@@ -11,10 +11,10 @@ from learn_bot.latent.place_area.load_data import LoadDataResult
 from learn_bot.latent.place_area.simulation.constants import place_names, place_name_to_index
 from learn_bot.latent.vis import run_vis_checkpoint
 
-ct_on_a_site_places = set([place_name_to_index[s] for s in ["BombsiteA", "ExtendedA", "ARamp"]])
-t_under_a_site_place = place_name_to_index["UnderA"]
-ct_on_b_site_places = set([place_name_to_index[s] for s in ["BombsiteB", "UpperTunnel"]])
-t_outside_b_site_place = place_name_to_index["BDoors"]
+t_on_a_site_places = set([place_name_to_index[s] for s in ["BombsiteA"]])
+ct_under_a_site_place = place_name_to_index["UnderA"]
+t_on_b_site_places = set([place_name_to_index[s] for s in ["BombsiteB", "UpperTunnel"]])
+ct_outside_b_site_place = place_name_to_index["BDoors"]
 
 def analyze_next_place():
     load_data_options = run_vis_checkpoint.load_data_options
@@ -22,9 +22,11 @@ def analyze_next_place():
     loaded_model = load_model_file(load_data_result)
     hdf5_to_round_ids = get_hdf5_to_test_round_ids(push_only=True)[0]
 
-    bad_transitions = 0
+    a_mistake_opportunities: set = set()
+    a_mistakes: set = set()
+    b_mistake_opportunities: set = set()
     with tqdm(total=len(loaded_model.dataset.data_hdf5s), disable=False) as pbar:
-        for i, hdf5_wrapper in enumerate(loaded_model.dataset.data_hdf5s):
+        for dataset_index, hdf5_wrapper in enumerate(loaded_model.dataset.data_hdf5s):
             #if i > 3:
             #    continue
             hdf5_key = str(hdf5_wrapper.hdf5_path.name)
@@ -32,7 +34,7 @@ def analyze_next_place():
                 #print(f'skipping {hdf5_key}')
                 continue
 
-            loaded_model.cur_hdf5_index = i
+            loaded_model.cur_hdf5_index = dataset_index
             loaded_model.load_cur_dataset_only(include_outputs=False)
 
             # get the data per hdf5
@@ -41,7 +43,7 @@ def analyze_next_place():
             dataset = loaded_model.cur_dataset.X
 
             # get trajectory identifies
-            trajectory_ids = id_df[round_id_column].unique()
+            trajectory_ids = hdf5_to_round_ids[hdf5_key]
             trajectory_id_col = id_df[round_id_column]
 
             for trajectory_id in trajectory_ids:
@@ -67,19 +69,34 @@ def analyze_next_place():
                                                 [int(i) for i in tick_places if i < len(place_names)])
                         team_to_tick_to_place[ct_team].append(team_place)
 
-                for i in range(len(trajectory_np) - 1):
-                    cur_ct_place = team_to_tick_to_place[True][i]
-                    next_ct_place = team_to_tick_to_place[True][i+1]
-                    cur_t_place = team_to_tick_to_place[False][i]
+                for j in [0]:#range(len(trajectory_np) - 1):
+                    cur_t_place = team_to_tick_to_place[False][j]
+                    next_t_place = team_to_tick_to_place[False][j]
+                    cur_ct_place = team_to_tick_to_place[True][j]
 
-                    cur_ct_only_on_a = set(cur_ct_place.places).issubset(ct_on_a_site_places)
-                    next_ct_under_a = t_under_a_site_place in next_ct_place.places
-                    cur_t_under_a = t_under_a_site_place in cur_t_place.places
+                    cur_t_only_on_a = set(cur_t_place.places).issubset(t_on_a_site_places)
+                    next_t_under_a = ct_under_a_site_place in next_t_place.places
+                    cur_ct_under_a = ct_under_a_site_place in cur_ct_place.places
 
-                    if cur_ct_only_on_a and next_ct_under_a and cur_t_under_a:
-                        bad_transitions += 1
+                    if cur_t_only_on_a and cur_ct_under_a:
+                        a_mistake_opportunities.add((dataset_index, hdf5_key, trajectory_id))
+                    if cur_t_only_on_a and cur_ct_under_a and next_t_under_a:
+                        a_mistakes.add((dataset_index, hdf5_key, trajectory_id))
+
+                    cur_t_only_on_b = set(cur_t_place.places).issubset(t_on_b_site_places)
+                    cur_ct_outside_b = ct_outside_b_site_place in cur_ct_place.places
+
+                    if cur_t_only_on_b and cur_ct_outside_b:
+                        b_mistake_opportunities.add((dataset_index, hdf5_key, trajectory_id))
+
             pbar.update(1)
-    print(bad_transitions)
+    print('opportunities')
+    print(len(a_mistake_opportunities))
+    print(a_mistake_opportunities)
+    print("")
+    print(b_mistake_opportunities)
+    #print('mistakes')
+    #print(a_mistakes)
 
 
 if __name__ == '__main__':
