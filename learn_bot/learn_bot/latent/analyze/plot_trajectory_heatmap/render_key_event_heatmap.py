@@ -6,6 +6,7 @@ import numpy as np
 import pandas as pd
 from matplotlib import pyplot as plt
 
+from learn_bot.latent.analyze.plot_trajectory_heatmap.title_rename_dict import title_rename_dict
 from learn_bot.latent.analyze.plot_trajectory_heatmap.build_heatmaps import title_to_team_to_pos_dict
 from learn_bot.latent.analyze.plot_trajectory_heatmap.filter_trajectories import TrajectoryFilterOptions
 from learn_bot.latent.analyze.test_traces.run_trace_visualization import d2_img, convert_to_canvas_coordinates
@@ -35,12 +36,6 @@ def create_heatmap(title: str, ct_team: bool, title_to_team_to_heatmap: Dict[str
     title_to_team_to_heatmap[title][ct_team] = heatmap
     return x_bins, y_bins
 
-title_rename_dict = {
-    "Human": "Human",
-    "1_15_24_learned_push": "CSMoveBot",
-    "1_15_24_handcrafted": "ManualBot",
-    "1_15_24_default": "CSGOBot",
-}
 
 def plot_heatmap(title: str, event: str, ct_team: bool, title_to_team_to_heatmap: Dict[str, Dict],
                  x_pos: List[float], max_bin_value: int,

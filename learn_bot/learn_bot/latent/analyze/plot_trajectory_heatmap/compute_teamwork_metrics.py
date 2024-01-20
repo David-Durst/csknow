@@ -46,6 +46,7 @@ class TeamPlaces:
 
 
 title_to_places_to_round_counts: Dict[str, Dict[TeamPlaces, int]] = {}
+title_to_places_to_tick_counts: Dict[str, Dict[TeamPlaces, int]] = {}
 
 
 def print_most_common_team_places(team_place_counts: Dict[TeamPlaces, int]):
@@ -131,10 +132,11 @@ def get_key_place_counts(team_place_counts: Dict[TeamPlaces, int], key_places: L
     return pd.Series(key_team_place_counts)
 
 
-def get_key_places_by_title(key_places: List[TeamPlaces]) -> pd.DataFrame:
+def get_key_places_by_title(key_places: List[TeamPlaces], use_tick_counts: bool) -> pd.DataFrame:
     titles: List[str] = []
     key_place_counts: List[pd.Series] = []
-    for title, team_place_count in title_to_places_to_round_counts.items():
+    counts_dict = title_to_places_to_tick_counts if use_tick_counts else title_to_places_to_round_counts
+    for title, team_place_count in counts_dict.items():
         titles.append(title)
         # need to fill in empty places (one title may have them not in another) so dataframe is rectangular
         key_place_counts.append(get_key_place_counts(team_place_count, key_places))
@@ -281,10 +283,15 @@ def compute_round_metrics(loaded_model: LoadedModel, trajectory_np: np.ndarray, 
         places_np = trajectory_vis_df.loc[:, place_columns].to_numpy()
 
         round_team_places: set[TeamPlaces] = set()
+        tick_team_places: Dict[TeamPlaces, int] = {}
         for i, tick_places in enumerate(places_np.tolist()):
-            round_team_places.add(TeamPlaces(ct_team, planted_a_np[i],
+            team_place = TeamPlaces(ct_team, planted_a_np[i],
                                              # filter out places of dead players
-                                             [int(i) for i in tick_places if i < len(place_names)]))
+                                             [int(i) for i in tick_places if i < len(place_names)])
+            round_team_places.add(team_place)
+            if team_place not in tick_team_places:
+                tick_team_places[team_place] = 0
+            tick_team_places[team_place] += 1
 
         if title not in title_to_places_to_round_counts:
             title_to_places_to_round_counts[title] = {}
@@ -292,6 +299,13 @@ def compute_round_metrics(loaded_model: LoadedModel, trajectory_np: np.ndarray, 
             if team_place not in title_to_places_to_round_counts[title]:
                 title_to_places_to_round_counts[title][team_place] = 0
             title_to_places_to_round_counts[title][team_place] += 1
+
+        if title not in title_to_places_to_tick_counts:
+            title_to_places_to_tick_counts[title] = {}
+        for team_place in tick_team_places:
+            if team_place not in title_to_places_to_tick_counts[title]:
+                title_to_places_to_tick_counts[title][team_place] = 0
+            title_to_places_to_tick_counts[title][team_place] += tick_team_places[team_place]
 
         for i in range(loaded_model.model.num_players_per_team):
             i_alive_at_start = trajectory_np[0, alive_columns].sum() == i

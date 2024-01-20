@@ -8,6 +8,7 @@ import pandas as pd
 from matplotlib import pyplot as plt
 
 from learn_bot.latent.analyze.compare_trajectories.process_trajectory_comparison import plot_hist, generate_bins
+from learn_bot.latent.analyze.plot_trajectory_heatmap.title_rename_dict import title_rename_dict
 from learn_bot.latent.analyze.plot_trajectory_heatmap.compute_teamwork_metrics import \
     get_title_to_places_to_round_counts, print_most_common_team_places, print_key_team_places, get_key_places_by_title, \
     get_all_places_by_title, num_players_col, ct_team_col, all_key_places, grouped_key_places, get_title_to_num_alive
@@ -50,11 +51,6 @@ def compute_one_metric_histograms(title_to_values: Dict[str, List[float]], metri
 
 plt.rc('font', family='Arial')
 
-title_rename_dict = {
-    "1_15_24_learned_push": "CSMoveBot",
-    "1_15_24_handcrafted": "ManualBot",
-    "1_15_24_default": "CSGOBot",
-}
 
 def compute_one_metric_grid_histograms(title_to_values: Dict[str, List[float]], metric_title: str,
                                        bin_width: Union[int, float], max_bin_end: float, y_max: float,
@@ -82,9 +78,7 @@ def compute_one_metric_grid_histograms(title_to_values: Dict[str, List[float]], 
         bins = generate_bins(0, int(ceil(max_bin_end)), bin_width)
     ax_index = 0
     for title, values in title_to_values.items():
-        renamed_title = title
-        if title in title_rename_dict:
-            renamed_title = title_rename_dict[title]
+        renamed_title = title_rename_dict[title]
         row_index = ax_index // 2
         col_index = ax_index % 2
         ax = axs[row_index, col_index]
@@ -147,7 +141,7 @@ def plot_key_places(plot_path: Path):
     title_to_num_alive = get_title_to_num_alive()
     for group, key_places in grouped_key_places.items():
         # plot key places
-        key_places_by_title = get_key_places_by_title(key_places)
+        key_places_by_title = get_key_places_by_title(key_places, True)
         key_places_by_title.plot(kind='bar', rot=90, title=group)
         plt.savefig(plot_path / (group.lower().replace(' ', '_') + '.png'), bbox_inches='tight')
 
