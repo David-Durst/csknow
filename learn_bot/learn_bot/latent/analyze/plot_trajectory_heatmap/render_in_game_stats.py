@@ -129,7 +129,7 @@ def compute_one_metric_emd(title_to_values: Dict[str, List[float]], plot_file_pa
 # fourth row is 3 players, T
 # columns are titles
 def plot_most_common_places_by_title(plot_file_path: Path):
-    key_places_by_title = get_key_places_by_title(all_key_places)
+    key_places_by_title = get_key_places_by_title(all_key_places, False)
     places_by_title = get_all_places_by_title()
 
     titles = key_places_by_title.columns.tolist()
@@ -154,14 +154,79 @@ def plot_most_common_places_by_title(plot_file_path: Path):
     plt.savefig(plot_file_path)
 
 
-def plot_key_places(plot_path: Path):
+name_to_ylim = {
+    "Offense Flanks": 100,
+    "Defense Spread": 100,
+    "mistakes": 50
+}
+
+name_to_yticks = {
+    "Offense Flanks": [0, 20, 40, 60, 80, 100],
+    "Defense Spread": [0, 20, 40, 60, 80, 100],
+    "mistakes": [0, 10, 20, 30, 40, 50]
+}
+
+situation_rename_dict = {
+    "T A ExtendedA,BombsiteA,LongA": "D1",
+    "T A BombsiteA,BombsiteA,LongA": "D2",
+    "T A BombsiteA,LongA,ARamp": "D3",
+    "T B BombsiteB,UpperTunnel,BDoors": "D4",
+    "T B BombsiteB,BombsiteB,BDoors": "D5",
+    "T B BombsiteB,BombsiteB,UpperTunnel": "D6",
+    "CT A LongA,ShortStairs": "A1",
+    "CT A CTSpawn,ShortStairs": "A2",
+    "CT A CTSpawn,LongA": "A3",
+    "CT B UpperTunnel,BDoors": "A4",
+    "CT B UpperTunnel,Hole": "A5",
+}
+
+
+def plot_place_title_df(df: pd.DataFrame, chart_name: str, plot_file_path: Path, y_label: str):
+    df.index = df.index.to_series().replace(situation_rename_dict)
+    df.rename(title_rename_dict, axis=1, inplace=True)
+
+    fig, ax = plt.subplots()
+
+    df.plot(kind='bar', title=chart_name, rot=0, ax=ax)#, color="#3f8f35")
+    if chart_name in name_to_ylim:
+        #ax.set_ylim(0., name_to_ylim[chart_name])
+        #ax.set_yticks(name_to_yticks[chart_name])
+        ax.tick_params(axis="x", labelsize=15)
+        ax.tick_params(axis="y", labelsize=15)
+    ax.set_title(chart_name, fontsize=15)
+    # ax.set_xlabel(x_label)
+    ax.set_ylabel(y_label)
+
+    #ax.set_xticks(x_ticks)
+
+    # remove right/top spine
+    ax.spines['top'].set_visible(False)
+    ax.spines['right'].set_visible(False)
+
+    # remove veritcal grid lines, make horizontal dotted
+    ax.yaxis.grid(True, color='#EEEEEE', dashes=[4, 1])
+    ax.xaxis.grid(False)
+    plt.savefig(plot_file_path, bbox_inches='tight')
+
+
+def plot_key_places(plot_path: Path, use_tick_counts: bool):
     set_pd_print_options()
     title_to_num_alive = get_title_to_num_alive()
     for group, key_places in grouped_key_places.items():
         # plot key places
-        key_places_by_title = get_key_places_by_title(key_places, True)
-        key_places_by_title.plot(kind='bar', rot=90, title=group)
-        plt.savefig(plot_path / (group.lower().replace(' ', '_') + '.png'), bbox_inches='tight')
+        key_places_by_title = get_key_places_by_title(key_places, use_tick_counts)
+        key_places_by_title_copy = key_places_by_title.copy()
+        if use_tick_counts:
+            key_places_by_title_copy /= 16
+        if use_tick_counts:
+            plots_file_name = plot_path / (group.lower().replace(' ', '_') + '_ticks.pdf')
+        else:
+            plots_file_name = plot_path / (group.lower().replace(' ', '_') + '_rounds.pdf')
+        plot_place_title_df(key_places_by_title_copy, group, plots_file_name,
+                            'Seconds' if use_tick_counts else 'Rounds')
+
+        if use_tick_counts:
+            continue
 
         titles = key_places_by_title.columns.tolist()
 
@@ -259,31 +324,50 @@ def plot_key_places(plot_path: Path):
             #print(pd.Series(title_to_percent_mad_diff))
 
 
+def plot_mistakes(plots_path, use_tick_counts: bool):
+    if use_tick_counts:
+        mistakes_df = pd.DataFrame.from_records([get_title_to_num_a_site_round_mistakes(),
+                                                 get_title_to_num_b_site_round_mistakes()],
+                                                index=['BombsiteA Mistakes', 'BombsiteB Mistakes'])
+    else:
+        mistakes_df = pd.DataFrame.from_records([get_title_to_num_a_site_mistakes(),
+                                                 get_title_to_num_b_site_mistakes()],
+                                                index=['BombsiteA Mistakes', 'BombsiteB Mistakes'])
+
+    plot_place_title_df(mistakes_df, 'Mistakes', plots_path / 'mistakes.pdf', 'Events' if use_tick_counts else 'Rounds')
+
+    if not use_tick_counts:
+        with open(plots_path / 'mistakes.txt', 'w') as f:
+            f.write('a opportunities\n')
+            f.write(pformat(get_title_to_opportunities_for_a_site_mistake(), indent=4))
+            f.write('a round opportunities\n')
+            f.write(pformat(get_title_to_opportunities_for_a_site_round_mistake(), indent=4))
+            f.write('a mistakes\n')
+            f.write(pformat(get_title_to_num_a_site_mistakes(), indent=4))
+            f.write('a round mistakes\n')
+            f.write(pformat(get_title_to_num_a_site_round_mistakes(), indent=4))
+
+            f.write('b opportunities\n')
+            f.write(pformat(get_title_to_opportunities_for_b_site_mistake(), indent=4))
+            f.write('b round opportunities\n')
+            f.write(pformat(get_title_to_opportunities_for_b_site_round_mistake(), indent=4))
+            f.write('b mistakes\n')
+            f.write(pformat(get_title_to_num_b_site_mistakes(), indent=4))
+            f.write('b round mistakes\n')
+            f.write(pformat(get_title_to_num_b_site_round_mistakes(), indent=4))
+
+
 def compute_metrics(trajectory_filter_options: TrajectoryFilterOptions, plots_path: Path):
     if trajectory_filter_options.is_no_filter():
         #plot_most_common_places_by_title(plots_path / 'most_popular_places.png')
         #key_places_by_title = get_key_places_by_title()
         #key_places_by_title.plot(kind='bar', rot=90, title='Rounds With Team Formations')
         #plt.savefig(plots_path / 'key_places.png', bbox_inches='tight')
-        plot_key_places(plots_path)
+        plot_key_places(plots_path, True)
+        plot_key_places(plots_path, False)
+        plot_mistakes(plots_path, True)
+        plot_mistakes(plots_path, False)
 
-        print('a opportunities')
-        print(get_title_to_opportunities_for_a_site_mistake())
-        print('a round opportunities')
-        print(get_title_to_opportunities_for_a_site_round_mistake())
-        print('a mistakes')
-        print(get_title_to_num_a_site_mistakes())
-        print('a round mistakes')
-        print(get_title_to_num_a_site_round_mistakes())
-
-        print('b opportunities')
-        print(get_title_to_opportunities_for_b_site_mistake())
-        print('b round opportunities')
-        print(get_title_to_opportunities_for_b_site_round_mistake())
-        print('b mistakes')
-        print(get_title_to_num_b_site_mistakes())
-        print('b round mistakes')
-        print(get_title_to_num_b_site_round_mistakes())
 
 
     if trajectory_filter_options.compute_speeds:

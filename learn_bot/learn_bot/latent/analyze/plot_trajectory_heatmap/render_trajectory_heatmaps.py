@@ -159,7 +159,7 @@ def plot_trajectories_to_image(titles: List[str], plot_teams_separately: bool, p
         extra_height_spacing = 50
         complete_image_with_highlights = concat_horizontal_vertical_with_extra(ct_title_images,
                                                                                t_title_images, 0,
-                                                                               in_game_image_height +
+                                                                               #in_game_image_height +
                                                                                # height spacing for in-engine images
                                                                                extra_height_spacing, #+ extra_height_for_highlights + ,
                                                                                extra_width_spacing,

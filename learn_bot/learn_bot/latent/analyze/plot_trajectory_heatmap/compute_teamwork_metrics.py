@@ -93,6 +93,7 @@ defense_spread = [
     TeamPlaces(False, True, ['BombsiteA', 'ARamp', 'LongA']),
     # spread out
     TeamPlaces(False, False, ['BombsiteB', 'BDoors', 'UpperTunnel']),
+    TeamPlaces(False, False, ['BombsiteB', 'BombsiteB', 'BDoors']),
     TeamPlaces(False, False, ['BombsiteB', 'BombsiteB', 'UpperTunnel']),
 ]
 #key_places = [
@@ -106,11 +107,11 @@ all_key_places_str = 'All Places'
 all_key_places = offense_two_man_flanks + offense_two_man_executes + defense_default + defense_together_off + defense_spread
 grouped_key_places: Dict[str, List[TeamPlaces]] = {
     offense_two_man_flanks_str: offense_two_man_flanks,
-    offense_two_man_executes_str: offense_two_man_executes,
-    defense_default_str: defense_default,
-    defense_together_off_str: defense_together_off,
+    #offense_two_man_executes_str: offense_two_man_executes,
+    #defense_default_str: defense_default,
+    #defense_together_off_str: defense_together_off,
     defense_spread_str: defense_spread,
-    all_key_places_str: all_key_places
+    #all_key_places_str: all_key_places
 }
 
 
@@ -370,17 +371,7 @@ def compute_round_metrics(loaded_model: LoadedModel, trajectory_np: np.ndarray, 
 
         cur_t_only_on_a = set(cur_t_place.places).issubset(t_on_a_site_places)
         cur_ct_attacking_a = len(set(cur_ct_place.places).intersection(ct_a_site_from_spawn_long)) > 0
-
         next_t_under_a = ct_under_a_site_place in next_t_place.places
-        #cur_t_away_cat_a = set(cur_t_place.places).issubset(t_away_cat_a_site_places)
-        #next_t_extended_a = ct_extended_a_site_place in next_t_place.places
-        #cur_ct_attack_a_spawn_cat = set(cur_ct_place.places).isdisjoint(t_away_cat_a_site_places) and \
-        #                            ct_under_a_site_place in cur_ct_place.places
-        #cur_ct_attack_a_spawn_cat = ct_under_a_site_place in cur_ct_place.places
-
-        cur_t_only_on_b = set(cur_t_place.places).issubset(t_on_b_site_places)
-        next_t_outside_b = ct_outside_b_site_place in next_t_place.places
-        cur_ct_outside_b = ct_outside_b_site_place in cur_ct_place.places
 
         if cur_t_only_on_a and cur_ct_attacking_a:
             title_to_opportunities_for_a_site_mistake[title] += 1
@@ -392,16 +383,11 @@ def compute_round_metrics(loaded_model: LoadedModel, trajectory_np: np.ndarray, 
             if not made_a_round_mistake:
                 title_to_num_a_site_round_mistakes[title] += 1
             made_a_round_mistake = True
-        #if cur_t_away_cat_a and cur_ct_attack_a_spawn_cat:
-        #    title_to_opportunities_for_a_site_mistake[title] += 1
-        #    if not had_a_round_mistake_opportunity:
-        #        title_to_opportunities_for_a_site_round_mistake[title] += 1
-        #    had_a_round_mistake_opportunity = True
-        #if cur_t_away_cat_a and next_t_under_a and cur_ct_attack_a_spawn_cat:
-        #    title_to_num_a_site_mistakes[title] += 1
-        #    if not made_a_round_mistake:
-        #        title_to_num_a_site_round_mistakes[title] += 1
-        #    made_a_round_mistake = True
+
+        cur_t_only_on_b = set(cur_t_place.places).issubset(t_on_b_site_places)
+        next_t_outside_b = ct_outside_b_site_place in next_t_place.places
+        cur_ct_outside_b = ct_outside_b_site_place in cur_ct_place.places
+
         if cur_t_only_on_b and cur_ct_outside_b:
             title_to_opportunities_for_b_site_mistake[title] += 1
             if not had_b_round_mistake_opportunity:
