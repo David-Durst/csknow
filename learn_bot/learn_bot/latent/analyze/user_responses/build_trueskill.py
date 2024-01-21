@@ -97,7 +97,7 @@ class PlayerRatings:
         cbar.ax.tick_params(labelsize=15)
         cbar.ax.set_ylabel('Win Probability', rotation=270, labelpad=20, fontsize=15)
 
-        full_title = 'User Study Win Probabilities'
+        full_title = 'User Study More Human Probabilities'
         if title_prefix is not None:
             full_title = title_prefix + " " + full_title
         ax.set_title(full_title, fontsize=25)
