@@ -70,26 +70,38 @@ def compute_coverage_metrics(loaded_model: LoadedModel, start_positions: bool):
         with open(coverage_pickle_path, "rb") as infile:
             (sum_pos_heatmap, x_pos_bins, y_pos_bins) = pickle.load(infile)
 
-
-
-    fig = plt.figure(figsize=(10, 10), constrained_layout=True)
+    fig = plt.figure(figsize=(7, 6), constrained_layout=True)
     if start_positions:
-        fig.suptitle("Starting Data Set Coverage Of de_dust2 Map", fontsize=16)
+        fig.suptitle("Starting Position Coverage", fontsize=30, x=0.40)
     else:
-        fig.suptitle("Data Set Coverage Of de_dust2 Map", fontsize=16)
+        fig.suptitle("All Position Coverage", fontsize=30, x=0.40)
     ax = fig.subplots(1, 1)
 
     sum_pos_heatmap = sum_pos_heatmap.T
 
     grid_x, grid_y = np.meshgrid(x_pos_bins, y_pos_bins)
 
-    heatmap_im = ax.pcolormesh(grid_x, grid_y, sum_pos_heatmap, norm=LogNorm(vmin=1, vmax=sum_pos_heatmap.max()),
+    heatmap_im = ax.pcolor(grid_x, grid_y, sum_pos_heatmap, norm=LogNorm(vmin=1, vmax=sum_pos_heatmap.max()),
                                cmap='viridis')
+    heatmap_im.set_edgecolor('face')
     cbar = fig.colorbar(heatmap_im, ax=ax)
-    cbar.ax.set_ylabel('Number of Per-Player Data Points', rotation=270, labelpad=15, fontsize=14)
+    cbar.ax.tick_params(labelsize=20)
+    cbar.ax.set_ylabel('Player Positions', rotation=270, labelpad=20, fontsize=20)
 
-    file_name = 'start_coverage.png' if first_tick_in_round_col else 'all_tick_coverage.png'
+    # remove right/top spine
+    ax.spines['top'].set_visible(False)
+    ax.spines['right'].set_visible(False)
+    ax.spines['left'].set_visible(False)
+    ax.spines['bottom'].set_visible(False)
 
+    ax.set_xticks([])
+    ax.set_yticks([])
+    ax.yaxis.grid(False)
+    ax.xaxis.grid(False)
+
+    file_name = 'start_coverage.pdf' if start_positions else 'all_tick_coverage.pdf'
+
+    print(f'saving {file_name}')
     plt.savefig(Path(__file__).parent / 'plots' / file_name)
 
     print(f"num ticks {num_ticks}, num alive player at ticks {num_alive_pats}")
