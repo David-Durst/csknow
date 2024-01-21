@@ -83,12 +83,62 @@ class PlayerRatings:
             f.write(str(self))
 
     def plot_win_probabilities(self, plot_path: Path, title_prefix: Optional[str] = None):
-        np.ndarray
-        for bot_type in bot_types
+        win_probabilities = np.ndarray((4, 4))
+        for r, first_bot_type in enumerate(bot_types):
+            for c, second_bot_type in enumerate(bot_types):
+                win_probabilities[r, c] = win_probability((self[first_bot_type],), (self[second_bot_type],)) * 100
 
+        fig, ax = plt.subplots(figsize=(7.5, 6))
+        # normalize data using vmin, vmax
+        cax = ax.matshow(win_probabilities, vmin=0, vmax=100)
+
+        # add a colorbar to a plot.
+        cbar = fig.colorbar(cax)
+        cbar.ax.tick_params(labelsize=15)
+        cbar.ax.set_ylabel('Win Probability', rotation=270, labelpad=20, fontsize=15)
+
+        full_title = 'User Study Win Probabilities'
+        if title_prefix is not None:
+            full_title = title_prefix + " " + full_title
+        ax.set_title(full_title, fontsize=25)
+
+        ## define ticks
+        #ticks = np.arange(0, 9, 1)
+
+        ## set x and y tick marks
+        #ax.set_xticks(ticks)
+        #ax.set_yticks(ticks)
+
+        for (i, j), z in np.ndenumerate(win_probabilities):
+            ax.text(j, i, '{:.0f}'.format(z), ha='center', va='center', fontsize=15,
+                    bbox=dict(boxstyle='round', facecolor='white', edgecolor='0.3'))
+
+        # set x and y tick labels
+        # https://stackoverflow.com/questions/63723514/userwarning-fixedformatter-should-only-be-used-together-with-fixedlocator
+        ax.set_xticks(np.arange(len(bot_types)))
+        ax.set_yticks(np.arange(len(bot_types)))
+        # https://stackoverflow.com/questions/3529666/matplotlib-matshow-labels
+        #fixed_bot_types = [''] + bot_types + ['']
+        ax.set_xticklabels(bot_types)
+        ax.set_yticklabels(bot_types)
+        ax.tick_params(axis="x", labelsize=15)
+        ax.tick_params(axis="y", labelsize=15)
+
+        # remove right/top spine
+        ax.spines['top'].set_visible(False)
+        ax.spines['right'].set_visible(False)
+        ax.spines['bottom'].set_visible(False)
+        ax.spines['left'].set_visible(False)
+
+        # remove veritcal grid lines, make horizontal dotted
+        ax.yaxis.grid(False)
+        ax.xaxis.grid(False)
+        fig.tight_layout()
+        plt.savefig(plot_path.with_stem(plot_path.stem + '_win_prob'))
 
     def plot(self, plot_path: Path, title_prefix: Optional[str] = None):
         self.plot_ratings(plot_path, title_prefix)
+        self.plot_win_probabilities(plot_path, title_prefix)
 
 
 def win_probability(team1, team2):
