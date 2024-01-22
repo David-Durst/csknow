@@ -41,9 +41,9 @@ def plot_heatmap(title: str, event: str, ct_team: bool, title_to_team_to_heatmap
                  x_pos: List[float], max_bin_value: int,
                  x_bins: np.ndarray, y_bins: np.ndarray, fig: plt.Figure, ax: plt.Axes, cmap, first_row: bool, first_col: bool):
     if first_row:
-        ax.set_title(title_rename_dict[title], fontsize=40)
+        ax.set_title(title_rename_dict[title], fontsize=8)
     if first_col:
-        ax.set_ylabel("Offense" if ct_team else "Defense", fontsize=40)
+        ax.set_ylabel("Offense" if ct_team else "Defense", fontsize=8)
     grid_x, grid_y = np.meshgrid(x_bins, y_bins)
     heatmap_im = ax.pcolor(grid_x, grid_y, title_to_team_to_heatmap[title][ct_team], vmin=1,
                                vmax=max_bin_value, cmap=cmap)#, #linewidth=0, alpha=1, rasterized=True)
@@ -70,7 +70,9 @@ def plot_key_event_heatmaps(title_to_team_to_key_event_pos: title_to_team_to_pos
 
     num_titles = len(title_to_team_to_key_event_pos.keys())
     # mul cols by 2 as need ct and t plots
-    fig = plt.figure(figsize=(fig_length * (num_titles + 0.3), fig_length * 2), constrained_layout=True)
+    local_fig_width = 7
+    # fig_length * (num_titles + 0.3)
+    fig = plt.figure(figsize=(7, 7 * 0.5), constrained_layout=True)
     axs = fig.subplots(2, num_titles, squeeze=False)
 
     canvas_min_max = convert_to_canvas_coordinates(pd.Series([d2_min[0], d2_max[0]]),
@@ -120,7 +122,7 @@ def plot_key_event_heatmaps(title_to_team_to_key_event_pos: title_to_team_to_pos
     #fig.subplots_adjust(right=0.9)
     #cbar_ax = fig.add_axes([0.92, 0.15, 0.03, 0.7])
     cbar = fig.colorbar(im, ax=axs)
-    cbar.ax.tick_params(labelsize=25)
+    cbar.ax.tick_params(labelsize=8)
 
     plt.savefig(plots_path / (event + '.pdf'))
     with open(plots_path / (event + '.txt'), 'w') as f:
