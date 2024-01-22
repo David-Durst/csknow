@@ -187,24 +187,43 @@ def plot_trajectories_to_image(titles: List[str], plot_teams_separately: bool, p
                                                                                extra_height_spacing, #+ extra_height_for_highlights + ,
                                                                                extra_width_spacing,
                                                                                extra_height_spacing)
-        ct_focus_ims: List[Image.Image] = []
+        ct_undera_focus_ims: List[Image.Image] = []
+        ct_b_focus_ims: List[Image.Image] = []
+        ct_mid_focus_ims: List[Image.Image] = []
         for im in ct_title_images:
-            focus_im = im.crop((663, 182, 842, 270))
-            focus_im = focus_im.resize((481, 237), Image.ANTIALIAS)
-            ct_focus_ims.append(focus_im)
-        repeated_paste_horizontal(complete_image_with_highlights, ct_focus_ims, 548, 783, 1000 + extra_width_spacing)
+            # undera
+            ct_undera_focus_im = im.crop((663, 182, 842, 270))
+            ct_undera_focus_im = ct_undera_focus_im.resize((481, 237), Image.ANTIALIAS)
+            ct_undera_focus_ims.append(ct_undera_focus_im)
+
+            ct_b_focus_im = im.crop((85, 87, 252, 325))
+            ct_b_focus_im = ct_b_focus_im.resize((291, 412), Image.ANTIALIAS)
+            ct_b_focus_ims.append(ct_b_focus_im)
+
+            ct_mid_focus_im = im.crop((468, 395, 493, 422))
+            ct_mid_focus_im = ct_mid_focus_im.resize((98, 100), Image.ANTIALIAS)
+            ct_mid_focus_ims.append(ct_mid_focus_im)
+        repeated_paste_horizontal(complete_image_with_highlights, ct_undera_focus_ims, 548, 783, 1000 + extra_width_spacing)
+        repeated_paste_horizontal(complete_image_with_highlights, ct_b_focus_ims, 10, 648, 1000 + extra_width_spacing)
+        repeated_paste_horizontal(complete_image_with_highlights, ct_mid_focus_ims, 348, 904, 1000 + extra_width_spacing)
 
         #a_example_im = Image.open(a_example_path)
         #a_example_im = a_example_im.resize((in_game_image_width, in_game_image_height), Image.Resampling.LANCZOS)
         #complete_image_with_highlights.paste(a_example_im, (1000 + extra_width_spacing // 2 - in_game_image_width // 2,
         #                                                    2000 + 2 * extra_height_spacing + extra_height_for_highlights))
 
-        t_focus_ims: List[Image.Image] = []
+        t_b_focus_ims: List[Image.Image] = []
+        t_longa_focus_ims: List[Image.Image] = []
         for im in t_title_images:
-            focus_im = im.crop((101, 141, 250, 363))
-            focus_im = focus_im.resize((291, 436), Image.ANTIALIAS)
-            t_focus_ims.append(focus_im)
-        repeated_paste_horizontal(complete_image_with_highlights, t_focus_ims, 732, 1000 + extra_height_spacing + 654, 1000 + extra_width_spacing)
+            t_b_focus_im = im.crop((101, 141, 250, 363))
+            t_b_focus_im = t_b_focus_im.resize((263, 372), Image.ANTIALIAS)
+            t_b_focus_ims.append(t_b_focus_im)
+
+            t_longa_focus_im = im.crop((825, 482, 945, 624))
+            t_longa_focus_im = t_longa_focus_im.resize((292, 345), Image.ANTIALIAS)
+            t_longa_focus_ims.append(t_longa_focus_im)
+        repeated_paste_horizontal(complete_image_with_highlights, t_b_focus_ims, 10, 1000 + extra_height_spacing + 654, 1000 + extra_width_spacing)
+        repeated_paste_horizontal(complete_image_with_highlights, t_longa_focus_ims, 733, 1000 + extra_height_spacing + 654, 1000 + extra_width_spacing)
 
         #b_example_im = Image.open(b_example_path)
         #b_example_im = b_example_im.resize((in_game_image_width, in_game_image_height), Image.Resampling.LANCZOS)
