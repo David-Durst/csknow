@@ -34,7 +34,7 @@ rollout_load_data_options = LoadDataOptions(
     use_all_human_data=False,
     add_manual_to_all_human_data=False,
     limit_manual_data_to_no_enemies_nav=False,
-    custom_rollout_extension='_12_29_23_model_learned_no_time_with_partial_1474_rounds*'
+    custom_rollout_extension='_1_15_24_handcrafted*'
 )
 
 def compute_num_points(load_data_result: LoadDataResult):
@@ -51,10 +51,10 @@ def compute_num_points(load_data_result: LoadDataResult):
 
 
 if __name__ == "__main__":
-    load_data_result = LoadDataResult(load_data_options)
+    load_data_result = LoadDataResult(rollout_load_data_options)
     compute_num_points(load_data_result)
 
-    loaded_model = load_model_file(load_data_result, use_test_data_only=True)
-    #loaded_model = load_model_file(load_data_result)
+    #loaded_model = load_model_file(load_data_result, use_test_data_only=True)
+    loaded_model = load_model_file(load_data_result)
 
     vis(loaded_model, off_policy_inference, " Off Policy")

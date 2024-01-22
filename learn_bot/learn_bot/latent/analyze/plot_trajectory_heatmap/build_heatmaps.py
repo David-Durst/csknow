@@ -384,6 +384,12 @@ def plot_one_trajectory_dataset(loaded_model: LoadedModel, id_df: pd.DataFrame, 
                         title_to_team_to_key_event_pos[title][ct_team][0].append(x_pos[i])
                         title_to_team_to_key_event_pos[title][ct_team][1].append(y_pos[i])
             else:
+                # sometimes get a late round end signal and so everyone dies and teleports, ignore those last few ticks
+                for i in range(len(canvas_pos_xy) - 1):
+                    if ((canvas_pos_xy[i][0] - canvas_pos_xy[i + 1][0]) ** 2. +
+                        (canvas_pos_xy[i][1] - canvas_pos_xy[i + 1][1]) ** 2.) ** 0.5 > 100:
+                        assert i > 10 and len(canvas_pos_xy) - i < 5
+                        canvas_pos_xy = canvas_pos_xy[:i+1]
                 for pos_xy in canvas_pos_xy:
                     #plot_gaussian(point_buffer, pos_xy[1], pos_xy[0], 1)
                     point_buffer[pos_xy[1], pos_xy[0]] += 1

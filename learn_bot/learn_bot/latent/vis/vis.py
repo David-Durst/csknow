@@ -13,7 +13,7 @@ from learn_bot.latent.place_area.column_names import *
 from learn_bot.latent.load_model import LoadedModel
 from learn_bot.latent.train_paths import default_selected_retake_rounds_path, default_save_push_round_labels_path
 from learn_bot.libs.df_grouping import make_index_column
-from learn_bot.mining.area_cluster import d2_radar_path
+from learn_bot.mining.area_cluster import d2_radar_path, dark_d2_radar_path
 from learn_bot.latent.vis.draw_inference import draw_all_players, minimap_height, minimap_width, scale_down
 import tkinter as tk
 from tkinter import ttk, font
@@ -52,7 +52,7 @@ def vis(loaded_model: LoadedModel, inference_fn: Callable[[LoadedModel], None], 
 
     img_frame = tk.Frame(window)
     img_frame.pack(pady=5)
-    d2_img = Image.open(d2_radar_path)
+    d2_img = Image.open(dark_d2_radar_path)
     scale_down()
     d2_img = d2_img.resize((minimap_width(), minimap_height()), Image.ANTIALIAS)
     d2_img_draw = d2_img.copy()
