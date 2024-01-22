@@ -17,7 +17,8 @@ from learn_bot.latent.analyze.plot_trajectory_heatmap.filter_trajectories import
     region_constraints, team_based_region_constraints
 from learn_bot.latent.analyze.plot_trajectory_heatmap.render_diff_metric_bar_charts import render_diff_metric_bar_charts
 from learn_bot.latent.analyze.plot_trajectory_heatmap.render_diffs import plot_trajectory_diffs_to_image
-from learn_bot.latent.analyze.plot_trajectory_heatmap.render_trajectory_heatmaps import plot_trajectories_to_image
+from learn_bot.latent.analyze.plot_trajectory_heatmap.render_trajectory_heatmaps import plot_trajectories_to_image, \
+    get_colorbar_image
 from learn_bot.latent.analyze.plot_trajectory_heatmap.render_key_event_heatmap import plot_key_event_heatmaps
 from learn_bot.latent.analyze.plot_trajectory_heatmap.render_in_game_stats import compute_metrics
 from learn_bot.latent.analyze.plot_trajectory_heatmap.build_heatmaps import plot_one_trajectory_dataset, \
@@ -41,7 +42,7 @@ def run_one_dataset_trajectory_heatmap(use_all_human_data: bool, title: str,
                                        # limit to hand labeled push/save data for first hdf5 file
                                        plot_only_first_hdf5_file_train_and_test: bool = False):
     print(f"{title} {str(base_trajectory_filter_options)}")
-    
+
     if use_all_human_data:
         load_data_options = run_vis_checkpoint.load_data_options
     else:
@@ -150,6 +151,8 @@ def run_trajectory_heatmaps(plot_only_first_hdf5_file_train_and_test: bool):
                                                                       compute_shots_per_kill=True),
                                               rollout_extensions, diff_indices, plots_path,
                                               plot_only_first_hdf5_file_train_and_test)
+
+    quit(0)
 
     if len(diff_indices) == 0:
         return

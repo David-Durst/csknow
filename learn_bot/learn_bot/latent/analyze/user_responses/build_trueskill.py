@@ -114,10 +114,10 @@ class PlayerRatings:
                     bbox=dict(boxstyle='round', facecolor='white', edgecolor='0.3'))
 
         # set x and y tick labels
-        # https://stackoverflow.com/questions/63723514/userwarning-fixedformatter-should-only-be-used-together-with-fixedlocator
+        # https://stackoverflow.com/questions/3529666/matplotlib-matshow-labels
+        # look at second answer
         ax.set_xticks(np.arange(len(bot_types)))
         ax.set_yticks(np.arange(len(bot_types)))
-        # https://stackoverflow.com/questions/3529666/matplotlib-matshow-labels
         #fixed_bot_types = [''] + bot_types + ['']
         ax.set_xticklabels(bot_types)
         ax.set_yticklabels(bot_types)
