@@ -117,24 +117,25 @@ def compute_plant_statistics():
 
     # plot histograms of players per round and round lengths
     # players per round
-    fig_length = 6
     pd.set_option('display.float_format', lambda x: '%.2f' % x)
-    fig = plt.figure(figsize=(3*fig_length, fig_length), constrained_layout=True)
+    fig = plt.figure(figsize=(3.25, 1 + 3.25 / 3), constrained_layout=True)
     axs = fig.subplots(1, 3, squeeze=False, sharey=True)
+
+    fig.suptitle('Round Statistics', fontsize=8)
 
     # plot ct per round
     plot_hist(axs[0, 0], players_per_round_df['ct per round'], [0.5, 1.5, 2.5, 3.5, 4.5, 5.5])
-    axs[0, 0].set_title('Offensive Players Per Round', fontsize=27)
-    axs[0, 0].set_xlabel('Players', fontsize=27)
-    axs[0, 0].set_ylabel('Percent', fontsize=27)
+    axs[0, 0].set_title('Offense', fontsize=8)
+    axs[0, 0].set_xlabel('Players', fontsize=8)
+    axs[0, 0].set_ylabel('Percent', fontsize=8)
     #axs[0, 0].text(3, 0.2, players_per_round_df['ct per round'].describe().to_string())
     axs[0, 0].set_ylim(0, 0.4)
     axs[0, 0].set_xlim(0.5, 5.5)
 
-    axs[0, 0].set_xticks([1, 2, 3, 4, 5])
-    axs[0, 0].set_yticks([0, 0.1, 0.2, 0.3, 0.4])
-    axs[0, 0].tick_params(axis="x", labelsize=27)
-    axs[0, 0].tick_params(axis="y", labelsize=27)
+    axs[0, 0].set_xticks([1, 3, 5])
+    axs[0, 0].set_yticks([0.2, 0.4])
+    axs[0, 0].tick_params(axis="x", labelsize=8)
+    axs[0, 0].tick_params(axis="y", labelsize=8)
 
     # remove right/top spine
     axs[0, 0].spines['top'].set_visible(False)
@@ -146,15 +147,15 @@ def compute_plant_statistics():
 
     # plot t per round
     plot_hist(axs[0, 1], players_per_round_df['t per round'], [0.5, 1.5, 2.5, 3.5, 4.5, 5.5])
-    axs[0, 1].set_title('Defensive Players Per Round', fontsize=27)
-    axs[0, 1].set_xlabel('Players', fontsize=27)
+    axs[0, 1].set_title('Defense', fontsize=8)
+    axs[0, 1].set_xlabel('Players', fontsize=8)
     #axs[0, 1].set_ylabel('Percent')
     #axs[0, 1].text(3, 0.2, players_per_round_df['t per round'].describe().to_string())
     axs[0, 1].set_ylim(0, 0.4)
     axs[0, 1].set_xlim(0.5, 5.5)
 
-    axs[0, 1].set_xticks([1, 2, 3, 4, 5])
-    axs[0, 1].tick_params(axis="x", labelsize=27)
+    axs[0, 1].set_xticks([1, 3, 5])
+    axs[0, 1].tick_params(axis="x", labelsize=8)
 
     # remove right/top spine
     axs[0, 1].spines['top'].set_visible(False)
@@ -168,15 +169,15 @@ def compute_plant_statistics():
 
     seconds_per_round_bins = generate_bins(0, int(ceil(max(seconds_per_round_series))), 5)
     plot_hist(axs[0, 2], seconds_per_round_series, seconds_per_round_bins)
-    axs[0, 2].set_title('Round Lengths', fontsize=27)
-    axs[0, 2].set_xlabel('Length (s)', fontsize=27)
+    axs[0, 2].set_title('Lengths', fontsize=8)
+    axs[0, 2].set_xlabel('Seconds', fontsize=8)
     #axs[0, 2].set_ylabel('Percent')
     #axs[2, 0].text(3, 0.2, seconds_per_round_series.describe().to_string())
     axs[0, 2].set_xlim(0, 40)
     axs[0, 2].set_ylim(0, 0.4)
 
-    axs[0, 2].set_xticks([0, 10, 20, 27, 40])
-    axs[0, 2].tick_params(axis="x", labelsize=27)
+    axs[0, 2].set_xticks([0, 20, 40])
+    axs[0, 2].tick_params(axis="x", labelsize=8)
 
     # remove right/top spine
     axs[0, 2].spines['top'].set_visible(False)

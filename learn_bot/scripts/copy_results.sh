@@ -23,3 +23,7 @@ cp trueskill.txt ../../similarity_plots/final_results/
 cp trueskill_win_prob.pdf ../../similarity_plots/final_results/
 cd ../../similarity_plots/simulation
 cp result.txt ../final_results/simulation_results.txt
+cd ../../plots
+cp all_tick_coverage.pdf ../similarity_plots/final_results/
+cp start_coverage.pdf ../similarity_plots/final_results/
+cp plant_statistics.pdf ../similarity_plots/final_results/

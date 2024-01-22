@@ -70,11 +70,11 @@ def compute_coverage_metrics(loaded_model: LoadedModel, start_positions: bool):
         with open(coverage_pickle_path, "rb") as infile:
             (sum_pos_heatmap, x_pos_bins, y_pos_bins) = pickle.load(infile)
 
-    fig = plt.figure(figsize=(7, 6), constrained_layout=True)
+    fig = plt.figure(figsize=(3.25 * 0.49, 6/8 * 3.25 * 0.49), constrained_layout=True)
     if start_positions:
-        fig.suptitle("Starting Position Coverage", fontsize=30, x=0.40)
+        fig.suptitle("Starting Positions", fontsize=8, x=0.35)
     else:
-        fig.suptitle("All Position Coverage", fontsize=30, x=0.40)
+        fig.suptitle("All Positions", fontsize=8, x=0.35)
     ax = fig.subplots(1, 1)
 
     sum_pos_heatmap = sum_pos_heatmap.T
@@ -82,11 +82,16 @@ def compute_coverage_metrics(loaded_model: LoadedModel, start_positions: bool):
     grid_x, grid_y = np.meshgrid(x_pos_bins, y_pos_bins)
 
     heatmap_im = ax.pcolor(grid_x, grid_y, sum_pos_heatmap, norm=LogNorm(vmin=1, vmax=sum_pos_heatmap.max()),
-                               cmap='viridis')
+                               cmap='tab20b')
     heatmap_im.set_edgecolor('face')
     cbar = fig.colorbar(heatmap_im, ax=ax)
-    cbar.ax.tick_params(labelsize=20)
-    cbar.ax.set_ylabel('Player Positions', rotation=270, labelpad=20, fontsize=20)
+    cbar.ax.tick_params(labelsize=8)
+    cbar.ax.set_ylabel('Points', rotation=270, labelpad=6, fontsize=8)
+    if start_positions:
+        cbar.ax.set_yticks([10**3])
+    else:
+        cbar.ax.set_yticks([10**5])
+    cbar.ax.tick_params(axis="y", labelsize=8)
 
     # remove right/top spine
     ax.spines['top'].set_visible(False)
