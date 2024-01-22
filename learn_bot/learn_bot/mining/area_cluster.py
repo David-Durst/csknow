@@ -17,7 +17,7 @@ minimapWidth = 2048
 minimapHeight = 2048
 minimapScale = 4.4 * 1024 / minimapHeight
 #d2_radar_path = Path(__file__).parent / '..' / '..' / '..' / 'web_vis' / 'vis_images' / 'de_dust2_radar_upsampled_all_labels_grid.png'
-d2_radar_path = Path(__file__).parent / '..' / '..' / '..' / 'web_vis' / 'vis_images' / 'de_dust2_radar_upsampled_all_labels.png'
+d2_radar_path = Path(__file__).parent / '..' / '..' / '..' / 'web_vis' / 'vis_images' / 'dust2_map_verylight.png'
 
 
 class MapCoordinate:

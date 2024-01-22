@@ -151,8 +151,6 @@ def run_trajectory_heatmaps(plot_only_first_hdf5_file_train_and_test: bool):
                                               rollout_extensions, diff_indices, plots_path,
                                               plot_only_first_hdf5_file_train_and_test)
 
-    quit(0)
-
     if len(diff_indices) == 0:
         return
 
@@ -174,6 +172,8 @@ def run_trajectory_heatmaps(plot_only_first_hdf5_file_train_and_test: bool):
     run_trajectory_heatmaps_one_filter_option(TrajectoryFilterOptions(compute_speeds=True, only_shots=True),
                                               rollout_extensions, diff_indices, plots_path,
                                               plot_only_first_hdf5_file_train_and_test)
+
+    return
 
     #for team_based_region_constraint in team_based_region_constraints:
     #    run_trajectory_heatmaps_one_filter_option(TrajectoryFilterOptions(team_based_all_start_in_region=team_based_region_constraint),
