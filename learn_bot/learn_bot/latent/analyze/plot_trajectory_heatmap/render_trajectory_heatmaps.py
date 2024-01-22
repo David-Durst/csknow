@@ -3,6 +3,7 @@ from typing import List, Optional, Dict
 
 import numpy as np
 from PIL import Image, ImageDraw
+from matplotlib import pyplot as plt
 
 from learn_bot.libs.pil_helpers import concat_horizontal, concat_vertical, concat_horizontal_vertical_with_extra, \
     repeated_paste_horizontal
@@ -19,6 +20,10 @@ max_value = 0
 a_example_path = Path(__file__).parent / '..' / 'a_site_example.jpg'
 b_example_path = Path(__file__).parent / '..' / 'b_site_example.jpg'
 
+alpha_color = False
+tab20b_cmap = plt.get_cmap('tab20b')
+tab20b_np = np.asarray([[c[0] * 255, c[1] * 255, c[2] * 255, 255] for c in tab20b_cmap.colors])
+
 def plot_one_image_one_team(title: str, ct_team: bool, team_color: List, saturated_team_color: List,
                             base_img: Image.Image, custom_buffer: Optional[np.ndarray] = None):
 
@@ -29,25 +34,43 @@ def plot_one_image_one_team(title: str, ct_team: bool, team_color: List, saturat
         buffer = title_to_buffers[title].get_buffer(ct_team)
     else:
         buffer = custom_buffer
-    color_buffer = buffer[:, :, np.newaxis].repeat(4, axis=2)
-    color_buffer[:, :, 0] = team_color[0]
-    color_buffer[:, :, 1] = team_color[1]
-    color_buffer[:, :, 2] = team_color[2]
 
-    # if saturate, then move to darker color to indicate
-    saturated_color_buffer_entries = color_buffer[:, :, 3] >= 255
-    if np.sum(saturated_color_buffer_entries) > 0:
-        percent_saturated = color_buffer[saturated_color_buffer_entries][:, 3] / max_value
-        full_alpha_team_color = np.asarray(team_color)
-        full_alpha_team_color[3] = 255
-        full_alpha_saturated_team_color = np.asarray(saturated_team_color)
-        full_alpha_saturated_team_color[3] = 255
-        color_buffer[saturated_color_buffer_entries] = \
-            (percent_saturated[:, np.newaxis].repeat(4, axis=1) *
-             full_alpha_saturated_team_color[np.newaxis, :].repeat(np.sum(saturated_color_buffer_entries), axis=0)) + \
-            ((1 - percent_saturated[:, np.newaxis].repeat(4, axis=1)) *
-             full_alpha_team_color[np.newaxis, :].repeat(np.sum(saturated_color_buffer_entries), axis=0))
+    if alpha_color:
+        color_buffer = buffer[:, :, np.newaxis].repeat(4, axis=2)
+        color_buffer[:, :, 0] = team_color[0]
+        color_buffer[:, :, 1] = team_color[1]
+        color_buffer[:, :, 2] = team_color[2]
+
+        # if saturate, then move to darker color to indicate
+        saturated_color_buffer_entries = color_buffer[:, :, 3] >= 255
+        if np.sum(saturated_color_buffer_entries) > 0:
+            percent_saturated = color_buffer[saturated_color_buffer_entries][:, 3] / max_value
+            full_alpha_team_color = np.asarray(team_color)
+            full_alpha_team_color[3] = 255
+            full_alpha_saturated_team_color = np.asarray(saturated_team_color)
+            full_alpha_saturated_team_color[3] = 255
+            color_buffer[saturated_color_buffer_entries] = \
+                (percent_saturated[:, np.newaxis].repeat(4, axis=1) *
+                 full_alpha_saturated_team_color[np.newaxis, :].repeat(np.sum(saturated_color_buffer_entries), axis=0)) + \
+                ((1 - percent_saturated[:, np.newaxis].repeat(4, axis=1)) *
+                 full_alpha_team_color[np.newaxis, :].repeat(np.sum(saturated_color_buffer_entries), axis=0))
+    else:
+        buffer_repeated = buffer[:, :, np.newaxis].repeat(4, axis=2)
+
+        if max_value > 255:
+            # one extra subtracted from numerator so that all values scaled to 0-19 in index lookup
+            above_saturated_scaled_buffer = (buffer - 256) / (max_value - 255)
+        else:
+            above_saturated_scaled_buffer = buffer
+        limit_scaled_buffer = np.where(buffer <= 255, buffer / 16, 16 + above_saturated_scaled_buffer * 4)
+        uint_limit_scaled_buffer = np.uint8(limit_scaled_buffer)
+        color_buffer_with_bad_zeros = tab20b_np[uint_limit_scaled_buffer]
+        transparent_color_buffer = color_buffer_with_bad_zeros.copy()
+        transparent_color_buffer[:, :, 3] = 0
+        color_buffer = np.where(buffer_repeated == 0., transparent_color_buffer, color_buffer_with_bad_zeros)
+
     uint8_color_buffer = np.uint8(color_buffer)
+
     base_img.alpha_composite(Image.fromarray(uint8_color_buffer, 'RGBA'))
 
     #title_drw = ImageDraw.Draw(base_img)
