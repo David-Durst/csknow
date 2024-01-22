@@ -147,11 +147,12 @@ def run_trajectory_heatmaps(plot_only_first_hdf5_file_train_and_test: bool):
 
     os.makedirs(plots_path / 'diff', exist_ok=True)
 
-    #run_trajectory_heatmaps_one_filter_option(TrajectoryFilterOptions(compute_speeds=True, compute_lifetimes=True,
-    #                                                                  compute_shots_per_kill=True),
-    #                                          rollout_extensions, diff_indices, plots_path,
-    #                                          plot_only_first_hdf5_file_train_and_test)
+    run_trajectory_heatmaps_one_filter_option(TrajectoryFilterOptions(compute_speeds=True, compute_lifetimes=True,
+                                                                      compute_shots_per_kill=True),
+                                              rollout_extensions, diff_indices, plots_path,
+                                              plot_only_first_hdf5_file_train_and_test)
 
+    quit(0)
 
     #if len(diff_indices) == 0:
     #    return
@@ -161,7 +162,6 @@ def run_trajectory_heatmaps(plot_only_first_hdf5_file_train_and_test: bool):
                                               rollout_extensions, diff_indices, plots_path,
                                               plot_only_first_hdf5_file_train_and_test)
 
-    quit(0)
 
 
     run_trajectory_heatmaps_one_filter_option(TrajectoryFilterOptions(compute_speeds=True, only_killed=True),

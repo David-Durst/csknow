@@ -81,8 +81,7 @@ def plot_mean_by_rank(df: pd.DataFrame):
 
 def plot_count_by_rank(df: pd.DataFrame):
     df = df.copy()
-    fig_length = 6
-    fig = plt.figure(figsize=(fig_length * 3, fig_length), constrained_layout=True)
+    fig = plt.figure(figsize=(3.3, 3.3), constrained_layout=True)
     ax = fig.subplots()
 
     num_per_rank = df.groupby(rank_col, as_index=False).count()
@@ -97,10 +96,11 @@ def plot_count_by_rank(df: pd.DataFrame):
 
     ax.get_legend().remove()
 
-    ax.set_xlabel('Rank', fontsize=27)
-    ax.set_ylabel('Users', fontsize=27)
-    ax.tick_params(axis="x", labelsize=27)
-    ax.tick_params(axis="y", labelsize=27)
+    ax.set_title('Number of Users By Rank', fontsize=8)
+    ax.set_xlabel('Rank', fontsize=8)
+    ax.set_ylabel('Users', fontsize=8)
+    ax.tick_params(axis="x", labelsize=8)
+    ax.tick_params(axis="y", labelsize=8)
 
     # remove right/top spine
     ax.spines['top'].set_visible(False)

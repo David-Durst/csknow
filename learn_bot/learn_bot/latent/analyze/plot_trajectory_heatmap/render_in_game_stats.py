@@ -181,21 +181,22 @@ situation_rename_dict = {
 }
 
 
-def plot_place_title_df(df: pd.DataFrame, chart_name: str, plot_file_path: Path, y_label: str):
+def plot_place_title_df(df: pd.DataFrame, chart_name: str, plot_file_path: Path, y_label: str, y_ticks: List):
     df.index = df.index.to_series().replace(situation_rename_dict)
     df.rename(title_rename_dict, axis=1, inplace=True)
 
-    fig, ax = plt.subplots()
+    fig, ax = plt.subplots(figsize=(7*0.49, 7*0.49*0.8))
 
     df.plot(kind='bar', title=chart_name, rot=0, ax=ax)#, color="#3f8f35")
     if chart_name in name_to_ylim:
         #ax.set_ylim(0., name_to_ylim[chart_name])
         #ax.set_yticks(name_to_yticks[chart_name])
-        ax.tick_params(axis="x", labelsize=15)
-        ax.tick_params(axis="y", labelsize=15)
-    ax.set_title(chart_name, fontsize=15)
+        ax.tick_params(axis="x", labelsize=8)
+        ax.tick_params(axis="y", labelsize=8)
+    ax.set_title(chart_name, fontsize=8)
     # ax.set_xlabel(x_label)
-    ax.set_ylabel(y_label)
+    ax.set_ylabel(y_label, fontsize=8)
+    ax.set_yticks(y_ticks)
 
     #ax.set_xticks(x_ticks)
 
@@ -206,6 +207,7 @@ def plot_place_title_df(df: pd.DataFrame, chart_name: str, plot_file_path: Path,
     # remove veritcal grid lines, make horizontal dotted
     ax.yaxis.grid(True, color='#EEEEEE', dashes=[4, 1])
     ax.xaxis.grid(False)
+    plt.legend(fontsize=8)
     plt.savefig(plot_file_path, bbox_inches='tight')
 
 
@@ -223,7 +225,7 @@ def plot_key_places(plot_path: Path, use_tick_counts: bool):
         else:
             plots_file_name = plot_path / (group.lower().replace(' ', '_') + '_rounds.pdf')
         plot_place_title_df(key_places_by_title_copy, group, plots_file_name,
-                            'Seconds' if use_tick_counts else 'Rounds')
+                            'Seconds' if use_tick_counts else 'Rounds', [0, 40, 80])
 
         if use_tick_counts:
             continue
@@ -338,8 +340,14 @@ def plot_mistakes(plots_path, use_tick_counts: bool):
                                                  get_title_to_num_b_site_mistakes()],
                                                 index=['BombsiteA', 'BombsiteB'])
 
-    title = 'Mistakes' if len([s for s in mistakes_df.columns if 'default' in s]) > 0 else 'Ablation Mistakes'
-    plot_place_title_df(mistakes_df, title, plots_path / 'mistakes.pdf', 'Events' if use_tick_counts else 'Rounds')
+    if len([s for s in mistakes_df.columns if 'default' in s]) > 0:
+        title = 'Mistakes'
+        y_ticks = [0, 100, 200]
+    else:
+        title = 'Ablation Mistakes'
+        y_ticks = [0, 40, 80]
+    plot_place_title_df(mistakes_df, title, plots_path / 'mistakes.pdf', 'Events' if use_tick_counts else 'Rounds',
+                        y_ticks)
 
     if not use_tick_counts:
         with open(plots_path / 'mistakes.txt', 'w') as f:

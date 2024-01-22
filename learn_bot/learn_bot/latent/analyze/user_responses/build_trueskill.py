@@ -10,7 +10,8 @@ import trueskill
 from matplotlib import pyplot as plt
 from trueskill import Rating, rate
 
-from learn_bot.latent.analyze.user_responses.user_constants import bot_types
+from learn_bot.latent.analyze.plot_trajectory_heatmap.title_rename_dict import title_rename_dict
+from learn_bot.latent.analyze.user_responses.user_constants import bot_types, nice_bot_types
 
 plt.rc('font', family='Arial')
 
@@ -53,28 +54,28 @@ class PlayerRatings:
         return f"human {self.human}, learned {self.learned}, hand-crafted {self.handcrafted}, default {self.default}"
 
     def plot_ratings(self, plot_path: Path, title_prefix: Optional[str] = None):
-        fig, ax = plt.subplots(figsize=(10, 6))
+        fig, ax = plt.subplots(figsize=(3.3, 1.8))
         mus = [self.human.mu, self.learned.mu, self.handcrafted.mu, self.default.mu]
         sigmas = [self.human.sigma, self.learned.sigma, self.handcrafted.sigma, self.default.sigma]
 
-        ax.bar(bot_types, mus, yerr=sigmas, align='center', ecolor='black', color="#3f8f35", capsize=5)
-        ax.set_ylim(0, 40)
-        ax.set_yticks([0, 10, 20, 30, 40])
-        ax.set_ylabel('TrueSkill Rating', fontsize=20)
-        ax.set_xlabel('Player Type', fontsize=20)
+        ax.barh(nice_bot_types, mus, xerr=sigmas, align='center', ecolor='black', color="#3f8f35", capsize=1)
+        ax.set_xlim(0, 40)
+        ax.set_xticks([0, 20, 40])
+        ax.set_xlabel('TrueSkill Rating', fontsize=8)
+        ax.set_ylabel('Player Type', fontsize=8)
         full_title = 'User Study TrueSkill Ratings'
         if title_prefix is not None:
             full_title = title_prefix + " " + full_title
-        ax.set_title(full_title, fontsize=25)
-        ax.tick_params(axis="x", labelsize=20)
-        ax.tick_params(axis="y", labelsize=20)
+        ax.set_title(full_title, fontsize=8)
+        ax.tick_params(axis="x", labelsize=8)
+        ax.tick_params(axis="y", labelsize=8)
 
         # remove right/top spine
         ax.spines['top'].set_visible(False)
         ax.spines['right'].set_visible(False)
 
         # remove veritcal grid lines, make horizontal dotted
-        ax.yaxis.grid(True, color='#EEEEEE', dashes=[4, 1])
+        ax.yaxis.grid(False)
         ax.xaxis.grid(False)
         fig.tight_layout()
         plt.savefig(plot_path)
@@ -88,19 +89,19 @@ class PlayerRatings:
             for c, second_bot_type in enumerate(bot_types):
                 win_probabilities[r, c] = win_probability((self[first_bot_type],), (self[second_bot_type],)) * 100
 
-        fig, ax = plt.subplots(figsize=(7.5, 6))
+        fig, ax = plt.subplots(figsize=(3.3, 3.3))
         # normalize data using vmin, vmax
         cax = ax.matshow(win_probabilities, vmin=0, vmax=100)
 
-        # add a colorbar to a plot.
-        cbar = fig.colorbar(cax)
-        cbar.ax.tick_params(labelsize=15)
-        cbar.ax.set_ylabel('Win Probability', rotation=270, labelpad=20, fontsize=15)
+        ## add a colorbar to a plot.
+        #cbar = fig.colorbar(cax)
+        #cbar.ax.tick_params(labelsize=8)
+        #cbar.ax.set_ylabel('Win Probability', rotation=270, fontsize=8)
 
         full_title = 'User Study More Human Probabilities'
         if title_prefix is not None:
             full_title = title_prefix + " " + full_title
-        ax.set_title(full_title, fontsize=25)
+        ax.set_title(full_title, fontsize=8)
 
         ## define ticks
         #ticks = np.arange(0, 9, 1)
@@ -110,7 +111,7 @@ class PlayerRatings:
         #ax.set_yticks(ticks)
 
         for (i, j), z in np.ndenumerate(win_probabilities):
-            ax.text(j, i, '{:.0f}'.format(z), ha='center', va='center', fontsize=15,
+            ax.text(j, i, '{:.0f}'.format(z), ha='center', va='center', fontsize=8,
                     bbox=dict(boxstyle='round', facecolor='white', edgecolor='0.3'))
 
         # set x and y tick labels
@@ -119,10 +120,10 @@ class PlayerRatings:
         ax.set_xticks(np.arange(len(bot_types)))
         ax.set_yticks(np.arange(len(bot_types)))
         #fixed_bot_types = [''] + bot_types + ['']
-        ax.set_xticklabels(bot_types)
-        ax.set_yticklabels(bot_types)
-        ax.tick_params(axis="x", labelsize=15)
-        ax.tick_params(axis="y", labelsize=15)
+        ax.set_xticklabels(nice_bot_types)
+        ax.set_yticklabels(nice_bot_types)
+        ax.tick_params(axis="x", labelsize=8)
+        ax.tick_params(axis="y", labelsize=8)
 
         # remove right/top spine
         ax.spines['top'].set_visible(False)
