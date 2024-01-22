@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import Dict
 
 rank_map = {
     'NA': 0,
@@ -22,6 +23,13 @@ rank_map = {
     'GE': 18,
     'Global': 18
 }
+
+rank_reverse_map: Dict[int, str] = {}
+for k, v in rank_map.items():
+    if v not in rank_reverse_map:
+        rank_reverse_map[v] = k
+    rank_reverse_map[0] = 'None'
+
 bot_types = ['human', 'learned', 'hand-crafted', 'default']
 answer_key = [
     ['human', 'default', 'learned', 'hand-crafted'],

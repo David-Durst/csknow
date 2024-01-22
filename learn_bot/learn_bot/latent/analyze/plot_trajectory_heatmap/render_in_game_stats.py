@@ -318,7 +318,11 @@ def plot_key_places(plot_path: Path, use_tick_counts: bool):
             #title_to_percent_mad_diff_series.plot(kind='bar')
             plt.savefig(plot_path / (plot_name + '.png'), bbox_inches='tight')
             with open(plot_path / (plot_name + '.txt'), 'w') as f:
-                f.write(str(title_to_percent_diff_df.describe()))
+                describe_df = title_to_percent_diff_df.describe()
+                f.write(str(describe_df))
+                f.write('\n')
+                f.write('IQR: ')
+                f.write(str(describe_df.loc['75%'] - describe_df.loc['25%']))
             #print(group)
             #print(key_places_by_title)
             #print(pd.Series(title_to_percent_mad_diff))

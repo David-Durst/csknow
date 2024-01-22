@@ -9,7 +9,7 @@ from matplotlib import pyplot as plt
 
 from learn_bot.latent.analyze.user_responses.build_trueskill import build_trueskill
 from learn_bot.latent.analyze.user_responses.user_constants import rank_map, answer_key, file_name_col, rank_col, \
-    years_exp_col, example_col, high_skill_col, user_study_plots, bot_types
+    years_exp_col, example_col, high_skill_col, user_study_plots, bot_types, rank_reverse_map
 from learn_bot.libs.pd_printing import set_pd_print_options
 
 
@@ -80,6 +80,7 @@ def plot_mean_by_rank(df: pd.DataFrame):
 
 
 def plot_count_by_rank(df: pd.DataFrame):
+    df = df.copy()
     fig_length = 6
     fig = plt.figure(figsize=(fig_length * 3, fig_length), constrained_layout=True)
     ax = fig.subplots()
@@ -87,7 +88,27 @@ def plot_count_by_rank(df: pd.DataFrame):
     num_per_rank = df.groupby(rank_col, as_index=False).count()
     num_per_rank[years_exp_col] /= 8
 
-    num_per_rank.plot.bar(x=rank_col, y=years_exp_col, ax=ax)
+    num_per_rank.plot.bar(x=rank_col, y=years_exp_col, ax=ax, rot=0, color="#3f8f35",)
+
+
+    old_x_tick_labels = ax.get_xticklabels()
+    x_tick_labels = [rank_reverse_map[int(i.get_text())] for i in old_x_tick_labels]
+    ax.set_xticklabels(x_tick_labels)
+
+    ax.get_legend().remove()
+
+    ax.set_xlabel('Rank', fontsize=27)
+    ax.set_ylabel('Users', fontsize=27)
+    ax.tick_params(axis="x", labelsize=27)
+    ax.tick_params(axis="y", labelsize=27)
+
+    # remove right/top spine
+    ax.spines['top'].set_visible(False)
+    ax.spines['right'].set_visible(False)
+
+    # remove veritcal grid lines, make horizontal dotted
+    ax.yaxis.grid(True, color='#EEEEEE', dashes=[4, 1])
+    ax.xaxis.grid(False)
 
     plt.savefig(user_study_plots / 'count_by_rank.pdf')
 
