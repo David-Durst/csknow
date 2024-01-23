@@ -62,7 +62,7 @@ class PlayerRatings:
         ax.set_xlim(0, 40)
         ax.set_xticks([0, 20, 40])
         ax.set_xlabel('TrueSkill Rating', fontsize=8)
-        ax.set_ylabel('Player Type', fontsize=8)
+        #ax.set_ylabel('Player Type', fontsize=8)
         full_title = 'User Study TrueSkill Ratings'
         if title_prefix is not None:
             full_title = title_prefix + " " + full_title
