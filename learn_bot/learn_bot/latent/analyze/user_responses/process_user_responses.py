@@ -45,7 +45,7 @@ def process_user_responses():
     print(f'num responses: {len(df) // 8}')
     user_study_plots.mkdir(parents=True, exist_ok=True)
 
-    df[high_skill_col] = df[rank_col] >= rank_map['DMG']
+    df[high_skill_col] = df[rank_col] >= rank_map['SMFC']
 
     plot_mean_by_rank(df)
     plot_count_by_rank(df)

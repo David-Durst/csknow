@@ -188,11 +188,8 @@ def plot_place_title_df(df: pd.DataFrame, chart_name: str, plot_file_path: Path,
     fig, ax = plt.subplots(figsize=(7*0.49, 7*0.49*0.8))
 
     df.plot(kind='bar', title=chart_name, rot=0, ax=ax)#, color="#3f8f35")
-    if chart_name in name_to_ylim:
-        #ax.set_ylim(0., name_to_ylim[chart_name])
-        #ax.set_yticks(name_to_yticks[chart_name])
-        ax.tick_params(axis="x", labelsize=8)
-        ax.tick_params(axis="y", labelsize=8)
+    ax.tick_params(axis="x", labelsize=8)
+    ax.tick_params(axis="y", labelsize=8)
     ax.set_title(chart_name, fontsize=8)
     # ax.set_xlabel(x_label)
     ax.set_ylabel(y_label, fontsize=8)
@@ -345,7 +342,7 @@ def plot_mistakes(plots_path, use_tick_counts: bool):
         y_ticks = [0, 100, 200]
     else:
         title = 'Ablation Mistakes'
-        y_ticks = [0, 40, 80]
+        y_ticks = [0, 20, 40]
     plot_place_title_df(mistakes_df, title, plots_path / 'mistakes.pdf', 'Events' if use_tick_counts else 'Rounds',
                         y_ticks)
 
