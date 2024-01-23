@@ -125,7 +125,7 @@ def compute_plant_statistics():
 
     # plot ct per round
     plot_hist(axs[0, 0], players_per_round_df['ct per round'], [0.5, 1.5, 2.5, 3.5, 4.5, 5.5])
-    axs[0, 0].set_title('Offense', fontsize=8)
+    axs[0, 0].set_title('Initial Offense', fontsize=8, x=0.45)
     axs[0, 0].set_xlabel('Players', fontsize=8, labelpad=2)
     axs[0, 0].set_ylabel('Percent Of Rounds', fontsize=7, labelpad=2)
     #axs[0, 0].text(3, 0.2, players_per_round_df['ct per round'].describe().to_string())
@@ -147,7 +147,7 @@ def compute_plant_statistics():
 
     # plot t per round
     plot_hist(axs[0, 1], players_per_round_df['t per round'], [0.5, 1.5, 2.5, 3.5, 4.5, 5.5])
-    axs[0, 1].set_title('Defense', fontsize=8)
+    axs[0, 1].set_title('Initial Defense', fontsize=8, x=0.55)
     axs[0, 1].set_xlabel('Players', fontsize=8, labelpad=2)
     #axs[0, 1].set_ylabel('Percent')
     #axs[0, 1].text(3, 0.2, players_per_round_df['t per round'].describe().to_string())
@@ -169,7 +169,7 @@ def compute_plant_statistics():
 
     seconds_per_round_bins = generate_bins(0, int(ceil(max(seconds_per_round_series))), 5)
     plot_hist(axs[0, 2], seconds_per_round_series, seconds_per_round_bins)
-    axs[0, 2].set_title('Lengths', fontsize=8)
+    axs[0, 2].set_title('Length', fontsize=8)
     axs[0, 2].set_xlabel('Seconds', fontsize=8, labelpad=2)
     #axs[0, 2].set_ylabel('Percent')
     #axs[2, 0].text(3, 0.2, seconds_per_round_series.describe().to_string())

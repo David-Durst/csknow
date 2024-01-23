@@ -31,7 +31,7 @@ for k, v in rank_map.items():
     rank_reverse_map[0] = 'None'
 
 bot_types = ['human', 'learned', 'hand-crafted', 'default']
-nice_bot_types = ['Human', 'CSMoveBot', 'ManualBot', 'CSGOBot']
+nice_bot_types = ['Human', 'CSMoveBot', 'RuleBot', 'CSGOBot']
 answer_key = [
     ['human', 'default', 'learned', 'hand-crafted'],
     ['hand-crafted', 'human', 'learned', 'default'],
