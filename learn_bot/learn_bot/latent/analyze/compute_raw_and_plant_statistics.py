@@ -127,7 +127,7 @@ def compute_plant_statistics():
     plot_hist(axs[0, 0], players_per_round_df['ct per round'], [0.5, 1.5, 2.5, 3.5, 4.5, 5.5])
     axs[0, 0].set_title('Offense', fontsize=8)
     axs[0, 0].set_xlabel('Players', fontsize=8, labelpad=2)
-    axs[0, 0].set_ylabel('Percent', fontsize=8, labelpad=2)
+    axs[0, 0].set_ylabel('Percent Of Rounds', fontsize=7, labelpad=2)
     #axs[0, 0].text(3, 0.2, players_per_round_df['ct per round'].describe().to_string())
     axs[0, 0].set_ylim(0, 0.4)
     axs[0, 0].set_xlim(0.5, 5.5)
@@ -142,7 +142,7 @@ def compute_plant_statistics():
     axs[0, 0].spines['right'].set_visible(False)
 
     # remove veritcal grid lines, make horizontal dotted
-    axs[0, 0].yaxis.grid(True, color='#EEEEEE', dashes=[4, 1])
+    axs[0, 0].yaxis.grid(False)#True, color='#EEEEEE', dashes=[4, 1])
     axs[0, 0].xaxis.grid(False)
 
     # plot t per round
@@ -162,7 +162,7 @@ def compute_plant_statistics():
     axs[0, 1].spines['right'].set_visible(False)
 
     # remove veritcal grid lines, make horizontal dotted
-    axs[0, 1].yaxis.grid(True, color='#EEEEEE', dashes=[4, 1])
+    axs[0, 1].yaxis.grid(False)
     axs[0, 1].xaxis.grid(False)
 
     # round lengths
@@ -184,7 +184,7 @@ def compute_plant_statistics():
     axs[0, 2].spines['right'].set_visible(False)
 
     # remove veritcal grid lines, make horizontal dotted
-    axs[0, 2].yaxis.grid(True, color='#EEEEEE', dashes=[4, 1])
+    axs[0, 2].yaxis.grid(False)
     axs[0, 2].xaxis.grid(False)
 
     plt.savefig(Path(__file__).parent / 'plots' / 'plant_statistics.pdf')

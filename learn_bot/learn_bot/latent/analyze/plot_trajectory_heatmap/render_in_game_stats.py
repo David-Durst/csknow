@@ -103,7 +103,7 @@ def compute_one_metric_four_histograms(title_to_values: Dict[str, List[float]], 
         ax.spines['right'].set_visible(False)
 
         # remove veritcal grid lines, make horizontal dotted
-        ax.yaxis.grid(True, color='#EEEEEE', dashes=[4,1])
+        ax.yaxis.grid(False)#True, color='#EEEEEE', dashes=[4,1])
         ax.xaxis.grid(False)
 
         ax_index += 1

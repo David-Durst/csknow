@@ -86,7 +86,7 @@ def compute_coverage_metrics(loaded_model: LoadedModel, start_positions: bool):
     heatmap_im.set_edgecolor('face')
     cbar = fig.colorbar(heatmap_im, ax=ax)
     cbar.ax.tick_params(labelsize=8)
-    cbar.ax.set_ylabel('Points', rotation=270, labelpad=3, fontsize=8)
+    cbar.ax.set_ylabel('Occupancy', rotation=270, labelpad=3, fontsize=8)
     if start_positions:
         cbar.ax.set_yticks([10**3])
     else:
