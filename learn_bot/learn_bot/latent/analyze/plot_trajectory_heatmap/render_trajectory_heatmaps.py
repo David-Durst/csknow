@@ -175,15 +175,15 @@ def plot_trajectories_to_image(titles: List[str], plot_teams_separately: bool, p
             title_images.append(base_both_d2_img)
 
     if len(titles) == 4 and trajectory_filter_options.is_no_filter():
-        extra_width_spacing = 125
-        extra_height_spacing = 175
+        extra_width_spacing = 125 + 35
+        extra_height_spacing = 175 + 76
         complete_image_with_highlights = concat_horizontal_vertical_with_extra(ct_title_images,
                                                                                t_title_images,
                                                                                #in_game_image_height +
                                                                                # height spacing for in-engine images
                                                                                2 * extra_height_spacing, #+ extra_height_for_highlights + ,
                                                                                extra_width_spacing,
-                                                                               extra_height_spacing, 83)
+                                                                               extra_height_spacing, 83 + 35, 83 + 76)
         ct_undera_focus_ims: List[Image.Image] = []
         ct_b_focus_ims: List[Image.Image] = []
         #ct_mid_focus_ims: List[Image.Image] = []
@@ -200,8 +200,8 @@ def plot_trajectories_to_image(titles: List[str], plot_teams_separately: bool, p
             #ct_mid_focus_im = im.crop((468, 395, 493, 422))
             #ct_mid_focus_im = ct_mid_focus_im.resize((98, 100), Image.ANTIALIAS)
             #ct_mid_focus_ims.append(ct_mid_focus_im)
-        repeated_paste_horizontal(complete_image_with_highlights, ct_b_focus_ims, 10, 728, 1000 + extra_width_spacing)
-        undera_top = 728 + 413 - 237
+        repeated_paste_horizontal(complete_image_with_highlights, ct_b_focus_ims, 10, 728 + 76, 1000 + extra_width_spacing)
+        undera_top = 728 + 76 + 413 - 237
         repeated_paste_horizontal(complete_image_with_highlights, ct_undera_focus_ims, 548, undera_top, 1000 + extra_width_spacing)
         #repeated_paste_horizontal(complete_image_with_highlights, ct_mid_focus_ims, 348, 904, 1000 + extra_width_spacing)
 
