@@ -3,6 +3,7 @@ from typing import List, Dict, Tuple, Union
 import pandas as pd
 from matplotlib.ticker import PercentFormatter
 
+from learn_bot.latent.analyze.color_lib import default_bar_color
 from learn_bot.latent.analyze.comparison_column_names import *
 import matplotlib.pyplot as plt
 import numpy as np
@@ -36,7 +37,7 @@ def generate_bins(min_bin_start: int, max_bin_end: int, bin_width: int) -> List[
 
 
 def plot_hist(ax: plt.Axes, data: pd.Series, bins: List[Union[int,float]]):
-    ax.hist(data.values, bins=bins, weights=np.ones(len(data)) / len(data), color="#3f8f35", edgecolor="#3f8f35")
+    ax.hist(data.values, bins=bins, weights=np.ones(len(data)) / len(data), color=default_bar_color, edgecolor=default_bar_color)
     ax.grid(visible=True)
     ax.yaxis.set_major_formatter(PercentFormatter(1, decimals=0))
 

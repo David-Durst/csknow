@@ -1,7 +1,7 @@
 from math import ceil
 from pathlib import Path
 from pprint import pformat
-from typing import List, Dict, Set, Union, Optional
+from typing import List, Dict, Set, Union, Optional, Tuple
 
 import numpy as np
 import pandas as pd
@@ -16,7 +16,7 @@ from learn_bot.latent.analyze.plot_trajectory_heatmap.compute_teamwork_metrics i
     get_title_to_opportunities_for_a_site_mistake, get_title_to_num_a_site_mistakes, get_title_to_num_b_site_mistakes, \
     get_title_to_opportunities_for_b_site_mistake, get_title_to_opportunities_for_a_site_round_mistake, \
     get_title_to_num_a_site_round_mistakes, get_title_to_num_b_site_round_mistakes, \
-    get_title_to_opportunities_for_b_site_round_mistake
+    get_title_to_opportunities_for_b_site_round_mistake, offense_two_man_flanks_str, defense_spread_str
 from learn_bot.latent.analyze.plot_trajectory_heatmap.filter_trajectories import TrajectoryFilterOptions
 from learn_bot.latent.analyze.plot_trajectory_heatmap.build_heatmaps import get_title_to_speeds, \
     get_title_to_lifetimes, get_title_to_shots_per_kill
@@ -57,22 +57,24 @@ def compute_one_metric_histograms(title_to_values: Dict[str, List[float]], metri
 plt.rc('font', family='Arial')
 
 
-def compute_one_metric_four_histograms(title_to_values: Dict[str, List[float]], metric_title: str,
+def compute_one_metric_four_histograms(title_to_values: Dict[str, List[float]], metric_title: Optional[str],
                                        bin_width: Union[int, float], max_bin_end: float, y_max: float,
                                        x_label: str, x_ticks: List, y_label: Optional[str],
                                        y_ticks: List, plot_file_path: Path):
     if len(title_to_values) != 4:
         return
     local_fig_length = 3.3
-    fig = plt.figure(figsize=(local_fig_length, 0.5 + local_fig_length / 3), constrained_layout=True)
+    fig = plt.figure(figsize=(local_fig_length, local_fig_length / 3), constrained_layout=True)
     axs = fig.subplots(1, 4, squeeze=False, sharey=True)
 
     if y_label is not None:
-        fig.suptitle(metric_title, x=0.52, fontsize=8)
+        if metric_title is not None:
+            fig.suptitle(metric_title, x=0.52, fontsize=8)
         fig.supxlabel(x_label, x=0.52, fontsize=8)
         fig.supylabel(y_label, fontsize=8)
     else:
-        fig.suptitle(metric_title, fontsize=8)
+        if metric_title is not None:
+            fig.suptitle(metric_title, fontsize=8)
         fig.supxlabel(x_label, fontsize=8)
 
     if bin_width < 1.:
@@ -167,27 +169,33 @@ name_to_yticks = {
 }
 
 situation_rename_dict = {
-    "T A ExtendedA,BombsiteA,LongA": "D1",
-    "T A BombsiteA,BombsiteA,LongA": "D2",
-    "T A BombsiteA,LongA,ARamp": "D3",
-    "T B BombsiteB,UpperTunnel,BDoors": "D4",
-    "T B BombsiteB,BombsiteB,BDoors": "D5",
-    "T B BombsiteB,BombsiteB,UpperTunnel": "D6",
-    "CT A LongA,ShortStairs": "A1",
-    "CT A CTSpawn,ShortStairs": "A2",
-    "CT A CTSpawn,LongA": "A3",
-    "CT B UpperTunnel,BDoors": "A4",
-    "CT B UpperTunnel,Hole": "A5",
+    "T A ExtendedA,BombsiteA,LongA": "S1",
+    "T A BombsiteA,BombsiteA,LongA": "S2",
+    "T A BombsiteA,LongA,ARamp": "S3",
+    "T B BombsiteB,UpperTunnel,BDoors": "S4",
+    "T B BombsiteB,BombsiteB,BDoors": "S5",
+    "T B BombsiteB,BombsiteB,UpperTunnel": "S6",
+    "CT A LongA,ShortStairs": "F1",
+    "CT A CTSpawn,ShortStairs": "F2",
+    "CT A CTSpawn,LongA": "F3",
+    "CT B UpperTunnel,BDoors": "F4",
+    "CT B UpperTunnel,Hole": "F5",
 }
+
+legend_pos_dict = {
+    "Mistakes": (0.375, 0.4)
+}
+
+no_legend_set = {'Defense Spread'}
 
 
 def plot_place_title_df(df: pd.DataFrame, chart_name: str, plot_file_path: Path, y_label: str, y_ticks: List):
     df.index = df.index.to_series().replace(situation_rename_dict)
     df.rename(title_rename_dict, axis=1, inplace=True)
 
-    fig, ax = plt.subplots(figsize=(7*0.49, 7*0.49*0.8))
+    fig, ax = plt.subplots(figsize=(3.3, 3.3*0.6))
 
-    df.plot(kind='bar', title=chart_name, rot=0, ax=ax)#, color="#3f8f35")
+    df.plot(kind='bar', title=chart_name, rot=0, ax=ax)#, color=default_bar_colro)
     ax.tick_params(axis="x", labelsize=8)
     ax.tick_params(axis="y", labelsize=8)
     ax.set_title(chart_name, fontsize=8)
@@ -204,8 +212,65 @@ def plot_place_title_df(df: pd.DataFrame, chart_name: str, plot_file_path: Path,
     # remove veritcal grid lines, make horizontal dotted
     ax.yaxis.grid(True, color='#EEEEEE', dashes=[4, 1])
     ax.xaxis.grid(False)
-    plt.legend(fontsize=8)
+    if chart_name in legend_pos_dict:
+        plt.legend(bbox_to_anchor=legend_pos_dict[chart_name], bbox_transform=ax.transAxes, fontsize=8)
+    else:
+        plt.legend(fontsize=8)
     plt.savefig(plot_file_path, bbox_inches='tight')
+
+
+def plot_specific_key_places(plot_path: Path):
+    fig, axs = plt.subplots(figsize=(3.3, 3.3*0.6 * 2), nrows=2, ncols=1)
+
+    offense_key_places = get_key_places_by_title(grouped_key_places[offense_two_man_flanks_str], False)
+    offense_key_places.index = offense_key_places.index.to_series().replace(situation_rename_dict)
+    offense_key_places.rename(title_rename_dict, axis=1, inplace=True)
+
+    offense_key_places.plot(kind='bar', rot=0, ax=axs[0])#, color=default_bar_color)
+    axs[0].tick_params(axis="x", labelsize=8)
+    axs[0].tick_params(axis="y", labelsize=8)
+    axs[0].set_title("Offense Flank Occurrences", fontsize=8)
+    # ax.set_xlabel(x_label)
+    axs[0].set_ylabel('Rounds', fontsize=8)
+    axs[0].set_yticks([0, 40, 80])
+
+    axs[0].spines['top'].set_visible(False)
+    axs[0].spines['right'].set_visible(False)
+
+    # remove veritcal grid lines, make horizontal dotted
+    axs[0].yaxis.grid(True, color='#EEEEEE', dashes=[4, 1])
+    axs[0].xaxis.grid(False)
+    #plt.legend(bbox_to_anchor=legend_pos_dict[offense_two_man_flanks_str], bbox_transform=axs[0].transAxes, fontsize=8)
+    #plt.legend(fontsize=8)
+    axs[0].get_legend().remove()
+
+
+    defense_key_places = get_key_places_by_title(grouped_key_places[defense_spread_str], False)
+    defense_key_places.index = defense_key_places.index.to_series().replace(situation_rename_dict)
+    defense_key_places.rename(title_rename_dict, axis=1, inplace=True)
+
+    defense_key_places.plot(kind='bar', rot=0, ax=axs[1])#, color=default_bar_color)
+    axs[1].tick_params(axis="x", labelsize=8)
+    axs[1].tick_params(axis="y", labelsize=8)
+    axs[1].set_title("Defense Spread Occurrences", fontsize=8)
+    # ax.set_xlabel(x_label)
+    axs[1].set_ylabel('Rounds', fontsize=8)
+    axs[1].set_yticks([0, 40, 80])
+
+    axs[1].spines['top'].set_visible(False)
+    axs[1].spines['right'].set_visible(False)
+
+    # remove veritcal grid lines, make horizontal dotted
+    axs[1].yaxis.grid(True, color='#EEEEEE', dashes=[4, 1])
+    axs[1].xaxis.grid(False)
+    #axs[1].legend(bbox_to_anchor=(2.5, -0.15), loc='center', bbox_transform=axs[1].transAxes, fontsize=8, ncol=len(defense_key_places.columns))
+    axs[1].legend(bbox_to_anchor=(0.45, -0.15), loc='upper center', fontsize=8, ncol=len(defense_key_places.columns))
+    #axs[1].legend(loc=())
+    #plt.subplots_adjust(left=0.065, right=0.97, top=0.96, bottom=0.065, wspace=0.14)
+    #fig.tight_layout()
+    plt.subplots_adjust(left=0.12, right=0.99, bottom=0.13, top=0.95, hspace=0.35)
+    plt.savefig(plot_path / 'specific_key_places_rounds.pdf', bbox_inches='tight')
+
 
 
 def plot_key_places(plot_path: Path, use_tick_counts: bool):
@@ -331,11 +396,11 @@ def plot_mistakes(plots_path, use_tick_counts: bool):
     if use_tick_counts:
         mistakes_df = pd.DataFrame.from_records([get_title_to_num_a_site_round_mistakes(),
                                                  get_title_to_num_b_site_round_mistakes()],
-                                                index=['BombsiteA', 'BombsiteB'])
+                                                index=['Leave \n High Ground', 'Leave \n Established Position'])
     else:
         mistakes_df = pd.DataFrame.from_records([get_title_to_num_a_site_mistakes(),
                                                  get_title_to_num_b_site_mistakes()],
-                                                index=['BombsiteA', 'BombsiteB'])
+                                                index=['Leave \n High Ground', 'Leave \n Established Position'])
 
     if len([s for s in mistakes_df.columns if 'default' in s]) > 0:
         title = 'Mistakes'
@@ -375,6 +440,7 @@ def compute_metrics(trajectory_filter_options: TrajectoryFilterOptions, plots_pa
         #plt.savefig(plots_path / 'key_places.png', bbox_inches='tight')
         plot_key_places(plots_path, True)
         plot_key_places(plots_path, False)
+        plot_specific_key_places(plots_path)
         plot_mistakes(plots_path, True)
         plot_mistakes(plots_path, False)
 
@@ -386,14 +452,14 @@ def compute_metrics(trajectory_filter_options: TrajectoryFilterOptions, plots_pa
                                       plots_path / ('speeds_' + str(trajectory_filter_options) + '.png'))
     if trajectory_filter_options.compute_lifetimes:
         # small timing mismatch can get 41 seconds on bomb timer
-        compute_one_metric_four_histograms(get_title_to_lifetimes(), 'Lifetimes', 5, 40.,
-                                           0.6, 'Seconds', [0, 20, 40], None, [0, 0.3, 0.6],
+        compute_one_metric_four_histograms(get_title_to_lifetimes(), None, 5, 40.,
+                                           0.6, 'Player Lifetimes (Seconds)', [0, 20, 40], None, [0, 0.3, 0.6],
                                            plots_path / ('lifetimes_' + str(trajectory_filter_options) + '.pdf'))
         compute_one_metric_emd(get_title_to_lifetimes(),
                                plots_path / ('lifetimes_' + str(trajectory_filter_options) + '.txt'))
     if trajectory_filter_options.compute_shots_per_kill:
-        compute_one_metric_four_histograms(get_title_to_shots_per_kill(), 'Shots Per Kill', 1, 30.,
-                                           0.3, 'Shots', [0, 15, 30], None, [0, 0.15, 0.3],
+        compute_one_metric_four_histograms(get_title_to_shots_per_kill(), None, 1, 30.,
+                                           0.3, 'Shots Per Kill', [0, 15, 30], None, [0, 0.15, 0.3],
                                            plots_path / ('shots_per_kill_' + str(trajectory_filter_options) + '.pdf'))
         compute_one_metric_emd(get_title_to_shots_per_kill(),
                                plots_path / ('shots_per_kill_' + str(trajectory_filter_options) + '.txt'))

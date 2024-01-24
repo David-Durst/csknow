@@ -7,17 +7,28 @@ import pandas as pd
 import pypandoc
 from matplotlib import pyplot as plt
 
+from learn_bot.latent.analyze.color_lib import default_bar_color
 from learn_bot.latent.analyze.user_responses.build_trueskill import build_trueskill
 from learn_bot.latent.analyze.user_responses.user_constants import rank_map, answer_key, file_name_col, rank_col, \
     years_exp_col, example_col, high_skill_col, user_study_plots, bot_types, rank_reverse_map
 from learn_bot.libs.pd_printing import set_pd_print_options
 
+anonymized_user_responses = Path("/home/durst/anonymized_user_response")
+
 
 def process_user_responses():
     answers: List[Dict] = []
-    for f in glob.glob("/home/durst/user_responses/*"):
+    anonymized_user_responses.mkdir(parents=True, exist_ok=True)
+
+    for i, f in enumerate(glob.glob("/home/durst/user_responses/*")):
         print(f)
         file_txt = pypandoc.convert_file(f, 'plain')
+        anonymized_file_txt = file_txt.replace("durst@stanford.edu", "<anonymized>")
+        with open(anonymized_user_responses / f"response_{i}.txt", 'w') as g:
+            g.write(anonymized_file_txt)
+        assert 'durst' not in anonymized_file_txt.lower()
+        assert 'david' not in anonymized_file_txt.lower()
+
         if 'tc_zhang' in f:
             rank_answer = re.search(r'Experience Question 1:\W*_*([a-zA-Z0-9]+)_*.*\n', file_txt)  #
             years_dev_answer = re.search(r'\nExperience Question 2:\W*_*([0-9]+).*\n', file_txt)  #
@@ -87,7 +98,7 @@ def plot_count_by_rank(df: pd.DataFrame):
     num_per_rank = df.groupby(rank_col, as_index=False).count()
     num_per_rank[years_exp_col] /= 8
 
-    num_per_rank.plot.bar(x=rank_col, y=years_exp_col, ax=ax, rot=0, color="#3f8f35",)
+    num_per_rank.plot.bar(x=rank_col, y=years_exp_col, ax=ax, rot=0, color=default_bar_color)
 
 
     old_x_tick_labels = ax.get_xticklabels()

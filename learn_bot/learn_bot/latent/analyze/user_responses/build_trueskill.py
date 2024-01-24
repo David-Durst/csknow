@@ -10,6 +10,7 @@ import trueskill
 from matplotlib import pyplot as plt
 from trueskill import Rating, rate
 
+from learn_bot.latent.analyze.color_lib import default_bar_color
 from learn_bot.latent.analyze.plot_trajectory_heatmap.title_rename_dict import title_rename_dict
 from learn_bot.latent.analyze.user_responses.user_constants import bot_types, nice_bot_types
 
@@ -58,15 +59,15 @@ class PlayerRatings:
         mus = [self.human.mu, self.learned.mu, self.handcrafted.mu, self.default.mu]
         sigmas = [self.human.sigma, self.learned.sigma, self.handcrafted.sigma, self.default.sigma]
 
-        ax.barh(nice_bot_types, mus, xerr=sigmas, align='center', ecolor='black', color="#3f8f35", capsize=1)
+        ax.barh(nice_bot_types, mus, xerr=sigmas, align='center', ecolor='black', color=default_bar_color, capsize=1)
         ax.set_xlim(0, 40)
         ax.set_xticks([0, 20, 40])
-        ax.set_xlabel('TrueSkill Rating', fontsize=8)
+        ax.set_xlabel('TrueSkill Rank Rating', fontsize=8)
         #ax.set_ylabel('Player Type', fontsize=8)
-        full_title = 'User Study TrueSkill Ratings'
-        if title_prefix is not None:
-            full_title = title_prefix + " " + full_title
-        ax.set_title(full_title, fontsize=8)
+        #full_title = 'User Study TrueSkill Ratings'
+        #if title_prefix is not None:
+        #    full_title = title_prefix + " " + full_title
+        #ax.set_title(full_title, fontsize=8)
         ax.tick_params(axis="x", labelsize=8)
         ax.tick_params(axis="y", labelsize=8)
 

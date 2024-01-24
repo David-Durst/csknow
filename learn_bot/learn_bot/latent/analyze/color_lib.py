@@ -1,0 +1,1 @@
+default_bar_color = "#8b8b8b"

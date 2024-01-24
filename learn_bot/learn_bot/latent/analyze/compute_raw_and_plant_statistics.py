@@ -18,6 +18,7 @@ from learn_bot.libs.hdf5_to_pd import load_hdf5_to_pd
 all_statistics_data_path = Path(__file__).parent / '..' / '..' / '..' / '..' / 'analytics' / 'all_train_outputs' / 'all_statistics.csv'
 all_players_data_path = Path(__file__).parent / '..' / '..' / '..' / '..' / 'analytics' / 'all_train_outputs' / 'all_players.csv'
 
+coverage_pickle_path = Path(__file__).parent / 'plots' / 'coverage.pickle'
 
 def ticks_to_hours(ticks: int, tick_rate: int) -> float:
     return ticks / tick_rate / 60. / 60.

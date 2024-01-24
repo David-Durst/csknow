@@ -10,6 +10,8 @@ from matplotlib.colors import LogNorm
 from learn_bot.latent.place_area.simulation.simulator import *
 from learn_bot.libs.hdf5_to_pd import load_hdf5_to_pd
 
+plt.rc('font', family='Arial')
+
 coverage_pickle_path = Path(__file__).parent / 'plots' / 'coverage.pickle'
 
 per_player_pos_columns = \
@@ -86,7 +88,7 @@ def compute_coverage_metrics(loaded_model: LoadedModel, start_positions: bool):
     heatmap_im.set_edgecolor('face')
     cbar = fig.colorbar(heatmap_im, ax=ax)
     cbar.ax.tick_params(labelsize=8)
-    cbar.ax.set_ylabel('Occupancy', rotation=270, labelpad=3, fontsize=8)
+    cbar.ax.set_ylabel('Player-Ticks', rotation=270, labelpad=3, fontsize=8)
     if start_positions:
         cbar.ax.set_yticks([10**3])
     else:

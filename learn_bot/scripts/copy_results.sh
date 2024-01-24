@@ -13,6 +13,7 @@ cp offense_flanks_pct_num_rounds_ticks.txt ../final_results/
 cp defense_spread_rounds.pdf ../final_results/
 cp defense_spread_pct.txt ../final_results/
 cp defense_spread_pct_num_rounds_ticks.txt ../final_results/
+cp specific_key_places_rounds.pdf ../final_results/
 cp mistakes.pdf ../final_results/regular_mistakes.pdf
 cd ../mask_1_15_24_learned_push
 cp mistakes.pdf ../final_results/mask_mistakes.pdf
