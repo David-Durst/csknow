@@ -28,6 +28,7 @@ def process_user_responses():
             g.write(anonymized_file_txt)
         assert 'durst' not in anonymized_file_txt.lower()
         assert 'david' not in anonymized_file_txt.lower()
+        assert 'stanford' not in anonymized_file_txt.lower()
 
         if 'tc_zhang' in f:
             rank_answer = re.search(r'Experience Question 1:\W*_*([a-zA-Z0-9]+)_*.*\n', file_txt)  #

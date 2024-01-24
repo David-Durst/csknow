@@ -16,10 +16,14 @@ fig_length = 10
 
 title_to_num_y_points_less_than_1000: Dict[str, int] = {}
 title_to_num_x_points_between_negative_1200_and_0: Dict[str, int] = {}
+title_to_num_points: Dict[str, int] = {}
 
 def clear_event_counters():
+    global title_to_num_x_points_between_negative_1200_and_0, title_to_num_y_points_less_than_1000, \
+        title_to_num_points
     title_to_num_y_points_less_than_1000 = {}
     title_to_num_x_points_between_negative_1200_and_0 = {}
+    title_to_num_points = {}
 
 def create_heatmap(title: str, ct_team: bool, title_to_team_to_heatmap: Dict[str, Dict],
                    x_pos: List[float], y_pos: List[float]) -> Tuple[np.ndarray, np.ndarray]:
@@ -28,8 +32,10 @@ def create_heatmap(title: str, ct_team: bool, title_to_team_to_heatmap: Dict[str
     if title not in title_to_num_y_points_less_than_1000:
         title_to_num_y_points_less_than_1000[title] = 0
         title_to_num_x_points_between_negative_1200_and_0[title] = 0
+        title_to_num_points[title] = 0
     title_to_num_y_points_less_than_1000[title] += len([y for y in y_pos if y < 1000])
     title_to_num_x_points_between_negative_1200_and_0[title] += len([x for x in x_pos if x > -1200 and x < 0])
+    title_to_num_points[title] += len(x_pos)
     heatmap = heatmap.T
     if title not in title_to_team_to_heatmap:
         title_to_team_to_heatmap[title] = {}
@@ -72,7 +78,7 @@ def plot_key_event_heatmaps(title_to_team_to_key_event_pos: title_to_team_to_pos
     # mul cols by 2 as need ct and t plots
     local_fig_width = 7
     # fig_length * (num_titles + 0.3)
-    fig = plt.figure(figsize=(7, 7 * 0.5), constrained_layout=True)
+    fig = plt.figure(figsize=(7, 7 * 0.4), constrained_layout=True)
     axs = fig.subplots(2, num_titles, squeeze=False)
 
     canvas_min_max = convert_to_canvas_coordinates(pd.Series([d2_min[0], d2_max[0]]),
@@ -128,3 +134,4 @@ def plot_key_event_heatmaps(title_to_team_to_key_event_pos: title_to_team_to_pos
     with open(plots_path / (event + '.txt'), 'w') as f:
         f.write(f"num y points less than 1000: {title_to_num_y_points_less_than_1000}\n")
         f.write(f"num x points between negative 1200 and 0: {title_to_num_x_points_between_negative_1200_and_0}\n")
+        f.write(f"num points: {title_to_num_points}\n")

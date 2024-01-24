@@ -62,7 +62,7 @@ class PlayerRatings:
         ax.barh(nice_bot_types, mus, xerr=sigmas, align='center', ecolor='black', color=default_bar_color, capsize=1)
         ax.set_xlim(0, 40)
         ax.set_xticks([0, 20, 40])
-        ax.set_xlabel('TrueSkill Rank Rating', fontsize=8)
+        ax.set_xlabel('TrueSkill Rating', fontsize=8)
         #ax.set_ylabel('Player Type', fontsize=8)
         #full_title = 'User Study TrueSkill Ratings'
         #if title_prefix is not None:
