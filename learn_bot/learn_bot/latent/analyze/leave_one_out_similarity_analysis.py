@@ -211,6 +211,7 @@ class TickSimilarityResults:
         self.player_tick_label_similarity = []
         self.player_tick_label_ground_truth = []
 
+plt.rc('font', family='Arial')
 
 def per_tick_similarity_analysis(push_save_round_labels: PushSaveRoundLabels,
                                  hdf5_wrapper: HDF5Wrapper, test_group_ids: List[int]):
@@ -326,7 +327,15 @@ def per_tick_similarity_analysis(push_save_round_labels: PushSaveRoundLabels,
                                             display_labels=['Push', 'Save'], ax=axs[1, 3], normalize='all')
     axs[1, 3].set_title('Test 20s Distance Decrease')
 
-    plt.savefig(similarity_plots_path / 'similarity_tick_confusion.png')
+    plt.savefig(similarity_plots_path / 'similarity_tick_confusion.pdf')
+
+    fig = plt.figure(figsize=(3.3, 3.3), constrained_layout=True)
+    fig.suptitle('Tick Push/Save Labels')
+    ax = fig.subplots(1, 1, squeeze=False)
+    ConfusionMatrixDisplay.from_predictions(test_result.player_tick_label_ground_truth,
+                                            test_result.player_tick_label_similarity,
+                                            display_labels=['Push', 'Save'], ax=ax[0, 0], normalize='all')
+    plt.savefig(similarity_plots_path / 'one_similarity_tick_confusion.pdf')
     #train_5s_accuracy = sum(train_result.correct_player_tick_label_5s) / len(train_result.correct_player_tick_label_5s)
     #train_10s_accuracy = sum(train_result.correct_player_tick_label_10s) / len(train_result.correct_player_tick_label_10s)
     #train_20s_accuracy = sum(train_result.correct_player_tick_label_20s) / len(train_result.correct_player_tick_label_20s)
