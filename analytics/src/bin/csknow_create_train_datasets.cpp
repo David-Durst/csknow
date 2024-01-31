@@ -216,6 +216,16 @@ int main(int argc, char * argv[]) {
             << " real game end tick number " << ticks.gameTickNumber[filteredRounds.endTick[tmpR]] << std::endl;
     }
     exit(0);
+    for (int64_t killIndex = 0; killIndex < kills.size; killIndex++) {
+        if (killIndex > 30) {
+            exit(0);
+        }
+        std::cout << players.name[players.idOffset + kills.killer[killIndex]] << ","
+            << players.name[players.idOffset + kills.victim[killIndex]] << ","
+            << kills.tickId[killIndex] << ","
+            << ticks.gameTickNumber[kills.tickId[killIndex]] << ","
+            << ticks.roundId[kills.tickId[killIndex]] << std::endl;
+    }
      */
 
 

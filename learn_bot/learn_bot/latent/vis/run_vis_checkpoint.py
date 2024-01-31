@@ -51,7 +51,7 @@ def compute_num_points(load_data_result: LoadDataResult):
 
 
 if __name__ == "__main__":
-    load_data_result = LoadDataResult(rollout_load_data_options)
+    load_data_result = LoadDataResult(load_data_options)
     compute_num_points(load_data_result)
 
     #loaded_model = load_model_file(load_data_result, use_test_data_only=True)
