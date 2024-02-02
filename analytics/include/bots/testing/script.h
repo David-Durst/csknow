@@ -18,15 +18,19 @@ protected:
     ObserveSettings observeSettings;
     Node::Ptr commands;
     bool initScript;
+    int numHumans;
+
+    void adjustHumanNeededBotEntries(const ServerState & state);
 
 public:
     using Ptr = std::unique_ptr<Script>;
     string name;
     string curLog;
 
-    Script(string name, vector<NeededBot> neededBots, ObserveSettings observeSettings, bool initScript = false) :
+    Script(string name, vector<NeededBot> neededBots, ObserveSettings observeSettings, bool initScript = false,
+           int numHumans = 0) :
             neededBots(std::move(neededBots)), observeSettings(observeSettings),
-            initScript(initScript), name(std::move(name)) { }
+            initScript(initScript), numHumans(numHumans), name(std::move(name)) { }
            //vector<Command::Ptr> && logicCommands, unique_ptr<Node> && conditions) :
            //logicCommands(std::move(logicCommands)), conditions(std::move(conditions)) { }
     virtual ~Script() = default;
@@ -88,7 +92,7 @@ struct NeedPreTestingInitNode : Node {
             if (!client.isBot) {
                 bool humanWrongTeam =
                     (client.team != ENGINE_TEAM_SPEC && numHumans >= numHumansNonSpec) ||
-                    (client.team != ENGINE_TEAM_T && numHumans < numHumansNonSpec);
+                    (client.team != ENGINE_TEAM_T && client.team != ENGINE_TEAM_CT && numHumans < numHumansNonSpec);
                 numHumans++;
                 if (humanWrongTeam) {
                     playerNodeState[treeThinker.csgoId] = NodeState::Success;
@@ -130,7 +134,7 @@ struct PreTestingInitFinishedNode : Node {
             if (!client.isBot) {
                 bool humanWrongTeam =
                     (client.team != ENGINE_TEAM_SPEC && numHumans >= numHumansNonSpec) ||
-                    (client.team != ENGINE_TEAM_T && numHumans < numHumansNonSpec);
+                    (client.team != ENGINE_TEAM_T && client.team != ENGINE_TEAM_CT && numHumans < numHumansNonSpec);
                 numHumans++;
                 if (humanWrongTeam) {
                     playerNodeState[treeThinker.csgoId] = NodeState::Running;
@@ -155,7 +159,7 @@ struct PreTestingInitFinishedNode : Node {
 class InitScript : public Script {
     int numHumansNonSpec;
 public:
-    InitScript(int numHumansNonSpec) : Script("InitScript", {}, {}, true),
+    InitScript(int numHumansNonSpec) : Script("InitScript", {}, {}, true, numHumansNonSpec),
         numHumansNonSpec(numHumansNonSpec) { };
 
     void initialize(Tree & tree, ServerState & state) override  {

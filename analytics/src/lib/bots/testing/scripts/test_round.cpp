@@ -10,6 +10,7 @@ RoundScript::RoundScript(const csknow::plant_states::PlantStatesResult & plantSt
                          std::optional<Vec2> cameraAngle, int numHumans) :
     Script(baseName, {}, {ObserveType::FirstPerson, 0}),
     plantStateIndex(plantStateIndex), numRounds(numRounds), playerFreeze(playerFreeze) {
+    this->numHumans = numHumans;
     name += std::to_string(plantStateIndex);
     if (cameraOrigin) {
         observeSettings.observeType = ObserveType::Absolute;
@@ -42,9 +43,6 @@ RoundScript::RoundScript(const csknow::plant_states::PlantStatesResult & plantSt
         }
         if (plantStatesResult.tPlayerStates[i].alive[plantStateIndex] && numT < maxT) {
             neededBots.push_back({0, ENGINE_TEAM_T, dis(gen) < 0.5 ? AggressiveType::Push : AggressiveType::Bait});
-            if (numT < numHumans) {
-                neededBots.back().human = true;
-            }
             playerPos.push_back(plantStatesResult.tPlayerStates[i].pos[plantStateIndex]);
             playerViewAngle.push_back(plantStatesResult.tPlayerStates[i].viewAngle[plantStateIndex]);
             // no need to flip view angle between recording and game, my bt test set pos command already does it

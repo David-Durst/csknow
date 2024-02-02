@@ -77,14 +77,15 @@ int main(int argc, char * argv[]) {
 
     bool finishedTests = false;
     csknow::plant_states::PlantStatesResult plantStatesResult;
-    bool limitToNonConfounding = false;
+    bool limitToNonConfounding = true;
     if (limitToNonConfounding) {
         plantStatesResult.loadFromPython(savedDatasetsDir + "/non_confound_test_plant_states.hdf5", true);
     }
     else {
         plantStatesResult.loadFromPython(savedDatasetsDir + "/" + testPlantStatesFileName, false);
     }
-    ScriptsRunner roundScriptsRunner(createRoundScripts(plantStatesResult, situationId, false, 0), false, 0);
+    int numHumans = 1;
+    ScriptsRunner roundScriptsRunner(createRoundScripts(plantStatesResult, situationId, false, numHumans), false, numHumans);
     csknow::tests::trace::TracesData traceData(savedDatasetsDir + "/traces.hdf5");
     ScriptsRunner traceScriptsRunner(csknow::tests::trace::createTracesScripts(traceData, botStop, true), false);
 

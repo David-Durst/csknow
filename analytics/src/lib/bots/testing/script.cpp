@@ -5,7 +5,32 @@
 #include "bots/testing/script.h"
 #include <iterator>
 
+
+void Script::adjustHumanNeededBotEntries(const ServerState & state) {
+    // going to assign human to first needed bot on right team (that another human isn't already using
+    int humansRemainingToAssign = numHumans;
+    map<TeamId, vector<size_t>> teamToNeededBotIndex;
+    for (size_t i = 0; i < neededBots.size(); i++) {
+        neededBots[i].human = false;
+        teamToNeededBotIndex[neededBots[i].team].push_back(i);
+    }
+
+    for (const auto &client: state.clients) {
+        if (humansRemainingToAssign > 0 && !client.isBot &&
+            (client.team == ENGINE_TEAM_CT || client.team == ENGINE_TEAM_T)) {
+            humansRemainingToAssign--;
+            for (const auto & neededBotIndex: teamToNeededBotIndex[client.team]) {
+                if (!neededBots[neededBotIndex].human) {
+                    neededBots[neededBotIndex].human = true;
+                    break;
+                }
+            }
+        }
+    }
+}
+
 void Script::initialize(Tree &, ServerState & state) {
+    adjustHumanNeededBotEntries(state);
     // allocate the bots to use
     set<CSGOId> usedBots;
     // get non-human bots
