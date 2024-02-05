@@ -103,8 +103,8 @@ struct NeedPreTestingInitNode : Node {
                 numBots++;
             }
         }
-        // need preinit testing if too few bots
-        if (numBots < numNeededNonHumanBots) {
+        // need preinit testing if too few bots or humans
+        if (numBots < numNeededNonHumanBots || numHumans < numHumansNonSpec) {
             playerNodeState[treeThinker.csgoId] = NodeState::Success;
             return playerNodeState[treeThinker.csgoId];
         }
@@ -145,8 +145,8 @@ struct PreTestingInitFinishedNode : Node {
                 numBots++;
             }
         }
-        // need preinit testing if too few bots
-        if (numBots < numNeededNonHumanBots) {
+        // need preinit testing if too few bots or humans
+        if (numBots < numNeededNonHumanBots || numHumans < numHumansNonSpec) {
             playerNodeState[treeThinker.csgoId] = NodeState::Running;
             return playerNodeState[treeThinker.csgoId];
         }
