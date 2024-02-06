@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from enum import Enum, auto
-from math import log, ceil
+from math import log, ceil, log10
 from pathlib import Path
 from typing import Dict, Optional, List, Tuple, Set
 
@@ -22,7 +22,8 @@ from learn_bot.latent.analyze.test_traces.run_trace_visualization import d2_img,
 from learn_bot.latent.engagement.column_names import round_id_column, game_tick_number_column
 from learn_bot.latent.load_model import LoadedModel
 from learn_bot.latent.order.column_names import team_strs
-from learn_bot.latent.place_area.column_names import specific_player_place_area_columns, PlayerPlaceAreaColumns
+from learn_bot.latent.place_area.column_names import specific_player_place_area_columns, PlayerPlaceAreaColumns, \
+    max_world_distance
 from learn_bot.latent.vis.draw_inference import d2_bottom_right_x, d2_bottom_right_y, d2_top_left_x, d2_top_left_y
 from learn_bot.libs.io_transforms import CPU_DEVICE_STR
 from learn_bot.libs.vec import Vec3
@@ -46,6 +47,8 @@ class ImageBuffers:
 time_to_kill_col = 'Time To Kill'
 time_to_shoot_col = 'Time To Shoot'
 crosshair_distance_to_enemy_col = 'Crosshair Distance To Enemy'
+world_distance_to_enemy_col = 'World Distance To Enemy'
+
 
 spread_radius = 2
 title_to_line_buffers: Dict[str, ImageBuffers] = {}
@@ -56,8 +59,8 @@ title_to_lifetimes: Dict[str, List[float]] = {}
 title_to_speeds: Dict[str, List[float]] = {}
 title_to_shots_per_kill: Dict[str, List[float]] = {}
 # tts - time to shoot, ttk - time to kill
-title_to_crosshair_distance_to_tts: Dict[str, List[Dict[str, float]]] = {}
-title_to_crosshair_distance_to_ttk: Dict[str, List[Dict[str, float]]] = {}
+title_to_tts_and_distance: Dict[str, List[Dict[str, float]]] = {}
+title_to_ttk_and_distance: Dict[str, List[Dict[str, float]]] = {}
 title_to_key_events: Dict[str, int] = {}
 title_to_team_to_pos_dict = Dict[str, Dict[bool, Tuple[List[float], List[float]]]]
 # this is different from buffers as buffers stores each point exactly once
@@ -94,6 +97,14 @@ def get_title_to_shots_per_kill() -> Dict[str, List[float]]:
     return title_to_shots_per_kill
 
 
+def get_title_to_tts_and_distance() -> Dict[str, List[Dict[str, float]]]:
+    return title_to_tts_and_distance
+
+
+def get_title_to_ttk_and_distance() -> Dict[str, List[Dict[str, float]]]:
+    return title_to_ttk_and_distance
+
+
 def get_title_to_key_events() -> Dict[str, int]:
     return title_to_key_events
 
@@ -105,7 +116,8 @@ def get_title_to_team_to_key_event_pos() -> title_to_team_to_pos_dict:
 def clear_title_caches():
     global title_to_line_buffers, title_to_point_buffers, title_to_num_trajectory_ids, title_to_num_points, \
         title_to_lifetimes, title_to_speeds, \
-        title_to_shots_per_kill, title_to_key_events, title_to_team_to_key_event_pos
+        title_to_shots_per_kill, title_to_key_events, title_to_team_to_key_event_pos, \
+        title_to_tts_and_distance, title_to_ttk_and_distance
     title_to_line_buffers = {}
     title_to_point_buffers = {}
     title_to_num_trajectory_ids = {}
@@ -115,6 +127,8 @@ def clear_title_caches():
     title_to_shots_per_kill = {}
     title_to_key_events = {}
     title_to_team_to_key_event_pos = {}
+    title_to_tts_and_distance = {}
+    title_to_ttk_and_distance = {}
     clear_teamwork_title_caches()
 
 
@@ -493,27 +507,31 @@ def compute_shots_per_kill(alive_trajectory_vis_df: pd.DataFrame, player_place_a
 
 
 def compute_crosshair_distance_to_engage(trajectory_id_df: pd.DataFrame, alive_trajectory_vis_df: pd.DataFrame,
-                                         crosshair_distance_to_enemy: pd.Series,
+                                         crosshair_distance_to_enemy_series: pd.Series,
                                          player_place_area_columns: PlayerPlaceAreaColumns,
                                          trajectory_filter_options: TrajectoryFilterOptions, title: str):
     if trajectory_filter_options.compute_crosshair_distance_to_engage:
-        if title not in title_to_crosshair_distance_to_tts:
-            title_to_crosshair_distance_to_tts[title] = []
-            title_to_crosshair_distance_to_ttk[title] = []
+        if title not in title_to_tts_and_distance:
+            title_to_tts_and_distance[title] = []
+            title_to_ttk_and_distance[title] = []
         alive_trajectory_id_df = trajectory_id_df.iloc[:len(alive_trajectory_vis_df)]
 
         shot_cur_tick_series = alive_trajectory_vis_df[player_place_area_columns.player_shots_cur_tick]
         kill_next_tick_series = alive_trajectory_vis_df[player_place_area_columns.player_kill_next_tick]
+        world_distance_to_enemy_series = \
+            alive_trajectory_vis_df[player_place_area_columns.nearest_world_distance_to_enemy]
 
         if shot_cur_tick_series.sum() > 0.:
             time_until_next_shot = compute_time_until_next_event(alive_trajectory_id_df, shot_cur_tick_series)
-            record_time_until_event_by_crosshair_distance(time_until_next_shot, crosshair_distance_to_enemy,
-                                                          time_to_shoot_col, title_to_crosshair_distance_to_tts[title])
+            record_time_until_event_and_distance(time_until_next_shot, crosshair_distance_to_enemy_series,
+                                                 world_distance_to_enemy_series,
+                                                 time_to_shoot_col, title_to_tts_and_distance[title])
 
         if kill_next_tick_series.sum() > 0.:
             time_until_next_kill = compute_time_until_next_event(alive_trajectory_id_df, kill_next_tick_series)
-            record_time_until_event_by_crosshair_distance(time_until_next_kill, crosshair_distance_to_enemy,
-                                                          time_to_kill_col, title_to_crosshair_distance_to_ttk[title])
+            record_time_until_event_and_distance(time_until_next_kill, crosshair_distance_to_enemy_series,
+                                                 world_distance_to_enemy_series,
+                                                 time_to_kill_col, title_to_ttk_and_distance[title])
 
 
 event_col = 'event'
@@ -542,20 +560,24 @@ def compute_time_until_next_event(alive_trajectory_id_df: pd.DataFrame, event_se
 
     return time_until_next_event
 
+
 crosshair_distance_to_degrees = 30.
 
-def record_time_until_event_by_crosshair_distance(time_until_next_event: pd.Series, crosshair_distance: pd.Series,
-                                                  time_to_event_col: str,
-                                                  crosshair_distance_to_event: List[Dict[str, float]]):
+
+def record_time_until_event_and_distance(time_until_next_event: pd.Series, crosshair_distance: pd.Series,
+                                         world_distance: pd.Series, time_to_event_col: str,
+                                         crosshair_distance_to_event: List[Dict[str, float]]):
     # retrict crosshair distance to ticks with a next event
     limited_crosshair_distance = crosshair_distance.iloc[:len(time_until_next_event)]
     df = pd.DataFrame({time_to_event_col: time_until_next_event.reset_index(drop=True),
-                       crosshair_distance_to_enemy_col: limited_crosshair_distance.reset_index(drop=True)})
+                       crosshair_distance_to_enemy_col: limited_crosshair_distance.reset_index(drop=True),
+                       world_distance_to_enemy_col: world_distance.reset_index(drop=True)})
 
     # only record situations where not maxing out crosshair distance
     filtered_df = df[df[crosshair_distance_to_enemy_col] < 1.]
 
     filtered_df[crosshair_distance_to_enemy_col] *= crosshair_distance_to_degrees
+    filtered_df[world_distance_to_enemy_col] = 10 ** (filtered_df[world_distance_to_enemy_col] * log10(max_world_distance))
 
     for _, row in filtered_df.iterrows():
         crosshair_distance_to_event.append(row.to_dict())

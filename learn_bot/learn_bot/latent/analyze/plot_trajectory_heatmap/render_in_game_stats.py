@@ -463,3 +463,9 @@ def compute_metrics(trajectory_filter_options: TrajectoryFilterOptions, plots_pa
                                            plots_path / ('shots_per_kill_' + str(trajectory_filter_options) + '.pdf'))
         compute_one_metric_emd(get_title_to_shots_per_kill(),
                                plots_path / ('shots_per_kill_' + str(trajectory_filter_options) + '.txt'))
+    if trajectory_filter_options.compute_crosshair_distance_to_engage:
+        compute_one_metric_four_histograms(get_title_to_shots_per_kill(), None, 1, 30.,
+                                           0.3, 'Shots Per Kill', [0, 15, 30], None, [0, 0.15, 0.3],
+                                           plots_path / ('shots_per_kill_' + str(trajectory_filter_options) + '.pdf'))
+        compute_one_metric_emd(get_title_to_shots_per_kill(),
+                               plots_path / ('shots_per_kill_' + str(trajectory_filter_options) + '.txt'))

@@ -2,7 +2,7 @@ import tkinter as tk
 from dataclasses import dataclass
 from tkinter import ttk, font
 from typing import Tuple, Optional, List, Dict
-from math import sqrt, pow, cos, sin, radians
+from math import sqrt, pow, cos, sin, radians, log10
 
 import pandas as pd
 from PIL import Image, ImageDraw, ImageTk as itk, ImageFont
@@ -12,7 +12,7 @@ from learn_bot.latent.place_area.pos_abs_from_delta_grid_or_radial import delta_
     delta_pos_grid_num_cells_per_xy_dim, \
     delta_pos_grid_cell_dim, delta_pos_grid_num_xy_cells_per_z_change, max_speed_per_second
 from learn_bot.latent.place_area.column_names import specific_player_place_area_columns, num_radial_bins, \
-    num_radial_bins_per_z_axis, StatureOptions, direction_angle_range
+    num_radial_bins_per_z_axis, StatureOptions, direction_angle_range, max_world_distance
 from learn_bot.latent.place_area.simulation.constants import EngineWeaponId, place_names, lookup_place_name
 from learn_bot.latent.transformer_nested_hidden_latent_model import stature_to_speed_list
 from learn_bot.mining.area_cluster import Vec3
@@ -195,6 +195,7 @@ def draw_all_players(data_dict: Dict, pred_dict: Optional[Dict], im_draw: ImageD
             decrease_distance_to_c4_10s = data_dict[player_place_area_columns.decrease_distance_to_c4_10s]
             decrease_distance_to_c4_20s = data_dict[player_place_area_columns.decrease_distance_to_c4_20s]
             nearest_crosshair_distance_to_enemy = data_dict[player_place_area_columns.nearest_crosshair_distance_to_enemy]
+            nearest_world_distance_to_enemy = 10**(data_dict[player_place_area_columns.nearest_world_distance_to_enemy] * log10(max_world_distance))
             hurt_last_5s = data_dict[player_place_area_columns.player_hurt_in_last_5s]
             fire_last_5s = data_dict[player_place_area_columns.player_fire_in_last_5s]
             no_fov_enemy_visible_last_5s = data_dict[player_place_area_columns.player_no_fov_enemy_visible_in_last_5s]
@@ -211,8 +212,8 @@ def draw_all_players(data_dict: Dict, pred_dict: Optional[Dict], im_draw: ImageD
             armor = data_dict[player_place_area_columns.player_armor]
             helmet = data_dict[player_place_area_columns.player_helmet]
             temporal_str = f"{player_place_area_columns.player_id_uniform_space} " \
-                           f"decrease distance to c4 5s {decrease_distance_to_c4_5s} 10s {decrease_distance_to_c4_10s} 20s {decrease_distance_to_c4_20s}, " \
-                           f"nearest crosshair distance to enemy {nearest_crosshair_distance_to_enemy:3.2f}, " \
+                           f"decrease dist to c4 5s {decrease_distance_to_c4_5s} 10s {decrease_distance_to_c4_10s} 20s {decrease_distance_to_c4_20s}, " \
+                           f"nearest aim/world dist to enemy {nearest_crosshair_distance_to_enemy:3.2f}/{nearest_world_distance_to_enemy:.0f}, " \
                            f"hurt last 5s {hurt_last_5s:3.2f}, fire last 5s {fire_last_5s:3.2f}, " \
                            f"enemy visible last 5s (no fov) {no_fov_enemy_visible_last_5s:3.2f}, (fov) {fov_enemy_visible_last_5s:3.2f}, " \
                            f"seconds after hit {seconds_after_prior_hit_enemy:5.2f} until next {seconds_until_next_hit_enemy:5.2f}"
@@ -225,7 +226,7 @@ def draw_all_players(data_dict: Dict, pred_dict: Optional[Dict], im_draw: ImageD
                 pos_coord.draw_vis(im_draw, True, custom_color=custom_color, rectangle=rectangle,
                                    player_text=player_to_text[player_index] if player_index in player_to_text else None,
                                    view_angle=data_dict[player_place_area_columns.view_angle[0]])
-                result.status += f"{player_place_area_columns.player_id} pos {pos_coord.coords}, " \
+                result.status += f"{player_place_area_columns.player_id_uniform_space} pos {pos_coord.coords}, " \
                                  f"vel {vel_per_player}, area id {int(area_id)} index {int(area_index)} place {lookup_place_name(int(place_index))}, " \
                                  f"health {health:3.2f}, armor {armor:3.2f}, helmet {helmet}, " \
                                  f"weapon {str(EngineWeaponId(weapon_id))}, " \

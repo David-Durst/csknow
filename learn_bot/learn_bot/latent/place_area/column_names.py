@@ -31,6 +31,8 @@ num_radial_bins_per_z_axis = num_directions * StatureOptions.NUM_STATURE_OPTIONS
 num_radial_bins = 1 + num_z_axis_layers * num_radial_bins_per_z_axis
 
 
+max_world_distance = 4000
+
 
 float_c4_cols = c4_time_left_percent #c4_ticks_since_plant #[c4_distance_to_a_site_col, c4_distance_to_b_site_col] + c4_pos_cols + c4_ticks_since_plant
 
@@ -92,6 +94,8 @@ class PlayerPlaceAreaColumns:
         self.prior_vel = []
         self.nearest_crosshair_distance_to_enemy = \
             get_player_nearest_crosshair_distance_to_enemy_columns(player_index, team_str)
+        self.nearest_world_distance_to_enemy = \
+            get_player_nearest_world_distance_to_enemy_columns(player_index, team_str)
         self.prior_nearest_crosshair_distance_to_enemy = []
         self.player_hurt_in_last_5s = get_player_hurt_in_last_5s_columns(player_index, team_str)
         self.seconds_after_prior_hit_enemy = get_player_seconds_after_prior_hit_enemy(player_index, team_str)
@@ -202,7 +206,8 @@ class PlayerPlaceAreaColumns:
     def get_vis_only_columns(self) -> list[str]:
         return [self.player_id, self.area_id, self.area_index, self.place_index,
                 self.player_hurt_next_tick, self.player_kill_next_tick, self.player_killed_next_tick,
-                self.player_shots_cur_tick, self.player_weapon_id, self.player_scoped, self.player_helmet] \
+                self.player_shots_cur_tick, self.player_weapon_id, self.player_scoped, self.player_helmet,
+                self.nearest_world_distance_to_enemy] \
             + self.vel + self.view_angle
 
 
