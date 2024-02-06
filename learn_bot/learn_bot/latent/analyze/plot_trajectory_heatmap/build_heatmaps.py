@@ -415,8 +415,11 @@ def plot_one_trajectory_dataset(loaded_model: LoadedModel, id_df: pd.DataFrame, 
             compute_speeds(alive_trajectory_vis_df, player_place_area_columns, weapon_scoped_to_max_speed,
                            trajectory_filter_options, title)
             compute_shots_per_kill(alive_trajectory_vis_df, player_place_area_columns, trajectory_filter_options, title)
-            compute_crosshair_distance_to_engage(trajectory_id_df, alive_trajectory_vis_df, player_place_area_columns,
-                                                 trajectory_filter_options, title)
+            crosshair_distance_to_enemy = \
+                pd.Series(alive_trajectory_np[:,
+                          loaded_model.model.players_nearest_crosshair_to_enemy_columns[player_index]])
+            compute_crosshair_distance_to_engage(trajectory_id_df, alive_trajectory_vis_df, crosshair_distance_to_enemy,
+                                                 player_place_area_columns, trajectory_filter_options, title)
 
 
 
@@ -490,6 +493,7 @@ def compute_shots_per_kill(alive_trajectory_vis_df: pd.DataFrame, player_place_a
 
 
 def compute_crosshair_distance_to_engage(trajectory_id_df: pd.DataFrame, alive_trajectory_vis_df: pd.DataFrame,
+                                         crosshair_distance_to_enemy: pd.Series,
                                          player_place_area_columns: PlayerPlaceAreaColumns,
                                          trajectory_filter_options: TrajectoryFilterOptions, title: str):
     if trajectory_filter_options.compute_crosshair_distance_to_engage:
@@ -500,9 +504,6 @@ def compute_crosshair_distance_to_engage(trajectory_id_df: pd.DataFrame, alive_t
 
         shot_cur_tick_series = alive_trajectory_vis_df[player_place_area_columns.player_shots_cur_tick]
         kill_next_tick_series = alive_trajectory_vis_df[player_place_area_columns.player_kill_next_tick]
-
-        crosshair_distance_to_enemy = \
-            alive_trajectory_vis_df[player_place_area_columns.nearest_crosshair_distance_to_enemy]
 
         if shot_cur_tick_series.sum() > 0.:
             time_until_next_shot = compute_time_until_next_event(alive_trajectory_id_df, shot_cur_tick_series)
@@ -531,8 +532,8 @@ def compute_time_until_next_event(alive_trajectory_id_df: pd.DataFrame, event_se
     alive_trajectory_id_and_event_df[event_col] = sum_if_event
     alive_trajectory_id_and_event_df = alive_trajectory_id_and_event_df[alive_trajectory_id_and_event_df[event_col] > 0]
 
-    max_per_event_df = alive_trajectory_id_and_event_df.groupby(event_col).value.transform(np.max)
-    alive_trajectory_id_and_event_df[event_game_tick_col] = max_per_event_df[game_tick_number_column]
+    event_game_tick = alive_trajectory_id_and_event_df.groupby(event_col)[game_tick_number_column].transform(np.max)
+    alive_trajectory_id_and_event_df[event_game_tick_col] = event_game_tick
 
     # convert game tick number into time
     ticks_until_next_event = alive_trajectory_id_and_event_df[event_game_tick_col] - \
@@ -541,17 +542,20 @@ def compute_time_until_next_event(alive_trajectory_id_df: pd.DataFrame, event_se
 
     return time_until_next_event
 
+crosshair_distance_to_degrees = 30.
 
 def record_time_until_event_by_crosshair_distance(time_until_next_event: pd.Series, crosshair_distance: pd.Series,
                                                   time_to_event_col: str,
                                                   crosshair_distance_to_event: List[Dict[str, float]]):
     # retrict crosshair distance to ticks with a next event
     limited_crosshair_distance = crosshair_distance.iloc[:len(time_until_next_event)]
-    df = pd.DataFrame({time_to_event_col: time_until_next_event,
-                       crosshair_distance_to_enemy_col: limited_crosshair_distance})
+    df = pd.DataFrame({time_to_event_col: time_until_next_event.reset_index(drop=True),
+                       crosshair_distance_to_enemy_col: limited_crosshair_distance.reset_index(drop=True)})
 
     # only record situations where not maxing out crosshair distance
     filtered_df = df[df[crosshair_distance_to_enemy_col] < 1.]
+
+    filtered_df[crosshair_distance_to_enemy_col] *= crosshair_distance_to_degrees
 
     for _, row in filtered_df.iterrows():
         crosshair_distance_to_event.append(row.to_dict())
