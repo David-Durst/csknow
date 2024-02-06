@@ -22,7 +22,7 @@ from learn_bot.latent.analyze.test_traces.run_trace_visualization import d2_img,
 from learn_bot.latent.engagement.column_names import round_id_column, game_tick_number_column
 from learn_bot.latent.load_model import LoadedModel
 from learn_bot.latent.order.column_names import team_strs
-from learn_bot.latent.place_area.column_names import specific_player_place_area_columns
+from learn_bot.latent.place_area.column_names import specific_player_place_area_columns, PlayerPlaceAreaColumns
 from learn_bot.latent.vis.draw_inference import d2_bottom_right_x, d2_bottom_right_y, d2_top_left_x, d2_top_left_y
 from learn_bot.libs.io_transforms import CPU_DEVICE_STR
 from learn_bot.libs.vec import Vec3
@@ -42,6 +42,10 @@ class ImageBuffers:
         else:
             return self.t_buffer
 
+# engagement stats columns
+time_to_kill_col = 'Time To Kill'
+time_to_shoot_col = 'Time To Shoot'
+crosshair_distance_to_enemy_col = 'Crosshair Distance To Enemy'
 
 spread_radius = 2
 title_to_line_buffers: Dict[str, ImageBuffers] = {}
@@ -51,6 +55,7 @@ title_to_num_points: Dict[str, int] = {}
 title_to_lifetimes: Dict[str, List[float]] = {}
 title_to_speeds: Dict[str, List[float]] = {}
 title_to_shots_per_kill: Dict[str, List[float]] = {}
+title_to_engage: Dict[str, List[Dict[str, float]]] = {}
 title_to_key_events: Dict[str, int] = {}
 title_to_team_to_pos_dict = Dict[str, Dict[bool, Tuple[List[float], List[float]]]]
 # this is different from buffers as buffers stores each point exactly once
@@ -403,38 +408,12 @@ def plot_one_trajectory_dataset(loaded_model: LoadedModel, id_df: pd.DataFrame, 
                     cur_player_d2_drw.line(xy=continuous_canvas_pos_xy, fill=1, width=5)
                 line_buffer += np.asarray(cur_player_d2_img)
             title_to_num_points[title] += len(alive_trajectory_np)
-            if trajectory_filter_options.compute_lifetimes:
-                if title not in title_to_lifetimes:
-                    title_to_lifetimes[title] = []
-                lifetime_in_game_ticks = trajectory_id_df[game_tick_number_column].iloc[len(alive_trajectory_np) - 1] - \
-                    first_game_tick_number
-                # sometimes if 41 seconds due to alignment issues, just make it 40 in those cases to handle
-                # weird counting issues
-                title_to_lifetimes[title].append(min(lifetime_in_game_ticks / game_tick_rate, 40.))
-            if trajectory_filter_options.compute_speeds:
-                if title not in title_to_speeds:
-                    title_to_speeds[title] = []
-                # z speed is out of our control, only use x and y
-                # z isn't tracked when running up a hill, its about jumping speed, which isn't part of wasd speed
-                speeds = (alive_trajectory_vis_df[player_place_area_columns.vel[0:2]] ** 2.).sum(axis=1) ** 0.5
-                weapon_id_index = alive_trajectory_vis_df[player_place_area_columns.player_weapon_id]
-                scoped_index = alive_trajectory_vis_df[player_place_area_columns.player_scoped]
-                weapon_id_and_scoped_index = torch.tensor((weapon_id_index * 2 + scoped_index).astype('int').values)
-                # mul weapon index by 2 as inner dimension is scoped, and 2 options for scoping (scoped or unscoped)
-                max_speed_per_weapon_and_scoped = \
-                    torch.index_select(weapon_scoped_to_max_speed, 0, weapon_id_and_scoped_index)
-                scaled_speeds = speeds.values / max_speed_per_weapon_and_scoped.numpy()
-                # found 1.3% are over max speed, just clip them to avoid annoyances
-                clipped_scaled_speeds = np.clip(scaled_speeds, 0., 1.)
-                title_to_speeds[title] += clipped_scaled_speeds.tolist()
-            if trajectory_filter_options.compute_shots_per_kill:
-                if title not in title_to_shots_per_kill:
-                    title_to_shots_per_kill[title] = []
-                num_shots = alive_trajectory_vis_df[player_place_area_columns.player_shots_cur_tick].sum()
-                num_kills = alive_trajectory_vis_df[player_place_area_columns.player_kill_next_tick].sum()
-                # metric undefined if player fails to score a kill
-                if num_kills > 0:
-                    title_to_shots_per_kill[title].append(num_shots / num_kills)
+            compute_lifetimes(trajectory_id_df, alive_trajectory_np, first_game_tick_number, trajectory_filter_options,
+                              title)
+            compute_speeds(alive_trajectory_vis_df, player_place_area_columns, weapon_scoped_to_max_speed,
+                           trajectory_filter_options, title)
+            compute_shots_per_kill(alive_trajectory_vis_df, player_place_area_columns, trajectory_filter_options, title)
+
 
 
     # verify that got all key events, no need to check killed or end as have assert above for that
@@ -461,5 +440,85 @@ def plot_one_trajectory_dataset(loaded_model: LoadedModel, id_df: pd.DataFrame, 
             print(f"per trajectory num key events {per_trajectory_num_key_events}")
 
 
+def compute_lifetimes(trajectory_id_df: pd.DataFrame, alive_trajectory_np: np.ndarray, first_game_tick_number: int,
+                      trajectory_filter_options: TrajectoryFilterOptions, title: str):
+    if trajectory_filter_options.compute_lifetimes:
+        if title not in title_to_lifetimes:
+            title_to_lifetimes[title] = []
+        lifetime_in_game_ticks = trajectory_id_df[game_tick_number_column].iloc[len(alive_trajectory_np) - 1] - \
+                                 first_game_tick_number
+        # sometimes if 41 seconds due to alignment issues, just make it 40 in those cases to handle
+        # weird counting issues
+        title_to_lifetimes[title].append(min(lifetime_in_game_ticks / game_tick_rate, 40.))
 
 
+def compute_speeds(alive_trajectory_vis_df: pd.DataFrame, player_place_area_columns: PlayerPlaceAreaColumns,
+                   weapon_scoped_to_max_speed: torch.Tensor, trajectory_filter_options: TrajectoryFilterOptions,
+                   title: str):
+    if trajectory_filter_options.compute_speeds:
+        if title not in title_to_speeds:
+            title_to_speeds[title] = []
+        # z speed is out of our control, only use x and y
+        # z isn't tracked when running up a hill, its about jumping speed, which isn't part of wasd speed
+        speeds = (alive_trajectory_vis_df[player_place_area_columns.vel[0:2]] ** 2.).sum(axis=1) ** 0.5
+        weapon_id_index = alive_trajectory_vis_df[player_place_area_columns.player_weapon_id]
+        scoped_index = alive_trajectory_vis_df[player_place_area_columns.player_scoped]
+        weapon_id_and_scoped_index = torch.tensor((weapon_id_index * 2 + scoped_index).astype('int').values)
+        # mul weapon index by 2 as inner dimension is scoped, and 2 options for scoping (scoped or unscoped)
+        max_speed_per_weapon_and_scoped = \
+            torch.index_select(weapon_scoped_to_max_speed, 0, weapon_id_and_scoped_index)
+        scaled_speeds = speeds.values / max_speed_per_weapon_and_scoped.numpy()
+        # found 1.3% are over max speed, just clip them to avoid annoyances
+        clipped_scaled_speeds = np.clip(scaled_speeds, 0., 1.)
+        title_to_speeds[title] += clipped_scaled_speeds.tolist()
+
+
+def compute_shots_per_kill(alive_trajectory_vis_df: pd.DataFrame, player_place_area_columns: PlayerPlaceAreaColumns,
+                           trajectory_filter_options: TrajectoryFilterOptions, title: str):
+    if trajectory_filter_options.compute_shots_per_kill:
+        if title not in title_to_shots_per_kill:
+            title_to_shots_per_kill[title] = []
+        num_shots = alive_trajectory_vis_df[player_place_area_columns.player_shots_cur_tick].sum()
+        num_kills = alive_trajectory_vis_df[player_place_area_columns.player_kill_next_tick].sum()
+        # metric undefined if player fails to score a kill
+        if num_kills > 0:
+            title_to_shots_per_kill[title].append(num_shots / num_kills)
+
+
+def compute_crosshair_distance_to_engage(trajectory_id_df: pd.DataFrame, alive_trajectory_vis_df: pd.DataFrame,
+                                         player_place_area_columns: PlayerPlaceAreaColumns,
+                                         trajectory_filter_options: TrajectoryFilterOptions, title: str):
+    if trajectory_filter_options.compute_crosshair_distance_to_engage:
+        if title not in title_to_engage:
+            title_to_engage[title] = []
+        alive_trajectory_id_df = trajectory_id_df.iloc[:len(alive_trajectory_vis_df)]
+
+        shot_cur_tick_series = alive_trajectory_vis_df[player_place_area_columns.player_shots_cur_tick]
+        kill_next_tick_series = alive_trajectory_vis_df[player_place_area_columns.player_kill_next_tick]
+        if shot_cur_tick_series.sum() == 0. and kill_next_tick_series == 0.:
+            return
+
+        time_until_next_shot = compute_time_until_next_event(alive_trajectory_id_df, shot_cur_tick_series)
+        time_until_next_kill = compute_time_until_next_event(alive_trajectory_id_df, kill_next_tick_series)
+        crosshair_distance_to_enemy = \
+            alive_trajectory_vis_df[player_place_area_columns.nearest_crosshair_distance_to_enemy]
+
+        result_df = pd.DataFrame({time_to_shoot_col: time_until_next_shot, time_to_kill_col: time_until_next_kill,
+                                  crosshair_distance_to_enemy_col: crosshair_distance_to_enemy})
+
+
+
+
+
+def compute_time_until_next_event(alive_trajectory_id_df: pd.DataFrame, event_series: pd.Series) -> pd.Series:
+    # backwards rolling sum computes all game ticks in future where event occurs
+    game_tick_if_event = alive_trajectory_id_df.loc[game_tick_number_column].where(event_series, 0)
+    sum_game_tick_if_event = game_tick_if_event.iloc[::-1].cumsum().iloc[::-1]
+    # remove next tick to get 
+    next_shot_game_tick = sum_game_tick_if_event - sum_game_tick_if_event.shift(-1)
+    ticks_until_next_event = next_shot_game_tick - alive_trajectory_id_df[game_tick_if_event]
+    # filter out after last key event
+
+    time_until_next_event = ticks_until_next_event / game_tick_rate
+    time_until_next_event =
+    return ticks_until_next_event / game_tick_rate
