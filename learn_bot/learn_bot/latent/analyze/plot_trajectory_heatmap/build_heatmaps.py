@@ -55,7 +55,9 @@ title_to_num_points: Dict[str, int] = {}
 title_to_lifetimes: Dict[str, List[float]] = {}
 title_to_speeds: Dict[str, List[float]] = {}
 title_to_shots_per_kill: Dict[str, List[float]] = {}
-title_to_engage: Dict[str, List[Dict[str, float]]] = {}
+# tts - time to shoot, ttk - time to kill
+title_to_crosshair_distance_to_tts: Dict[str, List[Dict[str, float]]] = {}
+title_to_crosshair_distance_to_ttk: Dict[str, List[Dict[str, float]]] = {}
 title_to_key_events: Dict[str, int] = {}
 title_to_team_to_pos_dict = Dict[str, Dict[bool, Tuple[List[float], List[float]]]]
 # this is different from buffers as buffers stores each point exactly once
@@ -413,6 +415,8 @@ def plot_one_trajectory_dataset(loaded_model: LoadedModel, id_df: pd.DataFrame, 
             compute_speeds(alive_trajectory_vis_df, player_place_area_columns, weapon_scoped_to_max_speed,
                            trajectory_filter_options, title)
             compute_shots_per_kill(alive_trajectory_vis_df, player_place_area_columns, trajectory_filter_options, title)
+            compute_crosshair_distance_to_engage(trajectory_id_df, alive_trajectory_vis_df, player_place_area_columns,
+                                                 trajectory_filter_options, title)
 
 
 
@@ -489,36 +493,68 @@ def compute_crosshair_distance_to_engage(trajectory_id_df: pd.DataFrame, alive_t
                                          player_place_area_columns: PlayerPlaceAreaColumns,
                                          trajectory_filter_options: TrajectoryFilterOptions, title: str):
     if trajectory_filter_options.compute_crosshair_distance_to_engage:
-        if title not in title_to_engage:
-            title_to_engage[title] = []
+        if title not in title_to_crosshair_distance_to_tts:
+            title_to_crosshair_distance_to_tts[title] = []
+            title_to_crosshair_distance_to_ttk[title] = []
         alive_trajectory_id_df = trajectory_id_df.iloc[:len(alive_trajectory_vis_df)]
 
         shot_cur_tick_series = alive_trajectory_vis_df[player_place_area_columns.player_shots_cur_tick]
         kill_next_tick_series = alive_trajectory_vis_df[player_place_area_columns.player_kill_next_tick]
-        if shot_cur_tick_series.sum() == 0. and kill_next_tick_series == 0.:
-            return
 
-        time_until_next_shot = compute_time_until_next_event(alive_trajectory_id_df, shot_cur_tick_series)
-        time_until_next_kill = compute_time_until_next_event(alive_trajectory_id_df, kill_next_tick_series)
         crosshair_distance_to_enemy = \
             alive_trajectory_vis_df[player_place_area_columns.nearest_crosshair_distance_to_enemy]
 
-        result_df = pd.DataFrame({time_to_shoot_col: time_until_next_shot, time_to_kill_col: time_until_next_kill,
-                                  crosshair_distance_to_enemy_col: crosshair_distance_to_enemy})
+        if shot_cur_tick_series.sum() > 0.:
+            time_until_next_shot = compute_time_until_next_event(alive_trajectory_id_df, shot_cur_tick_series)
+            record_time_until_event_by_crosshair_distance(time_until_next_shot, crosshair_distance_to_enemy,
+                                                          time_to_shoot_col, title_to_crosshair_distance_to_tts[title])
+
+        if kill_next_tick_series.sum() > 0.:
+            time_until_next_kill = compute_time_until_next_event(alive_trajectory_id_df, kill_next_tick_series)
+            record_time_until_event_by_crosshair_distance(time_until_next_kill, crosshair_distance_to_enemy,
+                                                          time_to_kill_col, title_to_crosshair_distance_to_ttk[title])
 
 
-
+event_col = 'event'
+event_game_tick_col = 'event game tick'
 
 
 def compute_time_until_next_event(alive_trajectory_id_df: pd.DataFrame, event_series: pd.Series) -> pd.Series:
-    # backwards rolling sum computes all game ticks in future where event occurs
-    game_tick_if_event = alive_trajectory_id_df.loc[game_tick_number_column].where(event_series, 0)
-    sum_game_tick_if_event = game_tick_if_event.iloc[::-1].cumsum().iloc[::-1]
-    # remove next tick to get 
-    next_shot_game_tick = sum_game_tick_if_event - sum_game_tick_if_event.shift(-1)
-    ticks_until_next_event = next_shot_game_tick - alive_trajectory_id_df[game_tick_if_event]
-    # filter out after last key event
+    # find all ticks with same next event: backwards rolling sum computes this,
+    # forwards would compute all game ticks with same prior event
+    one_if_event = event_series.where(event_series == 1., 0)
+    sum_if_event = one_if_event.iloc[::-1].cumsum().iloc[::-1]
 
+
+    # get game tick id for next event (making sure to drop all ticks with no next event)
+    alive_trajectory_id_and_event_df = alive_trajectory_id_df.copy()
+    alive_trajectory_id_and_event_df[event_col] = sum_if_event
+    alive_trajectory_id_and_event_df = alive_trajectory_id_and_event_df[alive_trajectory_id_and_event_df[event_col] > 0]
+
+    max_per_event_df = alive_trajectory_id_and_event_df.groupby(event_col).value.transform(np.max)
+    alive_trajectory_id_and_event_df[event_game_tick_col] = max_per_event_df[game_tick_number_column]
+
+    # convert game tick number into time
+    ticks_until_next_event = alive_trajectory_id_and_event_df[event_game_tick_col] - \
+                             alive_trajectory_id_and_event_df[game_tick_number_column]
     time_until_next_event = ticks_until_next_event / game_tick_rate
-    time_until_next_event =
-    return ticks_until_next_event / game_tick_rate
+
+    return time_until_next_event
+
+
+def record_time_until_event_by_crosshair_distance(time_until_next_event: pd.Series, crosshair_distance: pd.Series,
+                                                  time_to_event_col: str,
+                                                  crosshair_distance_to_event: List[Dict[str, float]]):
+    # retrict crosshair distance to ticks with a next event
+    limited_crosshair_distance = crosshair_distance.iloc[:len(time_until_next_event)]
+    df = pd.DataFrame({time_to_event_col: time_until_next_event,
+                       crosshair_distance_to_enemy_col: limited_crosshair_distance})
+
+    # only record situations where not maxing out crosshair distance
+    filtered_df = df[df[crosshair_distance_to_enemy_col] < 1.]
+
+    for _, row in filtered_df.iterrows():
+        crosshair_distance_to_event.append(row.to_dict())
+
+
+
