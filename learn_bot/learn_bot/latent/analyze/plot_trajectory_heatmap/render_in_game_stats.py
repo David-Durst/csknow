@@ -10,10 +10,14 @@ from matplotlib import pyplot as plt
 from learn_bot.latent.analyze.compare_trajectories.process_trajectory_comparison import plot_hist, generate_bins
 from learn_bot.latent.analyze.plot_trajectory_heatmap.render_key_places_and_mistakes import plot_specific_key_places, \
     plot_key_places, plot_mistakes
+from learn_bot.latent.analyze.plot_trajectory_heatmap.render_time_to_event_and_distance_histograms import \
+    compute_time_to_event_and_distance_histograms
 from learn_bot.latent.analyze.plot_trajectory_heatmap.title_rename_dict import title_rename_dict
 from learn_bot.latent.analyze.plot_trajectory_heatmap.filter_trajectories import TrajectoryFilterOptions
 from learn_bot.latent.analyze.plot_trajectory_heatmap.build_heatmaps import get_title_to_speeds, \
-    get_title_to_lifetimes, get_title_to_shots_per_kill
+    get_title_to_lifetimes, get_title_to_shots_per_kill, get_title_to_ttk_and_distance, time_to_kill_col, \
+    get_title_to_tts_and_distance, time_to_shoot_col, get_title_to_tts_and_distance_time_constrained, \
+    get_title_to_ttk_and_distance_time_constrained
 
 fig_length = 6
 
@@ -147,8 +151,11 @@ def compute_metrics(trajectory_filter_options: TrajectoryFilterOptions, plots_pa
         compute_one_metric_emd(get_title_to_shots_per_kill(),
                                plots_path / ('shots_per_kill_' + str(trajectory_filter_options) + '.txt'))
     if trajectory_filter_options.compute_crosshair_distance_to_engage:
-        compute_one_metric_four_histograms(get_title_to_shots_per_kill(), None, 1, 30.,
-                                           0.3, 'Shots Per Kill', [0, 15, 30], None, [0, 0.15, 0.3],
-                                           plots_path / ('shots_per_kill_' + str(trajectory_filter_options) + '.pdf'))
-        compute_one_metric_emd(get_title_to_shots_per_kill(),
-                               plots_path / ('shots_per_kill_' + str(trajectory_filter_options) + '.txt'))
+        compute_time_to_event_and_distance_histograms(get_title_to_tts_and_distance(), 'Time To Shoot', time_to_shoot_col,
+                                                      plots_path)
+        compute_time_to_event_and_distance_histograms(get_title_to_tts_and_distance_time_constrained(), 'Time To Shoot 2s Constraint', time_to_shoot_col,
+                                                      plots_path)
+        compute_time_to_event_and_distance_histograms(get_title_to_ttk_and_distance(), 'Time To Kill', time_to_kill_col,
+                                                      plots_path)
+        compute_time_to_event_and_distance_histograms(get_title_to_ttk_and_distance_time_constrained(), 'Time To Kill 2s Constraint', time_to_kill_col,
+                                                      plots_path)
