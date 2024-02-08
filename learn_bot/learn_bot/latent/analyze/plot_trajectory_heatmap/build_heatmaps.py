@@ -48,6 +48,7 @@ time_to_kill_col = 'Time To Kill'
 time_to_shoot_col = 'Time To Shoot'
 crosshair_distance_to_enemy_col = 'Crosshair Distance To Enemy'
 world_distance_to_enemy_col = 'World Distance To Enemy'
+vel_col = 'XY Velocity'
 
 
 spread_radius = 2
@@ -446,7 +447,8 @@ def plot_one_trajectory_dataset(loaded_model: LoadedModel, id_df: pd.DataFrame, 
                 pd.Series(alive_trajectory_np[:,
                           loaded_model.model.players_nearest_crosshair_to_enemy_columns[player_index]])
             compute_crosshair_distance_to_engage(trajectory_id_df, alive_trajectory_vis_df, crosshair_distance_to_enemy,
-                                                 player_place_area_columns, trajectory_filter_options, title)
+                                                 player_place_area_columns, weapon_scoped_to_max_speed,
+                                                 trajectory_filter_options, title)
 
 
 
@@ -522,6 +524,7 @@ def compute_shots_per_kill(alive_trajectory_vis_df: pd.DataFrame, player_place_a
 def compute_crosshair_distance_to_engage(trajectory_id_df: pd.DataFrame, alive_trajectory_vis_df: pd.DataFrame,
                                          crosshair_distance_to_enemy_series: pd.Series,
                                          player_place_area_columns: PlayerPlaceAreaColumns,
+                                         weapon_scoped_to_max_speed: torch.Tensor,
                                          trajectory_filter_options: TrajectoryFilterOptions, title: str):
     if trajectory_filter_options.compute_crosshair_distance_to_engage:
         if title not in title_to_tts_and_distance:
@@ -536,17 +539,28 @@ def compute_crosshair_distance_to_engage(trajectory_id_df: pd.DataFrame, alive_t
         world_distance_to_enemy_series = \
             alive_trajectory_vis_df[player_place_area_columns.nearest_world_distance_to_enemy]
 
+        # compute scaled speeds
+        speeds = (alive_trajectory_vis_df[player_place_area_columns.vel[0:2]] ** 2.).sum(axis=1) ** 0.5
+        weapon_id_index = alive_trajectory_vis_df[player_place_area_columns.player_weapon_id]
+        scoped_index = alive_trajectory_vis_df[player_place_area_columns.player_scoped]
+        weapon_id_and_scoped_index = torch.tensor((weapon_id_index * 2 + scoped_index).astype('int').values)
+        # mul weapon index by 2 as inner dimension is scoped, and 2 options for scoping (scoped or unscoped)
+        max_speed_per_weapon_and_scoped = \
+            torch.index_select(weapon_scoped_to_max_speed, 0, weapon_id_and_scoped_index)
+        scaled_speeds = speeds.values / max_speed_per_weapon_and_scoped.numpy()
+        clipped_scaled_speeds = pd.Series(np.clip(scaled_speeds, 0., 1.))
+
         if shot_cur_tick_series.sum() > 0.:
             time_until_next_shot = compute_time_until_next_event(alive_trajectory_id_df, shot_cur_tick_series)
-            record_time_until_event_and_distance(time_until_next_shot, crosshair_distance_to_enemy_series,
-                                                 world_distance_to_enemy_series,
+            record_time_until_event_distance_vel(time_until_next_shot, crosshair_distance_to_enemy_series,
+                                                 world_distance_to_enemy_series, clipped_scaled_speeds,
                                                  time_to_shoot_col, title_to_tts_and_distance[title],
                                                  title_to_tts_and_distance_time_constrained[title])
 
         if kill_next_tick_series.sum() > 0.:
             time_until_next_kill = compute_time_until_next_event(alive_trajectory_id_df, kill_next_tick_series)
-            record_time_until_event_and_distance(time_until_next_kill, crosshair_distance_to_enemy_series,
-                                                 world_distance_to_enemy_series,
+            record_time_until_event_distance_vel(time_until_next_kill, crosshair_distance_to_enemy_series,
+                                                 world_distance_to_enemy_series, clipped_scaled_speeds,
                                                  time_to_kill_col, title_to_ttk_and_distance[title],
                                                  title_to_ttk_and_distance_time_constrained[title])
 
@@ -581,15 +595,16 @@ def compute_time_until_next_event(alive_trajectory_id_df: pd.DataFrame, event_se
 crosshair_distance_to_degrees = 30.
 
 
-def record_time_until_event_and_distance(time_until_next_event: pd.Series, crosshair_distance: pd.Series,
-                                         world_distance: pd.Series, time_to_event_col: str,
+def record_time_until_event_distance_vel(time_until_next_event: pd.Series, crosshair_distance: pd.Series,
+                                         world_distance: pd.Series, vel: pd.Series, time_to_event_col: str,
                                          crosshair_distance_to_event: List[Dict[str, float]],
                                          crosshair_distance_to_event_time_constrained: List[Dict[str, float]]):
     # retrict crosshair distance to ticks with a next event
     limited_crosshair_distance = crosshair_distance.iloc[:len(time_until_next_event)]
     df = pd.DataFrame({time_to_event_col: time_until_next_event.reset_index(drop=True),
                        crosshair_distance_to_enemy_col: limited_crosshair_distance.reset_index(drop=True),
-                       world_distance_to_enemy_col: world_distance.reset_index(drop=True)})
+                       world_distance_to_enemy_col: world_distance.reset_index(drop=True),
+                       vel_col: vel.reset_index(drop=True)})
 
     # only record situations where not maxing out crosshair distance
     filtered_df = df[df[crosshair_distance_to_enemy_col] < 1.].copy()

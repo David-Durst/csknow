@@ -66,7 +66,7 @@ def plot_one_title_time_to_event_and_distance_histograms(event_distance_histogra
 
 
 def compute_time_to_event_and_distance_histograms(title_to_values: Dict[str, List[Dict[str, float]]], overall_title: str,
-                                                  time_to_event_col, plot_path: Path):
+                                                  time_to_event_col, y_label: str, plot_path: Path):
     for compute_median in [True, False]:
         metric_title = overall_title + (' Median' if compute_median else ' IQR')
 
@@ -96,7 +96,8 @@ def compute_time_to_event_and_distance_histograms(title_to_values: Dict[str, Lis
         plt.subplots_adjust(left=0.12, right=0.99, bottom=0.13, top=0.95, hspace=0.35)
         cbar = fig.colorbar(im, ax=axs)
         cbar.ax.tick_params(labelsize=8)
-        cbar.ax.set_ylabel('Seconds')
+        cbar.ax.set_ylabel(y_label)
         fig.savefig(plot_path / (metric_title.lower().replace(' ', '_') + '.pdf'))
+        plt.close(fig)
 
 

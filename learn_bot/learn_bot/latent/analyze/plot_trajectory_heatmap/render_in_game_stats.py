@@ -17,7 +17,7 @@ from learn_bot.latent.analyze.plot_trajectory_heatmap.filter_trajectories import
 from learn_bot.latent.analyze.plot_trajectory_heatmap.build_heatmaps import get_title_to_speeds, \
     get_title_to_lifetimes, get_title_to_shots_per_kill, get_title_to_ttk_and_distance, time_to_kill_col, \
     get_title_to_tts_and_distance, time_to_shoot_col, get_title_to_tts_and_distance_time_constrained, \
-    get_title_to_ttk_and_distance_time_constrained
+    get_title_to_ttk_and_distance_time_constrained, vel_col
 
 fig_length = 6
 
@@ -152,10 +152,14 @@ def compute_metrics(trajectory_filter_options: TrajectoryFilterOptions, plots_pa
                                plots_path / ('shots_per_kill_' + str(trajectory_filter_options) + '.txt'))
     if trajectory_filter_options.compute_crosshair_distance_to_engage:
         compute_time_to_event_and_distance_histograms(get_title_to_tts_and_distance(), 'Time To Shoot', time_to_shoot_col,
-                                                      plots_path)
+                                                      'Seconds', plots_path)
         compute_time_to_event_and_distance_histograms(get_title_to_tts_and_distance_time_constrained(), 'Time To Shoot 2s Constraint', time_to_shoot_col,
-                                                      plots_path)
+                                                      'Seconds', plots_path)
         compute_time_to_event_and_distance_histograms(get_title_to_ttk_and_distance(), 'Time To Kill', time_to_kill_col,
-                                                      plots_path)
+                                                      'Seconds', plots_path)
         compute_time_to_event_and_distance_histograms(get_title_to_ttk_and_distance_time_constrained(), 'Time To Kill 2s Constraint', time_to_kill_col,
-                                                      plots_path)
+                                                      'Seconds', plots_path)
+        compute_time_to_event_and_distance_histograms(get_title_to_tts_and_distance_time_constrained(), 'Velocity When Shoot 2s Constraint', vel_col,
+                                                      'Speed', plots_path)
+        compute_time_to_event_and_distance_histograms(get_title_to_ttk_and_distance_time_constrained(), 'Velocity When Kill 2s Constraint', vel_col,
+                                                      'Speed', plots_path)
