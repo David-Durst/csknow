@@ -182,7 +182,7 @@ namespace action {
         Vec2 deltaAngle = adjustedTargetViewAngle - curViewAngle;
         deltaAngle.makeYawNeg180To180();
 
-        if (curAction.aimTargetType == AimTargetType::Player && computeMagnitude(deltaAngle) < 5. &&
+        if (curPriority.learnedTargetPos && curAction.aimTargetType == AimTargetType::Player && computeMagnitude(deltaAngle) < 5. &&
             blackboard.aggressionDis(blackboard.gen) < 0.35 && state.isVisible(treeThinker.csgoId, curAction.targetPlayerId, true)) {
             stop(curAction);
         }
