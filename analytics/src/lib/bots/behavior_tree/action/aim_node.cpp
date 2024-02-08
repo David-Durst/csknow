@@ -63,6 +63,17 @@ namespace action {
         }
     }
 
+    float computeAngleVelocity(double totalDeltaAngle, double lastDeltaAngle) {
+        double newDeltaAngle = std::max(-1 * MAX_ONE_DIRECTION_ANGLE_VEL,
+                                        std::min(MAX_ONE_DIRECTION_ANGLE_VEL, totalDeltaAngle / 8));
+        double newAccelAngle = newDeltaAngle - lastDeltaAngle;
+        if (std::abs(newAccelAngle) > MAX_ONE_DIRECTION_ANGLE_ACCEL) {
+            newDeltaAngle = lastDeltaAngle +
+                            copysign(MAX_ONE_DIRECTION_ANGLE_ACCEL, newAccelAngle);
+        }
+        return newDeltaAngle / MAX_ONE_DIRECTION_ANGLE_VEL;
+    }
+
     Vec2 makeAngleToPct(Vec2 deltaAngle) {
         return deltaAngle / MAX_ONE_DIRECTION_ANGLE_VEL;
     }
@@ -171,6 +182,11 @@ namespace action {
         Vec2 deltaAngle = adjustedTargetViewAngle - curViewAngle;
         deltaAngle.makeYawNeg180To180();
 
+        if (curAction.aimTargetType == AimTargetType::Player && computeMagnitude(deltaAngle) < 5. &&
+            blackboard.aggressionDis(blackboard.gen) < 0.35 && state.isVisible(treeThinker.csgoId, curAction.targetPlayerId, true)) {
+            stop(curAction);
+        }
+
         /*
         const unordered_map<CSGOId, uint32_t> & playerToManualOverrideStart =
             blackboard.streamingManager.streamingEngagementAim.playerToManualOverrideStart;
@@ -183,14 +199,20 @@ namespace action {
          */
         curAction.inputAngleAbsolute = !second_order;
         if (second_order) {
-            Vec2 newDeltaAngle = mouseController.update(state.getSecondsBetweenTimes(curAction.lastActionTime, state.loadTime),
-                                                        deltaAngle, {0., 0.});
-            Vec2 newDeltaAnglePct = makeAngleToPct(newDeltaAngle);
-            //Vec2 newAngle = newDeltaAnglePct;
-            //std::cout << curClient.name << "," << curClient.getCurrentViewAngles().toString() << "," << newAngle.toString() << std::endl;
-            //newAngle.makeYawNeg180To180();
-            curAction.inputAngleX = newDeltaAnglePct.x;
-            curAction.inputAngleY = newDeltaAnglePct.y;
+            //std::cout << curClient.name << "," << deltaAngle.toString() << "," << newDeltaAnglePct.toString() << std::endl;
+            if (computeMagnitude(deltaAngle) < 1.) {
+                curAction.inputAngleX = computeAngleVelocity(deltaAngle.x, curAction.inputAngleX);
+                curAction.inputAngleY = computeAngleVelocity(deltaAngle.y, curAction.inputAngleY);
+            }
+            else {
+                Vec2 newDeltaAngle = mouseController.update(state.getSecondsBetweenTimes(curAction.lastActionTime, state.loadTime),
+                                                            deltaAngle, {0., 0.});
+                Vec2 newDeltaAnglePct = makeAngleToPct(newDeltaAngle);
+                //Vec2 newAngle = newDeltaAnglePct;
+                //newAngle.makeYawNeg180To180();
+                curAction.inputAngleX = newDeltaAnglePct.x;
+                curAction.inputAngleY = newDeltaAnglePct.y;
+            }
             /*
             double velocity = std::abs(computeMagnitude(newDeltaAnglePct));
             curAction.rollingAvgMouseVelocity = curAction.rollingAvgMouseVelocity * 0.5 + velocity * 0.5;

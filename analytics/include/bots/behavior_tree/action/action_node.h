@@ -8,6 +8,8 @@
 #include "bots/behavior_tree/node.h"
 
 namespace action {
+    void stop(Action & curAction);
+
     class MovementTaskNode : public Node {
     public:
         MovementTaskNode(Blackboard & blackboard) : Node(blackboard, "MovementTaskNode") { };
