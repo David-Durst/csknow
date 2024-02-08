@@ -592,7 +592,7 @@ def record_time_until_event_and_distance(time_until_next_event: pd.Series, cross
                        world_distance_to_enemy_col: world_distance.reset_index(drop=True)})
 
     # only record situations where not maxing out crosshair distance
-    filtered_df = df[(df[crosshair_distance_to_enemy_col] < 1.) & (df[time_to_event_col] < 2.)].copy()
+    filtered_df = df[df[crosshair_distance_to_enemy_col] < 1.].copy()
 
     filtered_df[crosshair_distance_to_enemy_col] *= crosshair_distance_to_degrees
     filtered_df[world_distance_to_enemy_col] = 10 ** (filtered_df[world_distance_to_enemy_col] * log10(max_world_distance))
@@ -601,7 +601,7 @@ def record_time_until_event_and_distance(time_until_next_event: pd.Series, cross
     for _, row in filtered_df.iterrows():
         crosshair_distance_to_event.append(row.to_dict())
 
-    for _, row in filtered_df[filtered_df[time_to_event_col] < 2.]:
-        crosshair_distance_to_event_time_constrained.append(row.to_dict)
+    for _, row in filtered_df[filtered_df[time_to_event_col] < 2.].iterrows():
+        crosshair_distance_to_event_time_constrained.append(row.to_dict())
 
 
