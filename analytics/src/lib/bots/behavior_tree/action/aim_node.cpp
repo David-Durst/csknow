@@ -183,7 +183,7 @@ namespace action {
         deltaAngle.makeYawNeg180To180();
 
         if (curPriority.learnedTargetPos && curAction.aimTargetType == AimTargetType::Player && computeMagnitude(deltaAngle) < 5. &&
-            blackboard.aggressionDis(blackboard.gen) < 0.35 && state.isVisible(treeThinker.csgoId, curAction.targetPlayerId, true)) {
+            blackboard.aggressionDis(blackboard.gen) < 0.25 && state.isVisible(treeThinker.csgoId, curAction.targetPlayerId, true)) {
             stop(curAction);
         }
 
@@ -200,7 +200,7 @@ namespace action {
         curAction.inputAngleAbsolute = !second_order;
         if (second_order) {
             //std::cout << curClient.name << "," << deltaAngle.toString() << "," << newDeltaAnglePct.toString() << std::endl;
-            if (computeMagnitude(deltaAngle) < 1.) {
+            if (computeMagnitude(deltaAngle) < 0.5) {
                 curAction.inputAngleX = computeAngleVelocity(deltaAngle.x, curAction.inputAngleX);
                 curAction.inputAngleY = computeAngleVelocity(deltaAngle.y, curAction.inputAngleY);
             }
