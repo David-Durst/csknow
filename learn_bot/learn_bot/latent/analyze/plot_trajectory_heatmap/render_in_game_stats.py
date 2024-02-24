@@ -159,7 +159,7 @@ def compute_metrics(trajectory_filter_options: TrajectoryFilterOptions, plots_pa
                                                       'Seconds', plots_path)
         compute_time_to_event_and_distance_histograms(get_title_to_ttk_and_distance_time_constrained(), 'Time To Kill 2s Constraint', time_to_kill_col,
                                                       'Seconds', plots_path)
-        compute_time_to_event_and_distance_histograms(get_title_to_tts_and_distance_time_constrained(), 'Velocity When Shoot 2s Constraint', vel_col,
+        compute_time_to_event_and_distance_histograms(get_title_to_tts_and_distance_time_constrained(), 'Speed When Shoot 2s Constraint', vel_col,
                                                       'Speed', plots_path)
-        compute_time_to_event_and_distance_histograms(get_title_to_ttk_and_distance_time_constrained(), 'Velocity When Kill 2s Constraint', vel_col,
+        compute_time_to_event_and_distance_histograms(get_title_to_ttk_and_distance_time_constrained(), 'Speed When Kill 2s Constraint', vel_col,
                                                       'Speed', plots_path)

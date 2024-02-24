@@ -76,7 +76,7 @@ def compute_time_to_event_and_distance_histograms(title_to_values: Dict[str, Lis
         fig = plt.figure(figsize=(7, 7))#, constrained_layout=True)
         axs = fig.subplots(2, 2, squeeze=False)
 
-        cmap = plt.get_cmap('tab20b').copy()
+        cmap = plt.get_cmap('jet').copy()
         cmap.set_under((1, 1, 1, 0))
 
         title_to_data: Dict[str, EventDistanceHistogramData] = {}
@@ -91,12 +91,12 @@ def compute_time_to_event_and_distance_histograms(title_to_values: Dict[str, Lis
             im = plot_one_title_time_to_event_and_distance_histograms(data, max_bin_value, axs[r, c], cmap, title)
 
         fig.suptitle(metric_title, fontsize=8)
-        fig.supxlabel('World Distance', fontsize=8)
-        fig.supylabel('Crosshair Distance', fontsize=8)
-        plt.subplots_adjust(left=0.12, right=0.99, bottom=0.13, top=0.95, hspace=0.35)
+        fig.supxlabel('Crosshair Distance', fontsize=8)
+        fig.supylabel('World Distance', fontsize=8)
+        plt.subplots_adjust(left=0.12, right=1., bottom=0.07, top=0.93, hspace=0.2)
         cbar = fig.colorbar(im, ax=axs)
         cbar.ax.tick_params(labelsize=8)
-        cbar.ax.set_ylabel(y_label)
+        cbar.ax.set_ylabel(y_label, fontsize=8)
         fig.savefig(plot_path / (metric_title.lower().replace(' ', '_') + '.pdf'))
         plt.close(fig)
 
