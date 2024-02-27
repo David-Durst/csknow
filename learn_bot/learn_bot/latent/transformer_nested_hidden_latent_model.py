@@ -79,6 +79,7 @@ class TransformerNestedHiddenLatentModel(nn.Module):
     internal_width: int
     cts: IOColumnTransformers
     noise_var: float
+    drop_history: bool
 
     def __init__(self, cts: IOColumnTransformers, internal_width: int, num_players: int, num_input_time_steps: int,
                  num_layers: int, num_heads: int, control_type: ControlType, player_mask_type: PlayerMaskType,
@@ -175,6 +176,7 @@ class TransformerNestedHiddenLatentModel(nn.Module):
         )
 
         self.noise_var = -1.
+        self.drop_history = False
 
         self.d2_min_cpu = torch.tensor(d2_min)
         self.d2_max_cpu = torch.tensor(d2_max)
@@ -266,6 +268,8 @@ class TransformerNestedHiddenLatentModel(nn.Module):
             similarity[:, :] = 0.
         x_pos = rearrange(x[:, self.players_pos_columns], "b (p t d) -> b p t d", p=self.num_players,
                           t=self.num_input_time_steps, d=self.num_dim)
+        if self.drop_history:
+            x_pos[:, :, 1:, :] = x_pos[:, :, [0], :]
         x_pos_encoded = self.encode_pos(x_pos)
         x_crosshair = rearrange(x[:, self.players_nearest_crosshair_to_enemy_columns], "b (p t) -> b p t 1",
                                 p=self.num_players, t=self.num_input_time_steps)
