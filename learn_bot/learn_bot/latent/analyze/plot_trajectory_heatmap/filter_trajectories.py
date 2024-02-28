@@ -34,6 +34,7 @@ class TrajectoryFilterOptions:
     only_killed_or_end: bool = False
     only_shots: bool = False
     compute_lifetimes: bool = False
+    compute_action_changes: bool = False
     compute_speeds: bool = False
     compute_shots_per_kill: bool = False
     compute_crosshair_distance_to_engage: bool = False
@@ -76,7 +77,8 @@ class TrajectoryFilterOptions:
         return self.only_kill or self.only_killed or self.only_killed_or_end or self.only_shots
 
     def computing_metrics(self) -> bool:
-        return self.compute_speeds or self.compute_lifetimes or self.compute_shots_per_kill
+        return self.compute_speeds or self.compute_lifetimes or self.compute_shots_per_kill or \
+            self.compute_action_changes
 
     def is_no_filter(self) -> bool:
         return str(self) == 'no_filter'

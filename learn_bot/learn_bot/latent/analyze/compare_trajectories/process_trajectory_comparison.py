@@ -36,11 +36,15 @@ def generate_bins(min_bin_start: int, max_bin_end: int, bin_width: int) -> List[
     return [b for b in range(min_bin_start, max_bin_end + bin_width, bin_width)]
 
 
-def plot_hist(ax: plt.Axes, data: pd.Series, bins: List[Union[int,float]]):
+def plot_hist(ax: plt.Axes, data: pd.Series, bins: List[Union[int,float]], add_points_per_bin: bool = False):
     ax.hist(data.values, bins=bins, weights=np.ones(len(data)) / len(data), color=default_bar_color, edgecolor=default_bar_color)
     ax.grid(visible=True)
     ax.yaxis.set_major_formatter(PercentFormatter(1, decimals=0))
-
+    if add_points_per_bin:
+        for rect in ax.patches:
+            height = rect.get_height()
+            ax.annotate(f'{height:.2f}', xy=(rect.get_x() + rect.get_width() / 2, height),
+                        xytext=(0, 5), textcoords='offset points', ha='center', va='bottom')
 
 def percentile_filter_series(data: pd.Series, low_pct_to_remove=0.01, high_pct_to_remove=0.01) -> pd.Series:
     q_low = data.quantile(low_pct_to_remove)

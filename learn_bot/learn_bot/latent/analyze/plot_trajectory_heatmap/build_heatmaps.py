@@ -59,6 +59,7 @@ title_to_num_points: Dict[str, int] = {}
 title_to_lifetimes: Dict[str, List[float]] = {}
 title_to_speeds: Dict[str, List[float]] = {}
 title_to_delta_speeds: Dict[str, List[float]] = {}
+title_to_move_not_move_change: Dict[str, List[float]] = {}
 title_to_shots_per_kill: Dict[str, List[float]] = {}
 # tts - time to shoot, ttk - time to kill
 title_to_tts_and_distance: Dict[str, List[Dict[str, float]]] = {}
@@ -101,6 +102,10 @@ def get_title_to_delta_speeds() -> Dict[str, List[float]]:
     return title_to_delta_speeds
 
 
+def get_title_to_move_not_move_change() -> Dict[str, List[float]]:
+    return title_to_move_not_move_change
+
+
 def get_title_to_shots_per_kill() -> Dict[str, List[float]]:
     return title_to_shots_per_kill
 
@@ -131,7 +136,7 @@ def get_title_to_team_to_key_event_pos() -> title_to_team_to_pos_dict:
 
 def clear_title_caches():
     global title_to_line_buffers, title_to_point_buffers, title_to_num_trajectory_ids, title_to_num_points, \
-        title_to_lifetimes, title_to_speeds, title_to_delta_speeds, \
+        title_to_lifetimes, title_to_speeds, title_to_delta_speeds, title_to_move_not_move_change, \
         title_to_shots_per_kill, title_to_key_events, title_to_team_to_key_event_pos, \
         title_to_tts_and_distance, title_to_ttk_and_distance, \
         title_to_tts_and_distance_time_constrained, title_to_ttk_and_distance_time_constrained
@@ -142,6 +147,7 @@ def clear_title_caches():
     title_to_lifetimes = {}
     title_to_speeds = {}
     title_to_delta_speeds = {}
+    title_to_move_not_move_change = {}
     title_to_shots_per_kill = {}
     title_to_key_events = {}
     title_to_team_to_key_event_pos = {}
@@ -232,6 +238,7 @@ def plot_one_trajectory_dataset(loaded_model: LoadedModel, id_df: pd.DataFrame, 
 
     for trajectory_id in trajectory_ids:
         trajectory_np = dataset[trajectory_id_col == trajectory_id]
+        #trajectory_actions_np = actions[trajectory_id_col == trajectory_id]
         trajectory_id_df = id_df[trajectory_id_col == trajectory_id]
         trajectory_vis_df = vis_df[trajectory_id_col == trajectory_id]
         first_game_tick_number = trajectory_id_df[game_tick_number_column].iloc[0]
@@ -396,10 +403,11 @@ def plot_one_trajectory_dataset(loaded_model: LoadedModel, id_df: pd.DataFrame, 
                 num_events_per_tick_with_event = event_series[event_constraint].tolist()
                 if debug_event_counting:
                     per_trajectory_key_event_indices.update(alive_trajectory_vis_df.index.tolist())
-            if trajectory_filter_options.compute_lifetimes and \
+            if trajectory_filter_options.computing_metrics() and \
                     (trajectory_filter_options.only_kill or trajectory_filter_options.only_killed or
                      trajectory_filter_options.only_shots):
-                raise Exception("can't filter to kill/killed/shot events and compute lifetimes")
+                raise Exception("can't filter to kill/killed/shot events and compute metrics depending on contiguous "
+                                "ticks")
 
             x_pos = alive_trajectory_np[:, loaded_model.model.nested_players_pos_columns_tensor[player_index, 0, 0]]
             y_pos = alive_trajectory_np[:, loaded_model.model.nested_players_pos_columns_tensor[player_index, 0, 1]]
@@ -448,6 +456,7 @@ def plot_one_trajectory_dataset(loaded_model: LoadedModel, id_df: pd.DataFrame, 
                               title)
             compute_speeds(alive_trajectory_vis_df, player_place_area_columns, weapon_scoped_to_max_speed,
                            trajectory_filter_options, title)
+            compute_action_changes(alive_trajectory_vis_df, player_place_area_columns, trajectory_filter_options, title)
             compute_shots_per_kill(alive_trajectory_vis_df, player_place_area_columns, trajectory_filter_options, title)
             crosshair_distance_to_enemy = \
                 pd.Series(alive_trajectory_np[:,
@@ -513,10 +522,28 @@ def compute_speeds(alive_trajectory_vis_df: pd.DataFrame, player_place_area_colu
         scaled_speeds = speeds.values / max_speed_per_weapon_and_scoped.numpy()
         # found 1.3% are over max speed, just clip them to avoid annoyances
         clipped_scaled_speeds = np.clip(scaled_speeds, 0., 1.)
-        lagged_clipped_scaled_speed = np.roll(clipped_scaled_speeds, 1)
-        delta_clipped_scaled_speed = np.abs(clipped_scaled_speeds - lagged_clipped_scaled_speed)
         title_to_speeds[title] += clipped_scaled_speeds.tolist()
-        title_to_delta_speeds[title] += delta_clipped_scaled_speed.tolist()[1:]
+        if trajectory_filter_options.compute_action_changes:
+            lagged_clipped_scaled_speed = np.roll(clipped_scaled_speeds, 1)
+            delta_clipped_scaled_speed = np.abs(clipped_scaled_speeds - lagged_clipped_scaled_speed)
+            title_to_delta_speeds[title] += delta_clipped_scaled_speed.tolist()[1:]
+
+
+def compute_action_changes(alive_trajectory_vis_df: pd.DataFrame, player_place_area_columns: PlayerPlaceAreaColumns,
+                           trajectory_filter_options: TrajectoryFilterOptions, title: str):
+    if trajectory_filter_options.compute_action_changes:
+        if title not in title_to_move_not_move_change:
+            title_to_move_not_move_change[title] = []
+        not_move = alive_trajectory_vis_df[player_place_area_columns.radial_vel[0]] > 0.5
+        not_move_lagged = not_move.shift(1, fill_value=False)
+        # not move contiguously 0
+        # move contiguously 1
+        # not move to move 2
+        # move to not move 3
+        move_contiguously = np.where(~not_move & ~not_move_lagged, 1, 0)
+        not_move_to_move = np.where(not_move & ~not_move_lagged, 2, 0)
+        move_to_not_move = np.where(~not_move & not_move_lagged, 3, 0)
+        title_to_move_not_move_change[title] += (move_contiguously + not_move_to_move + move_to_not_move).tolist()[1:]
 
 
 def compute_shots_per_kill(alive_trajectory_vis_df: pd.DataFrame, player_place_area_columns: PlayerPlaceAreaColumns,

@@ -17,14 +17,15 @@ from learn_bot.latent.analyze.plot_trajectory_heatmap.filter_trajectories import
 from learn_bot.latent.analyze.plot_trajectory_heatmap.build_heatmaps import get_title_to_speeds, \
     get_title_to_lifetimes, get_title_to_shots_per_kill, get_title_to_ttk_and_distance, time_to_kill_col, \
     get_title_to_tts_and_distance, time_to_shoot_col, get_title_to_tts_and_distance_time_constrained, \
-    get_title_to_ttk_and_distance_time_constrained, vel_col, get_title_to_delta_speeds
+    get_title_to_ttk_and_distance_time_constrained, vel_col, get_title_to_delta_speeds, \
+    get_title_to_move_not_move_change
 
 fig_length = 6
 
 
 def compute_one_metric_histograms(title_to_values: Dict[str, List[float]], metric_title: str,
                                   bin_width: Union[int, float], smallest_max: float,
-                                  x_label: str, plot_file_path: Path):
+                                  x_label: str, plot_file_path: Path, add_points_per_bin: bool = False):
     num_titles = len(title_to_values.keys())
     fig = plt.figure(figsize=(fig_length, fig_length * num_titles), constrained_layout=True)
     axs = fig.subplots(num_titles, 1, squeeze=False)
@@ -42,7 +43,7 @@ def compute_one_metric_histograms(title_to_values: Dict[str, List[float]], metri
         bins = generate_bins(0, int(ceil(max_observed)), bin_width)
     ax_index = 0
     for title, values in title_to_values.items():
-        plot_hist(axs[ax_index, 0], pd.Series(values), bins)
+        plot_hist(axs[ax_index, 0], pd.Series(values), bins, add_points_per_bin)
         axs[ax_index, 0].set_xlim(0., max_observed)
         axs[ax_index, 0].set_ylim(0., 1.)
         axs[ax_index, 0].set_title(title + " " + metric_title)
@@ -137,8 +138,14 @@ def compute_metrics(trajectory_filter_options: TrajectoryFilterOptions, plots_pa
         # airstrafing can get you above normal weapon max speed
         compute_one_metric_histograms(get_title_to_speeds(), 'Weapon/Scoped Scaled Speed', 0.1, 1., 'Percent Max Speed',
                                       plots_path / ('speeds_' + str(trajectory_filter_options) + '.png'))
-        compute_one_metric_histograms(get_title_to_delta_speeds(), 'Weapon/Scoped Scaled Delta Speed', 0.02, 1., 'Percent Max Speed',
+    if trajectory_filter_options.compute_action_changes:
+        compute_one_metric_histograms(get_title_to_delta_speeds(), 'Weapon/Scoped Scaled Delta Speed', 0.02, 1.,
+                                      'Percent Max Speed',
                                       plots_path / ('delta_speeds_' + str(trajectory_filter_options) + '.png'))
+        compute_one_metric_histograms(get_title_to_move_not_move_change(), 'Move/NotMove Changes', 1, 4,
+                                      'Percent Changes',
+                                      plots_path / ('move_not_move_' + str(trajectory_filter_options) + '.png'),
+                                      add_points_per_bin=True)
     if trajectory_filter_options.compute_lifetimes:
         # small timing mismatch can get 41 seconds on bomb timer
         compute_one_metric_four_histograms(get_title_to_lifetimes(), None, 5, 40.,
