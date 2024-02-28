@@ -85,7 +85,7 @@ int main(int argc, char * argv[]) {
         plantStatesResult.loadFromPython(savedDatasetsDir + "/" + testPlantStatesFileName, false);
     }
     int numHumans = 0;
-    ScriptsRunner roundScriptsRunner(createRoundScripts(plantStatesResult, situationId, false, numHumans), true, numHumans);
+    ScriptsRunner roundScriptsRunner(createRoundScripts(plantStatesResult, situationId, false, numHumans), numHumans > 0, numHumans);
     csknow::tests::trace::TracesData traceData(savedDatasetsDir + "/traces.hdf5");
     ScriptsRunner traceScriptsRunner(csknow::tests::trace::createTracesScripts(traceData, botStop, true), false);
 

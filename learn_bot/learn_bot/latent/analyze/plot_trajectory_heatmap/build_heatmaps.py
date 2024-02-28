@@ -58,6 +58,7 @@ title_to_num_trajectory_ids: Dict[str, int] = {}
 title_to_num_points: Dict[str, int] = {}
 title_to_lifetimes: Dict[str, List[float]] = {}
 title_to_speeds: Dict[str, List[float]] = {}
+title_to_delta_speeds: Dict[str, List[float]] = {}
 title_to_shots_per_kill: Dict[str, List[float]] = {}
 # tts - time to shoot, ttk - time to kill
 title_to_tts_and_distance: Dict[str, List[Dict[str, float]]] = {}
@@ -96,6 +97,10 @@ def get_title_to_speeds() -> Dict[str, List[float]]:
     return title_to_speeds
 
 
+def get_title_to_delta_speeds() -> Dict[str, List[float]]:
+    return title_to_delta_speeds
+
+
 def get_title_to_shots_per_kill() -> Dict[str, List[float]]:
     return title_to_shots_per_kill
 
@@ -126,7 +131,7 @@ def get_title_to_team_to_key_event_pos() -> title_to_team_to_pos_dict:
 
 def clear_title_caches():
     global title_to_line_buffers, title_to_point_buffers, title_to_num_trajectory_ids, title_to_num_points, \
-        title_to_lifetimes, title_to_speeds, \
+        title_to_lifetimes, title_to_speeds, title_to_delta_speeds, \
         title_to_shots_per_kill, title_to_key_events, title_to_team_to_key_event_pos, \
         title_to_tts_and_distance, title_to_ttk_and_distance, \
         title_to_tts_and_distance_time_constrained, title_to_ttk_and_distance_time_constrained
@@ -136,6 +141,7 @@ def clear_title_caches():
     title_to_num_points = {}
     title_to_lifetimes = {}
     title_to_speeds = {}
+    title_to_delta_speeds = {}
     title_to_shots_per_kill = {}
     title_to_key_events = {}
     title_to_team_to_key_event_pos = {}
@@ -494,6 +500,7 @@ def compute_speeds(alive_trajectory_vis_df: pd.DataFrame, player_place_area_colu
     if trajectory_filter_options.compute_speeds:
         if title not in title_to_speeds:
             title_to_speeds[title] = []
+            title_to_delta_speeds[title] = []
         # z speed is out of our control, only use x and y
         # z isn't tracked when running up a hill, its about jumping speed, which isn't part of wasd speed
         speeds = (alive_trajectory_vis_df[player_place_area_columns.vel[0:2]] ** 2.).sum(axis=1) ** 0.5
@@ -506,7 +513,10 @@ def compute_speeds(alive_trajectory_vis_df: pd.DataFrame, player_place_area_colu
         scaled_speeds = speeds.values / max_speed_per_weapon_and_scoped.numpy()
         # found 1.3% are over max speed, just clip them to avoid annoyances
         clipped_scaled_speeds = np.clip(scaled_speeds, 0., 1.)
+        lagged_clipped_scaled_speed = np.roll(clipped_scaled_speeds, 1)
+        delta_clipped_scaled_speed = np.abs(clipped_scaled_speeds - lagged_clipped_scaled_speed)
         title_to_speeds[title] += clipped_scaled_speeds.tolist()
+        title_to_delta_speeds[title] += delta_clipped_scaled_speed.tolist()[1:]
 
 
 def compute_shots_per_kill(alive_trajectory_vis_df: pd.DataFrame, player_place_area_columns: PlayerPlaceAreaColumns,

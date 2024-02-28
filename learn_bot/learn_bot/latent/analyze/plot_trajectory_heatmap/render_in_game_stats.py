@@ -17,7 +17,7 @@ from learn_bot.latent.analyze.plot_trajectory_heatmap.filter_trajectories import
 from learn_bot.latent.analyze.plot_trajectory_heatmap.build_heatmaps import get_title_to_speeds, \
     get_title_to_lifetimes, get_title_to_shots_per_kill, get_title_to_ttk_and_distance, time_to_kill_col, \
     get_title_to_tts_and_distance, time_to_shoot_col, get_title_to_tts_and_distance_time_constrained, \
-    get_title_to_ttk_and_distance_time_constrained, vel_col
+    get_title_to_ttk_and_distance_time_constrained, vel_col, get_title_to_delta_speeds
 
 fig_length = 6
 
@@ -137,6 +137,8 @@ def compute_metrics(trajectory_filter_options: TrajectoryFilterOptions, plots_pa
         # airstrafing can get you above normal weapon max speed
         compute_one_metric_histograms(get_title_to_speeds(), 'Weapon/Scoped Scaled Speed', 0.1, 1., 'Percent Max Speed',
                                       plots_path / ('speeds_' + str(trajectory_filter_options) + '.png'))
+        compute_one_metric_histograms(get_title_to_delta_speeds(), 'Weapon/Scoped Scaled Delta Speed', 0.02, 1., 'Percent Max Speed',
+                                      plots_path / ('delta_speeds_' + str(trajectory_filter_options) + '.png'))
     if trajectory_filter_options.compute_lifetimes:
         # small timing mismatch can get 41 seconds on bomb timer
         compute_one_metric_four_histograms(get_title_to_lifetimes(), None, 5, 40.,
