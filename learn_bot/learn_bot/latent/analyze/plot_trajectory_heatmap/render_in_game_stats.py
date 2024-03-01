@@ -18,7 +18,8 @@ from learn_bot.latent.analyze.plot_trajectory_heatmap.build_heatmaps import get_
     get_title_to_lifetimes, get_title_to_shots_per_kill, get_title_to_ttk_and_distance, time_to_kill_col, \
     get_title_to_tts_and_distance, time_to_shoot_col, get_title_to_tts_and_distance_time_constrained, \
     get_title_to_ttk_and_distance_time_constrained, vel_col, get_title_to_delta_speeds, \
-    get_title_to_move_not_move_change
+    get_title_to_action_changes, title_to_action_changes_when_killing, get_title_to_action_changes_when_killing, \
+    get_title_to_action_changes_when_shooting
 
 fig_length = 6
 
@@ -142,9 +143,17 @@ def compute_metrics(trajectory_filter_options: TrajectoryFilterOptions, plots_pa
         compute_one_metric_histograms(get_title_to_delta_speeds(), 'Weapon/Scoped Scaled Delta Speed', 0.02, 1.,
                                       'Percent Max Speed',
                                       plots_path / ('delta_speeds_' + str(trajectory_filter_options) + '.png'))
-        compute_one_metric_histograms(get_title_to_move_not_move_change(), 'Move/NotMove Changes', 1, 4,
+        compute_one_metric_histograms(get_title_to_action_changes(), 'Move/NotMove Changes', 1, 4,
                                       'Percent Changes',
                                       plots_path / ('move_not_move_' + str(trajectory_filter_options) + '.png'),
+                                      add_points_per_bin=True)
+        compute_one_metric_histograms(get_title_to_action_changes_when_shooting(), 'Move/NotMove Changes When Shoot 2s', 1, 4,
+                                      'Percent Changes',
+                                      plots_path / ('move_not_move_shoot_2s' + str(trajectory_filter_options) + '.png'),
+                                      add_points_per_bin=True)
+        compute_one_metric_histograms(get_title_to_action_changes_when_killing(), 'Move/NotMove Changes When Kill 2s', 1, 4,
+                                      'Percent Changes',
+                                      plots_path / ('move_not_move_kill_2s' + str(trajectory_filter_options) + '.png'),
                                       add_points_per_bin=True)
     if trajectory_filter_options.compute_lifetimes:
         # small timing mismatch can get 41 seconds on bomb timer

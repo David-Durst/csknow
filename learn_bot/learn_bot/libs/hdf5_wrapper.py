@@ -112,6 +112,13 @@ class HDF5Wrapper:
 
         if self.vis_np is None:
             self.vis_np = np.load(str(vis_mmap_path), mmap_mode='r')
+
+        # second pass to check if we've updated vis_cols since last vis_mmap creation
+        if self.vis_np.shape[1] != len(self.vis_cols):
+            vis_np = load_hdf5_to_np_array(self.hdf5_path, cols_to_get=self.vis_cols, cast_to_float=True)
+            np.save(str(vis_mmap_path), vis_np, allow_pickle=False)
+            self.vis_np = np.load(str(vis_mmap_path), mmap_mode='r')
+
         return self.vis_np[self.id_df['id']]
 
     def get_extra_df(self, cols: List[str]) -> pd.DataFrame:

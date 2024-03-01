@@ -49,6 +49,7 @@ time_to_shoot_col = 'Time To Shoot'
 crosshair_distance_to_enemy_col = 'Crosshair Distance To Enemy'
 world_distance_to_enemy_col = 'World Distance To Enemy'
 vel_col = 'XY Velocity'
+action_changes_col = 'Action Changes'
 
 
 spread_radius = 2
@@ -59,7 +60,9 @@ title_to_num_points: Dict[str, int] = {}
 title_to_lifetimes: Dict[str, List[float]] = {}
 title_to_speeds: Dict[str, List[float]] = {}
 title_to_delta_speeds: Dict[str, List[float]] = {}
-title_to_move_not_move_change: Dict[str, List[float]] = {}
+title_to_action_changes: Dict[str, List[float]] = {}
+title_to_action_changes_when_shooting: Dict[str, List[float]] = {}
+title_to_action_changes_when_killing: Dict[str, List[float]] = {}
 title_to_shots_per_kill: Dict[str, List[float]] = {}
 # tts - time to shoot, ttk - time to kill
 title_to_tts_and_distance: Dict[str, List[Dict[str, float]]] = {}
@@ -102,8 +105,16 @@ def get_title_to_delta_speeds() -> Dict[str, List[float]]:
     return title_to_delta_speeds
 
 
-def get_title_to_move_not_move_change() -> Dict[str, List[float]]:
-    return title_to_move_not_move_change
+def get_title_to_action_changes() -> Dict[str, List[float]]:
+    return title_to_action_changes
+
+
+def get_title_to_action_changes_when_shooting() -> Dict[str, List[float]]:
+    return title_to_action_changes_when_shooting
+
+
+def get_title_to_action_changes_when_killing() -> Dict[str, List[float]]:
+    return title_to_action_changes_when_killing
 
 
 def get_title_to_shots_per_kill() -> Dict[str, List[float]]:
@@ -136,7 +147,7 @@ def get_title_to_team_to_key_event_pos() -> title_to_team_to_pos_dict:
 
 def clear_title_caches():
     global title_to_line_buffers, title_to_point_buffers, title_to_num_trajectory_ids, title_to_num_points, \
-        title_to_lifetimes, title_to_speeds, title_to_delta_speeds, title_to_move_not_move_change, \
+        title_to_lifetimes, title_to_speeds, title_to_delta_speeds, title_to_action_changes, \
         title_to_shots_per_kill, title_to_key_events, title_to_team_to_key_event_pos, \
         title_to_tts_and_distance, title_to_ttk_and_distance, \
         title_to_tts_and_distance_time_constrained, title_to_ttk_and_distance_time_constrained
@@ -147,7 +158,7 @@ def clear_title_caches():
     title_to_lifetimes = {}
     title_to_speeds = {}
     title_to_delta_speeds = {}
-    title_to_move_not_move_change = {}
+    title_to_action_changes = {}
     title_to_shots_per_kill = {}
     title_to_key_events = {}
     title_to_team_to_key_event_pos = {}
@@ -503,6 +514,24 @@ def compute_lifetimes(trajectory_id_df: pd.DataFrame, alive_trajectory_np: np.nd
         title_to_lifetimes[title].append(min(lifetime_in_game_ticks / game_tick_rate, 40.))
 
 
+def clip_scale_speeds(alive_trajectory_vis_df: pd.DataFrame, player_place_area_columns: PlayerPlaceAreaColumns,
+                      weapon_scoped_to_max_speed: torch.Tensor, use_lagged_speeds: bool = False):
+    # z speed is out of our control, only use x and y
+    # z isn't tracked when running up a hill, its about jumping speed, which isn't part of wasd speed
+    vel_cols = player_place_area_columns.prior_vel[0:2] if use_lagged_speeds else player_place_area_columns.vel[0:2]
+    speeds = (alive_trajectory_vis_df[vel_cols] ** 2.).sum(axis=1) ** 0.5
+    weapon_id_index = alive_trajectory_vis_df[player_place_area_columns.player_weapon_id]
+    scoped_index = alive_trajectory_vis_df[player_place_area_columns.player_scoped]
+    weapon_id_and_scoped_index = torch.tensor((weapon_id_index * 2 + scoped_index).astype('int').values)
+    # mul weapon index by 2 as inner dimension is scoped, and 2 options for scoping (scoped or unscoped)
+    max_speed_per_weapon_and_scoped = \
+        torch.index_select(weapon_scoped_to_max_speed, 0, weapon_id_and_scoped_index)
+    scaled_speeds = speeds.values / max_speed_per_weapon_and_scoped.numpy()
+    # found 1.3% are over max speed, just clip them to avoid annoyances
+    clipped_scaled_speeds = np.clip(scaled_speeds, 0., 1.)
+    return clipped_scaled_speeds
+
+
 def compute_speeds(alive_trajectory_vis_df: pd.DataFrame, player_place_area_columns: PlayerPlaceAreaColumns,
                    weapon_scoped_to_max_speed: torch.Tensor, trajectory_filter_options: TrajectoryFilterOptions,
                    title: str):
@@ -510,32 +539,24 @@ def compute_speeds(alive_trajectory_vis_df: pd.DataFrame, player_place_area_colu
         if title not in title_to_speeds:
             title_to_speeds[title] = []
             title_to_delta_speeds[title] = []
-        # z speed is out of our control, only use x and y
-        # z isn't tracked when running up a hill, its about jumping speed, which isn't part of wasd speed
-        speeds = (alive_trajectory_vis_df[player_place_area_columns.vel[0:2]] ** 2.).sum(axis=1) ** 0.5
-        weapon_id_index = alive_trajectory_vis_df[player_place_area_columns.player_weapon_id]
-        scoped_index = alive_trajectory_vis_df[player_place_area_columns.player_scoped]
-        weapon_id_and_scoped_index = torch.tensor((weapon_id_index * 2 + scoped_index).astype('int').values)
-        # mul weapon index by 2 as inner dimension is scoped, and 2 options for scoping (scoped or unscoped)
-        max_speed_per_weapon_and_scoped = \
-            torch.index_select(weapon_scoped_to_max_speed, 0, weapon_id_and_scoped_index)
-        scaled_speeds = speeds.values / max_speed_per_weapon_and_scoped.numpy()
-        # found 1.3% are over max speed, just clip them to avoid annoyances
-        clipped_scaled_speeds = np.clip(scaled_speeds, 0., 1.)
+        clipped_scaled_speeds = clip_scale_speeds(alive_trajectory_vis_df, player_place_area_columns,
+                                                  weapon_scoped_to_max_speed)
         title_to_speeds[title] += clipped_scaled_speeds.tolist()
         if trajectory_filter_options.compute_action_changes:
-            lagged_clipped_scaled_speed = np.roll(clipped_scaled_speeds, 1)
+            lagged_clipped_scaled_speed = clip_scale_speeds(alive_trajectory_vis_df, player_place_area_columns,
+                                                            weapon_scoped_to_max_speed, True)
             delta_clipped_scaled_speed = np.abs(clipped_scaled_speeds - lagged_clipped_scaled_speed)
             title_to_delta_speeds[title] += delta_clipped_scaled_speed.tolist()[1:]
 
 
 def compute_action_changes(alive_trajectory_vis_df: pd.DataFrame, player_place_area_columns: PlayerPlaceAreaColumns,
-                           trajectory_filter_options: TrajectoryFilterOptions, title: str):
+                           trajectory_filter_options: TrajectoryFilterOptions, title: str,
+                           return_results: bool = False) -> Optional[pd.Series]:
     if trajectory_filter_options.compute_action_changes:
-        if title not in title_to_move_not_move_change:
-            title_to_move_not_move_change[title] = []
-        not_move = alive_trajectory_vis_df[player_place_area_columns.radial_vel[0]] > 0.5
-        not_move_lagged = not_move.shift(1, fill_value=False)
+        if title not in title_to_action_changes:
+            title_to_action_changes[title] = []
+        not_move = alive_trajectory_vis_df[player_place_area_columns.future_radial_vel[0][0]] > 0.5
+        not_move_lagged = alive_trajectory_vis_df[player_place_area_columns.radial_vel[0]] > 0.5
         # not move contiguously 0
         # move contiguously 1
         # not move to move 2
@@ -543,7 +564,17 @@ def compute_action_changes(alive_trajectory_vis_df: pd.DataFrame, player_place_a
         move_contiguously = np.where(~not_move & ~not_move_lagged, 1, 0)
         not_move_to_move = np.where(not_move & ~not_move_lagged, 2, 0)
         move_to_not_move = np.where(~not_move & not_move_lagged, 3, 0)
-        title_to_move_not_move_change[title] += (move_contiguously + not_move_to_move + move_to_not_move).tolist()[1:]
+        result_np = (move_contiguously + not_move_to_move + move_to_not_move)
+        if return_results:
+            # if return, need to do filtering later as must return list with same number of rows as alive_trajectory_vis_df
+            # mark as -1 for easier filtering later
+            result_np[0] = -1
+            result_np[-6:] = -1
+            return pd.Series(result_np)
+        else:
+            # remove last 6 as don't have valid data for next 3 time steps and data recorded at 2x frequency
+            title_to_action_changes[title] += result_np.tolist()[1:-6]
+    return None
 
 
 def compute_shots_per_kill(alive_trajectory_vis_df: pd.DataFrame, player_place_area_columns: PlayerPlaceAreaColumns,
@@ -569,37 +600,36 @@ def compute_crosshair_distance_to_engage(trajectory_id_df: pd.DataFrame, alive_t
             title_to_tts_and_distance_time_constrained[title] = []
             title_to_ttk_and_distance[title] = []
             title_to_ttk_and_distance_time_constrained[title] = []
+            title_to_action_changes_when_shooting[title] = []
+            title_to_action_changes_when_killing[title] = []
         alive_trajectory_id_df = trajectory_id_df.iloc[:len(alive_trajectory_vis_df)]
 
         shot_cur_tick_series = alive_trajectory_vis_df[player_place_area_columns.player_shots_cur_tick]
         kill_next_tick_series = alive_trajectory_vis_df[player_place_area_columns.player_kill_next_tick]
         world_distance_to_enemy_series = \
             alive_trajectory_vis_df[player_place_area_columns.nearest_world_distance_to_enemy]
-
-        # compute scaled speeds
-        speeds = (alive_trajectory_vis_df[player_place_area_columns.vel[0:2]] ** 2.).sum(axis=1) ** 0.5
-        weapon_id_index = alive_trajectory_vis_df[player_place_area_columns.player_weapon_id]
-        scoped_index = alive_trajectory_vis_df[player_place_area_columns.player_scoped]
-        weapon_id_and_scoped_index = torch.tensor((weapon_id_index * 2 + scoped_index).astype('int').values)
-        # mul weapon index by 2 as inner dimension is scoped, and 2 options for scoping (scoped or unscoped)
-        max_speed_per_weapon_and_scoped = \
-            torch.index_select(weapon_scoped_to_max_speed, 0, weapon_id_and_scoped_index)
-        scaled_speeds = speeds.values / max_speed_per_weapon_and_scoped.numpy()
-        clipped_scaled_speeds = pd.Series(np.clip(scaled_speeds, 0., 1.))
+        clipped_scaled_speeds = pd.Series(
+            clip_scale_speeds(alive_trajectory_vis_df, player_place_area_columns, weapon_scoped_to_max_speed))
+        action_changes = compute_action_changes(alive_trajectory_vis_df, player_place_area_columns,
+                                                trajectory_filter_options, title, True)
 
         if shot_cur_tick_series.sum() > 0.:
             time_until_next_shot = compute_time_until_next_event(alive_trajectory_id_df, shot_cur_tick_series)
             record_time_until_event_distance_vel(time_until_next_shot, crosshair_distance_to_enemy_series,
                                                  world_distance_to_enemy_series, clipped_scaled_speeds,
-                                                 time_to_shoot_col, title_to_tts_and_distance[title],
-                                                 title_to_tts_and_distance_time_constrained[title])
+                                                 action_changes, time_to_shoot_col,
+                                                 title_to_tts_and_distance[title],
+                                                 title_to_tts_and_distance_time_constrained[title],
+                                                 title_to_action_changes_when_shooting[title])
 
         if kill_next_tick_series.sum() > 0.:
             time_until_next_kill = compute_time_until_next_event(alive_trajectory_id_df, kill_next_tick_series)
             record_time_until_event_distance_vel(time_until_next_kill, crosshair_distance_to_enemy_series,
                                                  world_distance_to_enemy_series, clipped_scaled_speeds,
-                                                 time_to_kill_col, title_to_ttk_and_distance[title],
-                                                 title_to_ttk_and_distance_time_constrained[title])
+                                                 action_changes, time_to_kill_col,
+                                                 title_to_ttk_and_distance[title],
+                                                 title_to_ttk_and_distance_time_constrained[title],
+                                                 title_to_action_changes_when_killing[title])
 
 
 event_col = 'event'
@@ -611,7 +641,6 @@ def compute_time_until_next_event(alive_trajectory_id_df: pd.DataFrame, event_se
     # forwards would compute all game ticks with same prior event
     one_if_event = event_series.where(event_series == 1., 0)
     sum_if_event = one_if_event.iloc[::-1].cumsum().iloc[::-1]
-
 
     # get game tick id for next event (making sure to drop all ticks with no next event)
     alive_trajectory_id_and_event_df = alive_trajectory_id_df.copy()
@@ -633,15 +662,20 @@ crosshair_distance_to_degrees = 30.
 
 
 def record_time_until_event_distance_vel(time_until_next_event: pd.Series, crosshair_distance: pd.Series,
-                                         world_distance: pd.Series, vel: pd.Series, time_to_event_col: str,
+                                         world_distance: pd.Series, vel: pd.Series, action_changes: Optional[pd.Series],
+                                         time_to_event_col: str,
                                          crosshair_distance_to_event: List[Dict[str, float]],
-                                         crosshair_distance_to_event_time_constrained: List[Dict[str, float]]):
+                                         crosshair_distance_to_event_time_constrained: List[Dict[str, float]],
+                                         action_changes_while_event: List[float]):
     # retrict crosshair distance to ticks with a next event
     limited_crosshair_distance = crosshair_distance.iloc[:len(time_until_next_event)]
-    df = pd.DataFrame({time_to_event_col: time_until_next_event.reset_index(drop=True),
+    cols_for_df = {time_to_event_col: time_until_next_event.reset_index(drop=True),
                        crosshair_distance_to_enemy_col: limited_crosshair_distance.reset_index(drop=True),
                        world_distance_to_enemy_col: world_distance.reset_index(drop=True),
-                       vel_col: vel.reset_index(drop=True)})
+                       vel_col: vel.reset_index(drop=True)}
+    if action_changes is not None:
+        cols_for_df[action_changes_col] = action_changes.reset_index(drop=True)
+    df = pd.DataFrame(cols_for_df)
 
     # only record situations where not maxing out crosshair distance
     filtered_df = df[df[crosshair_distance_to_enemy_col] < 1.].copy()
@@ -650,10 +684,19 @@ def record_time_until_event_distance_vel(time_until_next_event: pd.Series, cross
     filtered_df[world_distance_to_enemy_col] = 10 ** (filtered_df[world_distance_to_enemy_col] * log10(max_world_distance))
     filtered_df[world_distance_to_enemy_col] = filtered_df[world_distance_to_enemy_col].clip(upper=2000)
 
-    for _, row in filtered_df.iterrows():
-        crosshair_distance_to_event.append(row.to_dict())
+    crosshair_distance_to_event += filtered_df.to_dict('records')
+    #for _, row in filtered_df.iterrows():
+    #    crosshair_distance_to_event.append(row.to_dict())
 
-    for _, row in filtered_df[filtered_df[time_to_event_col] < 2.].iterrows():
-        crosshair_distance_to_event_time_constrained.append(row.to_dict())
+    time_filtered_df = filtered_df[filtered_df[time_to_event_col] < 2.]
+    crosshair_distance_to_event_time_constrained += time_filtered_df.to_dict('records')
+    #for _, row in time_filtered_df.iterrows():
+    #    crosshair_distance_to_event_time_constrained.append(row.to_dict())
+
+    more_constrained_time_filtered_df = filtered_df[filtered_df[time_to_event_col] < 0.1]
+    if action_changes is not None:
+        # need to filter out nan since include first and last 6 (see compute action changes)
+        action_changes_with_nan = more_constrained_time_filtered_df[action_changes_col]
+        action_changes_while_event += action_changes_with_nan[action_changes_with_nan != -1].tolist()
 
 
