@@ -187,7 +187,7 @@ namespace csknow::weapon_speed {
         Vec2 vel2D{vel.x, vel.y};
         double speed2D = computeMagnitude(vel2D);
         Vec2 curVel2D{curVel.x, curVel.y}, nextVel2D{nextVel.x, nextVel.y};
-        bool increasingVel = computeMagnitude(nextVel2D) - computeMagnitude(curVel2D);
+        bool increasingVel = (computeMagnitude(nextVel2D) - computeMagnitude(curVel2D)) > 0;
 
         if (speed2D >= movingSpeedThreshold || increasingVel) {
             moving = true;

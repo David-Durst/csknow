@@ -766,6 +766,20 @@ namespace csknow::feature_store {
                                                         columnData[playerColumn].scoped[curTick],
                                                         columnData[playerColumn].airborne[futureTickIndex],
                                                         jumping);
+            /*
+            if (gameTickNumber[curTick] == 227522) {
+                std::cout << "cur tick " << curTick <<
+                          ", velocity " << columnData[playerColumn].velocity[curTick].toCSV() <<
+                          ", next velocity " << columnData[playerColumn].velocity[futureTickIndex].toCSV() <<
+                          ", statureOption " << enumAsInt(statureOption) <<
+                          ", scoped " << columnData[playerColumn].scoped[curTick] <<
+                          ", airborne " << columnData[playerColumn].airborne[futureTickIndex] <<
+                          ", weapon id " << enumAsInt(columnData[playerColumn].weaponId[curTick]) <<
+                          ", max speed " << engineWeaponIdToMaxSpeed(columnData[playerColumn].weaponId[curTick], statureOption, columnData[playerColumn].scoped[curTick]) <<
+                          ", movement status " << movementStatus.moving << std::endl;
+                std::cout << "hi" << std::endl;
+            }
+             */
             columnData[playerColumn].radialVel[movementStatus.toRadialMovementBin()][curTick] = true;
         }
     }
