@@ -184,12 +184,22 @@ namespace csknow::weapon_speed {
             movingSpeedThreshold = airwalk_speed * speed_threshold;
         }
 
-        Vec2 vel2D{vel.x, vel.y};
-        double speed2D = computeMagnitude(vel2D);
-        Vec2 curVel2D{curVel.x, curVel.y}, nextVel2D{nextVel.x, nextVel.y};
+        Vec2 curVel2D{vel.x, vel.y};
+        double speed2D = computeMagnitude(curVel2D);
+        Vec2 nextVel2D{nextVel.x, nextVel.y};
+        // if moving in same direciton and magnitude decreases, then stopping
+        // otherwise just changing direciton
         bool increasingVel = (computeMagnitude(nextVel2D) - computeMagnitude(curVel2D)) > 0;
+        // must check for 0, don't want a divide by 0
+        bool curVelZero = computeMagnitude(curVel2D) == 0;
+        bool nextVelZero = computeMagnitude(nextVel2D) == 0;
+        // no direction for not moving
+        bool sameDir = (curVelZero != nextVelZero) || angleBetween(curVel2D, nextVel2D) < 10.;
 
-        if (speed2D >= movingSpeedThreshold || increasingVel) {
+        // either at max speed currently
+        // or changing to a non-zero direction
+        // or increasing speed
+        if (speed2D >= movingSpeedThreshold || (!nextVelZero && !sameDir) || increasingVel) {
             moving = true;
             dir = velocityToDir(vel);
         }

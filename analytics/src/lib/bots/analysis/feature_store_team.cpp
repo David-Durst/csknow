@@ -766,20 +766,35 @@ namespace csknow::feature_store {
                                                         columnData[playerColumn].scoped[curTick],
                                                         columnData[playerColumn].airborne[futureTickIndex],
                                                         jumping);
+            // 227522 - awp shot
             /*
-            if (gameTickNumber[curTick] == 227522) {
+            if (gameTickNumber[curTick] == 227522/ *228010 || gameTickNumber[curTick] == 228018* /) {
+
+                weapon_speed::StatureOptions nextStatureOption = weapon_speed::StatureOptions::Standing;
+                if (columnData[playerColumn].ducking[futureTickIndex]) {
+                    nextStatureOption = weapon_speed::StatureOptions::Ducking;
+                }
+                else if (columnData[playerColumn].walking[futureTickIndex]) {
+                    nextStatureOption = weapon_speed::StatureOptions::Walking;
+                }
+
                 std::cout << "cur tick " << curTick <<
                           ", velocity " << columnData[playerColumn].velocity[curTick].toCSV() <<
                           ", next velocity " << columnData[playerColumn].velocity[futureTickIndex].toCSV() <<
                           ", statureOption " << enumAsInt(statureOption) <<
+                          ", next statureOption " << enumAsInt(nextStatureOption) <<
                           ", scoped " << columnData[playerColumn].scoped[curTick] <<
-                          ", airborne " << columnData[playerColumn].airborne[futureTickIndex] <<
+                          ", next scoped " << columnData[playerColumn].scoped[futureTickIndex] <<
+                          ", airborne " << columnData[playerColumn].airborne[curTick] <<
                           ", weapon id " << enumAsInt(columnData[playerColumn].weaponId[curTick]) <<
+                          ", weapon id " << enumAsInt(columnData[playerColumn].weaponId[futureTickIndex]) <<
                           ", max speed " << engineWeaponIdToMaxSpeed(columnData[playerColumn].weaponId[curTick], statureOption, columnData[playerColumn].scoped[curTick]) <<
+                          ", next max speed " << engineWeaponIdToMaxSpeed(columnData[playerColumn].weaponId[futureTickIndex], nextStatureOption, columnData[playerColumn].scoped[futureTickIndex]) <<
                           ", movement status " << movementStatus.moving << std::endl;
+
                 std::cout << "hi" << std::endl;
             }
-             */
+            */
             columnData[playerColumn].radialVel[movementStatus.toRadialMovementBin()][curTick] = true;
         }
     }

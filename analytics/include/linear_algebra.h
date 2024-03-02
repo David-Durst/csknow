@@ -373,6 +373,13 @@ double computeMagnitude(Vec2 v) {
 }
 
 static inline __attribute__((always_inline))
+double angleBetween(Vec2 v, Vec2 u) {
+    double dotProduct = v.dot(u);
+    double magnitudeProduct = computeMagnitude(v) * computeMagnitude(u);
+    return RAD2DEG(std::acos(dotProduct / magnitudeProduct));
+}
+
+static inline __attribute__((always_inline))
 Vec2 unitize(Vec2 v) {
     return v / computeMagnitude(v);
 }
