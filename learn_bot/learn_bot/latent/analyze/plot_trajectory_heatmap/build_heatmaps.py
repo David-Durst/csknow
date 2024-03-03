@@ -334,7 +334,7 @@ def plot_one_trajectory_dataset(loaded_model: LoadedModel, id_df: pd.DataFrame, 
                 (trajectory_filter_options.round_game_seconds is not None or
                  trajectory_filter_options.include_all_players_when_one_in_region):
             raise Exception("can't filter by game seconds or player in region and only key events like kill/killed/shot")
-        if trajectory_filter_options.computing_metrics() and \
+        if trajectory_filter_options.computing_multitick_metrics() and \
                 (trajectory_filter_options.round_game_seconds is not None or
                  trajectory_filter_options.include_all_players_when_one_in_region):
             raise Exception("can't filter by game seconds or player in region and compute metrics")
@@ -352,7 +352,7 @@ def plot_one_trajectory_dataset(loaded_model: LoadedModel, id_df: pd.DataFrame, 
             # only using vis_df to compute speed and filter for key events, so don't filter it if not computing metrics
             # or filtering for key events, otherwise will have length mismatch as other types of filters (like area
             # and time) will make trajectory_np have different length
-            if trajectory_filter_options.computing_metrics() or trajectory_filter_options.filtering_key_events():
+            if trajectory_filter_options.computing_multitick_metrics() or trajectory_filter_options.filtering_key_events():
                 alive_trajectory_vis_df = trajectory_vis_df[alive_constraint]
             else:
                 alive_trajectory_vis_df = None
@@ -414,7 +414,7 @@ def plot_one_trajectory_dataset(loaded_model: LoadedModel, id_df: pd.DataFrame, 
                 num_events_per_tick_with_event = event_series[event_constraint].tolist()
                 if debug_event_counting:
                     per_trajectory_key_event_indices.update(alive_trajectory_vis_df.index.tolist())
-            if trajectory_filter_options.computing_metrics() and \
+            if trajectory_filter_options.computing_multitick_metrics() and \
                     (trajectory_filter_options.only_kill or trajectory_filter_options.only_killed or
                      trajectory_filter_options.only_shots):
                 raise Exception("can't filter to kill/killed/shot events and compute metrics depending on contiguous "

@@ -76,9 +76,9 @@ class TrajectoryFilterOptions:
     def filtering_key_events(self) -> bool:
         return self.only_kill or self.only_killed or self.only_killed_or_end or self.only_shots
 
-    def computing_metrics(self) -> bool:
-        return self.compute_speeds or self.compute_lifetimes or self.compute_shots_per_kill or \
-            self.compute_action_changes
+    def computing_multitick_metrics(self) -> bool:
+        return self.compute_lifetimes or self.compute_shots_per_kill or \
+            self.compute_action_changes or self.compute_crosshair_distance_to_engage
 
     def is_no_filter(self) -> bool:
         return str(self) == 'no_filter'
