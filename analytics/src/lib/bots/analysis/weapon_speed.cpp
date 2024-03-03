@@ -176,16 +176,18 @@ namespace csknow::weapon_speed {
     MovementStatus::MovementStatus(EngineWeaponId engineWeaponId, Vec3 curVel, Vec3 nextVel, StatureOptions statureOption,
                                    bool scoped, bool airborne, bool jumping) : vel(curVel),
                                    statureOption(statureOption), jumping(jumping) {
+        (void) nextVel;
         double weaponMaxSpeed = engineWeaponIdToMaxSpeed(engineWeaponId, statureOption, scoped);
         // check if within threshold of moving or not moving. otherwise look ad delta in vel
-        double movingSpeedThreshold = weaponMaxSpeed * speed_threshold;
+        double movingSpeedThreshold = weaponMaxSpeed * stopped_threshold;
         // airborne check is for the 30 unit speed that you can accel from stopped while in air
         if (airborne) {
-            movingSpeedThreshold = airwalk_speed * speed_threshold;
+            movingSpeedThreshold = airwalk_speed * stopped_threshold;
         }
 
         Vec2 curVel2D{vel.x, vel.y};
         double speed2D = computeMagnitude(curVel2D);
+        /*
         Vec2 nextVel2D{nextVel.x, nextVel.y};
         // if moving in same direciton and magnitude decreases, then stopping
         // otherwise just changing direciton
@@ -200,6 +202,8 @@ namespace csknow::weapon_speed {
         // or changing to a non-zero direction
         // or increasing speed
         if (speed2D >= movingSpeedThreshold || (!nextVelZero && !sameDir) || increasingVel) {
+         */
+        if (speed2D >= movingSpeedThreshold || (jumping && speed2D > 0.)) {
             moving = true;
             dir = velocityToDir(vel);
         }

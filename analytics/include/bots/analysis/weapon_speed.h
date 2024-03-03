@@ -27,6 +27,7 @@ namespace csknow::weapon_speed {
     constexpr int num_radial_bins_per_z_axis = num_directions * enumAsInt(StatureOptions::NUM_STATURE_OPTIONS);
     constexpr int num_radial_bins = 1 + num_z_axis_layers * num_radial_bins_per_z_axis;
     constexpr double speed_threshold = 0.98;
+    constexpr double stopped_threshold = 0.1;
 
     double engineWeaponIdToMaxSpeed(EngineWeaponId engineWeaponId, StatureOptions statureOption, bool scoped);
 
