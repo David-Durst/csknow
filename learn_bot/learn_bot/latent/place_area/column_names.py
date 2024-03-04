@@ -78,6 +78,7 @@ class PlayerPlaceAreaColumns:
         self.player_id = player_id_column + " " + player_team_str(team_str, player_index)
         self.player_id_uniform_space = player_id_column + " " + player_team_str(team_str, player_index,
                                                                                 uniform_space=True)
+        self.player_team_str = player_team_str(team_str, player_index, uniform_space=True)
         self.index_on_team = get_player_index_on_team_column(player_index, team_str)
         self.ct_team = get_player_ctteam_column(player_index, team_str)
         self.area_id = get_player_area_id_column(player_index, team_str)

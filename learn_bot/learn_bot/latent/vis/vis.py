@@ -74,8 +74,13 @@ def vis(loaded_model: LoadedModel, inference_fn: Callable[[LoadedModel], None], 
     selected_df = loaded_model.load_round_df_from_cur_dataset(cur_round_id, use_sim_dataset=use_sim_dataset)
     pred_selected_df: pd.DataFrame = loaded_model.cur_inference_df
     draw_attention: bool = False
+    fig = None
+    axs = None
+    prior_alive_player_indices: List[int] = []
     attention_image = None
     attention_masks: pd.DataFrame = loaded_model.cur_attention_masks
+    embedding_image = None
+    embeddings: pd.DataFrame = loaded_model.cur_embeddings
     id_df: pd.DataFrame = loaded_model.get_cur_id_df()
     draw_pred: bool = True
     draw_max: bool = True
@@ -116,7 +121,8 @@ def vis(loaded_model: LoadedModel, inference_fn: Callable[[LoadedModel], None], 
             round_slider_changed(cur_round_index)
 
     def tick_slider_changed(cur_tick_index_str):
-        nonlocal cur_tick, cur_tick_index, cur_round_number, d2_img, d2_img_draw, img_label, draw_max, attention_image
+        nonlocal cur_tick, cur_tick_index, cur_round_number, d2_img, d2_img_draw, img_label, draw_max, \
+            attention_image, embedding_image, fig, axs, prior_alive_player_indices
         if selected_df.empty:
             print("why empty selected_df?")
             return
@@ -165,12 +171,41 @@ def vis(loaded_model: LoadedModel, inference_fn: Callable[[LoadedModel], None], 
         d2_img_copy.alpha_composite(d2_overlay_im)
 
         if draw_attention:
+            alive_player_indices = []
+            player_ticks = []
+            player_tick_names = []
+            for player_index, player_place_area_columns in enumerate(specific_player_place_area_columns):
+                if data_dict[player_place_area_columns.player_id] != -1:
+                    alive_player_indices.append(player_index)
+                    player_ticks.append(len(player_ticks))
+                    player_tick_names.append(player_place_area_columns.player_team_str)
+
             attention_mask = block_reduce(attention_masks[cur_tick_index], (3, 3), np.sum)
-            if attention_image is None:
-                attention_image = plt.imshow(attention_mask, cmap='hot', interpolation='nearest')
+            attention_mask = attention_mask[alive_player_indices][:, alive_player_indices]
+            embedding = block_reduce(embeddings[cur_tick_index], (3, 1), np.sum)
+            embedding = embedding[alive_player_indices]
+
+            if alive_player_indices != prior_alive_player_indices:
+                if fig is not None:
+                    plt.close(fig)
+                fig, axs = plt.subplots(nrows=2, ncols=1, figsize=(4, 9))
+
+                axs[0].set_title('Attention')
+                attention_image = axs[0].imshow(attention_mask, cmap='hot', interpolation='nearest', aspect='auto')
+                axs[0].set_yticks(player_ticks)
+                axs[0].set_yticklabels(player_tick_names)
+                axs[0].set_xticks(player_ticks)
+                axs[0].set_xticklabels(player_tick_names)
+
+                axs[1].set_title('Embedding')
+                axs[1].set_yticks(player_ticks)
+                axs[1].set_yticklabels(player_tick_names)
+
+                embedding_image = axs[1].imshow(embedding, cmap='hot', interpolation='nearest', aspect='auto')
             else:
                 attention_image.set_array(attention_mask)
-            fig = plt.gcf()
+                embedding_image.set_array(embedding)
+            prior_alive_player_indices = alive_player_indices
             fig.canvas.draw()
             d2_img_copy = concat_horizontal([
                 d2_img_copy, Image.frombytes('RGB', fig.canvas.get_width_height(), fig.canvas.tostring_rgb())
@@ -284,7 +319,7 @@ def vis(loaded_model: LoadedModel, inference_fn: Callable[[LoadedModel], None], 
 
     # state setters
     def change_round_dependent_data():
-        nonlocal selected_df, id_df, pred_selected_df, attention_masks, cur_round_id, ticks, game_ticks
+        nonlocal selected_df, id_df, pred_selected_df, attention_masks, embeddings, cur_round_id, ticks, game_ticks
         vis_only_df = loaded_model.get_cur_vis_df()
         make_index_column(vis_only_df)
         selected_df = loaded_model.load_round_df_from_cur_dataset(cur_round_id, vis_only_df,
@@ -296,6 +331,7 @@ def vis(loaded_model: LoadedModel, inference_fn: Callable[[LoadedModel], None], 
         pred_selected_df = loaded_model.cur_inference_df.loc[cur_round_condition]
         pred_selected_df = pred_selected_df.reset_index(drop=True)
         attention_masks = loaded_model.cur_attention_masks[cur_round_condition]
+        embeddings = loaded_model.cur_embeddings[cur_round_condition]
 
         ticks = selected_df.loc[:, 'tick id'].tolist()
         game_ticks = selected_df.loc[:, 'game tick number'].tolist()

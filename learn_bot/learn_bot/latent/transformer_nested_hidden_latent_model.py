@@ -331,20 +331,25 @@ class TransformerNestedHiddenLatentModel(nn.Module):
 
 
 last_attention_output: Optional[torch.Tensor] = None
+last_embedding_output: Optional[torch.Tensor] = None
 
 
 def _sa_block_with_attention(self, x: torch.Tensor, attn_mask: Optional[torch.Tensor],
                              key_padding_mask: Optional[torch.Tensor]) -> torch.Tensor:
-    global last_attention_output
-    x, last_attention_output = self.self_attn(x, x, x,
-                                              attn_mask=attn_mask,
-                                              key_padding_mask=key_padding_mask,
-                                              need_weights=True)
-    return self.dropout1(x)
+    global last_attention_output, last_embedding_output
+    last_embedding_output, last_attention_output = self.self_attn(x, x, x,
+                                                                  attn_mask=attn_mask,
+                                                                  key_padding_mask=key_padding_mask,
+                                                                  need_weights=True)
+    return self.dropout1(last_embedding_output)
 
 
 def get_last_attention_output() -> Optional[torch.Tensor]:
     return last_attention_output
+
+
+def get_last_embedding_output() -> Optional[torch.Tensor]:
+    return last_embedding_output
 
 
 def combine_padding_sequence_masks(sequence_mask: torch.Tensor, padding_mask: torch.Tensor, num_heads: int,

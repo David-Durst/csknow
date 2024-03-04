@@ -54,6 +54,7 @@ class LoadedModel:
         # this will be set later depending on if doing off policy or on policy inference
         self.cur_inference_df = None
         self.cur_attention_masks: Optional[np.ndarray] = None
+        self.cur_embeddings: Optional[np.ndarray] = None
 
     def load_cur_hdf5_as_pd(self, load_cur_dataset=True, cast_bool_to_int=True):
         self.cur_loaded_df = load_hdf5_to_pd(self.dataset.data_hdf5s[self.cur_hdf5_index].hdf5_path,
