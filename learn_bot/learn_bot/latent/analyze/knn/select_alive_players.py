@@ -53,7 +53,7 @@ def get_id_df_and_alive_pos_and_full_table_id_np(hdf5_wrapper: HDF5Wrapper, mode
     # include similarity require pushing rounds only
     valid = (num_ct_alive_np == num_ct_alive) & (num_t_alive_np == num_t_alive)
     if push_only:
-        valid = valid & hdf5_wrapper.id_df[get_similarity_column(0)].to_numpy()
+        valid = valid & hdf5_wrapper.id_df[get_similarity_column(0)].to_numpy().astype(np.bool)
     if decimation is not None:
         valid = valid & (hdf5_wrapper.id_df[index_column] % decimation == 0)
 
