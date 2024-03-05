@@ -77,7 +77,7 @@ int main(int argc, char * argv[]) {
 
     bool finishedTests = false;
     csknow::plant_states::PlantStatesResult plantStatesResult;
-    bool limitToNonConfounding = false;
+    bool limitToNonConfounding = true;
     if (limitToNonConfounding) {
         plantStatesResult.loadFromPython(savedDatasetsDir + "/non_confound_test_plant_states.hdf5", true);
     }

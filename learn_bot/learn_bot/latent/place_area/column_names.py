@@ -93,6 +93,8 @@ class PlayerPlaceAreaColumns:
         self.prior_pos = []
         self.vel = [get_player_velocity_columns(player_index, team_str, dim_str) for dim_str in ["x", "y", "z"]]
         self.prior_vel = []
+        self.walking = get_player_walking(player_index, team_str)
+        self.ducking = get_player_ducking(player_index, team_str)
         self.nearest_crosshair_distance_to_enemy = \
             get_player_nearest_crosshair_distance_to_enemy_columns(player_index, team_str)
         self.nearest_world_distance_to_enemy = \
@@ -208,6 +210,7 @@ class PlayerPlaceAreaColumns:
         return [self.player_id, self.area_id, self.area_index, self.place_index,
                 self.player_hurt_next_tick, self.player_kill_next_tick, self.player_killed_next_tick,
                 self.player_shots_cur_tick, self.player_weapon_id, self.player_scoped, self.player_helmet,
+                self.walking, self.ducking,
                 self.nearest_world_distance_to_enemy, self.radial_vel[0], self.future_radial_vel[0][0]] \
             + self.vel + self.prior_vel[0:3] + self.view_angle
 

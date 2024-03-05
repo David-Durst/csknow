@@ -23,7 +23,7 @@ from learn_bot.latent.engagement.column_names import round_id_column, game_tick_
 from learn_bot.latent.load_model import LoadedModel
 from learn_bot.latent.order.column_names import team_strs
 from learn_bot.latent.place_area.column_names import specific_player_place_area_columns, PlayerPlaceAreaColumns, \
-    max_world_distance
+    max_world_distance, walking_modifier, ducking_modifier
 from learn_bot.latent.vis.draw_inference import d2_bottom_right_x, d2_bottom_right_y, d2_top_left_x, d2_top_left_y
 from learn_bot.libs.io_transforms import CPU_DEVICE_STR
 from learn_bot.libs.vec import Vec3
@@ -526,7 +526,13 @@ def clip_scale_speeds(alive_trajectory_vis_df: pd.DataFrame, player_place_area_c
     # mul weapon index by 2 as inner dimension is scoped, and 2 options for scoping (scoped or unscoped)
     max_speed_per_weapon_and_scoped = \
         torch.index_select(weapon_scoped_to_max_speed, 0, weapon_id_and_scoped_index)
+
     scaled_speeds = speeds.values / max_speed_per_weapon_and_scoped.numpy()
+    assert np.max(alive_trajectory_vis_df[player_place_area_columns.walking] +
+                  alive_trajectory_vis_df[player_place_area_columns.ducking]) <= 1.
+    scaled_speeds /= np.where(alive_trajectory_vis_df[player_place_area_columns.walking], walking_modifier, 1.)
+    scaled_speeds /= np.where(alive_trajectory_vis_df[player_place_area_columns.ducking], ducking_modifier, 1.)
+
     # found 1.3% are over max speed, just clip them to avoid annoyances
     clipped_scaled_speeds = np.clip(scaled_speeds, 0., 1.)
     return clipped_scaled_speeds
@@ -541,6 +547,16 @@ def compute_speeds(alive_trajectory_vis_df: pd.DataFrame, player_place_area_colu
             title_to_delta_speeds[title] = []
         clipped_scaled_speeds = clip_scale_speeds(alive_trajectory_vis_df, player_place_area_columns,
                                                   weapon_scoped_to_max_speed)
+        #not_move = alive_trajectory_vis_df[player_place_area_columns.radial_vel[0]] > 0.5
+        #jumping = alive_trajectory_vis_df[player_place_area_columns.vel[2]] > 0.
+        #rolling_jumping = jumping.rolling(24, min_periods=1, center=True).max() > 0.5
+        #airborne = alive_trajectory_vis_df[player_place_area_columns.vel[2]] != 0
+        #shifted_airborne = airborne.shift(-2, fill_value=True)
+        ## ignore last 6 time steps as no valid labels there, so move/not might not be correct
+        ## technically using shifted_airbone, but that's on different tick frequency, include unshifted airborne
+        ## as leniency
+        #if np.sum(((clipped_scaled_speeds < 0.1) & ~not_move & ~rolling_jumping & ~(airborne | shifted_airborne)).iloc[:-6]):
+        #    print("hi")
         title_to_speeds[title] += clipped_scaled_speeds.tolist()
         if trajectory_filter_options.compute_action_changes:
             lagged_clipped_scaled_speed = clip_scale_speeds(alive_trajectory_vis_df, player_place_area_columns,
@@ -693,7 +709,7 @@ def record_time_until_event_distance_vel(time_until_next_event: pd.Series, cross
     #for _, row in time_filtered_df.iterrows():
     #    crosshair_distance_to_event_time_constrained.append(row.to_dict())
 
-    more_constrained_time_filtered_df = filtered_df[filtered_df[time_to_event_col] < 0.1]
+    more_constrained_time_filtered_df = filtered_df[filtered_df[time_to_event_col] == 0.]
     if action_changes is not None:
         # need to filter out nan since include first and last 6 (see compute action changes)
         action_changes_with_nan = more_constrained_time_filtered_df[action_changes_col]

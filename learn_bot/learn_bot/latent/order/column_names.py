@@ -82,6 +82,12 @@ def get_player_pos_columns(player_index: int, team_str: str, dim_str: str, histo
     return "player pos " + team_str + " " + str(player_index) + \
         ("" if history_index == 0 else " t-" + str(history_index)) + " " + dim_str
 
+def get_player_walking(player_index: int, team_str: str) -> str:
+    return "player walking " + team_str + " " + str(player_index)
+
+def get_player_ducking(player_index: int, team_str: str) -> str:
+    return "player ducking " + team_str + " " + str(player_index)
+
 def get_player_nearest_crosshair_distance_to_enemy_columns(player_index: int, team_str: str, history_index: int = 0) -> str:
     return "player nearest crosshair distance to enemy " + team_str + " " + str(player_index) + \
         ("" if history_index == 0 else " t-" + str(history_index))
