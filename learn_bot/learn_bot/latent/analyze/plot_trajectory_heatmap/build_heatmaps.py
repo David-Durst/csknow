@@ -528,10 +528,15 @@ def clip_scale_speeds(alive_trajectory_vis_df: pd.DataFrame, player_place_area_c
         torch.index_select(weapon_scoped_to_max_speed, 0, weapon_id_and_scoped_index)
 
     scaled_speeds = speeds.values / max_speed_per_weapon_and_scoped.numpy()
-    assert np.max(alive_trajectory_vis_df[player_place_area_columns.walking] +
-                  alive_trajectory_vis_df[player_place_area_columns.ducking]) <= 1.
-    scaled_speeds /= np.where(alive_trajectory_vis_df[player_place_area_columns.walking], walking_modifier, 1.)
-    scaled_speeds /= np.where(alive_trajectory_vis_df[player_place_area_columns.ducking], ducking_modifier, 1.)
+    # humans can't walk and duck at same time (I checked) but bots can
+    # I prefer speed vis to show crouching/walking in between 0/1 - need these uncommented when verifying speeds
+    # match labels
+    #assert np.max(alive_trajectory_vis_df[player_place_area_columns.walking] +
+    #              alive_trajectory_vis_df[player_place_area_columns.ducking]) <= 1.
+    #scaled_speeds /= np.where(alive_trajectory_vis_df[player_place_area_columns.walking], walking_modifier, 1.)
+    #scaled_speeds /= np.where(
+    #    (alive_trajectory_vis_df[player_place_area_columns.walking] == 0.) &
+    #    (alive_trajectory_vis_df[player_place_area_columns.ducking] == 1.), ducking_modifier, 1.)
 
     # found 1.3% are over max speed, just clip them to avoid annoyances
     clipped_scaled_speeds = np.clip(scaled_speeds, 0., 1.)
