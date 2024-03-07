@@ -21,6 +21,9 @@ def process_user_responses():
     anonymized_user_responses.mkdir(parents=True, exist_ok=True)
 
     for i, f in enumerate(glob.glob("/home/durst/user_responses/*")):
+        if 'isaac' in f:
+            continue
+
         print(f)
         file_txt = pypandoc.convert_file(f, 'plain')
         anonymized_file_txt = file_txt.replace("durst@stanford.edu", "<anonymized>")
@@ -54,7 +57,10 @@ def process_user_responses():
             answers.append(answer)
 
     df = pd.DataFrame.from_records(answers)
+    df.sort_values(['File', 'Example'], ascending=True, inplace=True)
+    df.reset_index(drop=True, inplace=True)
     print(f'num responses: {len(df) // 8}')
+    print(f'human most human: {sum(df["human"] > 1.5) / len(df["human"])}')
     user_study_plots.mkdir(parents=True, exist_ok=True)
 
     df[high_skill_col] = df[rank_col] >= rank_map['SMFC']
