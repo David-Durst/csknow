@@ -1,6 +1,6 @@
 from math import ceil
 from pathlib import Path
-from typing import List
+from typing import List, Dict
 
 import pandas as pd
 from matplotlib import pyplot as plt
@@ -49,6 +49,7 @@ def compute_plant_statistics():
     loaded_model = load_model_file(load_data_result)
 
     players_list: List[str] = []
+    player_to_num_seconds: Dict[str, int] = {}
     num_games = 0
     num_rounds = 0
     num_ticks = 0
@@ -72,10 +73,12 @@ def compute_plant_statistics():
             # compute key event metrics
             vis_df = loaded_model.get_cur_vis_df()
             player_ids: List[int] = []
+            player_id_counts: List[Dict[int, int]] = []
             for player_index, player_player_area_columns in enumerate(specific_player_place_area_columns):
                 all_player_id = vis_df[player_player_area_columns.player_id].astype('int32')
                 valid_player_id = all_player_id[all_player_id >= 0]
                 player_ids += valid_player_id.unique().tolist()
+                player_id_counts.append(valid_player_id.value_counts().to_dict())
                 num_shots += int(vis_df[player_player_area_columns.player_shots_cur_tick].sum())
                 num_kills += int(vis_df[player_player_area_columns.player_kill_next_tick].sum())
                 num_killeds += int(vis_df[player_player_area_columns.player_killed_next_tick].sum())
@@ -92,6 +95,14 @@ def compute_plant_statistics():
             unique_player_ids = set(player_ids)
             # first name is invalid, so take names after that, just how I structured names array
             players_list += [player_names_cur_dataset[i+1] for i in unique_player_ids]
+            for player_id in unique_player_ids:
+                player_name = player_names_cur_dataset[player_id+1]
+                if player_name not in player_to_num_seconds:
+                    player_to_num_seconds[player_name] = 0
+                for player_id_count in player_id_counts:
+                    if player_id in player_id_count:
+                        player_to_num_seconds[player_name] += ticks_to_seconds(player_id_count[player_id], 16)
+
 
             # compute per round metrics
             num_ticks_per_round += list(loaded_model.get_cur_id_df().groupby(round_id_column)[tick_id_column].count())
@@ -190,6 +201,35 @@ def compute_plant_statistics():
 
     plt.savefig(Path(__file__).parent / 'plots' / 'plant_statistics.pdf')
     plt.close(fig)
+
+    # seconds per player
+
+    seconds_per_player = pd.Series(player_to_num_seconds.values())
+    seconds_per_player_bins = generate_bins(0, int(ceil(max(seconds_per_player))), 1000)
+    seconds_per_player_fig, seconds_per_player_ax = plt.subplots(figsize=(3.3, 3.3))
+    plot_hist(seconds_per_player_ax, seconds_per_player, seconds_per_player_bins)
+    seconds_per_player_ax.set_title('Length', fontsize=8)
+    seconds_per_player_ax.set_xlabel('Seconds', fontsize=8, labelpad=2)
+    #axs[0, 2].set_ylabel('Percent')
+    #axs[2, 0].text(3, 0.2, seconds_per_round_series.describe().to_string())
+    seconds_per_player_ax.set_xlim(0, 16000)
+    #seconds_per_player_ax.set_ylim(0, 0.4)
+
+    #seconds_per_player_ax.set_xticks([0, 20, 40])
+    #seconds_per_player_ax.tick_params(axis="x", labelsize=8, pad=1)
+
+    # remove right/top spine
+    seconds_per_player_ax.spines['top'].set_visible(False)
+    seconds_per_player_ax.spines['right'].set_visible(False)
+
+    # remove veritcal grid lines, make horizontal dotted
+    seconds_per_player_ax.yaxis.grid(False)
+    seconds_per_player_ax.xaxis.grid(False)
+
+    plt.savefig(Path(__file__).parent / 'plots' / 'seconds_per_player.pdf')
+    plt.close(seconds_per_player_fig)
+
+
 
     print(f'num players {len(players_set)}, num games {num_games}, num rounds {num_rounds}, '
           f'num ticks {num_ticks}, num hours {num_hours}, num shots {num_shots}, '
