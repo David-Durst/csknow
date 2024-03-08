@@ -6,6 +6,8 @@ from typing import Dict, List
 import pandas as pd
 import pypandoc
 from matplotlib import pyplot as plt
+from scikit_posthocs import posthoc_dunn
+from scipy import stats
 
 from learn_bot.latent.analyze.color_lib import default_bar_color
 from learn_bot.latent.analyze.user_responses.build_trueskill import build_trueskill
@@ -64,6 +66,8 @@ def process_user_responses():
     user_study_plots.mkdir(parents=True, exist_ok=True)
 
     df[high_skill_col] = df[rank_col] >= rank_map['SMFC']
+
+    significance_tests(df, user_study_plots / 'significance.txt')
 
     plot_mean_by_rank(df)
     plot_count_by_rank(df)
@@ -129,6 +133,17 @@ def plot_count_by_rank(df: pd.DataFrame):
     ax.xaxis.grid(False)
 
     plt.savefig(user_study_plots / 'count_by_rank.pdf')
+
+
+def significance_tests(df: pd.DataFrame, plot_path: Path):
+    ratings_df = df.loc[:, ['human', 'learned', 'hand-crafted', 'default']]
+    melted_ratings_df = ratings_df.melt()
+    dunn = posthoc_dunn(melted_ratings_df, val_col='value', group_col='variable', p_adjust='holm')
+    ratings_2d = [list(df['human']), list(df['learned']), list(df['hand-crafted']), list(df['default'])]
+    kruskal = stats.kruskal(*ratings_2d)
+    with plot_path.open("w") as f:
+        f.write(f"kruskal: {set(kruskal)}\n")
+        f.write(f"dunn: {str(dunn)}")
 
 
 if __name__ == '__main__':
