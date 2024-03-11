@@ -19,14 +19,15 @@ from learn_bot.latent.analyze.plot_trajectory_heatmap.build_heatmaps import get_
     get_title_to_tts_and_distance, time_to_shoot_col, get_title_to_tts_and_distance_time_constrained, \
     get_title_to_ttk_and_distance_time_constrained, vel_col, get_title_to_delta_speeds, \
     get_title_to_action_changes, title_to_action_changes_when_killing, get_title_to_action_changes_when_killing, \
-    get_title_to_action_changes_when_shooting
+    get_title_to_action_changes_when_shooting, get_title_to_num_points
 
 fig_length = 6
 
 
 def compute_one_metric_histograms(title_to_values: Dict[str, List[float]], metric_title: str,
                                   bin_width: Union[int, float], smallest_max: float,
-                                  x_label: str, plot_file_path: Path, add_points_per_bin: bool = False):
+                                  x_label: str, plot_file_path: Path, add_points_per_bin: bool = False,
+                                  compute_percent_total_points: bool = False):
     num_titles = len(title_to_values.keys())
     fig = plt.figure(figsize=(fig_length, fig_length * num_titles), constrained_layout=True)
     axs = fig.subplots(num_titles, 1, squeeze=False)
@@ -51,6 +52,11 @@ def compute_one_metric_histograms(title_to_values: Dict[str, List[float]], metri
         axs[ax_index, 0].set_xlabel(x_label)
         ax_index += 1
     plt.savefig(plot_file_path)
+    if compute_percent_total_points:
+        title_to_num_points = get_title_to_num_points()
+        with open(plot_file_path.with_suffix('.txt'), 'w') as f:
+            for k, v in title_to_values.items():
+                f.write(f"{f}: {len(v)} / {title_to_num_points[k]} : {len(v) / title_to_num_points[k]:.3f}\n")
 
 
 plt.rc('font', family='Arial')
@@ -146,15 +152,15 @@ def compute_metrics(trajectory_filter_options: TrajectoryFilterOptions, plots_pa
         compute_one_metric_histograms(get_title_to_action_changes(), 'Move/NotMove Changes', 1, 4,
                                       'Percent Changes',
                                       plots_path / ('move_not_move_' + str(trajectory_filter_options) + '.png'),
-                                      add_points_per_bin=True)
+                                      add_points_per_bin=True, compute_percent_total_points=True)
         compute_one_metric_histograms(get_title_to_action_changes_when_shooting(), 'Move/NotMove Changes When Shoot 2s', 1, 4,
                                       'Percent Changes',
                                       plots_path / ('move_not_move_shoot_2s' + str(trajectory_filter_options) + '.png'),
-                                      add_points_per_bin=True)
+                                      add_points_per_bin=True, compute_percent_total_points=True)
         compute_one_metric_histograms(get_title_to_action_changes_when_killing(), 'Move/NotMove Changes When Kill 2s', 1, 4,
                                       'Percent Changes',
                                       plots_path / ('move_not_move_kill_2s' + str(trajectory_filter_options) + '.png'),
-                                      add_points_per_bin=True)
+                                      add_points_per_bin=True, compute_percent_total_points=True)
     if trajectory_filter_options.compute_lifetimes:
         # small timing mismatch can get 41 seconds on bomb timer
         compute_one_metric_four_histograms(get_title_to_lifetimes(), None, 5, 40.,

@@ -714,7 +714,7 @@ def record_time_until_event_distance_vel(time_until_next_event: pd.Series, cross
     #for _, row in time_filtered_df.iterrows():
     #    crosshair_distance_to_event_time_constrained.append(row.to_dict())
 
-    more_constrained_time_filtered_df = filtered_df[filtered_df[time_to_event_col] == 0.]
+    more_constrained_time_filtered_df = filtered_df[filtered_df[time_to_event_col] < 0.]
     if action_changes is not None:
         # need to filter out nan since include first and last 6 (see compute action changes)
         action_changes_with_nan = more_constrained_time_filtered_df[action_changes_col]
