@@ -5,6 +5,7 @@ title_rename_dict = {
     "3_2_24_learned_push_time": "CSMoveBotStopTime",
     "3_3_24_learned_push_no_time": "CSMoveBotStop",
     "3_3_24_learned_push_time": "CSMoveBotStopTime",
+    "3_11_24_learned_push_weight": "CSMoveBotWeight",
     "1_15_24_learned_save": "CSMoveSave",
     "1_15_24_learned_input_history": "CSMoveHistory",
     "1_15_24_handcrafted": "RuleBot",
