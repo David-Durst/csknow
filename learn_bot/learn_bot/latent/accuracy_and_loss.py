@@ -69,6 +69,21 @@ class LatentLosses:
 
 
 def compute_output_mask(model: TransformerNestedHiddenLatentModel, X: torch.Tensor,
+                             output_mask_type: OutputMaskType) -> torch.Tensor:
+    no_time_shoot_cur_tick = \
+        rearrange(X[:, model.shots_cur_tick], "b (p d) -> b p d", p=model.num_players)
+    no_time_shoot_cur_tick = no_time_shoot_cur_tick > 0
+    shoot_cur_tick_per_player = rearrange(
+        repeat(no_time_shoot_cur_tick, 'b p d -> b (p repeat) d', repeat=num_radial_ticks),
+        'b pt d -> (b pt) d'
+    )
+    if output_mask_type == OutputMaskType.NoMask:
+        return torch.ones_like(shoot_cur_tick_per_player[:, 0], dtype=torch.bool)
+    elif output_mask_type == OutputMaskType.EngagementMask or output_mask_type == OutputMaskType.NoEngagementMask:
+        return shoot_cur_tick_per_player
+
+# strict output mask that removes all other data
+def hard_compute_output_mask(model: TransformerNestedHiddenLatentModel, X: torch.Tensor,
                         output_mask_type: OutputMaskType) -> torch.Tensor:
     no_time_seconds_to_hit_enemy_per_player = \
         rearrange(X[:, model.players_seconds_to_hit_enemy], "b (p d) -> b p d", p=model.num_players)
@@ -109,7 +124,7 @@ def make_future_predictions_zero(Y, pred):
 
 
 # https://discuss.pytorch.org/t/how-to-combine-multiple-criterions-to-a-loss-function/348/4
-def compute_loss(model: TransformerNestedHiddenLatentModel, pred, Y, X_orig: Optional, X_rollout: Optional,
+def compute_loss(model: TransformerNestedHiddenLatentModel, pred, Y, X, X_orig: Optional, X_rollout: Optional,
                  duplicated_last, num_players, output_mask, weight_not_move_loss: Optional[float]) -> LatentLosses:
     global cross_entropy_loss_fn
     pred_transformed = get_transformed_outputs(pred)
@@ -144,24 +159,49 @@ def compute_loss(model: TransformerNestedHiddenLatentModel, pred, Y, X_orig: Opt
     losses_to_float = []
 
     # weight stopping the most
-    if weight_not_move_loss is not None:
+    if weight_not_move_loss is not None and False:
         weights = torch.tensor([weight_not_move_loss if i == 0 else 1. for i in range(valid_pred_transformed.shape[1])],
                                device=valid_Y_transformed.device)
         weight_sum = torch.sum(weights)
     else:
         weight_sum = 1.
     if cross_entropy_loss_fn is None:
-        if weight_not_move_loss is not None:
+        if weight_not_move_loss is not None and False:
             cross_entropy_loss_fn = nn.CrossEntropyLoss(reduction='none', weight=weights)
             #unweighted_cross_entropy_loss_fn = nn.CrossEntropyLoss(reduction='none')
         else:
             cross_entropy_loss_fn = nn.CrossEntropyLoss(reduction='none')
+
+    if weight_not_move_loss is not None:
+        # only 1 col, so everything is per player, no inner dimension d
+        no_time_shoot_cur_tick = \
+            rearrange(X[:, model.shots_cur_tick], "b p -> b p", p=model.num_players)
+        no_time_shoot_cur_tick = no_time_shoot_cur_tick > 0
+        shoot_cur_tick_per_player_time = rearrange(
+            repeat(no_time_shoot_cur_tick, 'b p -> b (p repeat)', repeat=num_radial_ticks),
+            'b pt -> (b pt)'
+        )
+        valid_shoot_cur_tick_per_player = shoot_cur_tick_per_player_time[valid_rows]
+        weight_valid_shoot_cur_tick_per_player_time = valid_shoot_cur_tick_per_player * (weight_not_move_loss - 1)
+        weight_valid_shoot_cur_tick_per_player_time += 1.
+    else:
+        weight_valid_shoot_cur_tick_per_player_time = None
+    #    num_repeats = int(weight_not_move_loss) - 1
+    #    valid_pred_transformed_shoot = valid_pred_transformed[valid_shoot_cur_tick_per_player].repeat([num_repeats, 1])
+    #    valid_pred_transformed = torch.cat([valid_pred_transformed, valid_pred_transformed_shoot], 0)
+    #    valid_Y_transformed_shoot = valid_Y_transformed[valid_shoot_cur_tick_per_player].repeat([num_repeats, 1])
+    #    valid_Y_transformed = torch.cat([valid_Y_transformed, valid_Y_transformed_shoot], 0)
+    #    valid_duplicated_shoot = torch.full([valid_pred_transformed_shoot.shape[0]], False,
+    #                                        device=valid_Y_transformed.device)
+    #    valid_duplicated = torch.cat([valid_duplicated, valid_duplicated_shoot], 0)
 
     if valid_Y_transformed[~valid_duplicated].shape[0] > 0:
         cat_loss = cross_entropy_loss_fn(valid_pred_transformed[~valid_duplicated],
                                          valid_Y_transformed[~valid_duplicated])# / weight_sum
         #unweighted_cat_loss = unweighted_cross_entropy_loss_fn(valid_pred_transformed[~valid_duplicated],
         #                                 valid_Y_transformed[~valid_duplicated])
+        if weight_valid_shoot_cur_tick_per_player_time is not None:
+            cat_loss = cat_loss * weight_valid_shoot_cur_tick_per_player_time
         if torch.isnan(cat_loss).any():
             print('bad cat loss')
         losses.cat_loss = torch.mean(cat_loss)

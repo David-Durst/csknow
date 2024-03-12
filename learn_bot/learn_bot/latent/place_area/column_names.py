@@ -180,7 +180,7 @@ class PlayerPlaceAreaColumns:
                              [self.player_health], [self.player_armor],
                              # not used as model inputs, but used in training to filter to engagements/non engagmenets
                              # for output mask
-                             [self.seconds_after_prior_hit_enemy], [self.seconds_until_next_hit_enemy]])
+                             [self.seconds_after_prior_hit_enemy], [self.seconds_until_next_hit_enemy], [self.player_shots_cur_tick]])
         #return flatten_list([self.pos])
         #return flatten_list([self.aligned_pos])
 

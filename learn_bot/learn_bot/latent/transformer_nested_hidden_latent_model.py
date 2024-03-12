@@ -126,6 +126,8 @@ class TransformerNestedHiddenLatentModel(nn.Module):
                       'p t -> (p t)', p=self.num_players, t=num_input_time_steps).tolist()
         self.players_seconds_to_hit_enemy = \
             range_list_to_index_list(cts.get_name_ranges(True, True, contained_str="player seconds"))
+        self.shots_cur_tick = \
+            range_list_to_index_list(cts.get_name_ranges(True, True, contained_str="player shots cur tick"))
         self.players_hurt = \
             range_list_to_index_list(cts.get_name_ranges(True, True, contained_str="player hurt"))
         self.players_fire = \
