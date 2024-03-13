@@ -104,8 +104,8 @@ int main(int argc, char * argv[]) {
                                                                         situationId, false), false);
 
     ScriptsRunner scriptsRunner(Script::makeList(
-            /*
          make_unique<GooseToCatScript>(state),
+                 /*
             make_unique<GooseToCatShortScript>(state)
             make_unique<CTPushLongScript>(state),
             make_unique<CTPushBDoorsScript>(state),
@@ -120,14 +120,16 @@ int main(int argc, char * argv[]) {
             make_unique<HoldASiteBaitScript>(state)
             make_unique<HoldBSitePushScript>(state),
             make_unique<HoldBSiteBaitScript>(state)
-            make_unique<AimAndKillWithinTimeCheck>(state),
              */
+            make_unique<AimAndKillWithinTimeCheck>(state)
+                    /*
+             * /
             make_unique<CTEngageSpacingScript>(state),
             make_unique<PushBaitGooseToCatScript>(state),
             make_unique<PushWaitForBaitGooseToCatScript>(state),
             make_unique<PushMultipleBaitGooseToCatScript>(state),
             make_unique<PushLurkBaitASiteScript>(state),
-                    /*
+                    / *
             make_unique<PushATwoOrdersScript>(state),
             make_unique<PushTwoBDoorsScript>(state),
             make_unique<PushThreeBScript>(state)
@@ -139,12 +141,12 @@ int main(int argc, char * argv[]) {
             make_unique<SpawnPossibleNavAreasCheck>(state),
             make_unique<DiffusionPossibleNavAreasCheck>(state),
             make_unique<VisibilityPossibleNavAreasCheck>(state),
-             */
             make_unique<DangerOnePlayerCheck>(state),
             make_unique<DangerTwoPlayerCheck>(state)
+             */
 
             //make_unique<SayScript>(state)
-    ), false);
+    ), true);
     ScriptsRunner scenarioRunner(variable_aim_test::makeBotTests(), false, 0);
     ScriptsRunner humanScenarioRunner(variable_aim_test::makeHumanTests(), false, 1);
      /*
