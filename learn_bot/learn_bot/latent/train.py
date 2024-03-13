@@ -53,7 +53,7 @@ default_hyperparameter_options = HyperparameterOptions()
 hyperparameter_option_range = [HyperparameterOptions(num_input_time_steps=1, control_type=ControlType.SimilarityControl),
                                HyperparameterOptions(num_input_time_steps=3, control_type=ControlType.SimilarityControl),
                                HyperparameterOptions(num_input_time_steps=1, control_type=ControlType.SimilarityControl,
-                                                     weight_not_move_loss=15.),
+                                                     weight_not_move_loss=75.),
                                HyperparameterOptions(num_input_time_steps=1, control_type=ControlType.SimilarityControl,
                                                      mask_partial_info=True, player_mask_type=PlayerMaskType.EveryoneMask,
                                                      bc_epochs=40),
