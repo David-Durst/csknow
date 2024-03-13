@@ -41,6 +41,8 @@ struct Action {
     CSGOId targetPlayerId;
     Vec3 aimTarget;
     Vec2 targetViewAngle;
+    // when aiming at a human, the first view angle
+    Vec2 firstTargetViewAngle;
     string aimTargetTypeToString(AimTargetType type) {
         switch (type) {
             case AimTargetType::Player:

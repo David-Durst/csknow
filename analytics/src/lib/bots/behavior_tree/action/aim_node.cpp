@@ -65,7 +65,7 @@ namespace action {
 
     float computeAngleVelocity(double totalDeltaAngle, double lastDeltaAngle) {
         double newDeltaAngle = std::max(-1 * MAX_ONE_DIRECTION_ANGLE_VEL,
-                                        std::min(MAX_ONE_DIRECTION_ANGLE_VEL, totalDeltaAngle / 8));
+                                        std::min(MAX_ONE_DIRECTION_ANGLE_VEL, totalDeltaAngle / 13));
         double newAccelAngle = newDeltaAngle - lastDeltaAngle;
         if (std::abs(newAccelAngle) > MAX_ONE_DIRECTION_ANGLE_ACCEL) {
             newDeltaAngle = lastDeltaAngle +
@@ -167,12 +167,29 @@ namespace action {
         // don't need to change pitch here because engine stores pitch in -90 to 90 (I think)
         // while conversion function below uses 360-270 for -90-0
         Vec2 curViewAngle = curClient.getCurrentViewAnglesWithAimpunch();;
+        // if aiming at a player, adjust aim for how much they move since last interval
+        // and only adjust aim target every 100ms
+        bool updateFirstTargetViewAngle = true;
+        bool aimEvery100ms = false;
+        if (aimEvery100ms && curPriority.targetPlayer.playerId != INVALID_ID) {
+            // two possible initial values for first target frame: invalid or current
+            if (curPriority.targetPlayer.firstTargetFrame != INVALID_ID &&
+                 curPriority.targetPlayer.firstTargetFrame != state.getLastFrame() &&
+                 curPriority.targetPlayer.firstTargetFrame >= state.getLastFrame() + 12) {
+                curAction.aimTarget = oldAction.aimTarget;
+                updateFirstTargetViewAngle = false;
+            }
+            else {
+                curAction.aimTarget = curAction.aimTarget +
+                        state.getClient(curPriority.targetPlayer.playerId).getVelocity() * 0.1;
+            }
+        }
         Vec3 targetVector = curAction.aimTarget - curClient.getEyePosForPlayer();
         curAction.targetViewAngle = vectorAngles(targetVector);
         Vec2 adjustedTargetViewAngle = curAction.targetViewAngle;
 
-        // if aiming at a player, adjust aim for how much they move since last interval
-        if (curAction.aimTargetType == AimTargetType::Player && curAction.targetPlayerId == oldAction.targetPlayerId) {
+        if (!aimEvery100ms && curAction.aimTargetType == AimTargetType::Player &&
+            curAction.targetPlayerId == oldAction.targetPlayerId) {
             adjustedTargetViewAngle = adjustedTargetViewAngle + (curAction.targetViewAngle - oldAction.targetViewAngle);
         }
 
@@ -181,6 +198,12 @@ namespace action {
         // https://stackoverflow.com/a/7428771
         Vec2 deltaAngle = adjustedTargetViewAngle - curViewAngle;
         deltaAngle.makeYawNeg180To180();
+        if (updateFirstTargetViewAngle) {
+            curAction.firstTargetViewAngle = deltaAngle;
+        }
+        else {
+            curAction.firstTargetViewAngle = oldAction.firstTargetViewAngle;
+        }
 
         /*
         if (curPriority.learnedTargetPos && curAction.aimTargetType == AimTargetType::Player && computeMagnitude(deltaAngle) < 5. &&
@@ -202,9 +225,9 @@ namespace action {
         curAction.inputAngleAbsolute = !second_order;
         if (second_order) {
             //std::cout << curClient.name << "," << deltaAngle.toString() << "," << newDeltaAnglePct.toString() << std::endl;
-            if (false && computeMagnitude(deltaAngle) < 0.5) {
-                curAction.inputAngleX = computeAngleVelocity(deltaAngle.x, curAction.inputAngleX);
-                curAction.inputAngleY = computeAngleVelocity(deltaAngle.y, curAction.inputAngleY);
+            if (aimEvery100ms && computeMagnitude(deltaAngle) < 0.5) {
+                curAction.inputAngleX = computeAngleVelocity(curAction.firstTargetViewAngle.x, curAction.inputAngleX);
+                curAction.inputAngleY = computeAngleVelocity(curAction.firstTargetViewAngle.y, curAction.inputAngleY);
             }
             else {
                 Vec2 newDeltaAngle = mouseController.update(state.getSecondsBetweenTimes(curAction.lastActionTime, state.loadTime),
