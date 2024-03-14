@@ -19,7 +19,7 @@ from learn_bot.latent.analyze.plot_trajectory_heatmap.build_heatmaps import get_
     get_title_to_tts_and_distance, time_to_shoot_col, get_title_to_tts_and_distance_time_constrained, \
     get_title_to_ttk_and_distance_time_constrained, vel_col, get_title_to_delta_speeds, \
     get_title_to_action_changes, title_to_action_changes_when_killing, get_title_to_action_changes_when_killing, \
-    get_title_to_action_changes_when_shooting, get_title_to_num_points
+    get_title_to_action_changes_when_shooting, get_title_to_num_points, get_title_to_action_changes_when_enemy_visible
 
 fig_length = 6
 
@@ -160,6 +160,10 @@ def compute_metrics(trajectory_filter_options: TrajectoryFilterOptions, plots_pa
         compute_one_metric_histograms(get_title_to_action_changes_when_killing(), 'Move/NotMove Changes When Kill 2s', 1, 4,
                                       'Percent Changes',
                                       plots_path / ('move_not_move_kill_2s' + str(trajectory_filter_options) + '.png'),
+                                      add_points_per_bin=True, compute_percent_total_points=True)
+        compute_one_metric_histograms(get_title_to_action_changes_when_enemy_visible(), 'Move/NotMove Changes When Enemy Visible 2s', 1, 4,
+                                      'Percent Changes',
+                                      plots_path / ('move_not_move_enemy_visible' + str(trajectory_filter_options) + '.png'),
                                       add_points_per_bin=True, compute_percent_total_points=True)
     if trajectory_filter_options.compute_lifetimes:
         # small timing mismatch can get 41 seconds on bomb timer

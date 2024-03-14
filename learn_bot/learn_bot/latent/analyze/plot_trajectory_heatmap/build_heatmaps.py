@@ -49,6 +49,7 @@ time_to_shoot_col = 'Time To Shoot'
 crosshair_distance_to_enemy_col = 'Crosshair Distance To Enemy'
 world_distance_to_enemy_col = 'World Distance To Enemy'
 vel_col = 'XY Velocity'
+time_since_enemy_visible_col = 'Time Since Enemy Visible'
 action_changes_col = 'Action Changes'
 
 
@@ -630,6 +631,7 @@ def compute_crosshair_distance_to_engage(trajectory_id_df: pd.DataFrame, alive_t
             title_to_ttk_and_distance_time_constrained[title] = []
             title_to_action_changes_when_shooting[title] = []
             title_to_action_changes_when_killing[title] = []
+            title_to_action_changes_when_enemy_visible[title] = []
         alive_trajectory_id_df = trajectory_id_df.iloc[:len(alive_trajectory_vis_df)]
 
         shot_cur_tick_series = alive_trajectory_vis_df[player_place_area_columns.player_shots_cur_tick]
@@ -638,6 +640,7 @@ def compute_crosshair_distance_to_engage(trajectory_id_df: pd.DataFrame, alive_t
             alive_trajectory_vis_df[player_place_area_columns.nearest_world_distance_to_enemy]
         clipped_scaled_speeds = pd.Series(
             clip_scale_speeds(alive_trajectory_vis_df, player_place_area_columns, weapon_scoped_to_max_speed))
+        enemy_visible_series = alive_trajectory_vis_df[player_place_area_columns.player_fov_enemy_visible_in_last_5s]
         action_changes = compute_action_changes(alive_trajectory_vis_df, player_place_area_columns,
                                                 trajectory_filter_options, title, True)
 
@@ -658,6 +661,11 @@ def compute_crosshair_distance_to_engage(trajectory_id_df: pd.DataFrame, alive_t
                                                  title_to_ttk_and_distance[title],
                                                  title_to_ttk_and_distance_time_constrained[title],
                                                  title_to_action_changes_when_killing[title])
+
+        if enemy_visible_series is not None:
+            record_action_changes_when_enemy_visible(action_changes, enemy_visible_series,
+                                                     title_to_action_changes_when_enemy_visible[title])
+
 
 
 event_col = 'event'
@@ -727,4 +735,14 @@ def record_time_until_event_distance_vel(time_until_next_event: pd.Series, cross
         action_changes_with_nan = more_constrained_time_df[action_changes_col]
         action_changes_while_event += action_changes_with_nan[action_changes_with_nan != -1].tolist()
 
+
+def record_action_changes_when_enemy_visible(action_changes: pd.Series, time_since_enemy_visible: pd.Series,
+                                             action_changes_while_enemy_visible: List[float]):
+    cols_for_df = {action_changes_col: action_changes.reset_index(drop=True),
+                   time_since_enemy_visible_col: time_since_enemy_visible.reset_index(drop=True)}
+    df = pd.DataFrame(cols_for_df)
+
+    constrained_df = df[df[time_since_enemy_visible_col] == 0.]
+    # need to filter out nan since include first and last 6 (see compute action changes)
+    action_changes_while_enemy_visible += constrained_df.loc[action_changes != -1, action_changes_col].tolist()
 
