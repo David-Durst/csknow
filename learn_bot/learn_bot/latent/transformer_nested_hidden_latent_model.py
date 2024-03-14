@@ -257,9 +257,9 @@ class TransformerNestedHiddenLatentModel(nn.Module):
     def forward(self, x_in, similarity_in, temperature):
         x = x_in.clone()
         if self.control_type != ControlType.TimeControl:
-            #x[:, self.time_control_columns] = 0.
-            x[:, self.time_control_columns_5s] = 0.
-            x[:, self.time_control_columns_10s] = 0.
+            x[:, self.time_control_columns] = 0.
+            #x[:, self.time_control_columns_5s] = 0.
+            #x[:, self.time_control_columns_10s] = 0.
         if self.mask_partial_info:
             x[:, self.players_visibility] = 0.
             x[:, self.players_hurt] = 0.

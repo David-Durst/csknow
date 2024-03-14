@@ -63,6 +63,7 @@ title_to_delta_speeds: Dict[str, List[float]] = {}
 title_to_action_changes: Dict[str, List[float]] = {}
 title_to_action_changes_when_shooting: Dict[str, List[float]] = {}
 title_to_action_changes_when_killing: Dict[str, List[float]] = {}
+title_to_action_changes_when_enemy_visible: Dict[str, List[float]] = {}
 title_to_shots_per_kill: Dict[str, List[float]] = {}
 # tts - time to shoot, ttk - time to kill
 title_to_tts_and_distance: Dict[str, List[Dict[str, float]]] = {}
@@ -116,6 +117,8 @@ def get_title_to_action_changes_when_shooting() -> Dict[str, List[float]]:
 def get_title_to_action_changes_when_killing() -> Dict[str, List[float]]:
     return title_to_action_changes_when_killing
 
+def get_title_to_action_changes_when_enemy_visible() -> Dict[str, List[float]]:
+    return title_to_action_changes_when_enemy_visible
 
 def get_title_to_shots_per_kill() -> Dict[str, List[float]]:
     return title_to_shots_per_kill
@@ -148,6 +151,7 @@ def get_title_to_team_to_key_event_pos() -> title_to_team_to_pos_dict:
 def clear_title_caches():
     global title_to_line_buffers, title_to_point_buffers, title_to_num_trajectory_ids, title_to_num_points, \
         title_to_lifetimes, title_to_speeds, title_to_delta_speeds, title_to_action_changes, \
+        title_to_action_changes_when_killing, title_to_action_changes_when_shooting, title_to_action_changes_when_enemy_visible, \
         title_to_shots_per_kill, title_to_key_events, title_to_team_to_key_event_pos, \
         title_to_tts_and_distance, title_to_ttk_and_distance, \
         title_to_tts_and_distance_time_constrained, title_to_ttk_and_distance_time_constrained
@@ -159,6 +163,9 @@ def clear_title_caches():
     title_to_speeds = {}
     title_to_delta_speeds = {}
     title_to_action_changes = {}
+    title_to_action_changes_when_shooting = {}
+    title_to_action_changes_when_killing = {}
+    title_to_action_changes_when_enemy_visible = {}
     title_to_shots_per_kill = {}
     title_to_key_events = {}
     title_to_team_to_key_event_pos = {}
@@ -714,10 +721,10 @@ def record_time_until_event_distance_vel(time_until_next_event: pd.Series, cross
     #for _, row in time_filtered_df.iterrows():
     #    crosshair_distance_to_event_time_constrained.append(row.to_dict())
 
-    more_constrained_time_filtered_df = filtered_df[filtered_df[time_to_event_col] == 0.]
+    more_constrained_time_df = df[df[time_to_event_col] == 0.]
     if action_changes is not None:
         # need to filter out nan since include first and last 6 (see compute action changes)
-        action_changes_with_nan = more_constrained_time_filtered_df[action_changes_col]
+        action_changes_with_nan = more_constrained_time_df[action_changes_col]
         action_changes_while_event += action_changes_with_nan[action_changes_with_nan != -1].tolist()
 
 

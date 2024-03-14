@@ -210,7 +210,7 @@ class PlayerPlaceAreaColumns:
         return [self.player_id, self.area_id, self.area_index, self.place_index,
                 self.player_hurt_next_tick, self.player_kill_next_tick, self.player_killed_next_tick,
                 self.player_shots_cur_tick, self.player_weapon_id, self.player_scoped, self.player_helmet,
-                self.walking, self.ducking,
+                self.walking, self.ducking, self.player_fov_enemy_visible_in_last_5s,
                 self.nearest_world_distance_to_enemy, self.radial_vel[0], self.future_radial_vel[0][0]] \
             + self.vel + self.prior_vel[0:3] + self.view_angle
 
