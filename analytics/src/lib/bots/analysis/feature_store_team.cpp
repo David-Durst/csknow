@@ -499,6 +499,14 @@ namespace csknow::feature_store {
             if (buffer.playerTickCounters[btTeamPlayerData.playerId].ticksSinceHitEnemy == 0) {
                 nonDecimatedData[columnIndex].roundIdToTickIdsWhenHitEnemy[roundIndex].push_back(tickIndex);
             }
+            /*
+            if (buffer.playerTickCounters[btTeamPlayerData.playerId].ticksSinceHurt == 0) {
+                nonDecimatedData[columnIndex].roundIdToTickIdsWhenHurt[roundIndex].push_back(tickIndex);
+            }
+            if (buffer.playerTickCounters[btTeamPlayerData.playerId].ticksSinceFire == 0) {
+                nonDecimatedData[columnIndex].roundIdToTickIdsWhenFire[roundIndex].push_back(tickIndex);
+            }
+             */
         }
         nonDecimatedC4AreaIndex[tickIndex] = buffer.c4MapData.c4AreaIndex;
 

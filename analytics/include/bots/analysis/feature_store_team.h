@@ -62,6 +62,10 @@ namespace csknow::feature_store {
             vector<bool> fovEnemyVisible;
             // above are set every tick, below is only for key ticks
             map<int64_t, vector<int64_t>> roundIdToTickIdsWhenHitEnemy;
+            /*
+            map<int64_t, vector<int64_t>> roundIdToTickIdsWhenFire;
+            map<int64_t, vector<int64_t>> roundIdToTickIdsWhenHurt;
+             */
         };
         array<NonDecimatedPlayerData, max_enemies> nonDecimatedCTData, nonDecimatedTData;
         vector<int64_t> nonDecimatedC4AreaIndex;

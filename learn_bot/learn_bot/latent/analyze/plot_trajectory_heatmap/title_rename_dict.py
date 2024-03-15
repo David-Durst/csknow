@@ -1,6 +1,7 @@
 title_rename_dict = {
     "Human": "Human",
     "1_15_24_learned_push": "CSMoveBot",
+    "3_14_24_learned_push_repeat": "CSMoveBotR",
     "3_2_24_learned_push_no_time": "CSMoveBotStop",
     "3_2_24_learned_push_time": "CSMoveBotStopTime",
     "3_3_24_learned_push_no_time": "CSMoveBotStop",
@@ -14,4 +15,6 @@ title_rename_dict = {
     "1_15_24_default": "CSGOBot",
     "1_15_24_learned_everyone_mask_only": "NoAttention",
     "1_15_24_learned_everyone_mask_and_mpi": "PositionC4Only",
+    "3_15_24_learned_everyone_mask_only_repeat": "NoAttentionR",
+    "3_14_24_learned_everyone_mask_and_mpi_repeat": "PositionC4OnlyR",
 }
