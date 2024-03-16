@@ -13,7 +13,7 @@ from learn_bot.latent.place_area.pos_abs_from_delta_grid_or_radial import NavDat
     one_hot_prob_to_index, max_speed_per_second
 from learn_bot.latent.place_area.simulation.constants import weapon_scoped_to_max_speed_tensor
 from learn_bot.libs.io_transforms import IOColumnTransformers, CUDA_DEVICE_STR, CPU_DEVICE_STR, \
-    range_list_to_index_list, flatten_list
+    range_list_to_index_list, flatten_list, ALL_TYPES_BUT_PASSTHROUGH
 from learn_bot.libs.positional_encoding import *
 from einops import rearrange, repeat
 from positional_encodings.torch_encodings import PositionalEncoding1D
@@ -98,7 +98,8 @@ class TransformerNestedHiddenLatentModel(nn.Module):
         self.non_player_c4_columns_ranges = [i for i in all_c4_columns_ranges if i not in c4_decrease_distance_columns_ranges]
         #baiting_columns_ranges = range_list_to_index_list(cts.get_name_ranges(True, True, contained_str="baiting"))
         players_columns = [self.non_player_c4_columns_ranges +  #baiting_columns_ranges +
-                           range_list_to_index_list(cts.get_name_ranges(True, True, contained_str=" " + player_team_str(team_str, player_index)))
+                           range_list_to_index_list(cts.get_name_ranges(True, True, types=ALL_TYPES_BUT_PASSTHROUGH,
+                                                                        contained_str=" " + player_team_str(team_str, player_index)))
                            for team_str in team_strs for player_index in range(max_enemies)]
         self.columns_dict = cts.get_index_name_dict(True, True, True)
         #players_columns_names = [cts.get_name_ranges(True, True, contained_str=" " + player_team_str(team_str, player_index), include_names=True)[1]

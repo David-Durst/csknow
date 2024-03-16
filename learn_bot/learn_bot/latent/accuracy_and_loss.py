@@ -125,7 +125,8 @@ def make_future_predictions_zero(Y, pred):
 
 # https://discuss.pytorch.org/t/how-to-combine-multiple-criterions-to-a-loss-function/348/4
 def compute_loss(model: TransformerNestedHiddenLatentModel, pred, Y, X, X_orig: Optional, X_rollout: Optional,
-                 duplicated_last, num_players, output_mask, weight_not_move_loss: Optional[float]) -> LatentLosses:
+                 duplicated_last, num_players, output_mask, weight_not_move_loss: Optional[float],
+                 weight_shoot: Optional[float], weight_not_shoot: Optional[float]) -> LatentLosses:
     global cross_entropy_loss_fn
     pred_transformed = get_transformed_outputs(pred)
 
@@ -159,20 +160,24 @@ def compute_loss(model: TransformerNestedHiddenLatentModel, pred, Y, X, X_orig: 
     losses_to_float = []
 
     # weight stopping the most
-    if weight_not_move_loss is not None and False:
+    if weight_not_move_loss is not None:
         weights = torch.tensor([weight_not_move_loss if i == 0 else 1. for i in range(valid_pred_transformed.shape[1])],
                                device=valid_Y_transformed.device)
         weight_sum = torch.sum(weights)
     else:
         weight_sum = 1.
     if cross_entropy_loss_fn is None:
-        if weight_not_move_loss is not None and False:
+        if weight_not_move_loss is not None:
             cross_entropy_loss_fn = nn.CrossEntropyLoss(reduction='none', weight=weights)
             #unweighted_cross_entropy_loss_fn = nn.CrossEntropyLoss(reduction='none')
         else:
             cross_entropy_loss_fn = nn.CrossEntropyLoss(reduction='none')
 
-    if weight_not_move_loss is not None:
+    if weight_shoot is not None or weight_not_shoot is not None:
+        if weight_shoot is None:
+            weight_shoot = 1.
+        if weight_not_shoot is None:
+            weight_not_shoot = 1.
         # only 1 col, so everything is per player, no inner dimension d
         no_time_shoot_cur_tick = \
             rearrange(X[:, model.shots_cur_tick], "b p -> b p", p=model.num_players)
@@ -182,8 +187,9 @@ def compute_loss(model: TransformerNestedHiddenLatentModel, pred, Y, X, X_orig: 
             'b pt -> (b pt)'
         )
         valid_shoot_cur_tick_per_player = shoot_cur_tick_per_player_time[valid_rows]
-        weight_valid_shoot_cur_tick_per_player_time = valid_shoot_cur_tick_per_player * (weight_not_move_loss - 1)
-        weight_valid_shoot_cur_tick_per_player_time += 1.
+        weight_valid_shoot_cur_tick_per_player_time = valid_shoot_cur_tick_per_player * weight_shoot
+        not_valid_shoot_cur_tick_per_player = ~shoot_cur_tick_per_player_time[valid_rows]
+        weight_valid_shoot_cur_tick_per_player_time += not_valid_shoot_cur_tick_per_player * weight_not_shoot
     else:
         weight_valid_shoot_cur_tick_per_player_time = None
     #    num_repeats = int(weight_not_move_loss) - 1
@@ -197,7 +203,7 @@ def compute_loss(model: TransformerNestedHiddenLatentModel, pred, Y, X, X_orig: 
 
     if valid_Y_transformed[~valid_duplicated].shape[0] > 0:
         cat_loss = cross_entropy_loss_fn(valid_pred_transformed[~valid_duplicated],
-                                         valid_Y_transformed[~valid_duplicated])# / weight_sum
+                                         valid_Y_transformed[~valid_duplicated]) / weight_sum
         #unweighted_cat_loss = unweighted_cross_entropy_loss_fn(valid_pred_transformed[~valid_duplicated],
         #                                 valid_Y_transformed[~valid_duplicated])
         if weight_valid_shoot_cur_tick_per_player_time is not None:
@@ -220,7 +226,7 @@ def compute_loss(model: TransformerNestedHiddenLatentModel, pred, Y, X, X_orig: 
             losses_to_float.append(float_loss)
     if valid_Y_transformed[valid_duplicated].shape[0] > 0.:
         duplicated_last_cat_loss = cross_entropy_loss_fn(valid_pred_transformed[valid_duplicated],
-                                                         valid_Y_transformed[valid_duplicated])# / weight_sum
+                                                         valid_Y_transformed[valid_duplicated]) / weight_sum
         if torch.isnan(duplicated_last_cat_loss).any():
             print('bad cat loss')
         losses.duplicate_last_cat_loss = torch.mean(duplicated_last_cat_loss)

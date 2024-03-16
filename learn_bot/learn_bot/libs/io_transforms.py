@@ -62,6 +62,15 @@ ALL_TYPES: FrozenSet[ColumnTransformerType] = frozenset({ColumnTransformerType.F
                                                          ColumnTransformerType.CATEGORICAL_DISTRIBUTION,
                                                          ColumnTransformerType.PASSTHROUGH})
 
+ALL_TYPES_BUT_PASSTHROUGH: FrozenSet[ColumnTransformerType] = frozenset({ColumnTransformerType.FLOAT_STANDARD,
+                                                                         ColumnTransformerType.FLOAT_DELTA,
+                                                                         ColumnTransformerType.FLOAT_180_ANGLE,
+                                                                         ColumnTransformerType.FLOAT_180_ANGLE_DELTA,
+                                                                         ColumnTransformerType.FLOAT_90_ANGLE,
+                                                                         ColumnTransformerType.FLOAT_90_ANGLE_DELTA,
+                                                                         ColumnTransformerType.CATEGORICAL,
+                                                                         ColumnTransformerType.CATEGORICAL_DISTRIBUTION})
+
 
 @dataclass(frozen=True)
 class ColumnTimeOffset:
@@ -174,6 +183,7 @@ class ColumnTypes:
         return self.all_cols_
 
     def column_names_all_categorical_columns(self) -> List[str]:
+        self.add_members()
         categorical_distribution_cols = [c for cs in self.categorical_distribution_cols for c in cs]
         relative_cols, _ = split_delta_columns(self.float_delta_cols)
         relative_180_cols, _ = split_delta_columns(self.float_180_angle_delta_cols)
@@ -181,7 +191,8 @@ class ColumnTypes:
         return self.float_standard_cols + relative_cols + \
             self.float_180_angle_cols + relative_180_cols + \
             self.float_90_angle_cols + relative_90_cols + \
-            self.categorical_cols + categorical_distribution_cols
+            self.categorical_cols + categorical_distribution_cols + \
+            (self.passthrough_cols if self.passthrough_cols is not None else [])
 
     def delta_float_column_names(self) -> List[str]:
         if self.delta_float_column_names_ is None:

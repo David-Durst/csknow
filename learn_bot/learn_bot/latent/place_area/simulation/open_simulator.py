@@ -395,8 +395,8 @@ def run_analysis_per_mask(loaded_model: LoadedModel, all_data_loaded_model: Load
             all_data_loaded_model.load_cur_dataset_only()
 
         for iteration in range(mask_iterations):
-            if mask_iterations > 1:
-                print(f"iteration {iteration} / {num_iterations}")
+            #if mask_iterations > 1:
+            #    print(f"iteration {iteration} / {num_iterations}")
 
             round_lengths = get_round_lengths(loaded_model.get_cur_id_df(), round_length_divisible_by=num_time_steps)
             player_enable_mask = build_player_mask(loaded_model, player_mask_config, round_lengths)
@@ -404,7 +404,7 @@ def run_analysis_per_mask(loaded_model: LoadedModel, all_data_loaded_model: Load
             hdf5_displacement_errors = compare_predicted_rollout_indices(loaded_model, player_enable_mask,
                                                                          player_mask_config in mask_all_configs,
                                                                          player_mask_config == PlayerMaskConfig.GROUND_TRUTH_CMD)
-            if False and iteration == 0 and player_mask_config in possible_mask_configs_to_plot:
+            if iteration == 0 and player_mask_config in possible_mask_configs_to_plot:
                 trajectory_counter = compute_trajectory_counter(loaded_model.get_cur_id_df(), round_lengths)
                 plot_one_trajectory_dataset(loaded_model, loaded_model.get_cur_id_df(),
                                             loaded_model.get_cur_vis_df(),

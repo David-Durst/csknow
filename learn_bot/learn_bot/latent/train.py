@@ -53,7 +53,11 @@ default_hyperparameter_options = HyperparameterOptions()
 hyperparameter_option_range = [HyperparameterOptions(num_input_time_steps=1, control_type=ControlType.SimilarityControl),
                                HyperparameterOptions(num_input_time_steps=3, control_type=ControlType.SimilarityControl),
                                HyperparameterOptions(num_input_time_steps=1, control_type=ControlType.SimilarityControl,
-                                                     weight_not_move_loss=75.),
+                                                     weight_shoot=75.),
+                               HyperparameterOptions(num_input_time_steps=1, control_type=ControlType.SimilarityControl,
+                                                     weight_shoot=50., weight_not_shoot=0.),
+                               HyperparameterOptions(num_input_time_steps=1, control_type=ControlType.SimilarityControl,
+                                                     weight_not_shoot=0.),
                                HyperparameterOptions(num_input_time_steps=1, control_type=ControlType.SimilarityControl,
                                                      mask_partial_info=True, player_mask_type=PlayerMaskType.EveryoneMask,
                                                      bc_epochs=40),
@@ -326,7 +330,8 @@ def train(train_type: TrainType, multi_hdf5_wrapper: MultiHDF5Wrapper,
                     batch_loss = compute_loss(model, pred_flattened, Y_flattened, X, X_flattened_orig, X_flattened_rollout,
                                               duplicated_last_flattened, model.num_players,
                                               output_mask,
-                                              hyperparameter_options.weight_not_move_loss)
+                                              hyperparameter_options.weight_not_move_loss,
+                                              hyperparameter_options.weight_shoot, hyperparameter_options.weight_not_shoot)
                     # uncomment here and below causes memory issues
                     cumulative_loss += batch_loss
                     #losses.append(batch_loss.total_loss.tolist()[0])
