@@ -122,9 +122,12 @@ flat_output_cat_distribution_columns: list[list[str]] = \
 
 def get_simplified_column_types(float_standard_cols: List[str], categorical_cols: List[str],
                                 num_cats_per_col: List[int],
-                                categorical_distribution_cols: List[List[str]]) -> ColumnTypes:
+                                categorical_distribution_cols: List[List[str]],
+                                passthrough_cols: List[str] = None) -> ColumnTypes:
+    if passthrough_cols is None:
+        passthrough_cols = []
     return ColumnTypes(float_standard_cols, [], [], [], [], [], categorical_cols, num_cats_per_col, [], [], [],
-                       categorical_distribution_cols)
+                       categorical_distribution_cols, passthrough_cols=passthrough_cols)
 
 
 engagement_input_column_types = get_simplified_column_types(flat_input_float_specific_enemy_columns,

@@ -38,6 +38,7 @@ class TrajectoryFilterOptions:
     compute_speeds: bool = False
     compute_shots_per_kill: bool = False
     compute_crosshair_distance_to_engage: bool = False
+    no_metrics: bool = False
 
     def __str__(self):
         compound_name = ''

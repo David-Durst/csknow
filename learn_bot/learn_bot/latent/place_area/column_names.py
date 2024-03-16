@@ -180,7 +180,7 @@ class PlayerPlaceAreaColumns:
                              [self.player_health], [self.player_armor],
                              # not used as model inputs, but used in training to filter to engagements/non engagmenets
                              # for output mask
-                             [self.seconds_after_prior_hit_enemy], [self.seconds_until_next_hit_enemy], [self.player_shots_cur_tick]])
+                             [self.seconds_after_prior_hit_enemy], [self.seconds_until_next_hit_enemy]])
         #return flatten_list([self.pos])
         #return flatten_list([self.aligned_pos])
 
@@ -191,6 +191,9 @@ class PlayerPlaceAreaColumns:
                 [self.ct_team],
                 [self.decrease_distance_to_c4_5s], [self.decrease_distance_to_c4_10s],
                 [self.decrease_distance_to_c4_20s]]
+
+    def to_extra_input_float_list(self) -> list[str]:
+        return flatten_list([[self.player_shots_cur_tick]])
 
     def to_output_cat_list(self, place: bool, area: bool, delta: bool, radial: bool) -> list[list[str]]:
         result = []
@@ -224,6 +227,8 @@ flat_input_cat_place_area_num_options: list[int] = [num_c4_status]
 flat_input_distribution_cat_place_area_columns: list[list[str]] = \
     flatten_list([cols.to_input_distribution_cat_list() for cols in specific_player_place_area_columns]) + \
     [[c4_plant_a_col, c4_plant_b_col, c4_not_planted_col]]
+flat_input_passthrough_columns: list[str] = \
+    flatten_list([cols.to_extra_input_float_list() for cols in specific_player_place_area_columns])
 #[['baiting'], [c4_plant_a_col, c4_plant_b_col, c4_not_planted_col]]
 flat_output_cat_place_distribution_columns: list[list[str]] = \
     flatten_list([cols.to_output_cat_list(True, False, False, False) for cols in specific_player_place_area_columns])
@@ -237,7 +242,8 @@ flat_output_cat_radial_vel_columns: list[list[str]] = \
 place_area_input_column_types = get_simplified_column_types(flat_input_float_place_area_columns,
                                                             [], #flat_input_cat_place_area_columns,
                                                             [], #flat_input_cat_place_area_num_options,
-                                                            flat_input_distribution_cat_place_area_columns)
+                                                            flat_input_distribution_cat_place_area_columns,
+                                                            flat_input_passthrough_columns)
                                                             #flat_input_distribution_cat_place_area_columns)
 #output_column_types = get_simplified_column_types([], flat_output_cat_columns, flat_output_num_options,
 #                                                  flat_output_cat_distribution_columns)

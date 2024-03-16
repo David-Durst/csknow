@@ -34,6 +34,7 @@ class ColumnTransformerType(Enum):
     FLOAT_90_ANGLE_DELTA = 5
     CATEGORICAL = 6
     CATEGORICAL_DISTRIBUTION = 7
+    PASSTHROUGH = 8
 
 
 @dataclass
@@ -58,7 +59,8 @@ ALL_TYPES: FrozenSet[ColumnTransformerType] = frozenset({ColumnTransformerType.F
                                                          ColumnTransformerType.FLOAT_90_ANGLE,
                                                          ColumnTransformerType.FLOAT_90_ANGLE_DELTA,
                                                          ColumnTransformerType.CATEGORICAL,
-                                                         ColumnTransformerType.CATEGORICAL_DISTRIBUTION})
+                                                         ColumnTransformerType.CATEGORICAL_DISTRIBUTION,
+                                                         ColumnTransformerType.PASSTHROUGH})
 
 
 @dataclass(frozen=True)
@@ -89,6 +91,8 @@ class ColumnTypes:
     categorical_distribution_cols: List[List[str]]
     categorical_distribution_cols_flattened: List[str]
     categorical_distribution_first_sub_cols: List[str]
+    # extra cols not to be modified, just stored as a passthrough at the end
+    passthrough_cols: Optional[List[str]]
 
     def __init__(self, float_standard_cols: List[str] = [], float_delta_cols: List[DeltaColumn] = [],
                  float_180_angle_cols: List[str] = [], float_180_angle_delta_cols: List[DeltaColumn] = [],
@@ -99,7 +103,8 @@ class ColumnTypes:
                  float_angular_standard_cols: List[str] = [], float_angular_delta_cols: List[DeltaColumn] = [],
                  # these are standard or delta columns that wrap around at 180/-180 when computing loss
                  float_180_wrap_cols: List[str] = [],
-                 categorical_distribution_cols: List[List[str]] = []):
+                 categorical_distribution_cols: List[List[str]] = [],
+                 passthrough_cols: Optional[List[str]] = None):
         self.float_standard_cols = float_standard_cols
         self.float_delta_cols = float_delta_cols
         self.float_180_angle_cols = float_180_angle_cols
@@ -116,6 +121,7 @@ class ColumnTypes:
         self.categorical_distribution_cols = categorical_distribution_cols
         self.categorical_distribution_cols_flattened = [c for cs in categorical_distribution_cols for c in cs]
         self.categorical_distribution_first_sub_cols = [cs[0] for cs in categorical_distribution_cols]
+        self.passthrough_cols = passthrough_cols
         self.compute_time_offsets()
 
     col_time_offsets: Dict[str, ColumnTimeOffset]
@@ -135,35 +141,19 @@ class ColumnTypes:
                 self.col_time_offsets[col_name] = ColumnTimeOffset(False, 0)
 
     # caching values
-    column_types_ = None
     all_cols_ = None
     delta_float_column_names_ = None
     delta_180_angle_column_names_ = None
     delta_90_angle_column_names_ = None
     delta_float_target_column_names_ = None
 
-    def column_types(self) -> List[ColumnTransformerType]:
-        if self.column_types_ is None:
-            self.column_types_ = []
-            for _ in self.float_standard_cols:
-                self.column_types_.append(ColumnTransformerType.FLOAT_STANDARD)
-            for _ in self.float_delta_cols:
-                self.column_types_.append(ColumnTransformerType.FLOAT_DELTA)
-            for _ in self.float_180_angle_cols:
-                self.column_types_.append(ColumnTransformerType.FLOAT_180_ANGLE)
-            for _ in self.float_180_angle_delta_cols:
-                self.column_types_.append(ColumnTransformerType.FLOAT_180_ANGLE_DELTA)
-            for _ in self.float_90_angle_cols:
-                self.column_types_.append(ColumnTransformerType.FLOAT_90_ANGLE)
-            for _ in self.float_90_angle_delta_cols:
-                self.column_types_.append(ColumnTransformerType.FLOAT_90_ANGLE_DELTA)
-            for _ in self.categorical_cols:
-                self.column_types_.append(ColumnTransformerType.CATEGORICAL)
-            for _ in self.categorical_distribution_cols:
-                self.column_types_.append(ColumnTransformerType.CATEGORICAL_DISTRIBUTION)
-        return self.column_types_
+    # enables adding columns to already serialized columns
+    def add_members(self):
+        if not hasattr(self, 'passthrough_cols'):
+            self.passthrough_cols = None
 
     def column_names(self, relative_cols_first=False) -> List[str]:
+        self.add_members()
         categorical_distribution_cols = [c[0] for c in self.categorical_distribution_cols]
         if relative_cols_first:
             relative_cols, _ = split_delta_columns(self.float_delta_cols)
@@ -171,7 +161,7 @@ class ColumnTypes:
             relative_90_cols, _ = split_delta_columns(self.float_90_angle_delta_cols)
             return relative_cols + relative_180_cols + relative_90_cols + \
                    self.float_180_angle_cols + self.float_90_angle_cols + self.categorical_cols + \
-                   categorical_distribution_cols
+                   categorical_distribution_cols + (self.passthrough_cols if self.passthrough_cols is not None else [])
         if self.all_cols_ is None:
             relative_cols, _ = split_delta_columns(self.float_delta_cols)
             relative_180_cols, _ = split_delta_columns(self.float_180_angle_delta_cols)
@@ -179,7 +169,8 @@ class ColumnTypes:
             self.all_cols_ = self.float_standard_cols + relative_cols + \
                              self.float_180_angle_cols + relative_180_cols + \
                              self.float_90_angle_cols + relative_90_cols + \
-                             self.categorical_cols + categorical_distribution_cols
+                             self.categorical_cols + categorical_distribution_cols + \
+                             (self.passthrough_cols if self.passthrough_cols is not None else [])
         return self.all_cols_
 
     def column_names_all_categorical_columns(self) -> List[str]:
@@ -580,6 +571,7 @@ class IOColumnTransformers:
         cur_start: int = 0
 
         column_types: ColumnTypes = self.input_types if input else self.output_types
+        column_types.add_members()
         cts: List[PTColumnTransformer] = self.input_ct_pts if input else self.output_ct_pts
 
         angle_columns = 2 if transformed else 1
@@ -655,6 +647,15 @@ class IOColumnTransformers:
                     result_names.append(ct.col_names[0])
                 cur_start += len(ct.col_names)
 
+        if column_types.passthrough_cols is not None:
+            for col_name in column_types.passthrough_cols:
+                if ColumnTransformerType.PASSTHROUGH in types and \
+                        (not only_wrap_cols) and \
+                        (contained_str is None or contained_str in col_name):
+                    result.append(range(cur_start, cur_start + 1))
+                    result_names.append(col_name)
+                cur_start += 1
+
         if include_names:
             return result, result_names
         else:
@@ -666,6 +667,7 @@ class IOColumnTransformers:
         cur_start: int = 0
 
         column_types: ColumnTypes = self.input_types if input else self.output_types
+        column_types.add_members()
         cts: List[PTColumnTransformer] = self.input_ct_pts if input else self.output_ct_pts
 
         angle_columns = 2 if transformed else 1
@@ -713,6 +715,11 @@ class IOColumnTransformers:
                     result[ct.col_names[0]] = range(cur_start, cur_start + len(ct.col_names))
                     cur_start += len(ct.col_names)
 
+        if column_types.passthrough_cols is not None:
+            for col_name in column_types.passthrough_cols:
+                result[col_name] = range(cur_start, cur_start + 1)
+                cur_start += 1
+
         return result
 
     def get_index_name_dict(self, input: bool, transformed: bool, separate_distribution_cols: bool = False) -> Dict[int, str]:
@@ -727,11 +734,14 @@ class IOColumnTransformers:
     def get_name_ranges_in_time_range(self, input: bool, transformed: bool,
                                       time_offset_range: range, include_non_temporal: bool,
                                       include_cat: bool) -> Tuple[List[int], List[str]]:
+        # force deprecation
+        raise NotImplementedError
         result: List[int] = []
         result_str: List[str] = []
         cur_start: int = 0
 
         column_types: ColumnTypes = self.input_types if input else self.output_types
+        column_types.add_members()
         cts: List[PTColumnTransformer] = self.input_ct_pts if input else self.output_ct_pts
 
         angle_columns = 2 if transformed else 1
@@ -831,6 +841,8 @@ class IOColumnTransformers:
         return result
 
     def transform_columns(self, input: bool, x: torch.Tensor, x_input: torch.Tensor) -> torch.Tensor:
+        # force deprecation
+        raise NotImplementedError
         cur_device = x.device
         #x = x.to(CPU_DEVICE_STR)
         #x_input = x_input.to(CPU_DEVICE_STR)
@@ -915,6 +927,8 @@ class IOColumnTransformers:
         return torch.unflatten(flattened_transformed_x, 0, [-1, window_size])
 
     def untransform_columns(self, input: bool, x: torch.Tensor, x_input: torch.Tensor) -> torch.Tensor:
+        # force deprecation
+        raise NotImplementedError
         cur_device = x.device
         #x = x.to(CPU_DEVICE_STR)
         #x_input = x_input.to(CPU_DEVICE_STR)

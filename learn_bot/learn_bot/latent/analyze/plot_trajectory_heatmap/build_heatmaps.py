@@ -263,7 +263,7 @@ def plot_one_trajectory_dataset(loaded_model: LoadedModel, id_df: pd.DataFrame, 
         first_game_tick_number = trajectory_id_df[game_tick_number_column].iloc[0]
 
         # if no filter, compute the teamwork metrics
-        if trajectory_filter_options.is_no_filter():
+        if trajectory_filter_options.is_no_filter() and not trajectory_filter_options.no_metrics:
             compute_teamwork_metrics(loaded_model, trajectory_np, trajectory_vis_df, title)
 
         # early terminate if requiring all players to be in regions and one fails
