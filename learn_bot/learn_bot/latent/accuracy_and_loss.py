@@ -179,9 +179,7 @@ def compute_loss(model: TransformerNestedHiddenLatentModel, pred, Y, X, X_orig: 
         if weight_not_shoot is None:
             weight_not_shoot = 1.
         # only 1 col, so everything is per player, no inner dimension d
-        no_time_shoot_cur_tick = \
-            rearrange(X[:, model.shots_cur_tick], "b p -> b p", p=model.num_players)
-        no_time_shoot_cur_tick = no_time_shoot_cur_tick > 0
+        no_time_shoot_cur_tick = X[:, model.shots_cur_tick] > 0
         shoot_cur_tick_per_player_time = rearrange(
             repeat(no_time_shoot_cur_tick, 'b p -> b (p repeat)', repeat=num_radial_ticks),
             'b pt -> (b pt)'
