@@ -22,6 +22,7 @@ title_rename_dict = {
     "3_16_24_learned_everyone_mask_and_mpi_repeat": "PositionC4OnlyRR",
     "3_20_24_first_learned_push_repeat": "CSMoveBot",
     "3_20_24_second_learned_push_repeat": "CSMoveBot",
+    "3_24_24_learned_push_old_code": "OldMoveBot",
     "3_20_24_first_learned_everyone_mask_only_repeat": "NoAttention",
     "3_20_24_second_learned_everyone_mask_only_repeat": "NoAttention",
     "3_20_24_first_learned_everyone_mask_and_mpi_repeat": "PositionC4Only",
