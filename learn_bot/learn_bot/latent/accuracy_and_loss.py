@@ -254,9 +254,9 @@ def compute_loss(model: TransformerNestedHiddenLatentModel, pred, Y, X, X_orig: 
 
 duplicated_name_str = 'duplicated'
 
-def compute_accuracy_and_delta_diff(pred, Y, duplicated_last, accuracy, delta_diff_xy, delta_diff_xyz,
+def compute_accuracy_and_delta_diff(model, pred, Y, X, duplicated_last, accuracy, delta_diff_xy, delta_diff_xyz,
                                     valids_per_accuracy_column, num_players, column_transformers: IOColumnTransformers,
-                                    stature_to_speed, output_mask):
+                                    stature_to_speed, output_mask, weight_shoot_only):
     pred_untransformed = get_untransformed_outputs(pred)
 
     name = column_transformers.output_types.categorical_distribution_first_sub_cols[0]
@@ -271,6 +271,12 @@ def compute_accuracy_and_delta_diff(pred, Y, duplicated_last, accuracy, delta_di
     Y_valid_per_player_row = Y_per_player.sum(axis=2) * rearrange(torch.where(output_mask, 1., 0.),
                                                                   '(b p t) -> b (p t)',
                                                                   p=num_players, t=num_radial_ticks)
+    if weight_shoot_only:
+        # only 1 col, so everything is per player, no inner dimension d
+        no_time_shoot_cur_tick = X[:, model.shots_cur_tick] > 0
+        shoot_cur_tick_per_player_time = repeat(no_time_shoot_cur_tick, 'b p -> b (p repeat)', repeat=num_radial_ticks)
+        Y_valid_per_player_row *= shoot_cur_tick_per_player_time
+
     masked_accuracy_per_player = accuracy_per_player * Y_valid_per_player_row
 
     # compute delta diffs
