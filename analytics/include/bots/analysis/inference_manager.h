@@ -26,14 +26,14 @@ namespace csknow::inference_manager {
 
     struct ClientInferenceData {
         TeamId team;
-        bool validDeltaPosProbabilities/*, validUncertainDeltaPosProbabilities*/;
+        bool validDeltaPosProbabilities, validUncertainDeltaPosProbabilities;
         csknow::inference_delta_pos::InferenceDeltaPosPlayerAtTickProbabilities deltaPosProbabilities,
             uncertainDeltaPosProbabilities;
     };
 
     class InferenceManager {
         bool ranDeltaPosInference = false, ranUncertainDeltaPosInference = false;
-        void runDeltaPosInference(/*bool uncertainModule*/);
+        void runDeltaPosInference(bool uncertainModule);
         int overallModelToRun = 0;
     public:
         bool ranDeltaPosInferenceThisTick = false;

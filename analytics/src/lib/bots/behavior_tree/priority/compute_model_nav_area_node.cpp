@@ -12,14 +12,28 @@ namespace csknow::compute_nav_area {
 
     void ComputeModelNavAreaNode::computeDeltaPosProbabilistic(const ServerState & state, Priority & curPriority,
                                                                CSGOId csgoId, ModelNavData & modelNavData) {
-        //TargetPlayer & curTarget = curPriority.targetPlayer;
+        TargetPlayer & curTarget = curPriority.targetPlayer;
+        bool gettingReadyToFire = false;
+        if (curTarget.playerId != INVALID_ID && curTarget.visible) {
+            const auto & victim = state.getClient(curTarget.playerId);
+            const auto & attacker = state.getClient(csgoId);
+            Vec3 victimHeadPos = getCenterHeadCoordinatesForPlayer(victim.getFootPosForPlayer(), victim.getCurrentViewAngles(), victim.duckAmount);
+            Vec2 deltaViewAngle = deltaViewFromOriginToDest(attacker.getEyePosForPlayer(), victimHeadPos, attacker.getCurrentViewAngles());
+            double magnitudeDeltaViewAngle = computeMagnitude(deltaViewAngle);
+            if (magnitudeDeltaViewAngle < 5.) {
+                gettingReadyToFire = true;
+            }
+        }
         // compute area probabilities
         const csknow::inference_delta_pos::InferenceDeltaPosPlayerAtTickProbabilities & deltaPosProbabilities =
                 blackboard.inferenceManager.playerToInferenceData.at(csgoId).deltaPosProbabilities;
-        //const csknow::inference_delta_pos::InferenceDeltaPosPlayerAtTickProbabilities & uncertainDeltaPosProbabilities =
-        //        blackboard.inferenceManager.playerToInferenceData.at(csgoId).uncertainDeltaPosProbabilities;
+        const csknow::inference_delta_pos::InferenceDeltaPosPlayerAtTickProbabilities & uncertainDeltaPosProbabilities =
+                blackboard.inferenceManager.playerToInferenceData.at(csgoId).uncertainDeltaPosProbabilities;
         vector<float> probabilities = deltaPosProbabilities.radialVelProbabilities;
         //vector<float> uncertainProbabilities = uncertainDeltaPosProbabilities.radialVelProbabilities;
+        if (gettingReadyToFire) {
+            probabilities = uncertainDeltaPosProbabilities.radialVelProbabilities;
+        }
         const ServerState::Client & curClient = state.getClient(csgoId);
 
         size_t deltaPosOption = 0;
@@ -111,8 +125,8 @@ namespace csknow::compute_nav_area {
         // if put in the model orders but not ready for this player, just stand still
         if (blackboard.inferenceManager.playerToInferenceData.find(treeThinker.csgoId) ==
             blackboard.inferenceManager.playerToInferenceData.end() ||
-            !blackboard.inferenceManager.playerToInferenceData.at(treeThinker.csgoId).validDeltaPosProbabilities /* ||
-            !blackboard.inferenceManager.playerToInferenceData.at(treeThinker.csgoId).validUncertainDeltaPosProbabilities*/) {
+            !blackboard.inferenceManager.playerToInferenceData.at(treeThinker.csgoId).validDeltaPosProbabilities ||
+            !blackboard.inferenceManager.playerToInferenceData.at(treeThinker.csgoId).validUncertainDeltaPosProbabilities) {
             curPriority.learnedTargetPos = false;
             curPriority.targetPos = state.getClient(treeThinker.csgoId).getFootPosForPlayer();
             curPriority.targetAreaId = curAreaId;

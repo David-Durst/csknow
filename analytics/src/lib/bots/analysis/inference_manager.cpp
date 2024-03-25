@@ -17,8 +17,8 @@ namespace csknow::inference_manager {
         torch::jit::getProfilingMode() = false;
         auto tmpDeltaPosModule = torch::jit::load(deltaPosModelPath);
         deltaPosModule = torch::jit::optimize_for_inference(tmpDeltaPosModule);
-        //auto tmpUncertainDeltaPosModule = torch::jit::load(uncertainDeltaPosModelPath);
-        //uncertainDeltaPosModule = torch::jit::optimize_for_inference(tmpUncertainDeltaPosModule);
+        auto tmpUncertainDeltaPosModule = torch::jit::load(uncertainDeltaPosModelPath);
+        uncertainDeltaPosModule = torch::jit::optimize_for_inference(tmpUncertainDeltaPosModule);
     }
 
     void InferenceManager::setCurClients(const vector<ServerState::Client> & clients) {
@@ -56,7 +56,7 @@ namespace csknow::inference_manager {
                                                                                         teamSaveControlParameters);
     }
 
-    void InferenceManager::runDeltaPosInference(/*bool uncertainModule*/) {
+    void InferenceManager::runDeltaPosInference(bool uncertainModule) {
         std::vector<torch::jit::IValue> inputs;
         torch::Tensor rowPT = torch::from_blob(deltaPosValues.rowCPP.data(),
                                                {1, static_cast<long>(deltaPosValues.rowCPP.size())},
@@ -72,12 +72,12 @@ namespace csknow::inference_manager {
         torch::Tensor temperaturePt = torch::from_blob(temperatureArr.data(), {1, 1}, options);
         inputs.push_back(temperaturePt);
 
-        if (false) {
-            throw std::runtime_error("can't use uncertain model right now");
+        if (uncertainModule) {
+            //throw std::runtime_error("can't use uncertain model right now");
             at::Tensor output = uncertainDeltaPosModule.forward(inputs).toTuple()->elements()[1].toTensor();
 
             for (auto & [csgoId, inferenceData] : playerToInferenceData) {
-                //playerToInferenceData[csgoId].validUncertainDeltaPosProbabilities = true;
+                playerToInferenceData[csgoId].validUncertainDeltaPosProbabilities = true;
                 playerToInferenceData[csgoId].uncertainDeltaPosProbabilities =
                         extractFeatureStoreDeltaPosResults(output, deltaPosValues, csgoId, inferenceData.team);
             }
@@ -107,15 +107,15 @@ namespace csknow::inference_manager {
         //runEngagementInference(clients);
         //runAggressionInference(clients);
         ranDeltaPosInferenceThisTick = false;
-        //if (overallModelToRun == 0) {
-        //    runDeltaPosInference(true);
-        //    ranUncertainDeltaPosInference = true;
-        //}
         if (overallModelToRun == 0) {
+            runDeltaPosInference(true);
+            ranUncertainDeltaPosInference = true;
+        }
+        if (overallModelToRun == 8) {
             //std::chrono::duration<double> inferenceTime = start - lastInferenceTime;
             //std::cout << "times between inferences " << inferenceTime.count() << std::endl;
             //lastInferenceTime = start;
-            runDeltaPosInference();
+            runDeltaPosInference(false);
             ranDeltaPosInference = true;
             ranDeltaPosInferenceThisTick = true;
         }
@@ -129,7 +129,7 @@ namespace csknow::inference_manager {
     }
 
     bool InferenceManager::haveValidData() const {
-        return ranDeltaPosInference;// && ranUncertainDeltaPosInference;
+        return ranDeltaPosInference && ranUncertainDeltaPosInference;
         /*
         if (!ranOrderInference || !ranPlaceInference || !ranAreaInference || !ranDeltaPosInference) {
             return false;
