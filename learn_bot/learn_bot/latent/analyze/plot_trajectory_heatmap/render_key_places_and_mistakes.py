@@ -277,6 +277,7 @@ def plot_key_places(plot_path: Path, use_tick_counts: bool):
                 f.write('\n')
                 f.write('values: ')
                 f.write(str(title_to_percent_diff_df))
+            key_places_by_title.to_csv(plot_path / (plot_name + '_for_aggregation.csv'))
             #print(group)
             #print(key_places_by_title)
             #print(pd.Series(title_to_percent_mad_diff))
@@ -298,7 +299,8 @@ def plot_mistakes(plots_path, use_tick_counts: bool):
     else:
         title = 'Ablation Mistakes'
         y_ticks = [0, 20, 40]
-    plot_place_title_df(mistakes_df, title, plots_path / 'mistakes.pdf', 'Events' if use_tick_counts else 'Rounds',
+    mistakes_name = 'mistakes_ticks.pdf' if use_tick_counts else 'mistakes.pdf'
+    plot_place_title_df(mistakes_df, title, plots_path / mistakes_name, 'Events' if use_tick_counts else 'Rounds',
                         y_ticks)
 
     if not use_tick_counts:
@@ -320,3 +322,4 @@ def plot_mistakes(plots_path, use_tick_counts: bool):
             f.write(pformat(get_title_to_num_b_site_mistakes(), indent=4))
             f.write('b round mistakes\n')
             f.write(pformat(get_title_to_num_b_site_round_mistakes(), indent=4))
+        mistakes_df.to_csv(plots_path / 'mistakes_aggregation.csv')
