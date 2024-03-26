@@ -405,7 +405,7 @@ def plot_one_trajectory_dataset(loaded_model: LoadedModel, id_df: pd.DataFrame, 
                 #else:
                 #    # in rare situations,
                 sum_event_series = sum(event_series)
-                if sum_event_series == 2.:
+                if sum_event_series > 2.:
                     print("bad demo with late round end event")
                 assert sum(event_series) == 1. or sum(event_series) == 2.
             elif trajectory_filter_options.only_shots:

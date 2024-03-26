@@ -35,4 +35,5 @@ title_rename_dict = {
     "3_23_24_second_default_repeat": "CSGOBot",
     "3_23_24_third_default_repeat": "CSGOBot",
     "3_23_24_fourth_default_repeat": "CSGOBot",
+    "3_25_24_learned_push_combat": "CSMoveCombat",
 }
