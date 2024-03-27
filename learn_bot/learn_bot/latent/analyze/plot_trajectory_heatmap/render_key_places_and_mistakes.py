@@ -78,13 +78,16 @@ no_legend_set = {'Defense Spread'}
 
 
 def plot_place_title_df(df: pd.DataFrame, chart_name: str, plot_file_path: Path, y_label: str, y_ticks: List,
-                        margin_df: Optional[pd.DataFrame]):
+                        margin_df: Optional[pd.DataFrame] = None):
     df.index = df.index.to_series().replace(situation_rename_dict)
     df.rename(title_rename_dict, axis=1, inplace=True)
+    if margin_df is not None:
+        margin_df.index = df.index
+        margin_df.rename(title_rename_dict, axis=1, inplace=True)
 
     fig, ax = plt.subplots(figsize=(3.3, 3.3*0.6))
 
-    df.plot(kind='bar', title=chart_name, rot=0, ax=ax)#, color=default_bar_colro)
+    df.plot(kind='bar', title=chart_name, rot=0, ax=ax, yerr=margin_df)#, color=default_bar_colro)
     ax.tick_params(axis="x", labelsize=8)
     ax.tick_params(axis="y", labelsize=8)
     ax.set_title(chart_name, fontsize=8)
@@ -106,6 +109,7 @@ def plot_place_title_df(df: pd.DataFrame, chart_name: str, plot_file_path: Path,
     else:
         plt.legend(fontsize=8)
     plt.savefig(plot_file_path, bbox_inches='tight')
+    plt.close(fig)
 
 
 def plot_specific_key_places(plot_path: Path):
@@ -159,6 +163,7 @@ def plot_specific_key_places(plot_path: Path):
     #fig.tight_layout()
     plt.subplots_adjust(left=0.12, right=0.99, bottom=0.13, top=0.95, hspace=0.35)
     plt.savefig(plot_path / 'specific_key_places_rounds.pdf', bbox_inches='tight')
+    plt.close(fig)
 
 
 def plot_key_places(plot_path: Path, use_tick_counts: bool):
@@ -286,12 +291,12 @@ def plot_key_places(plot_path: Path, use_tick_counts: bool):
 
 def plot_mistakes(plots_path, use_tick_counts: bool):
     if use_tick_counts:
-        mistakes_df = pd.DataFrame.from_records([get_title_to_num_a_site_round_mistakes(),
-                                                 get_title_to_num_b_site_round_mistakes()],
-                                                index=['Leave \n High Ground', 'Leave \n Established Position'])
-    else:
         mistakes_df = pd.DataFrame.from_records([get_title_to_num_a_site_mistakes(),
                                                  get_title_to_num_b_site_mistakes()],
+                                                index=['Leave \n High Ground', 'Leave \n Established Position'])
+    else:
+        mistakes_df = pd.DataFrame.from_records([get_title_to_num_a_site_round_mistakes(),
+                                                 get_title_to_num_b_site_round_mistakes()],
                                                 index=['Leave \n High Ground', 'Leave \n Established Position'])
 
     if len([s for s in mistakes_df.columns if 'default' in s]) > 0:
