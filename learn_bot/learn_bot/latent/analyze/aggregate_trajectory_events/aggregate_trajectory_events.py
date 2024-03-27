@@ -1,45 +1,55 @@
 import sys
+from pathlib import Path
 from typing import Optional, List
 
+from einops import rearrange
 import numpy as np
 import pandas as pd
-from scipy.stats import stats
+from scipy.stats import iqr
 
 from learn_bot.latent.analyze.comparison_column_names import similarity_plots_path
 
 
-def aggregate_trajectory_events(rollout_extensions: list[str], rollout_prefix: str):
-    offense_flanks_nps: List[np.ndarray] = []
-    defense_spread_nps: List[np.ndarray] = []
-    mistakes_nps: List[np.ndarray] = []
+def aggregate_one_event(rollout_extensions: list[str], rollout_prefix: str, event_csv_path: Path,
+                        diff_to_first_player_type: bool):
+    event_nps: List[np.ndarray] = []
 
     for i, rollout_extension in enumerate(rollout_extensions):
         plots_path = similarity_plots_path / (rollout_prefix + rollout_extension)
-        new_offense_flanks_df = pd.read_csv(plots_path / "offense_flanks_pct_for_aggregation.csv", index_col=0)
-        new_defense_spread_df = pd.read_csv(plots_path / "defense_spread_pct_for_aggregation.csv", index_col=0)
-        new_mistakes_df = pd.read_csv(plots_path / "mistakes_aggregation.csv", index_col=0)
-
+        new_event_df = pd.read_csv(plots_path / event_csv_path, index_col=0)
         if i == 0:
-            offense_flanks_df = new_offense_flanks_df
-            defense_spread_df = new_defense_spread_df
-            mistakes_df = new_mistakes_df
+            column_names = new_event_df.columns
+            row_index = new_event_df.index
+        event_nps.append(new_event_df.values)
 
-        offense_flanks_nps.append(new_offense_flanks_df.values)
-        defense_spread_nps.append(new_defense_spread_df.values)
-        mistakes_nps.append(new_mistakes_df.values)
+    event_np = np.stack(event_nps, axis=-1)
 
-    offense_flanks_np = np.stack(offense_flanks_nps, axis=-1)
-    defense_spread_np = np.stack(defense_spread_nps, axis=-1)
-    mistakes_np = np.stack(mistakes_nps, axis=-1)
+    if diff_to_first_player_type:
+        column_names = column_names[1:]
+        event_np = np.abs((event_np[:, 1:, :] - event_np[:, [0], :]) / event_np[:, [0], :])
 
-    offense_flanks_median_np = np.median(offense_flanks_np, axis=2)
-    defense_spread_median_np = np.median(defense_spread_np, axis=2)
-    mistakes_median_np = np.median(mistakes_np, axis=2)
+    per_event_median_np = np.median(event_np, axis=2)
+    per_event_median_df = pd.DataFrame(data=per_event_median_np, index=row_index, columns=column_names)
+    per_event_iqr_np = iqr(event_np, axis=2)
+    per_event_iqr_df = pd.DataFrame(data=per_event_iqr_np, index=row_index, columns=column_names)
 
-    offense_flanks_iqr_np = stats.iqr(offense_flanks_np, axis=2)
-    defense_spread_iqr_np = np.iqr(defense_spread_np, axis=2)
-    mistakes_iqr_np = np.iqr(mistakes_np, axis=2)
-    x = 1
+    aggregation_plots_path = similarity_plots_path / ("agg_" + rollout_prefix + rollout_extension)
+
+    # in order to aggregate across different events, get player type first dimension,
+    # then event type, then different trials of events
+    player_event_trials_np = rearrange('i j k -> j (i k)', event_np)
+    all_events_median_np = np.median(event_np, axis=1)
+    all_events_median_series = pd.Series(data=all_events_median_np, index=column_names)
+    all_events_iqr_np = iqr(event_np, axis=1)
+    all_events_median_series = pd.Series(data=all_events_iqr_np, index=column_names)
+
+
+def aggregate_trajectory_events(rollout_extensions: list[str], rollout_prefix: str):
+    aggregate_one_event(rollout_extensions, rollout_prefix, Path("offense_flanks_pct_for_aggregation.csv"), True)
+    aggregate_one_event(rollout_extensions, rollout_prefix, Path("defense_spread_pct_for_aggregation.csv"), True)
+    aggregate_one_event(rollout_extensions, rollout_prefix, Path("mistakes_aggregation.csv"), True)
+    aggregate_one_event(rollout_extensions, rollout_prefix, Path("diff") / "emd_no_filter.txt", False)
+    aggregate_one_event(rollout_extensions, rollout_prefix, Path("diff") / "emd_only_kill.txt", False)
 
 
 if __name__ == "__main__":

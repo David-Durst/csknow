@@ -1,6 +1,6 @@
 from pathlib import Path
 from pprint import pformat
-from typing import List, Dict
+from typing import List, Dict, Optional
 
 import pandas as pd
 from matplotlib import pyplot as plt
@@ -77,7 +77,8 @@ legend_pos_dict = {
 no_legend_set = {'Defense Spread'}
 
 
-def plot_place_title_df(df: pd.DataFrame, chart_name: str, plot_file_path: Path, y_label: str, y_ticks: List):
+def plot_place_title_df(df: pd.DataFrame, chart_name: str, plot_file_path: Path, y_label: str, y_ticks: List,
+                        margin_df: Optional[pd.DataFrame]):
     df.index = df.index.to_series().replace(situation_rename_dict)
     df.rename(title_rename_dict, axis=1, inplace=True)
 
