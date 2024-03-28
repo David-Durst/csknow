@@ -29,12 +29,22 @@ class EventAggregation:
 
 
 def aggregate_one_event_type(rollout_extensions: list[str], rollout_prefix: str, event_csv_path: Path,
-                             diff_to_first_player_type: bool, aggregation_plots_path: Path, event_type: str) -> EventAggregation:
+                             diff_to_first_player_type: bool, aggregation_plots_path: Path, event_type: str,
+                             # set if only one event in the event (like lifetimes), so need to convert series to dataframe
+                             event_name: Optional[str] = None) -> EventAggregation:
     event_nps: List[np.ndarray] = []
 
     for i, rollout_extension in enumerate(rollout_extensions):
         plots_path = similarity_plots_path / (rollout_prefix + rollout_extension)
-        new_event_df = pd.read_csv(plots_path / event_csv_path, index_col=0)
+        if event_name is not None:
+            with open(plots_path / event_csv_path, 'r') as f:
+                new_event_dict = eval(f.read())
+            # make lists so pandas accepts as one row df
+            new_event_dict = {k: [v] for k, v in new_event_dict.items()}
+            new_event_df = pd.DataFrame.from_dict(new_event_dict)
+            new_event_df.index = [event_name]
+        else:
+            new_event_df = pd.read_csv(plots_path / event_csv_path, index_col=0)
         if i == 0:
             column_names = new_event_df.columns
             row_index = new_event_df.index
@@ -125,7 +135,7 @@ def plot_offense_defense(offense_events: EventAggregation, defense_events: Event
 
 def plot_mistakes(mistakes_events: EventAggregation, aggregation_plots_path: Path):
     y_ticks = [0, 100, 200]
-    if mistakes_events.per_event_median_df.max().max() < 80:
+    if len([s for s in mistakes_events.per_event_median_df.columns if 'default' in s]) > 0:
         y_ticks = [0, 20, 40]
     plot_place_title_df(mistakes_events.per_event_median_df, 'Mistakes', aggregation_plots_path / 'mistakes.pdf',
                         'Rounds', y_ticks, mistakes_events.per_event_iqr_df)
@@ -153,12 +163,17 @@ def aggregate_trajectory_events(rollout_extensions: list[str], rollout_prefix: s
                                                Path("mistakes_aggregation.csv"), True,
                                                aggregation_plots_path, 'mistakes')
     plot_mistakes(mistakes_events, aggregation_plots_path)
-    return
 
     aggregate_one_event_type(rollout_extensions, rollout_prefix, Path("diff") / "emd_no_filter.txt", False,
                              aggregation_plots_path, 'emd_no_filter')
     aggregate_one_event_type(rollout_extensions, rollout_prefix, Path("diff") / "emd_only_kill.txt", False,
                              aggregation_plots_path, 'emd_only_kill')
+
+    aggregate_one_event_type(rollout_extensions, rollout_prefix, Path("lifetimes_no_filter.txt"), False,
+                             aggregation_plots_path, 'lifetimes_no_filter', 'Lifetimes')
+    aggregate_one_event_type(rollout_extensions, rollout_prefix, Path("shots_per_kill_no_filter.txt"), False,
+                             aggregation_plots_path, 'shots_per_kill_no_filter', 'Shots Per Kill')
+
 
 if __name__ == "__main__":
     rollout_extensions = sys.argv[1].split(',')
