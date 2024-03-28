@@ -134,8 +134,9 @@ def plot_offense_defense(offense_events: MetricAggregation, defense_events: Metr
 
 
 def plot_mistakes(mistakes_events: MetricAggregation, aggregation_plots_path: Path):
-    y_ticks = [0, 100, 200]
-    if len([s for s in mistakes_events.per_event_median_df.columns if 'default' in s]) > 0:
+    if len([s for s in mistakes_events.per_event_median_df.columns if 'CSGOBot' in s]) > 0:
+        y_ticks = [0, 100, 200]
+    else:
         y_ticks = [0, 20, 40]
     plot_place_title_df(mistakes_events.per_event_median_df, 'Mistakes', aggregation_plots_path / 'mistakes.pdf',
                         'Rounds', y_ticks, mistakes_events.per_event_iqr_df)
@@ -214,5 +215,5 @@ def aggregate_trajectory_metrics(rollout_extensions: list[str], rollout_prefix: 
 
 if __name__ == "__main__":
     rollout_extensions = sys.argv[1].split(',')
-    rollout_prefix = sys.argv[2] if len(sys.argv) >= 3 else ""
+    rollout_prefix = sys.argv[2] + "_" if len(sys.argv) >= 3 else ""
     aggregate_trajectory_metrics(rollout_extensions, rollout_prefix)
