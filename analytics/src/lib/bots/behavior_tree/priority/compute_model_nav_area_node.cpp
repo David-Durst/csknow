@@ -20,7 +20,7 @@ namespace csknow::compute_nav_area {
             Vec3 victimHeadPos = getCenterHeadCoordinatesForPlayer(victim.getFootPosForPlayer(), victim.getCurrentViewAngles(), victim.duckAmount);
             Vec2 deltaViewAngle = deltaViewFromOriginToDest(attacker.getEyePosForPlayer(), victimHeadPos, attacker.getCurrentViewAngles());
             double magnitudeDeltaViewAngle = computeMagnitude(deltaViewAngle);
-            if (magnitudeDeltaViewAngle < 5.) {
+            if (magnitudeDeltaViewAngle < 15.) {
                 gettingReadyToFire = true;
             }
         }
