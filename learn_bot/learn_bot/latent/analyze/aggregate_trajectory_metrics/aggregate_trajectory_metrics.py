@@ -17,7 +17,7 @@ from learn_bot.latent.analyze.plot_trajectory_heatmap.title_rename_dict import t
 
 
 @dataclass
-class EventAggregation:
+class MetricAggregation:
     per_event_median_df: pd.DataFrame
     per_event_iqr_df: pd.DataFrame
     all_events_median_iqr_df: pd.DataFrame
@@ -28,23 +28,23 @@ class EventAggregation:
         self.all_events_median_iqr_df.to_csv(plots_path / (event_name + "_all_events.csv"))
 
 
-def aggregate_one_event_type(rollout_extensions: list[str], rollout_prefix: str, event_csv_path: Path,
-                             diff_to_first_player_type: bool, aggregation_plots_path: Path, event_type: str,
-                             # set if only one event in the event (like lifetimes), so need to convert series to dataframe
-                             event_name: Optional[str] = None) -> EventAggregation:
+def aggregate_one_metric_type(rollout_extensions: list[str], rollout_prefix: str, metric_data_path: Path,
+                              diff_to_first_player_type: bool, aggregation_plots_path: Path, event_type: str,
+                              # set if only one event in the event (like lifetimes), so need to convert series to dataframe
+                              event_name: Optional[str] = None) -> MetricAggregation:
     event_nps: List[np.ndarray] = []
 
     for i, rollout_extension in enumerate(rollout_extensions):
         plots_path = similarity_plots_path / (rollout_prefix + rollout_extension)
         if event_name is not None:
-            with open(plots_path / event_csv_path, 'r') as f:
+            with open(plots_path / metric_data_path, 'r') as f:
                 new_event_dict = eval(f.read())
             # make lists so pandas accepts as one row df
             new_event_dict = {k: [v] for k, v in new_event_dict.items()}
             new_event_df = pd.DataFrame.from_dict(new_event_dict)
             new_event_df.index = [event_name]
         else:
-            new_event_df = pd.read_csv(plots_path / event_csv_path, index_col=0)
+            new_event_df = pd.read_csv(plots_path / metric_data_path, index_col=0)
         if i == 0:
             column_names = new_event_df.columns
             row_index = new_event_df.index
@@ -68,12 +68,12 @@ def aggregate_one_event_type(rollout_extensions: list[str], rollout_prefix: str,
     all_events_iqr_np = iqr(player_event_trials_np, axis=1)
     all_events_median_iqr_df = \
         pd.DataFrame(data=[all_events_median_np, all_events_iqr_np], columns=column_names, index=['Median', 'IQR'])
-    result = EventAggregation(per_event_median_df, per_event_iqr_df, all_events_median_iqr_df)
+    result = MetricAggregation(per_event_median_df, per_event_iqr_df, all_events_median_iqr_df)
     result.to_csv(aggregation_plots_path, event_type)
     return result
 
 
-def plot_offense_defense(offense_events: EventAggregation, defense_events: EventAggregation,
+def plot_offense_defense(offense_events: MetricAggregation, defense_events: MetricAggregation,
                          aggregation_plots_path: Path):
     fig, axs = plt.subplots(figsize=(3.3, 3.3*0.6 * 2), nrows=2, ncols=1)
 
@@ -133,7 +133,7 @@ def plot_offense_defense(offense_events: EventAggregation, defense_events: Event
     plt.savefig(aggregation_plots_path / 'specific_key_places_rounds.pdf', bbox_inches='tight')
 
 
-def plot_mistakes(mistakes_events: EventAggregation, aggregation_plots_path: Path):
+def plot_mistakes(mistakes_events: MetricAggregation, aggregation_plots_path: Path):
     y_ticks = [0, 100, 200]
     if len([s for s in mistakes_events.per_event_median_df.columns if 'default' in s]) > 0:
         y_ticks = [0, 20, 40]
@@ -141,8 +141,40 @@ def plot_mistakes(mistakes_events: EventAggregation, aggregation_plots_path: Pat
                         'Rounds', y_ticks, mistakes_events.per_event_iqr_df)
 
 
+def create_latex_tables(offense_events: MetricAggregation, defense_events: MetricAggregation,
+                        emd_no_filter: MetricAggregation, emd_only_kill: MetricAggregation,
+                        lifetimes_no_filter: MetricAggregation, shots_per_kill_no_filter: MetricAggregation,
+                        plots_path: Path):
+    with open(plots_path / 'latex.txt', 'w') as f:
+        f.write(f'''
+\\begin{{tabular}}{{ r | r@{{\\hspace{{0em}}}}r r@{{\hspace{{0em}}}}r }} 
+     & \multicolumn{{2}}{{r}}{{Offense}} &  \multicolumn{{2}}{{r}}{{Defense}} \\\\
+    \\hline
+    \\learnedbot & {offense_events.all_events_median_iqr_df.iloc[0, 0]*100:.0f}\\% $\pm$ & {offense_events.all_events_median_iqr_df.iloc[1, 0]*100:.0f}\\% & {defense_events.all_events_median_iqr_df.iloc[0, 0]*100:.0f}\\% $\pm$ & {defense_events.all_events_median_iqr_df.iloc[1, 0]*100:.0f}\\% \\\\
+    \\hline
+    \\handcraftedbot & {offense_events.all_events_median_iqr_df.iloc[0, 1]*100:.0f}\\% $\pm$ & {offense_events.all_events_median_iqr_df.iloc[1, 1]*100:.0f}\\% & {defense_events.all_events_median_iqr_df.iloc[0, 1]*100:.0f}\\% $\pm$ & {defense_events.all_events_median_iqr_df.iloc[1, 1]*100:.0f}\\% \\\\
+    \\hline
+    \\defaultbot & {offense_events.all_events_median_iqr_df.iloc[0, 2]*100:.0f}\\% $\pm$ & {offense_events.all_events_median_iqr_df.iloc[1, 2]*100:.0f}\\% & {defense_events.all_events_median_iqr_df.iloc[0, 2]*100:.0f}\\% $\pm$ & {defense_events.all_events_median_iqr_df.iloc[1, 2]*100:.0f}\\%
+\\end{{tabular}}
+        ''')
 
-def aggregate_trajectory_events(rollout_extensions: list[str], rollout_prefix: str):
+        f.write(f'''
+\\begin{{tabular}}{{ r | r@{{\\hspace{{0.2em}}}}l r@{{\hspace{{0em}}}}r r@{{\\hspace{{0em}}}}r }} 
+    EMD Type & \multicolumn{{2}}{{r}}{{\\learnedbot}} & \multicolumn{{2}}{{r}}{{\\handcraftedbot}} & \multicolumn{{2}}{{r}}{{\\defaultbot}} \\\\
+    \\hline
+    Map Occupancy & {emd_no_filter.per_event_median_df.iloc[0, 0]:.1f} $\pm$ & {emd_no_filter.per_event_iqr_df.iloc[0, 0]:.1f} & {emd_no_filter.per_event_median_df.iloc[1, 0]:.1f} $\pm$ & {emd_no_filter.per_event_iqr_df.iloc[1, 0]:.1f} & {emd_no_filter.per_event_median_df.iloc[2, 0]:.1f} $\pm$ & {emd_no_filter.per_event_iqr_df.iloc[2, 0]:.1f} \\\\
+    \\hline
+    Kill Locations & {emd_only_kill.per_event_median_df.iloc[0, 0]:.1f} $\pm$ & {emd_only_kill.per_event_iqr_df.iloc[0, 0]:.1f} & {emd_only_kill.per_event_median_df.iloc[1, 0]:.1f} $\pm$ & {emd_only_kill.per_event_iqr_df.iloc[1, 0]:.1f} & {emd_only_kill.per_event_median_df.iloc[2, 0]:.1f} $\pm$ & {emd_only_kill.per_event_iqr_df.iloc[2, 0]:.1f} \\\\
+    \\hline
+    Lifetimes & {lifetimes_no_filter.per_event_median_df.iloc[0, 0]:.1f} $\pm$ & {lifetimes_no_filter.per_event_iqr_df.iloc[0, 0]:.1f} & {lifetimes_no_filter.per_event_median_df.iloc[0, 1]:.1f} $\pm$ & {lifetimes_no_filter.per_event_iqr_df.iloc[0, 1]:.1f} & {lifetimes_no_filter.per_event_median_df.iloc[0, 2]:.1f} $\pm$ & {lifetimes_no_filter.per_event_iqr_df.iloc[0, 2]:.1f} \\\\
+    \\hline
+    Shots Per Kill & {shots_per_kill_no_filter.per_event_median_df.iloc[0, 0]:.1f} $\pm$ & {shots_per_kill_no_filter.per_event_iqr_df.iloc[0, 0]:.1f} & {shots_per_kill_no_filter.per_event_median_df.iloc[0, 1]:.1f} $\pm$ & {shots_per_kill_no_filter.per_event_iqr_df.iloc[0, 1]:.1f} & {shots_per_kill_no_filter.per_event_median_df.iloc[0, 2]:.1f} $\pm$ & {shots_per_kill_no_filter.per_event_iqr_df.iloc[0, 2]:.1f}
+\\end{{tabular}}
+        ''')
+
+
+
+def aggregate_trajectory_metrics(rollout_extensions: list[str], rollout_prefix: str):
     aggregation_plots_path = similarity_plots_path / ("agg_" + rollout_prefix + rollout_extensions[0])
     aggregation_plots_path.mkdir(parents=True, exist_ok=True)
 
@@ -151,31 +183,36 @@ def aggregate_trajectory_events(rollout_extensions: list[str], rollout_prefix: s
     pd.options.display.width = 1000
     pd.set_option('display.float_format', lambda x: '%.4f' % x)
 
-    offense_events = aggregate_one_event_type(rollout_extensions, rollout_prefix,
-                                              Path("offense_flanks_pct_for_aggregation.csv"), True,
-                                              aggregation_plots_path, 'offense_flanks')
-    defense_events = aggregate_one_event_type(rollout_extensions, rollout_prefix,
-                                              Path("defense_spread_pct_for_aggregation.csv"), True,
-                                              aggregation_plots_path, 'defense_spread')
+    offense_events = aggregate_one_metric_type(rollout_extensions, rollout_prefix,
+                                               Path("offense_flanks_pct_for_aggregation.csv"), True,
+                                               aggregation_plots_path, 'offense_flanks')
+    defense_events = aggregate_one_metric_type(rollout_extensions, rollout_prefix,
+                                               Path("defense_spread_pct_for_aggregation.csv"), True,
+                                               aggregation_plots_path, 'defense_spread')
     plot_offense_defense(offense_events, defense_events, aggregation_plots_path)
 
-    mistakes_events = aggregate_one_event_type(rollout_extensions, rollout_prefix,
-                                               Path("mistakes_aggregation.csv"), True,
-                                               aggregation_plots_path, 'mistakes')
+    mistakes_events = aggregate_one_metric_type(rollout_extensions, rollout_prefix,
+                                                Path("mistakes_aggregation.csv"), True,
+                                                aggregation_plots_path, 'mistakes')
     plot_mistakes(mistakes_events, aggregation_plots_path)
 
-    aggregate_one_event_type(rollout_extensions, rollout_prefix, Path("diff") / "emd_no_filter.txt", False,
-                             aggregation_plots_path, 'emd_no_filter')
-    aggregate_one_event_type(rollout_extensions, rollout_prefix, Path("diff") / "emd_only_kill.txt", False,
-                             aggregation_plots_path, 'emd_only_kill')
+    emd_no_filter = \
+        aggregate_one_metric_type(rollout_extensions, rollout_prefix, Path("diff") / "emd_no_filter.txt", False,
+                                  aggregation_plots_path, 'emd_no_filter')
+    emd_only_kill = aggregate_one_metric_type(rollout_extensions, rollout_prefix, Path("diff") / "emd_only_kill.txt", False,
+                                              aggregation_plots_path, 'emd_only_kill')
 
-    aggregate_one_event_type(rollout_extensions, rollout_prefix, Path("lifetimes_no_filter.txt"), False,
-                             aggregation_plots_path, 'lifetimes_no_filter', 'Lifetimes')
-    aggregate_one_event_type(rollout_extensions, rollout_prefix, Path("shots_per_kill_no_filter.txt"), False,
-                             aggregation_plots_path, 'shots_per_kill_no_filter', 'Shots Per Kill')
+    lifetimes_no_filter = \
+        aggregate_one_metric_type(rollout_extensions, rollout_prefix, Path("lifetimes_no_filter.txt"), False,
+                                  aggregation_plots_path, 'lifetimes_no_filter', 'Lifetimes')
+    shots_per_kill_no_filter = \
+        aggregate_one_metric_type(rollout_extensions, rollout_prefix, Path("shots_per_kill_no_filter.txt"), False,
+                                  aggregation_plots_path, 'shots_per_kill_no_filter', 'Shots Per Kill')
+    create_latex_tables(offense_events, defense_events, emd_no_filter, emd_only_kill,
+                        lifetimes_no_filter, shots_per_kill_no_filter, aggregation_plots_path)
 
 
 if __name__ == "__main__":
     rollout_extensions = sys.argv[1].split(',')
     rollout_prefix = sys.argv[2] if len(sys.argv) >= 3 else ""
-    aggregate_trajectory_events(rollout_extensions, rollout_prefix)
+    aggregate_trajectory_metrics(rollout_extensions, rollout_prefix)
