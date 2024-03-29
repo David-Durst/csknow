@@ -58,7 +58,7 @@ if make -j 8; then
     echo 'most recent demo file before test run'
     ls -tp /home/steam/csgo-ds/csgo/*.dem | grep -v /$ | head -1
     /home/steam/csgo-ds/csgo/addons/sourcemod/scripting/bot-link/end_game.sh
-    sleep 40
+    sleep 50
     date
 
     # learned bots
@@ -69,8 +69,12 @@ if make -j 8; then
     #models=(01_15_2024__05_35_49_iw_256_bc_20_pr_0_fr_0_b_1024_it_1_ot_3_lr_4e-05_wd_0.0_l_4_h_4_n_20.0_ros_2.0_ct_SimilarityControl_pm_NoMask_mpi_False_om_NoMask_w_None_dh_None_ifo_False_c_just_human_all)
     #models=(01_18_2024__10_25_27_iw_256_bc_20_pr_0_fr_0_b_1024_it_1_ot_3_lr_4e-05_wd_0.0_l_4_h_4_n_20.0_ros_2.0_ct_TimeControl_pm_NoMask_mpi_False_om_NoMask_w_None_dh_None_ifo_False_c_just_human_all)
     #models=(01_15_2024__05_35_49_iw_256_bc_40_pr_0_fr_0_b_1024_it_1_ot_3_lr_4e-05_wd_0.0_l_4_h_4_n_20.0_ros_2.0_ct_SimilarityControl_pm_EveryoneMask_mpi_False_om_NoMask_w_None_dh_None_ifo_False_c_just_human_all)
-    models=(01_16_2024__10_18_32_iw_256_bc_40_pr_0_fr_0_b_1024_it_1_ot_3_lr_4e-05_wd_0.0_l_4_h_4_n_20.0_ros_2.0_ct_SimilarityControl_pm_EveryoneMask_mpi_True_om_NoMask_w_None_dh_None_ifo_False_c_just_human_all \
-        01_16_2024__10_18_32_iw_256_bc_40_pr_0_fr_0_b_1024_it_1_ot_3_lr_4e-05_wd_0.0_l_4_h_4_n_20.0_ros_2.0_ct_SimilarityControl_pm_EveryoneMask_mpi_True_om_NoMask_w_None_dh_None_ifo_False_c_just_human_all)
+    #models=(01_16_2024__10_18_32_iw_256_bc_40_pr_0_fr_0_b_1024_it_1_ot_3_lr_4e-05_wd_0.0_l_4_h_4_n_20.0_ros_2.0_ct_SimilarityControl_pm_EveryoneMask_mpi_True_om_NoMask_w_None_dh_None_ifo_False_c_just_human_all \
+    #    01_16_2024__10_18_32_iw_256_bc_40_pr_0_fr_0_b_1024_it_1_ot_3_lr_4e-05_wd_0.0_l_4_h_4_n_20.0_ros_2.0_ct_SimilarityControl_pm_EveryoneMask_mpi_True_om_NoMask_w_None_dh_None_ifo_False_c_just_human_all)
+    models=(01_15_2024__05_35_49_iw_256_bc_20_pr_0_fr_0_b_1024_it_1_ot_3_lr_4e-05_wd_0.0_l_4_h_4_n_20.0_ros_2.0_ct_SimilarityControl_pm_NoMask_mpi_False_om_NoMask_w_None_dh_None_ifo_False_c_just_human_all \
+        01_15_2024__05_35_49_iw_256_bc_20_pr_0_fr_0_b_1024_it_1_ot_3_lr_4e-05_wd_0.0_l_4_h_4_n_20.0_ros_2.0_ct_SimilarityControl_pm_NoMask_mpi_False_om_NoMask_w_None_dh_None_ifo_False_c_just_human_all)
+    uncertain_models=(03_25_2024__12_22_32_iw_256_bc_20_pr_0_fr_0_b_1024_it_1_ot_3_lr_4e-05_wd_0.0_l_4_h_4_n_20.0_ros_2.0_ct_SimilarityControl_pm_NoMask_mpi_False_om_NoMask_w_None_ws_50.0_wns_0.0_dh_None_ifo_False_c_just_human_all \
+        03_25_2024__12_22_32_iw_256_bc_20_pr_0_fr_0_b_1024_it_1_ot_3_lr_4e-05_wd_0.0_l_4_h_4_n_20.0_ros_2.0_ct_SimilarityControl_pm_NoMask_mpi_False_om_NoMask_w_None_ws_50.0_wns_0.0_dh_None_ifo_False_c_just_human_all)
     #models=(01_06_2024__00_05_43_iw_256_bc_20_pr_0_fr_0_b_1024_it_1_ot_3_lr_4e-05_wd_0.0_l_4_h_4_n_20.0_ros_2.0_ct_NoControl_pm_NoMask_mpi_False_om_NoMask_w_None_dh_None_c_just_human_all)
     #uncertain_models=(12_29_2023__22_46_01_iw_256_bc_20_pr_0_fr_0_b_1024_it_1_ot_3_lr_4e-05_wd_0.0_l_4_h_4_n_20.0_ros_2.0_ct_TimeControl_pm_NoMask_mpi_False_om_NoMask_w_None_dh_None_c_just_human_all)
     #models=(12_25_2023__21_22_14_iw_256_bc_20_pr_0_fr_0_b_1024_it_1_ot_3_lr_4e-05_wd_0.0_l_4_h_4_n_20.0_ros_2.0_ct_SimilarityControl_pm_NoMask_mpi_False_om_NoMask_w_None_dh_None_c_just_human_all)
@@ -80,13 +84,13 @@ if make -j 8; then
     for (( i=0; i<${#models[*]}; i++ ))
     do
         model="${models[$i]}"
-        ##uncertain_model="${uncertain_models[$i]}"
+        uncertain_model="${uncertain_models[$i]}"
 
-        #/home/steam/csgo-ds/csgo/addons/sourcemod/scripting/bot-link/make_push.sh
-        #model_type="learned push"
-        #bot_type=r
-        #custom_bots=1
-        #run_csknow_rounds
+        /home/steam/csgo-ds/csgo/addons/sourcemod/scripting/bot-link/make_push.sh
+        model_type="learned push"
+        bot_type=r
+        custom_bots=1
+        run_csknow_rounds
 
         #/home/steam/csgo-ds/csgo/addons/sourcemod/scripting/bot-link/make_save.sh
         #model_type="learned save"
@@ -95,17 +99,17 @@ if make -j 8; then
         #run_csknow_rounds
     done
 
-    # hand-crafted bots
-    model_type="hand-crafted"
-    bot_type=rh
-    custom_bots=1
-    run_csknow_rounds
+    ## hand-crafted bots
+    #model_type="hand-crafted"
+    #bot_type=rh
+    #custom_bots=1
+    #run_csknow_rounds
 
-    # default bots
-    model_type="default"
-    bot_type=rh
-    custom_bots=0
-    run_csknow_rounds
+    ## default bots
+    #model_type="default"
+    #bot_type=rh
+    #custom_bots=0
+    #run_csknow_rounds
 
     old_ifs=$IFS
     export IFS=$'\n'
