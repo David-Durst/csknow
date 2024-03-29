@@ -25,7 +25,7 @@ run_csknow_rounds() {
         echo "uncertain model"
         echo $uncertain_model 
         ./scripts/deploy_latent_models_specific.sh $model 
-        #./scripts/deploy_uncertain_models_specific.sh $uncertain_model 
+        ./scripts/deploy_uncertain_models_specific.sh $uncertain_model 
         cd ${script_dir}/../build
         echo "most recent demo file before $model_type $j"
         new_demo=$(ls -tp /home/steam/csgo-ds/csgo/*.dem | grep -v /$ | head -1)
