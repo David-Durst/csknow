@@ -16,7 +16,7 @@ bool runAllRounds = false;
 bool useRealProbT = true, useRealProbCT = true;
 
 void processModelArg(string modelArg) {
-    bool runRoundsNoHeuristics = modelArg == "r" || modelArg == "tl";
+    bool runRoundsNoHeuristics = modelArg == "r" || modelArg == "tl" || modelArg == "s";
     bool runRoundsHeuristics = modelArg == "rh" || modelArg == "t";
     bool runRoundsHeuristicsT = modelArg == "rht";
     bool runRoundsHeuristicsCT = modelArg == "rhct";

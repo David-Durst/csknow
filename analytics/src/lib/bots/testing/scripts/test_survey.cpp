@@ -8,7 +8,7 @@ namespace csknow::survey {
     const vector<string> actualBotNames{"Learned", "Learned Combat", "Hand-Crafted", "Default"};
 
     void SurveyScript::initialize(Tree &tree, ServerState &state) {
-        RoundScript::initialize(tree, state)
+        RoundScript::initialize(tree, state);
         if (tree.newBlackboard) {
             Blackboard &blackboard = *tree.blackboard;
             Script::initialize(tree, state);
@@ -24,6 +24,20 @@ namespace csknow::survey {
             );
             if (botIndex == 0) {
                 setupNodes.insert(setupNodes.begin(), make_unique<SayCmd>(blackboard, scenarioInstructions));
+            }
+            if (botScenarioOrder[botIndex] == BotType::Default) {
+                setupNodes.insert(setupNodes.begin(), make_unique<SetBotStop>(blackboard, "0"));
+            }
+            else {
+                setupNodes.insert(setupNodes.begin(), make_unique<SetBotStop>(blackboard, "1"));
+                if (botScenarioOrder[botIndex] == BotType::Handcrafted) {
+                    setupNodes.insert(setupNodes.begin(), make_unique<SetUseLearnedModel>(blackboard, false, ENGINE_TEAM_T));
+                    setupNodes.insert(setupNodes.begin(), make_unique<SetUseLearnedModel>(blackboard, false, ENGINE_TEAM_CT));
+                }
+                else {
+                    setupNodes.insert(setupNodes.begin(), make_unique<SetUseLearnedModel>(blackboard, true, ENGINE_TEAM_T));
+                    setupNodes.insert(setupNodes.begin(), make_unique<SetUseLearnedModel>(blackboard, true, ENGINE_TEAM_CT));
+                }
             }
             Node::Ptr setup = make_unique<SequenceNode>(blackboard, std::move(setupNodes));
             vector<Node::Ptr> newCommandNodes = Node::makeList(
@@ -113,6 +127,49 @@ namespace csknow::survey {
         }
 
         return playerNodeState[treeThinker.csgoId];
+    }
+
+    NodeState SetUseLearnedModel::exec(const ServerState &, TreeThinker &treeThinker) {
+        setAllTeamModelProbabilities(useLearnedModel, teamId);
+        playerNodeState[treeThinker.csgoId] = NodeState::Success;
+        return playerNodeState[treeThinker.csgoId];
+    }
+
+    vector<Script::Ptr> createSurveyScripts(const csknow::plant_states::PlantStatesResult & plantStatesResult,
+                                            int startSituationId, bool quitAtEnd, int numHumans) {
+        vector<Script::Ptr> result;
+
+        std::random_device rd;
+        std::mt19937 gen;
+        std::uniform_real_distribution<> dis;
+
+        size_t numRounds = static_cast<size_t>(plantStatesResult.size);
+
+        size_t batchSize = 100;
+        size_t maxI = std::min(batchSize * (startSituationId + 1), numRounds);
+        if (startSituationId == -1) {
+            startSituationId = 0;
+            maxI = numRounds;
+        }
+        //maxI = 100;
+        for (size_t i = batchSize * startSituationId; i < maxI; i++) {
+            vector<BotType> botScenarioOrder{BotType::Learned, BotType::LearnedCombat, BotType::Handcrafted, BotType::Default};
+            shuffle(botScenarioOrder.begin(), botScenarioOrder.end(), gen);
+            for (size_t j = 0; j < enumAsInt(BotType::NUM_BOT_TYPES); j++) {
+                result.push_back(make_unique<SurveyScript>(plantStatesResult, i, maxI, gen, dis,
+                                                           std::nullopt, "RoundScript", std::nullopt, std::nullopt,
+                                                           numHumans, j, botScenarioOrder));
+            }
+        }
+        if (quitAtEnd) {
+            result.push_back(make_unique<QuitScript>());
+        }
+        else {
+            result.push_back(make_unique<WaitUntilScoreScript>());
+        }
+
+        return result;
+
     }
 
 }

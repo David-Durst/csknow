@@ -21,6 +21,7 @@
 #include "bots/analysis/learned_models.h"
 #include "navmesh/nav_file.h"
 #include "bots/testing/scripts/test_setup.h"
+#include "bots/testing/scripts/test_survey.h"
 #include "bots/testing/scripts/learned/test_learned_teamwork.h"
 #include "bots/analysis/formation_initializer.h"
 #include "bots/testing/scripts/learned/test_learned_all.h"
@@ -42,7 +43,7 @@ int main(int argc, char * argv[]) {
             << "3. path/to/log\n"
             << "4. path/to/models\n"
             << "5. path/to/saved/data\n"
-            << "6. t for tests, tl for tests with learned, r for rounds, rh for rounds with hueristics, rht for rounds with t hueristics, rhct for rounds with ct heuristics\n"
+            << "6. t for tests, tl for tests with learned, r for rounds, rh for rounds with hueristics, rht for rounds with t hueristics, rhct for rounds with ct heuristics, s for survey\n"
             << "7. 1 for all csknow bots, ct for ct only csknow bots, t for t only csknow bots, 0 for for no csknow bots\n"
             << "8. y for traces, n for normal bots, b for prebaked rounds, br for prebaked rounds with position randomization"
             << "(optional) 9. situation to run (if none provided, then run all)"
@@ -66,6 +67,7 @@ int main(int argc, char * argv[]) {
     bool runTraces = tracesStr == "y";
     bool runPrebakedRounds = tracesStr == "b" || tracesStr == "br";
     bool prebakedPositionRandomization = tracesStr == "br";
+    bool runSurvey = roundsTestStr == "s";
     processModelArg(roundsTestStr);
 
     ServerState state;
@@ -86,6 +88,7 @@ int main(int argc, char * argv[]) {
     }
     int numHumans = 0;
     ScriptsRunner roundScriptsRunner(createRoundScripts(plantStatesResult, situationId, false, numHumans), numHumans > 0, numHumans);
+    ScriptsRunner surveyScriptsRunner(csknow::survey::createSurveyScripts(plantStatesResult, situationId, false, numHumans), numHumans > 0, numHumans);
     csknow::tests::trace::TracesData traceData(savedDatasetsDir + "/traces.hdf5");
     ScriptsRunner traceScriptsRunner(csknow::tests::trace::createTracesScripts(traceData, botStop, true), false);
 
@@ -217,6 +220,10 @@ int main(int argc, char * argv[]) {
                 else if (runPrebakedRounds) {
                     prebakedRoundScriptsRunner.initialize(tree, state);
                     finishedTests = prebakedRoundScriptsRunner.tick(tree, state);
+                }
+                else if (runSurvey) {
+                    surveyScriptsRunner.initialize(tree, state);
+                    finishedTests = roundScriptsRunner.tick(tree, state);
                 }
                 else {
                     roundScriptsRunner.initialize(tree, state);

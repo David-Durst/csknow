@@ -5,6 +5,7 @@
 #ifndef CSKNOW_TEST_SURVEY_H
 #define CSKNOW_TEST_SURVEY_H
 
+#include "bots/analysis/learned_models.h"
 #include "bots/testing/scripts/test_round.h"
 #include <array>
 
@@ -41,6 +42,16 @@ namespace csknow::survey {
 
         CollectBotRankingCommand(Blackboard & blackboard, int scenarioId, const vector<BotType> & botScenarioOrder) :
             Node(blackboard, "CollectBotRankingCommand"), scenarioId(scenarioId), botScenarioOrder(botScenarioOrder) { };
+
+        virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override;
+    };
+
+    struct SetUseLearnedModel : Node {
+        bool useLearnedModel;
+        TeamId teamId;
+
+        SetUseLearnedModel(Blackboard & blackboard, bool useLearnedModel, TeamId teamId) :
+                Node(blackboard, "SetBotStop"), useLearnedModel(useLearnedModel), teamId(teamId) { }
 
         virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override;
     };
