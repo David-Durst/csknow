@@ -320,7 +320,11 @@ public:
     vector<WeaponFire> weaponFireEvents;
     int64_t lastRoundStartFrame = -1;
     bool newRoundStart = false;
-    vector<string> sayEvents;
+    struct PlayerSay {
+        int64_t player;
+        string message;
+    };
+    vector<PlayerSay> sayEvents;
 
     // state for caller to debug
     bool loadedSuccessfully;

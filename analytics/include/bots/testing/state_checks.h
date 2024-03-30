@@ -403,8 +403,8 @@ public:
 
     NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
         playerNodeState[treeThinker.csgoId] = NodeState::Running;
-        for (const auto & sayStr : state.sayEvents) {
-            if (sayStr == sayPhrase) {
+        for (const auto & sayEvent : state.sayEvents) {
+            if (sayEvent.message == sayPhrase) {
                 playerNodeState[treeThinker.csgoId] = NodeState::Success;
             }
         }

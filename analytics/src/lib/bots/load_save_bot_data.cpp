@@ -472,12 +472,25 @@ void ServerState::loadSayEvents(const string &sayFilePath) {
     size_t firstRow = getNewline(file, 0, stats.st_size);
 
     // track location for error logging
+    int64_t rowNumber = 0;
+    int64_t colNumber = 0;
 
     for (size_t curStart = firstRow + 1, curDelimiter = getNextDelimiter(file, curStart, stats.st_size);
          curDelimiter < static_cast<size_t>(stats.st_size);
          curStart = curDelimiter + 1, curDelimiter = getNextDelimiter(file, curStart, stats.st_size)) {
-        sayEvents.push_back("");
-        readCol(file, curStart, curDelimiter, sayEvents.back());
+        if (colNumber == 0) {
+            sayEvents.push_back({});
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, sayEvents.back().player);
+        }
+        else if (colNumber == 1) {
+            readCol(file, curStart, curDelimiter, sayEvents.back().message);
+            rowNumber++;
+        }
+        colNumber = (colNumber + 1) % 2;
+    }
+    for (size_t curStart = firstRow + 1, curDelimiter = getNextDelimiter(file, curStart, stats.st_size);
+         curDelimiter < static_cast<size_t>(stats.st_size);
+         curStart = curDelimiter + 1, curDelimiter = getNextDelimiter(file, curStart, stats.st_size)) {
     }
     closeMMapFile({fd, stats, file});
 }
