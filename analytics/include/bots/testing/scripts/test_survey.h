@@ -36,6 +36,30 @@ namespace csknow::survey {
         void initialize(Tree & tree, ServerState & state) override;
     };
 
+    struct CheckForSentinelFile : Node {
+        string filePath;
+        CheckForSentinelFile(Blackboard & blackboard, string filePath) :
+            Node(blackboard, "CheckForSentinelFile"), filePath(filePath) { };
+
+        virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override;
+    };
+
+    struct CollectCSGOExperienceCommand : Node {
+        int scenarioId;
+        CollectCSGOExperienceCommand(Blackboard & blackboard, int scenarioId) :
+            Node(blackboard, "CollectCSGOExperience"), scenarioId(scenarioId) { };
+
+        virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override;
+    };
+
+    struct CollectDevExperienceCommand : Node {
+        int scenarioId;
+        CollectDevExperienceCommand(Blackboard & blackboard, int scenarioId) :
+            Node(blackboard, "CollectDevExperience"), scenarioId(scenarioId) { };
+
+        virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override;
+    };
+
     struct CollectBotRankingCommand : Node {
         int scenarioId;
         vector<BotType> botScenarioOrder;

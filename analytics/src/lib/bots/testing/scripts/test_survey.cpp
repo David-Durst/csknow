@@ -18,27 +18,50 @@ namespace csknow::survey {
             string scenarioInstructions = "STARTING SCENARIO " + std::to_string(scenarioIndex);
             string botInstructions = "Playing scenario " + std::to_string(scenarioIndex) + ", bot " +
                     std::to_string(botIndex) + " in 3 seconds";
-            vector<Node::Ptr> setupNodes = Node::makeList(
-                    make_unique<SayCmd>(blackboard, botInstructions),
-                    make_unique<movement::WaitNode>(blackboard, 3)
-            );
+            vector<Node::Ptr> setupNodes;
+
+            // optional experience collection
+            // assuming only one player is playing at a time
+            string playerName;
+            for (const auto & client : state.clients) {
+                if (!client.isBot && (client.team == ENGINE_TEAM_T || client.team == ENGINE_TEAM_CT)) {
+                    playerName = client.name;
+                    break;
+                }
+            }
+            // only ask for csgo experience if not provided yet
+            setupNodes.push_back(make_unique<SelectorNode>(blackboard, Node::makeList(
+                    make_unique<CheckForSentinelFile>(blackboard, "/home/durst/responses/" + playerName + "_csgo_experience.csv"),
+                    make_unique<CollectCSGOExperienceCommand>(blackboard, scenarioIndex)
+            )));
+            // same for dev experience
+            setupNodes.push_back(make_unique<SelectorNode>(blackboard, Node::makeList(
+                    make_unique<CheckForSentinelFile>(blackboard, "/home/durst/responses/" + playerName + "_dev_experience.csv"),
+                    make_unique<CollectDevExperienceCommand>(blackboard, scenarioIndex)
+            )));
+
+            // scenario instructions
             if (botIndex == 0) {
-                setupNodes.insert(setupNodes.begin(), make_unique<SayCmd>(blackboard, scenarioInstructions));
+                setupNodes.push_back(make_unique<SayCmd>(blackboard, scenarioInstructions));
             }
             if (botScenarioOrder[botIndex] == BotType::Default) {
-                setupNodes.insert(setupNodes.begin(), make_unique<SetBotStop>(blackboard, "0"));
+                setupNodes.push_back(make_unique<SetBotStop>(blackboard, "0"));
             }
             else {
-                setupNodes.insert(setupNodes.begin(), make_unique<SetBotStop>(blackboard, "1"));
+                setupNodes.push_back(make_unique<SetBotStop>(blackboard, "1"));
                 if (botScenarioOrder[botIndex] == BotType::Handcrafted) {
-                    setupNodes.insert(setupNodes.begin(), make_unique<SetUseLearnedModel>(blackboard, false, ENGINE_TEAM_T));
-                    setupNodes.insert(setupNodes.begin(), make_unique<SetUseLearnedModel>(blackboard, false, ENGINE_TEAM_CT));
+                    setupNodes.push_back(make_unique<SetUseLearnedModel>(blackboard, false, ENGINE_TEAM_T));
+                    setupNodes.push_back(make_unique<SetUseLearnedModel>(blackboard, false, ENGINE_TEAM_CT));
                 }
                 else {
-                    setupNodes.insert(setupNodes.begin(), make_unique<SetUseLearnedModel>(blackboard, true, ENGINE_TEAM_T));
-                    setupNodes.insert(setupNodes.begin(), make_unique<SetUseLearnedModel>(blackboard, true, ENGINE_TEAM_CT));
+                    setupNodes.push_back(make_unique<SetUseLearnedModel>(blackboard, true, ENGINE_TEAM_T));
+                    setupNodes.push_back(make_unique<SetUseLearnedModel>(blackboard, true, ENGINE_TEAM_CT));
                 }
             }
+            // bot-specific instructions
+            setupNodes.push_back(make_unique<SayCmd>(blackboard, botInstructions));
+            setupNodes.push_back(make_unique<movement::WaitNode>(blackboard, 3));
+
             Node::Ptr setup = make_unique<SequenceNode>(blackboard, std::move(setupNodes));
             vector<Node::Ptr> newCommandNodes = Node::makeList(
                     std::move(setup),
@@ -60,7 +83,124 @@ namespace csknow::survey {
         }
     }
 
-    std::regex ranking_regex("[1-4],[1-4],[1-4],[1-4]",
+    string getUserFilePath(const ServerState &state, CSGOId playerId) {
+        string playerName = state.getClient(playerId).name;
+        string playerFile = "/home/durst/responses/" + playerName + ".csv";
+        if (!std::filesystem::exists(playerFile)) {
+            std::ofstream headerStream(playerFile);
+            headerStream << "name,time,scenario id,response type,payload" << std::endl;
+            headerStream.close();
+        }
+        return playerFile;
+    }
+
+    string getNowAsISOString() {
+        std::time_t t
+                = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+        std::stringstream ss;
+        ss << std::put_time( std::localtime( &t ), "%FT%T%z");
+        return ss.str();
+    }
+
+    NodeState CheckForSentinelFile::exec(const ServerState &, TreeThinker &treeThinker) {
+        if (std::filesystem::exists(filePath)) {
+            playerNodeState[treeThinker.csgoId] = NodeState::Success;
+        }
+        else {
+            playerNodeState[treeThinker.csgoId] = NodeState::Running;
+        }
+
+        return playerNodeState[treeThinker.csgoId];
+    }
+
+    // need to put longer strings before shorter ones so substring match doesn't find shorter one in longer one
+    vector<string> csgoExperience = {"NA", "S1", "S2", "S3", "S4", "SEM", "SE", "GN1", "GN2", "GN3", "GNM",
+                                     "MG1", "MG2", "MGE", "DMG", "LEM", "LE", "SMFC", "GE"};
+
+    NodeState CollectCSGOExperienceCommand::exec(const ServerState &state, TreeThinker &treeThinker) {
+        bool foundCSGOExperience = false;
+        for (const auto & sayEvent : state.sayEvents) {
+            std::smatch ranking_match;
+            for (const auto & c : csgoExperience) {
+                if (sayEvent.message.find(c) != std::string::npos) {
+                    foundCSGOExperience = true;
+
+                    string playerName = state.getClient(sayEvent.player).name;
+
+                    // create indicator that player experience recorded
+                    string sentinelFile = "/home/durst/responses/" + playerName + "_csgo_experience.txt";
+                    std::ofstream sentinelStream(sentinelFile);
+                    sentinelStream << std::endl;
+                    sentinelStream.close();
+
+                    // create file if not exists
+                    string playerFile = getUserFilePath(state, sayEvent.player);
+
+                    // append result to file for player
+                    std::ofstream resultStream(playerFile, std::ofstream::app);
+                    resultStream << playerName << "," << getNowAsISOString() << ","
+                                 << scenarioId << "," << "CSGO experience" << "," << c << std::endl;
+                    resultStream.close();
+                    break;
+                }
+            }
+        }
+
+        if (foundCSGOExperience) {
+            playerNodeState[treeThinker.csgoId] = NodeState::Success;
+        }
+        else {
+            playerNodeState[treeThinker.csgoId] = NodeState::Running;
+        }
+
+        return playerNodeState[treeThinker.csgoId];
+    }
+
+    std::regex devExperienceRegex("[0-9]+",
+                             std::regex_constants::ECMAScript | std::regex_constants::icase);
+
+    NodeState CollectDevExperienceCommand::exec(const ServerState &state, TreeThinker &treeThinker) {
+        bool foundDevExperience = false;
+        for (const auto & sayEvent : state.sayEvents) {
+            std::smatch devExperienceMatch;
+            if (std::regex_search(sayEvent.message, devExperienceMatch, devExperienceRegex)) {
+                foundDevExperience = true;
+                int devExperience = std::stoi(devExperienceMatch.str());
+
+                string playerName = state.getClient(sayEvent.player).name;
+
+                // create indicator that player experience recorded
+                string sentinelFile = "/home/durst/responses/" + playerName + "_dev_experience.txt";
+                std::ofstream sentinelStream(sentinelFile);
+                sentinelStream << std::endl;
+                sentinelStream.close();
+
+                // create results file if not exists
+                string playerFile = getUserFilePath(state, sayEvent.player);
+
+                // append result to file for player
+                std::ofstream resultStream(playerFile, std::ofstream::app);
+                resultStream << playerName << "," << getNowAsISOString() << ","
+                             << scenarioId << "," << "dev experience" << "," << devExperience;
+                resultStream << std::endl;
+                resultStream.close();
+
+                break;
+            }
+        }
+
+        if (foundDevExperience) {
+            playerNodeState[treeThinker.csgoId] = NodeState::Success;
+        }
+        else {
+            playerNodeState[treeThinker.csgoId] = NodeState::Running;
+        }
+
+        return playerNodeState[treeThinker.csgoId];
+    }
+
+
+    std::regex rankingRegex("[1-4],[1-4],[1-4],[1-4]",
                              std::regex_constants::ECMAScript | std::regex_constants::icase);
     string botTypeToString(BotType botType) {
         if (botType == BotType::Learned) {
@@ -80,11 +220,11 @@ namespace csknow::survey {
     NodeState CollectBotRankingCommand::exec(const ServerState &state, TreeThinker &treeThinker) {
         bool foundRanking = false;
         for (const auto & sayEvent : state.sayEvents) {
-            std::smatch ranking_match;
-            if (std::regex_search(sayEvent.message, ranking_match, ranking_regex)) {
+            std::smatch rankingMatch;
+            if (std::regex_search(sayEvent.message, rankingMatch, rankingRegex)) {
                 vector<string> botRanking;
                 vector<bool> foundAllBots{false, false, false, false};
-                for (const auto & m : ranking_match) {
+                for (const auto & m : rankingMatch) {
                     int botIndex = std::stoi(m.str()) - 1;
                     foundAllBots[botIndex] = true;
                     botRanking.push_back(botTypeToString(botScenarioOrder[botIndex]));
@@ -95,16 +235,12 @@ namespace csknow::survey {
 
                     // create file if not exists
                     string playerName = state.getClient(sayEvent.player).name;
-                    string playerFile = "/home/durst/responses/" + playerName + ".csv";
-                    if (!std::filesystem::exists(playerFile)) {
-                        std::ofstream headerStream(playerFile);
-                        headerStream << "name,scenario id,ranking" << std::endl;
-                        headerStream.close();
-                    }
+                    string playerFile = getUserFilePath(state, sayEvent.player);
 
                     // append result to file for player
                     std::ofstream resultStream(playerFile, std::ofstream::app);
-                    resultStream << playerName << "," << scenarioId << ",";
+                    resultStream << playerName << "," << getNowAsISOString() << ","
+                        << scenarioId << "," << "ranking" << ",";
                     for (size_t i = 0; i < botRanking.size(); i++) {
                         if (i > 0) {
                             resultStream << ";";
