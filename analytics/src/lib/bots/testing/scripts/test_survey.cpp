@@ -136,6 +136,9 @@ namespace csknow::survey {
     NodeState CollectCSGOExperienceCommand::exec(const ServerState &state, TreeThinker &treeThinker) {
         bool foundCSGOExperience = false;
         for (const auto & sayEvent : state.sayEvents) {
+            if (sayEvent.player == 0) {
+                continue;
+            }
             std::smatch ranking_match;
             for (const auto & c : csgoExperience) {
                 if (sayEvent.message.find(c) != std::string::npos) {
@@ -178,6 +181,9 @@ namespace csknow::survey {
     NodeState CollectDevExperienceCommand::exec(const ServerState &state, TreeThinker &treeThinker) {
         bool foundDevExperience = false;
         for (const auto & sayEvent : state.sayEvents) {
+            if (sayEvent.player == 0) {
+                continue;
+            }
             std::smatch devExperienceMatch;
             if (std::regex_search(sayEvent.message, devExperienceMatch, devExperienceRegex)) {
                 foundDevExperience = true;

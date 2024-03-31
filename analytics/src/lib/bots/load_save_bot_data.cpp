@@ -645,6 +645,7 @@ CSGOFileTime ServerState::loadServerState() {
     fovVisibilityClientPairs.clear();
     weaponFireEvents.clear();
     hurtEvents.clear();
+    sayEvents.clear();
 
     loadGeneralState(tmpGeneralFilePath);
     loadClientStates(tmpClientStatesFilePath);
