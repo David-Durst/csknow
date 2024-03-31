@@ -14,6 +14,7 @@ bool usePlaceAreaModelProbabilitiesT = true;
 bool usePlaceAreaModelProbabilitiesCT = true;
 bool runAllRounds = false;
 bool useRealProbT = true, useRealProbCT = true;
+bool useUncertainModel = true;
 
 void processModelArg(string modelArg) {
     bool runRoundsNoHeuristics = modelArg == "r" || modelArg == "tl" || modelArg == "s";
@@ -57,6 +58,10 @@ void setAllTeamModelProbabilities(bool value, TeamId teamId) {
     }
 }
 
+void setUseUncertainModel(bool value) {
+    useUncertainModel = value;
+}
+
 bool getOrderModelProbabilities(TeamId teamId) {
     if (teamId == ENGINE_TEAM_T) {
         return useOrderModelProbabilitiesT;
@@ -91,4 +96,8 @@ bool getPlaceAreaModelProbabilities(TeamId teamId) {
     else {
         return usePlaceAreaModelProbabilitiesCT;
     }
+}
+
+bool getUseUncertainModel() {
+    return useUncertainModel;
 }

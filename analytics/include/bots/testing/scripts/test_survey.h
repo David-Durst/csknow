@@ -75,7 +75,16 @@ namespace csknow::survey {
         TeamId teamId;
 
         SetUseLearnedModel(Blackboard & blackboard, bool useLearnedModel, TeamId teamId) :
-                Node(blackboard, "SetBotStop"), useLearnedModel(useLearnedModel), teamId(teamId) { }
+                Node(blackboard, "SetUseLearnedModel"), useLearnedModel(useLearnedModel), teamId(teamId) { }
+
+        virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override;
+    };
+
+    struct SetUseUncertainModel : Node {
+        bool useUncertainModel;
+
+        SetUseUncertainModel(Blackboard & blackboard, bool useUncertainModel) :
+                Node(blackboard, "SetUseUncertainModel"), useUncertainModel(useUncertainModel) { }
 
         virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override;
     };

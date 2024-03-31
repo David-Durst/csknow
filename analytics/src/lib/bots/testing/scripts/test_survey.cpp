@@ -62,16 +62,26 @@ namespace csknow::survey {
             }
             if (botScenarioOrder[botIndex] == BotType::Default) {
                 setupNodes.push_back(make_unique<SetBotStop>(blackboard, "0"));
+                setupNodes.push_back(make_unique<SayCmd>(blackboard, "default"));
             }
             else {
                 setupNodes.push_back(make_unique<SetBotStop>(blackboard, "1"));
                 if (botScenarioOrder[botIndex] == BotType::Handcrafted) {
                     setupNodes.push_back(make_unique<SetUseLearnedModel>(blackboard, false, ENGINE_TEAM_T));
                     setupNodes.push_back(make_unique<SetUseLearnedModel>(blackboard, false, ENGINE_TEAM_CT));
+                    setupNodes.push_back(make_unique<SayCmd>(blackboard, "hand-crafted"));
                 }
                 else {
                     setupNodes.push_back(make_unique<SetUseLearnedModel>(blackboard, true, ENGINE_TEAM_T));
                     setupNodes.push_back(make_unique<SetUseLearnedModel>(blackboard, true, ENGINE_TEAM_CT));
+                    if (botScenarioOrder[botIndex] == BotType::Learned) {
+                        setupNodes.push_back(make_unique<SetUseUncertainModel>(blackboard, false));
+                        setupNodes.push_back(make_unique<SayCmd>(blackboard, "learned"));
+                    }
+                    else if (botScenarioOrder[botIndex] == BotType::LearnedCombat) {
+                        setupNodes.push_back(make_unique<SetUseUncertainModel>(blackboard, true));
+                        setupNodes.push_back(make_unique<SayCmd>(blackboard, "learned combat"));
+                    }
                 }
             }
             // bot-specific instructions
@@ -91,7 +101,11 @@ namespace csknow::survey {
                                              "Please rank bots from best match of your expectations to worst match using a semicolon seperated list like 1,2,3,4";
                 Node::Ptr finish = make_unique<SequenceNode>(blackboard, Node::makeList(
                         make_unique<SayCmd>(blackboard, rankingInstructions),
-                        make_unique<CollectBotRankingCommand>(blackboard, scenarioIndex, botScenarioOrder)
+                        make_unique<CollectBotRankingCommand>(blackboard, scenarioIndex, botScenarioOrder),
+                        setupNodes.push_back(make_unique<SetBotStop>(blackboard, "1")),
+                        setupNodes.push_back(make_unique<SetUseLearnedModel>(blackboard, true, ENGINE_TEAM_T));
+                        setupNodes.push_back(make_unique<SetUseLearnedModel>(blackboard, true, ENGINE_TEAM_CT));
+                        setupNodes.push_back(make_unique<SetUseUncertainModel>(blackboard, true, ENGINE_TEAM_T));
                 ));
                 newCommandNodes.push_back(std::move(finish));
             }
@@ -289,6 +303,12 @@ namespace csknow::survey {
 
     NodeState SetUseLearnedModel::exec(const ServerState &, TreeThinker &treeThinker) {
         setAllTeamModelProbabilities(useLearnedModel, teamId);
+        playerNodeState[treeThinker.csgoId] = NodeState::Success;
+        return playerNodeState[treeThinker.csgoId];
+    }
+
+    NodeState SetUseUncertainModel::exec(const ServerState &, TreeThinker &treeThinker) {
+        setUseUncertainModel(useUncertainModel);
         playerNodeState[treeThinker.csgoId] = NodeState::Success;
         return playerNodeState[treeThinker.csgoId];
     }

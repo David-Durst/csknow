@@ -13,12 +13,15 @@ extern bool useTargetModelProbabilitiesT, useTargetModelProbabilitiesCT;
 extern bool usePlaceAreaModelProbabilitiesT, usePlaceAreaModelProbabilitiesCT;
 extern bool runAllRounds;
 extern bool useRealProbT, useRealProbCT;
+extern bool useUncertainModel;
 
 void processModelArg(string modelArg);
 void setAllTeamModelProbabilities(bool value, TeamId teamId);
+void setUseUncertainModel(bool value);
 bool getOrderModelProbabilities(TeamId teamId);
 bool getAggressionModelProbabilities(TeamId teamId);
 bool getTargetModelProbabilities(TeamId teamId);
 bool getPlaceAreaModelProbabilities(TeamId teamId);
+bool getUseUncertainModel();
 
 #endif //CSKNOW_LEARNED_MODELS_H

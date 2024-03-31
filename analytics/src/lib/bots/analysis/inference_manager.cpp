@@ -3,6 +3,8 @@
 //
 
 #include "bots/analysis/inference_manager.h"
+#include "bots/analysis/learned_models.h"
+
 using namespace torch::indexing;
 
 namespace csknow::inference_manager {
@@ -29,7 +31,7 @@ namespace csknow::inference_manager {
                 if (playerToInferenceData.find(client.csgoId) == playerToInferenceData.end()) {
                     playerToInferenceData[client.csgoId] = {};
                     playerToInferenceData[client.csgoId].team = client.team;
-                    //playerToInferenceData[client.csgoId].validUncertainDeltaPosProbabilities = false;
+                    playerToInferenceData[client.csgoId].validUncertainDeltaPosProbabilities = false;
                     playerToInferenceData[client.csgoId].validDeltaPosProbabilities = false;
                 }
 
@@ -74,12 +76,17 @@ namespace csknow::inference_manager {
 
         if (uncertainModule) {
             //throw std::runtime_error("can't use uncertain model right now");
-            at::Tensor output = uncertainDeltaPosModule.forward(inputs).toTuple()->elements()[1].toTensor();
+            at::Tensor output;
+            if (getUseUncertainModel()) {
+                output = uncertainDeltaPosModule.forward(inputs).toTuple()->elements()[1].toTensor();
+            }
 
             for (auto & [csgoId, inferenceData] : playerToInferenceData) {
                 playerToInferenceData[csgoId].validUncertainDeltaPosProbabilities = true;
-                playerToInferenceData[csgoId].uncertainDeltaPosProbabilities =
-                        extractFeatureStoreDeltaPosResults(output, deltaPosValues, csgoId, inferenceData.team);
+                if (getUseUncertainModel()) {
+                    playerToInferenceData[csgoId].uncertainDeltaPosProbabilities =
+                            extractFeatureStoreDeltaPosResults(output, deltaPosValues, csgoId, inferenceData.team);
+                }
             }
         }
         else {

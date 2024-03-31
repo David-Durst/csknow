@@ -31,7 +31,7 @@ namespace csknow::compute_nav_area {
                 blackboard.inferenceManager.playerToInferenceData.at(csgoId).uncertainDeltaPosProbabilities;
         vector<float> probabilities = deltaPosProbabilities.radialVelProbabilities;
         //vector<float> uncertainProbabilities = uncertainDeltaPosProbabilities.radialVelProbabilities;
-        if (gettingReadyToFire) {
+        if (getUseUncertainModel() && gettingReadyToFire) {
             probabilities = uncertainDeltaPosProbabilities.radialVelProbabilities;
         }
         const ServerState::Client & curClient = state.getClient(csgoId);
