@@ -494,9 +494,6 @@ void ServerState::loadSayEvents(const string &sayFilePath) {
          curStart = curDelimiter + 1, curDelimiter = getNextDelimiter(file, curStart, stats.st_size)) {
     }
     closeMMapFile({fd, stats, file});
-    for (const auto & sayEvent : sayEvents) {
-        std::cout << "received say event " << sayEvent.message << std::endl;
-    }
 }
 
 void ServerState::sleepUntilServerStateExists(CSGOFileTime lastFileTime) {

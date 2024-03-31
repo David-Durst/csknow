@@ -37,7 +37,7 @@ namespace csknow::survey {
             string csgoExperienceOptions =
                     "NA, S1, S2, S3, S4, SE, SEM, GN1, GN2, GN3, GNM, MG1, MG2, MGE, DMG, LE, LEM, SMFC, GE";
             setupNodes.push_back(make_unique<SelectorNode>(blackboard, Node::makeList(
-                    make_unique<CheckForSentinelFile>(blackboard, "/home/durst/responses/" + playerName + "_csgo_experience.csv"),
+                    make_unique<CheckForSentinelFile>(blackboard, "/home/steam/responses/" + playerName + "_csgo_experience.txt"),
                     make_unique<SequenceNode>(blackboard, Node::makeList(
                         make_unique<SayCmd>(blackboard, csgoExperienceInstructions),
                         make_unique<SayCmd>(blackboard, csgoExperienceOptions),
@@ -49,7 +49,7 @@ namespace csknow::survey {
                     "How many years of professional experience do you have working on AAA FPS games with a multiplayer "
                     "component? Please answer with a number like 0 or 5 or 15.";
             setupNodes.push_back(make_unique<SelectorNode>(blackboard, Node::makeList(
-                    make_unique<CheckForSentinelFile>(blackboard, "/home/durst/responses/" + playerName + "_dev_experience.csv"),
+                    make_unique<CheckForSentinelFile>(blackboard, "/home/steam/responses/" + playerName + "_dev_experience.txt"),
                     make_unique<SequenceNode>(blackboard, Node::makeList(
                             make_unique<SayCmd>(blackboard, devExperienceInstructions),
                             make_unique<CollectDevExperienceCommand>(blackboard, scenarioIndex)
@@ -101,7 +101,7 @@ namespace csknow::survey {
 
     string getUserFilePath(const ServerState &state, CSGOId playerId) {
         string playerName = state.getClient(playerId).name;
-        string playerFile = "/home/durst/responses/" + playerName + ".csv";
+        string playerFile = "/home/steam/responses/" + playerName + ".csv";
         if (!std::filesystem::exists(playerFile)) {
             std::ofstream headerStream(playerFile);
             headerStream << "name,time,scenario id,response type,payload" << std::endl;
@@ -147,7 +147,7 @@ namespace csknow::survey {
                     string playerName = state.getClient(sayEvent.player).name;
 
                     // create indicator that player experience recorded
-                    string sentinelFile = "/home/durst/responses/" + playerName + "_csgo_experience.txt";
+                    string sentinelFile = "/home/steam/responses/" + playerName + "_csgo_experience.txt";
                     std::ofstream sentinelStream(sentinelFile);
                     sentinelStream << std::endl;
                     sentinelStream.close();
@@ -192,7 +192,7 @@ namespace csknow::survey {
                 string playerName = state.getClient(sayEvent.player).name;
 
                 // create indicator that player experience recorded
-                string sentinelFile = "/home/durst/responses/" + playerName + "_dev_experience.txt";
+                string sentinelFile = "/home/steam/responses/" + playerName + "_dev_experience.txt";
                 std::ofstream sentinelStream(sentinelFile);
                 sentinelStream << std::endl;
                 sentinelStream.close();
