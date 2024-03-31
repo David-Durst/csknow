@@ -30,14 +30,30 @@ namespace csknow::survey {
                 }
             }
             // only ask for csgo experience if not provided yet
+            string csgoExperienceInstructions =
+                    "What is the highest rank you achieved in CSGO matchmaking? Please answer with one of the "
+                    "following abbreviations. Please do not include CS2, Faceit, or ESEA ranks. Please answer with NA "
+                    "if you never had a CSGO matchmaking rank.: ";
+            string csgoExperienceOptions =
+                    "NA, S1, S2, S3, S4, SE, SEM, GN1, GN2, GN3, GNM, MG1, MG2, MGE, DMG, LE, LEM, SMFC, GE";
             setupNodes.push_back(make_unique<SelectorNode>(blackboard, Node::makeList(
                     make_unique<CheckForSentinelFile>(blackboard, "/home/durst/responses/" + playerName + "_csgo_experience.csv"),
-                    make_unique<CollectCSGOExperienceCommand>(blackboard, scenarioIndex)
+                    make_unique<SequenceNode>(blackboard, Node::makeList(
+                        make_unique<SayCmd>(blackboard, csgoExperienceInstructions),
+                        make_unique<SayCmd>(blackboard, csgoExperienceOptions),
+                        make_unique<CollectCSGOExperienceCommand>(blackboard, scenarioIndex)
+                    ))
             )));
             // same for dev experience
+            string devExperienceInstructions =
+                    "How many years of professional experience do you have working on AAA FPS games with a multiplayer "
+                    "component? Please answer with a number like 0 or 5 or 15.";
             setupNodes.push_back(make_unique<SelectorNode>(blackboard, Node::makeList(
                     make_unique<CheckForSentinelFile>(blackboard, "/home/durst/responses/" + playerName + "_dev_experience.csv"),
-                    make_unique<CollectDevExperienceCommand>(blackboard, scenarioIndex)
+                    make_unique<SequenceNode>(blackboard, Node::makeList(
+                            make_unique<SayCmd>(blackboard, devExperienceInstructions),
+                            make_unique<CollectDevExperienceCommand>(blackboard, scenarioIndex)
+                    ))
             )));
 
             // scenario instructions
@@ -72,7 +88,7 @@ namespace csknow::survey {
             if (botIndex == static_cast<int>(actualBotNames.size())) {
                 string rankingInstructions = "Please rank the bots in this scenario based on the following statement: "
                                              "Player movement matches your expectation of how humans would move in the scenario situation. "
-                                             "Please rank bots from best match of your expectations to worst match using a comma seperated list like 1,2,3,4";
+                                             "Please rank bots from best match of your expectations to worst match using a semicolon seperated list like 1,2,3,4";
                 Node::Ptr finish = make_unique<SequenceNode>(blackboard, Node::makeList(
                         make_unique<SayCmd>(blackboard, rankingInstructions),
                         make_unique<CollectBotRankingCommand>(blackboard, scenarioIndex, botScenarioOrder)
@@ -107,7 +123,7 @@ namespace csknow::survey {
             playerNodeState[treeThinker.csgoId] = NodeState::Success;
         }
         else {
-            playerNodeState[treeThinker.csgoId] = NodeState::Running;
+            playerNodeState[treeThinker.csgoId] = NodeState::Failure;
         }
 
         return playerNodeState[treeThinker.csgoId];

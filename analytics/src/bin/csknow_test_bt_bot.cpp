@@ -86,7 +86,7 @@ int main(int argc, char * argv[]) {
     else {
         plantStatesResult.loadFromPython(savedDatasetsDir + "/" + testPlantStatesFileName, false);
     }
-    int numHumans = 0;
+    int numHumans = 1;
     ScriptsRunner roundScriptsRunner(createRoundScripts(plantStatesResult, situationId, false, numHumans), numHumans > 0, numHumans);
     ScriptsRunner surveyScriptsRunner(csknow::survey::createSurveyScripts(plantStatesResult, situationId, false, numHumans), numHumans > 0, numHumans);
     csknow::tests::trace::TracesData traceData(savedDatasetsDir + "/traces.hdf5");
@@ -223,7 +223,7 @@ int main(int argc, char * argv[]) {
                 }
                 else if (runSurvey) {
                     surveyScriptsRunner.initialize(tree, state);
-                    finishedTests = roundScriptsRunner.tick(tree, state);
+                    finishedTests = surveyScriptsRunner.tick(tree, state);
                 }
                 else {
                     roundScriptsRunner.initialize(tree, state);
@@ -284,6 +284,9 @@ int main(int argc, char * argv[]) {
             testLogFile << outDistributionDataGenerator.curLog();
             testLogFile << learnedAllDataGenerator.curLog();
             testLogFile << formationDataGenerator.curLog();
+        }
+        else if (runSurvey) {
+            testLogFile << surveyScriptsRunner.curLog();
         }
         else {
             testLogFile << roundScriptsRunner.curLog();

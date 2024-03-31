@@ -477,7 +477,8 @@ void ServerState::loadSayEvents(const string &sayFilePath) {
 
     for (size_t curStart = firstRow + 1, curDelimiter = getNextDelimiter(file, curStart, stats.st_size);
          curDelimiter < static_cast<size_t>(stats.st_size);
-         curStart = curDelimiter + 1, curDelimiter = getNextDelimiter(file, curStart, stats.st_size)) {
+         curStart = curDelimiter + 1, curDelimiter = (colNumber < 1 ?
+                 getNextDelimiter(file, curStart, stats.st_size) : getNewline(file, curStart, stats.st_size))) {
         if (colNumber == 0) {
             sayEvents.push_back({});
             readCol(file, curStart, curDelimiter, rowNumber, colNumber, sayEvents.back().player);
@@ -493,6 +494,9 @@ void ServerState::loadSayEvents(const string &sayFilePath) {
          curStart = curDelimiter + 1, curDelimiter = getNextDelimiter(file, curStart, stats.st_size)) {
     }
     closeMMapFile({fd, stats, file});
+    for (const auto & sayEvent : sayEvents) {
+        std::cout << "received say event " << sayEvent.message << std::endl;
+    }
 }
 
 void ServerState::sleepUntilServerStateExists(CSGOFileTime lastFileTime) {
