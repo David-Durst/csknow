@@ -128,7 +128,7 @@ namespace csknow::survey {
         string playerFile = "/home/steam/responses/" + playerName + ".csv";
         if (!std::filesystem::exists(playerFile)) {
             std::ofstream headerStream(playerFile);
-            headerStream << "name,time,scenario id,response type,payload" << std::endl;
+            headerStream << "name,team,time,scenario id,response type,payload" << std::endl;
             headerStream.close();
         }
         return playerFile;
@@ -153,6 +153,26 @@ namespace csknow::survey {
         return playerNodeState[treeThinker.csgoId];
     }
 
+    bool playerInGame(const ServerState &state, CSGOId csgoId) {
+        const auto & client = state.getClient(csgoId);
+        return !client.isBot && (client.team == ENGINE_TEAM_T || client.team == ENGINE_TEAM_CT);
+    }
+
+    string teamToString(TeamId teamId) {
+        if (teamId == ENGINE_TEAM_CT) {
+            return "CT";
+        }
+        else if (teamId == ENGINE_TEAM_T) {
+            return "T";
+        }
+        else if (teamId == ENGINE_TEAM_SPEC) {
+            return "S";
+        }
+        else {
+            return "U";
+        }
+    }
+
     // need to put longer strings before shorter ones so substring match doesn't find shorter one in longer one
     vector<string> csgoExperience = {"NA", "S1", "S2", "S3", "S4", "SEM", "SE", "GN1", "GN2", "GN3", "GNM",
                                      "MG1", "MG2", "MGE", "DMG", "LEM", "LE", "SMFC", "GE"};
@@ -160,7 +180,7 @@ namespace csknow::survey {
     NodeState CollectCSGOExperienceCommand::exec(const ServerState &state, TreeThinker &treeThinker) {
         bool foundCSGOExperience = false;
         for (const auto & sayEvent : state.sayEvents) {
-            if (sayEvent.player == 0) {
+            if (sayEvent.player == 0 || !playerInGame(state, sayEvent.player)) {
                 continue;
             }
             std::smatch ranking_match;
@@ -169,6 +189,7 @@ namespace csknow::survey {
                     foundCSGOExperience = true;
 
                     string playerName = state.getClient(sayEvent.player).name;
+                    string teamStr = teamToString(state.getClient(sayEvent.player).team);
 
                     // create indicator that player experience recorded
                     string sentinelFile = "/home/steam/responses/" + playerName + "_csgo_experience.txt";
@@ -181,7 +202,7 @@ namespace csknow::survey {
 
                     // append result to file for player
                     std::ofstream resultStream(playerFile, std::ofstream::app);
-                    resultStream << playerName << "," << getNowAsISOString() << ","
+                    resultStream << playerName << "," << teamStr << "," << getNowAsISOString() << ","
                                  << scenarioId << "," << "CSGO experience" << "," << c << std::endl;
                     resultStream.close();
                     break;
@@ -205,7 +226,7 @@ namespace csknow::survey {
     NodeState CollectDevExperienceCommand::exec(const ServerState &state, TreeThinker &treeThinker) {
         bool foundDevExperience = false;
         for (const auto & sayEvent : state.sayEvents) {
-            if (sayEvent.player == 0) {
+            if (sayEvent.player == 0 || !playerInGame(state, sayEvent.player)) {
                 continue;
             }
             std::smatch devExperienceMatch;
@@ -214,6 +235,7 @@ namespace csknow::survey {
                 int devExperience = std::stoi(devExperienceMatch.str());
 
                 string playerName = state.getClient(sayEvent.player).name;
+                string teamStr = teamToString(state.getClient(sayEvent.player).team);
 
                 // create indicator that player experience recorded
                 string sentinelFile = "/home/steam/responses/" + playerName + "_dev_experience.txt";
@@ -226,7 +248,7 @@ namespace csknow::survey {
 
                 // append result to file for player
                 std::ofstream resultStream(playerFile, std::ofstream::app);
-                resultStream << playerName << "," << getNowAsISOString() << ","
+                resultStream << playerName << "," << teamStr << "," << getNowAsISOString() << ","
                              << scenarioId << "," << "dev experience" << "," << devExperience;
                 resultStream << std::endl;
                 resultStream.close();
@@ -266,7 +288,7 @@ namespace csknow::survey {
     NodeState CollectBotRankingCommand::exec(const ServerState &state, TreeThinker &treeThinker) {
         bool foundRanking = false;
         for (const auto & sayEvent : state.sayEvents) {
-            if (sayEvent.player == 0) {
+            if (sayEvent.player == 0 || !playerInGame(state, sayEvent.player)) {
                 continue;
             }
             std::smatch rankingMatch;
@@ -284,11 +306,12 @@ namespace csknow::survey {
 
                     // create file if not exists
                     string playerName = state.getClient(sayEvent.player).name;
+                    string teamStr = teamToString(state.getClient(sayEvent.player).team);
                     string playerFile = getUserFilePath(state, sayEvent.player);
 
                     // append result to file for player
                     std::ofstream resultStream(playerFile, std::ofstream::app);
-                    resultStream << playerName << "," << getNowAsISOString() << ","
+                    resultStream << playerName << "," << teamStr << "," << getNowAsISOString() << ","
                         << scenarioId << "," << "ranking" << ",";
                     for (size_t i = 0; i < botRanking.size(); i++) {
                         if (i > 0) {
