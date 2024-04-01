@@ -312,13 +312,12 @@ namespace csknow::survey {
                 // append result to file for player
                 std::ofstream resultStream(playerFile, std::ofstream::app);
                 resultStream << playerName << "," << teamStr << "," << getNowAsISOString() << ","
-                             << scenarioId << "," << "replay" << ",";
-                resultStream << std::endl;
+                             << scenarioId << "," << "replay" << "," << std::endl;
                 resultStream.close();
 
                 break;
             }
-            
+
             std::smatch rankingMatch;
             if (std::regex_search(sayEvent.message, rankingMatch, rankingRegex)) {
                 vector<string> botRanking;
