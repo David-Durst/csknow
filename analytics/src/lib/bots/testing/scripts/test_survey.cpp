@@ -303,7 +303,22 @@ namespace csknow::survey {
             if (sayEvent.message.find("replay") != std::string::npos) {
                 // -3 to go back to first bot, but 1 less as there's an extra script at start (init script)
                 setScriptRestart(roundIndex - 2);
+
+                // create file if not exists
+                string playerName = state.getClient(sayEvent.player).name;
+                string teamStr = teamToString(state.getClient(sayEvent.player).team);
+                string playerFile = getUserFilePath(state, sayEvent.player);
+
+                // append result to file for player
+                std::ofstream resultStream(playerFile, std::ofstream::app);
+                resultStream << playerName << "," << teamStr << "," << getNowAsISOString() << ","
+                             << scenarioId << "," << "replay" << ",";
+                resultStream << std::endl;
+                resultStream.close();
+
+                break;
             }
+            
             std::smatch rankingMatch;
             if (std::regex_search(sayEvent.message, rankingMatch, rankingRegex)) {
                 vector<string> botRanking;
