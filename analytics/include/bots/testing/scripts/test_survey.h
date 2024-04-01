@@ -88,6 +88,12 @@ namespace csknow::survey {
         virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override;
     };
 
+    struct RestartNode : Node {
+        RestartNode(Blackboard & blackboard) : Node(blackboard, "RestartNode") { };
+
+        virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override;
+    };
+
     vector<Script::Ptr> createSurveyScripts(const csknow::plant_states::PlantStatesResult & plantStatesResult,
                                             int startSituationId, bool quitAtEnd, int numHumans);
 }

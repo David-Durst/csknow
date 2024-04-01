@@ -58,15 +58,18 @@ namespace csknow::survey {
             if (botIndex == 0) {
                 setupNodes.push_back(make_unique<SayCmd>(blackboard, scenarioInstructions));
             }
-            bool printBotNames = false;
+            bool printBotNames = true;
+            // do bot stop change after wait so that players are forzen during waiting period
+            Node::Ptr botStop;
+            setupNodes.push_back(make_unique<SetBotStop>(blackboard, "1"));
             if (botScenarioOrder[botIndex] == BotType::Default) {
-                setupNodes.push_back(make_unique<SetBotStop>(blackboard, "0"));
+                botStop = make_unique<SetBotStop>(blackboard, "0");
                 if (printBotNames) {
                     setupNodes.push_back(make_unique<SayCmd>(blackboard, "default"));
                 }
             }
             else {
-                setupNodes.push_back(make_unique<SetBotStop>(blackboard, "1"));
+                botStop = make_unique<SetBotStop>(blackboard, "1");
                 if (botScenarioOrder[botIndex] == BotType::Handcrafted) {
                     setupNodes.push_back(make_unique<SetUseLearnedModel>(blackboard, false, ENGINE_TEAM_T));
                     setupNodes.push_back(make_unique<SetUseLearnedModel>(blackboard, false, ENGINE_TEAM_CT));
@@ -94,6 +97,7 @@ namespace csknow::survey {
             // bot-specific instructions
             setupNodes.push_back(make_unique<SayCmd>(blackboard, botInstructions));
             setupNodes.push_back(make_unique<movement::WaitNode>(blackboard, 3));
+            setupNodes.push_back(std::move(botStop));
 
             externalSetupNodes = make_unique<SequenceNode>(blackboard, std::move(setupNodes));
 
@@ -117,6 +121,15 @@ namespace csknow::survey {
         }
 
         RoundScript::initialize(tree, state);
+
+        if (tree.newBlackboard) {
+            Blackboard &blackboard = *tree.blackboard;
+            Node::Ptr innerCommands = std::move(commands);
+            commands = make_unique<ParallelFirstNode>(blackboard, Node::makeList(
+                    make_unique<RestartNode>(blackboard),
+                    std::move(innerCommands)
+            ));
+        }
     }
 
     string getUserFilePath(const ServerState &state, CSGOId playerId) {
@@ -346,6 +359,21 @@ namespace csknow::survey {
     NodeState SetUseUncertainModel::exec(const ServerState &, TreeThinker &treeThinker) {
         setUseUncertainModel(useUncertainModel);
         playerNodeState[treeThinker.csgoId] = NodeState::Success;
+        return playerNodeState[treeThinker.csgoId];
+    }
+
+    NodeState RestartNode::exec(const ServerState &state, TreeThinker &treeThinker) {
+        for (const auto & sayEvent : state.sayEvents) {
+            if (sayEvent.player == 0 || !playerInGame(state, sayEvent.player)) {
+                continue;
+            }
+            if (sayEvent.message.find("restart") != std::string::npos) {
+                setScriptRestart(0);
+            }
+        }
+
+        playerNodeState[treeThinker.csgoId] = NodeState::Running;
+
         return playerNodeState[treeThinker.csgoId];
     }
 
