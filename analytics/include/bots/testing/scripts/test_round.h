@@ -25,6 +25,9 @@ class RoundScript : public Script {
     size_t plantStateIndex, roundIndex, numRounds;
     std::optional<vector<bool>> playerFreeze;
 
+protected:
+    std::optional<Node::Ptr> externalSetupNodes, externalFinishNodes;
+
 public:
     explicit RoundScript(const csknow::plant_states::PlantStatesResult & plantStatesResult, size_t plantStateIndex,
                          size_t roundIndex, size_t numRounds, std::mt19937 gen, std::uniform_real_distribution<> dis,

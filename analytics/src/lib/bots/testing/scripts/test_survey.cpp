@@ -8,11 +8,9 @@ namespace csknow::survey {
     const vector<string> actualBotNames{"Learned", "Learned Combat", "Hand-Crafted", "Default"};
 
     void SurveyScript::initialize(Tree &tree, ServerState &state) {
-        RoundScript::initialize(tree, state);
         if (tree.newBlackboard) {
             Blackboard &blackboard = *tree.blackboard;
             Script::initialize(tree, state);
-            Node::Ptr oldCommands{std::move(commands)};
 
             // start commands
             string scenarioInstructions = "STARTING SCENARIO " + std::to_string(scenarioIndex);
@@ -97,11 +95,7 @@ namespace csknow::survey {
             setupNodes.push_back(make_unique<SayCmd>(blackboard, botInstructions));
             setupNodes.push_back(make_unique<movement::WaitNode>(blackboard, 3));
 
-            Node::Ptr setup = make_unique<SequenceNode>(blackboard, std::move(setupNodes));
-            vector<Node::Ptr> newCommandNodes = Node::makeList(
-                    std::move(setup),
-                    std::move(oldCommands)
-            );
+            externalSetupNodes = make_unique<SequenceNode>(blackboard, std::move(setupNodes));
 
             // end commands
             if (botIndex == static_cast<int>(actualBotNames.size() - 1)) {
@@ -109,7 +103,7 @@ namespace csknow::survey {
                                              "Player movement matches your expectation of how humans would move in the scenario situation. ";
                 string rankingInstructions1 = "Please rank bots from best match of your expectations to worst match using a comma seperated list like 1,2,3,4";
                 string rankingInstructions2 = "Type replay if you want to play the scenario again before ranking.";
-                Node::Ptr finish = make_unique<SequenceNode>(blackboard, Node::makeList(
+                externalFinishNodes = make_unique<SequenceNode>(blackboard, Node::makeList(
                         make_unique<SayCmd>(blackboard, rankingInstructions0),
                         make_unique<SayCmd>(blackboard, rankingInstructions1),
                         make_unique<SayCmd>(blackboard, rankingInstructions2),
@@ -119,10 +113,10 @@ namespace csknow::survey {
                         make_unique<SetUseLearnedModel>(blackboard, true, ENGINE_TEAM_CT),
                         make_unique<SetUseUncertainModel>(blackboard, true)
                 ));
-                newCommandNodes.push_back(std::move(finish));
             }
-            commands = make_unique<SequenceNode>(blackboard, std::move(newCommandNodes));
         }
+
+        RoundScript::initialize(tree, state);
     }
 
     string getUserFilePath(const ServerState &state, CSGOId playerId) {

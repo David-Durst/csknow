@@ -61,9 +61,14 @@ void RoundScript::initialize(Tree &tree, ServerState &state) {
         vector<CSGOId> neededBotIds = getNeededBotIds();
         bool lastRound = numRounds == roundIndex + 1;
 
+        Node::Ptr fillerExternalSetupNode = make_unique<SuccessNode>(blackboard);
+        Node::Ptr fillerExternalFinishNode = make_unique<SuccessNode>(blackboard);
+
         Node::Ptr setupCommands = make_unique<SequenceNode>(blackboard, Node::makeList(
             make_unique<InitGameRound>(blackboard, name),
+            make_unique<movement::WaitNode>(blackboard, 0.3),
             make_unique<SetMaxRounds>(blackboard, lastRound ? 2 : 20, true),
+            externalSetupNodes ? std::move(externalSetupNodes.value()) : std::move(fillerExternalSetupNode),
             make_unique<movement::WaitNode>(blackboard, 0.3),
             make_unique<SpecDynamic>(blackboard, neededBots, observeSettings),
             make_unique<SlayAllBut>(blackboard, neededBotIds, state),
@@ -110,8 +115,9 @@ void RoundScript::initialize(Tree &tree, ServerState &state) {
 
         commands = make_unique<SequenceNode>(blackboard, Node::makeList(
                 std::move(disableAllBothDuringSetup),
-                std::move(roundLogicWithFreeze)),
-        "RoundSequence");
+                std::move(roundLogicWithFreeze),
+                externalFinishNodes ? std::move(externalFinishNodes.value()) : std::move(fillerExternalFinishNode)
+        ), "RoundSequence");
     }
 }
 

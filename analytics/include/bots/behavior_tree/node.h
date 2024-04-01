@@ -347,6 +347,16 @@ public:
     }
 };
 
+class SuccessNode : public Node {
+public:
+    SuccessNode(Blackboard & blackboard) : Node(blackboard, "SuccessNode") { };
+
+    NodeState exec(const ServerState &, TreeThinker &treeThinker) override {
+        playerNodeState[treeThinker.csgoId] = NodeState::Success;
+        return playerNodeState[treeThinker.csgoId];
+    }
+};
+
 class FailureNode : public Node {
 public:
     FailureNode(Blackboard & blackboard) : Node(blackboard, "FailureNode") { };
