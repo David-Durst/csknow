@@ -19,7 +19,7 @@ namespace csknow::survey {
     };
 
     class SurveyScript : public RoundScript {
-        int scenarioIndex, botIndex;
+        int roundIndex, scenarioIndex, botIndex;
         vector<BotType> botScenarioOrder;
     public:
         SurveyScript(const csknow::plant_states::PlantStatesResult & plantStatesResult, size_t plantStateIndex,
@@ -29,7 +29,7 @@ namespace csknow::survey {
                      const vector<BotType> & botScenarioOrder) :
                      RoundScript(plantStatesResult, plantStateIndex, roundIndex, numRounds, gen, dis,
                                  playerFreeze, baseName, cameraOrigin, cameraAngle, numHumans),
-                                 scenarioIndex(plantStateIndex), botIndex(botIndex),
+                                 roundIndex(roundIndex), scenarioIndex(plantStateIndex), botIndex(botIndex),
                                  botScenarioOrder(botScenarioOrder) { };
 
         void initialize(Tree & tree, ServerState & state) override;
@@ -60,11 +60,11 @@ namespace csknow::survey {
     };
 
     struct CollectBotRankingCommand : Node {
-        int scenarioId;
+        int roundIndex, scenarioId;
         vector<BotType> botScenarioOrder;
 
-        CollectBotRankingCommand(Blackboard & blackboard, int scenarioId, const vector<BotType> & botScenarioOrder) :
-            Node(blackboard, "CollectBotRankingCommand"), scenarioId(scenarioId), botScenarioOrder(botScenarioOrder) { };
+        CollectBotRankingCommand(Blackboard & blackboard, int roundIndex, int scenarioId, const vector<BotType> & botScenarioOrder) :
+            Node(blackboard, "CollectBotRankingCommand"), roundIndex(roundIndex), scenarioId(scenarioId), botScenarioOrder(botScenarioOrder) { };
 
         virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override;
     };

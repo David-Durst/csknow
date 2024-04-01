@@ -28,6 +28,10 @@ enum class NodeState {
     NUM_NODE_STATES [[maybe_unused]]
 };
 
+// a mechanism for a node to force restart a specific script index
+void setScriptRestart(std::optional<int> scriptIndex);
+std::optional<int> getScriptRestart();
+
 class Node {
 public:
     using Ptr = std::unique_ptr<Node>;

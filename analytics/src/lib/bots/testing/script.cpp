@@ -184,6 +184,12 @@ bool ScriptsRunner::tick(Tree & tree, ServerState & state) {
             return true;
         }
     }
+    else if (getScriptRestart()) {
+        curScript = getScriptRestart().value();
+        setScriptRestart(std::nullopt);
+        restart();
+        return false;
+    }
     else {
         return false;
     }

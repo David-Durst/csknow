@@ -37,7 +37,7 @@ namespace csknow::survey {
             string csgoExperienceOptions =
                     "NA, S1, S2, S3, S4, SE, SEM, GN1, GN2, GN3, GNM, MG1, MG2, MGE, DMG, LE, LEM, SMFC, GE";
             setupNodes.push_back(make_unique<SelectorNode>(blackboard, Node::makeList(
-                    make_unique<CheckForSentinelFile>(blackboard, "/home/steam/responses/" + playerName + "_csgo_experience.txt"),
+                    make_unique<CheckForSentinelFile>(blackboard, "/home/steam/responses/sentinel/" + playerName + "_csgo_experience.txt"),
                     make_unique<SequenceNode>(blackboard, Node::makeList(
                         make_unique<SayCmd>(blackboard, csgoExperienceInstructions),
                         make_unique<SayCmd>(blackboard, csgoExperienceOptions),
@@ -49,7 +49,7 @@ namespace csknow::survey {
                     "How many years of professional experience do you have working on AAA FPS games with a multiplayer "
                     "component? Please answer with a number like 0 or 5 or 15.";
             setupNodes.push_back(make_unique<SelectorNode>(blackboard, Node::makeList(
-                    make_unique<CheckForSentinelFile>(blackboard, "/home/steam/responses/" + playerName + "_dev_experience.txt"),
+                    make_unique<CheckForSentinelFile>(blackboard, "/home/steam/responses/sentinel/" + playerName + "_dev_experience.txt"),
                     make_unique<SequenceNode>(blackboard, Node::makeList(
                             make_unique<SayCmd>(blackboard, devExperienceInstructions),
                             make_unique<CollectDevExperienceCommand>(blackboard, scenarioIndex)
@@ -108,10 +108,12 @@ namespace csknow::survey {
                 string rankingInstructions0 = "Please rank the bots in this scenario based on the following statement: "
                                              "Player movement matches your expectation of how humans would move in the scenario situation. ";
                 string rankingInstructions1 = "Please rank bots from best match of your expectations to worst match using a comma seperated list like 1,2,3,4";
+                string rankingInstructions2 = "Type replay if you want to play the scenario again before ranking.";
                 Node::Ptr finish = make_unique<SequenceNode>(blackboard, Node::makeList(
                         make_unique<SayCmd>(blackboard, rankingInstructions0),
                         make_unique<SayCmd>(blackboard, rankingInstructions1),
-                        make_unique<CollectBotRankingCommand>(blackboard, scenarioIndex, botScenarioOrder),
+                        make_unique<SayCmd>(blackboard, rankingInstructions2),
+                        make_unique<CollectBotRankingCommand>(blackboard, roundIndex, scenarioIndex, botScenarioOrder),
                         make_unique<SetBotStop>(blackboard, "1"),
                         make_unique<SetUseLearnedModel>(blackboard, true, ENGINE_TEAM_T),
                         make_unique<SetUseLearnedModel>(blackboard, true, ENGINE_TEAM_CT),
@@ -192,7 +194,7 @@ namespace csknow::survey {
                     string teamStr = teamToString(state.getClient(sayEvent.player).team);
 
                     // create indicator that player experience recorded
-                    string sentinelFile = "/home/steam/responses/" + playerName + "_csgo_experience.txt";
+                    string sentinelFile = "/home/steam/responses/sentinel/" + playerName + "_csgo_experience.txt";
                     std::ofstream sentinelStream(sentinelFile);
                     sentinelStream << std::endl;
                     sentinelStream.close();
@@ -238,7 +240,7 @@ namespace csknow::survey {
                 string teamStr = teamToString(state.getClient(sayEvent.player).team);
 
                 // create indicator that player experience recorded
-                string sentinelFile = "/home/steam/responses/" + playerName + "_dev_experience.txt";
+                string sentinelFile = "/home/steam/responses/sentinel/" + playerName + "_dev_experience.txt";
                 std::ofstream sentinelStream(sentinelFile);
                 sentinelStream << std::endl;
                 sentinelStream.close();
@@ -290,6 +292,10 @@ namespace csknow::survey {
         for (const auto & sayEvent : state.sayEvents) {
             if (sayEvent.player == 0 || !playerInGame(state, sayEvent.player)) {
                 continue;
+            }
+            if (sayEvent.message.find("replay") != std::string::npos) {
+                // -3 to go back to first bot, but 1 less as there's an extra script at start (init script)
+                setScriptRestart(roundIndex - 2);
             }
             std::smatch rankingMatch;
             if (std::regex_search(sayEvent.message, rankingMatch, rankingRegex)) {
