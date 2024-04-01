@@ -17,7 +17,7 @@ namespace csknow::survey {
             // start commands
             string scenarioInstructions = "STARTING SCENARIO " + std::to_string(scenarioIndex);
             string botInstructions = "Playing scenario " + std::to_string(scenarioIndex) + ", bot " +
-                    std::to_string(botIndex) + " in 3 seconds";
+                    std::to_string(botIndex + 1) + " in 3 seconds";
             vector<Node::Ptr> setupNodes;
 
             // optional experience collection
@@ -60,27 +60,36 @@ namespace csknow::survey {
             if (botIndex == 0) {
                 setupNodes.push_back(make_unique<SayCmd>(blackboard, scenarioInstructions));
             }
+            bool printBotNames = false;
             if (botScenarioOrder[botIndex] == BotType::Default) {
                 setupNodes.push_back(make_unique<SetBotStop>(blackboard, "0"));
-                setupNodes.push_back(make_unique<SayCmd>(blackboard, "default"));
+                if (printBotNames) {
+                    setupNodes.push_back(make_unique<SayCmd>(blackboard, "default"));
+                }
             }
             else {
                 setupNodes.push_back(make_unique<SetBotStop>(blackboard, "1"));
                 if (botScenarioOrder[botIndex] == BotType::Handcrafted) {
                     setupNodes.push_back(make_unique<SetUseLearnedModel>(blackboard, false, ENGINE_TEAM_T));
                     setupNodes.push_back(make_unique<SetUseLearnedModel>(blackboard, false, ENGINE_TEAM_CT));
-                    setupNodes.push_back(make_unique<SayCmd>(blackboard, "hand-crafted"));
+                    if (printBotNames) {
+                        setupNodes.push_back(make_unique<SayCmd>(blackboard, "hand-crafted"));
+                    }
                 }
                 else {
                     setupNodes.push_back(make_unique<SetUseLearnedModel>(blackboard, true, ENGINE_TEAM_T));
                     setupNodes.push_back(make_unique<SetUseLearnedModel>(blackboard, true, ENGINE_TEAM_CT));
                     if (botScenarioOrder[botIndex] == BotType::Learned) {
                         setupNodes.push_back(make_unique<SetUseUncertainModel>(blackboard, false));
-                        setupNodes.push_back(make_unique<SayCmd>(blackboard, "learned"));
+                        if (printBotNames) {
+                            setupNodes.push_back(make_unique<SayCmd>(blackboard, "learned"));
+                        }
                     }
                     else if (botScenarioOrder[botIndex] == BotType::LearnedCombat) {
                         setupNodes.push_back(make_unique<SetUseUncertainModel>(blackboard, true));
-                        setupNodes.push_back(make_unique<SayCmd>(blackboard, "learned combat"));
+                        if (printBotNames) {
+                            setupNodes.push_back(make_unique<SayCmd>(blackboard, "learned combat"));
+                        }
                     }
                 }
             }
@@ -99,11 +108,9 @@ namespace csknow::survey {
                 string rankingInstructions0 = "Please rank the bots in this scenario based on the following statement: "
                                              "Player movement matches your expectation of how humans would move in the scenario situation. ";
                 string rankingInstructions1 = "Please rank bots from best match of your expectations to worst match using a comma seperated list like 1,2,3,4";
-                string rankingInstructions2 = "Type repeat if you'd like to play the scenario again before providing a ranking.";
                 Node::Ptr finish = make_unique<SequenceNode>(blackboard, Node::makeList(
                         make_unique<SayCmd>(blackboard, rankingInstructions0),
                         make_unique<SayCmd>(blackboard, rankingInstructions1),
-                        make_unique<SayCmd>(blackboard, rankingInstructions2),
                         make_unique<CollectBotRankingCommand>(blackboard, scenarioIndex, botScenarioOrder),
                         make_unique<SetBotStop>(blackboard, "1"),
                         make_unique<SetUseLearnedModel>(blackboard, true, ENGINE_TEAM_T),
@@ -112,9 +119,7 @@ namespace csknow::survey {
                 ));
                 newCommandNodes.push_back(std::move(finish));
             }
-            commands = make_unique<RepeatDecorator>(blackboard,
-                                                    make_unique<SequenceNode>(blackboard, std::move(newCommandNodes)),
-                                                    true);
+            commands = make_unique<SequenceNode>(blackboard, std::move(newCommandNodes));
         }
     }
 
@@ -241,7 +246,7 @@ namespace csknow::survey {
     }
 
 
-    std::regex rankingRegex("[1-4],[1-4],[1-4],[1-4]",
+    std::regex rankingRegex("([1-4]),([1-4]),([1-4]),([1-4])",
                              std::regex_constants::ECMAScript | std::regex_constants::icase);
     string botTypeToString(BotType botType) {
         if (botType == BotType::Learned) {
@@ -260,18 +265,16 @@ namespace csknow::survey {
 
     NodeState CollectBotRankingCommand::exec(const ServerState &state, TreeThinker &treeThinker) {
         bool foundRanking = false;
-        bool foundRepeat = false;
         for (const auto & sayEvent : state.sayEvents) {
-            std::smatch rankingMatch;
-            if (sayEvent.message.find("repeat") != std::string::npos) {
-                foundRepeat = true;
-                break;
+            if (sayEvent.player == 0) {
+                continue;
             }
+            std::smatch rankingMatch;
             if (std::regex_search(sayEvent.message, rankingMatch, rankingRegex)) {
                 vector<string> botRanking;
                 vector<bool> foundAllBots{false, false, false, false};
-                for (const auto & m : rankingMatch) {
-                    int botIndex = std::stoi(m.str()) - 1;
+                for (size_t i = 1; i < rankingMatch.size(); i++) {
+                    int botIndex = std::stoi(rankingMatch[i].str()) - 1;
                     foundAllBots[botIndex] = true;
                     botRanking.push_back(botTypeToString(botScenarioOrder[botIndex]));
                 }
@@ -303,9 +306,6 @@ namespace csknow::survey {
 
         if (foundRanking) {
             playerNodeState[treeThinker.csgoId] = NodeState::Success;
-        }
-        else if (foundRepeat) {
-            playerNodeState[treeThinker.csgoId] = NodeState::Failure;
         }
         else {
             playerNodeState[treeThinker.csgoId] = NodeState::Running;
