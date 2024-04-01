@@ -5,11 +5,11 @@
 #include "bots/testing/scripts/learned/log_nodes.h"
 
 RoundScript::RoundScript(const csknow::plant_states::PlantStatesResult & plantStatesResult, size_t plantStateIndex,
-                         size_t numRounds, std::mt19937 gen, std::uniform_real_distribution<> dis,
+                         size_t roundIndex, size_t numRounds, std::mt19937 gen, std::uniform_real_distribution<> dis,
                          std::optional<vector<bool>> playerFreeze, string baseName, std::optional<Vec3> cameraOrigin,
                          std::optional<Vec2> cameraAngle, int numHumans) :
     Script(baseName, {}, {ObserveType::FirstPerson, 0}),
-    plantStateIndex(plantStateIndex), numRounds(numRounds), playerFreeze(playerFreeze) {
+    plantStateIndex(plantStateIndex), roundIndex(roundIndex), numRounds(numRounds), playerFreeze(playerFreeze) {
     this->numHumans = numHumans;
     name += std::to_string(plantStateIndex);
     if (cameraOrigin) {
@@ -59,7 +59,7 @@ void RoundScript::initialize(Tree &tree, ServerState &state) {
         Blackboard &blackboard = *tree.blackboard;
         Script::initialize(tree, state);
         vector<CSGOId> neededBotIds = getNeededBotIds();
-        bool lastRound = numRounds == plantStateIndex + 1;
+        bool lastRound = numRounds == roundIndex + 1;
 
         Node::Ptr setupCommands = make_unique<SequenceNode>(blackboard, Node::makeList(
             make_unique<InitGameRound>(blackboard, name),
@@ -82,12 +82,12 @@ void RoundScript::initialize(Tree &tree, ServerState &state) {
 
         Node::Ptr finishCondition = make_unique<ParallelFirstNode>(blackboard, Node::makeList(
                 make_unique<RepeatDecorator>(blackboard, make_unique<RoundStart>(blackboard), true),
-                make_unique<csknow::tests::learned::FailIfTimeoutEndNode>(blackboard, name, plantStateIndex, numRounds, 60)));
+                make_unique<csknow::tests::learned::FailIfTimeoutEndNode>(blackboard, name, roundIndex, numRounds, 60)));
 
         Node::Ptr roundLogic = make_unique<SequenceNode>(blackboard, Node::makeList(
-                make_unique<csknow::tests::learned::StartNode>(blackboard, name, plantStateIndex, numRounds),
+                make_unique<csknow::tests::learned::StartNode>(blackboard, name, roundIndex, numRounds),
                 std::move(finishCondition),
-                make_unique<csknow::tests::learned::SuccessEndNode>(blackboard, name, plantStateIndex, numRounds))
+                make_unique<csknow::tests::learned::SuccessEndNode>(blackboard, name, roundIndex, numRounds))
         );
 
         Node::Ptr roundLogicWithFreeze;
@@ -150,7 +150,7 @@ vector<Script::Ptr> createRoundScripts(const csknow::plant_states::PlantStatesRe
     for (size_t i = batchSize * startSituationId; i < maxI; i++) {
         // 0 - push in to b from mid with enemy in b site
         // 4 - attacking a from cat and spawn
-        result.push_back(make_unique<RoundScript>(plantStatesResult, i/*0*//*4*//*8*//*12*//*205*/, maxI, gen, dis,
+        result.push_back(make_unique<RoundScript>(plantStatesResult, i/*0*//*4*//*8*//*12*//*205*/, i, maxI, gen, dis,
                                                   std::nullopt, "RoundScript", std::nullopt, std::nullopt,
                                                   numHumans));
     }
@@ -562,7 +562,7 @@ vector<Script::Ptr> createPrebakedRoundScripts(const nav_mesh::nav_file & navFil
 
     size_t numRounds = static_cast<size_t>(plantStatesResult.size);
     for (size_t i = 0; i < numRounds; i++) {
-        result.push_back(make_unique<RoundScript>(plantStatesResult, i/*1*//*8*//*12*//*205*/, numRounds, gen, dis,
+        result.push_back(make_unique<RoundScript>(plantStatesResult, i/*1*//*8*//*12*//*205*/, i, numRounds, gen, dis,
                                                   playerFreeze[i], names[i], cameraPoses[i], cameraAngles[i], 0));
     }
     if (quitAtEnd) {

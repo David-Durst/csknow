@@ -102,10 +102,10 @@ namespace csknow::survey {
                 Node::Ptr finish = make_unique<SequenceNode>(blackboard, Node::makeList(
                         make_unique<SayCmd>(blackboard, rankingInstructions),
                         make_unique<CollectBotRankingCommand>(blackboard, scenarioIndex, botScenarioOrder),
-                        setupNodes.push_back(make_unique<SetBotStop>(blackboard, "1")),
-                        setupNodes.push_back(make_unique<SetUseLearnedModel>(blackboard, true, ENGINE_TEAM_T));
-                        setupNodes.push_back(make_unique<SetUseLearnedModel>(blackboard, true, ENGINE_TEAM_CT));
-                        setupNodes.push_back(make_unique<SetUseUncertainModel>(blackboard, true, ENGINE_TEAM_T));
+                        make_unique<SetBotStop>(blackboard, "1"),
+                        make_unique<SetUseLearnedModel>(blackboard, true, ENGINE_TEAM_T),
+                        make_unique<SetUseLearnedModel>(blackboard, true, ENGINE_TEAM_CT),
+                        make_unique<SetUseUncertainModel>(blackboard, true)
                 ));
                 newCommandNodes.push_back(std::move(finish));
             }
@@ -333,8 +333,9 @@ namespace csknow::survey {
         for (size_t i = batchSize * startSituationId; i < maxI; i++) {
             vector<BotType> botScenarioOrder{BotType::Learned, BotType::LearnedCombat, BotType::Handcrafted, BotType::Default};
             shuffle(botScenarioOrder.begin(), botScenarioOrder.end(), gen);
-            for (size_t j = 0; j < enumAsInt(BotType::NUM_BOT_TYPES); j++) {
-                result.push_back(make_unique<SurveyScript>(plantStatesResult, i, maxI, gen, dis,
+            for (size_t j = 0; j < static_cast<size_t>(BotType::NUM_BOT_TYPES); j++) {
+                result.push_back(make_unique<SurveyScript>(plantStatesResult, i, i * enumAsInt(BotType::NUM_BOT_TYPES) + j,
+                                                           maxI * enumAsInt(BotType::NUM_BOT_TYPES), gen, dis,
                                                            std::nullopt, "RoundScript", std::nullopt, std::nullopt,
                                                            numHumans, j, botScenarioOrder));
             }

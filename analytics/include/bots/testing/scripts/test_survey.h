@@ -23,12 +23,11 @@ namespace csknow::survey {
         vector<BotType> botScenarioOrder;
     public:
         SurveyScript(const csknow::plant_states::PlantStatesResult & plantStatesResult, size_t plantStateIndex,
-                     size_t numRounds, std::mt19937 gen, std::uniform_real_distribution<> dis,
+                     size_t roundIndex, size_t numRounds, std::mt19937 gen, std::uniform_real_distribution<> dis,
                      std::optional<vector<bool>> playerFreeze, string baseName, std::optional<Vec3> cameraOrigin,
                      std::optional<Vec2> cameraAngle, int numHumans, int botIndex,
                      const vector<BotType> & botScenarioOrder) :
-                     RoundScript(plantStatesResult, plantStateIndex * enumAsInt(BotType::NUM_BOT_TYPES) + botIndex,
-                                 enumAsInt(BotType::NUM_BOT_TYPES) * numRounds, gen, dis,
+                     RoundScript(plantStatesResult, plantStateIndex, roundIndex, numRounds, gen, dis,
                                  playerFreeze, baseName, cameraOrigin, cameraAngle, numHumans),
                                  scenarioIndex(plantStateIndex), botIndex(botIndex),
                                  botScenarioOrder(botScenarioOrder) { };

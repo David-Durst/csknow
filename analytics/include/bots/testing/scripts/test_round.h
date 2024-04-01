@@ -22,12 +22,12 @@ class RoundScript : public Script {
     vector<int> health;
     vector<int> armor;
     vector<bool> helmet;
-    size_t plantStateIndex, numRounds;
+    size_t plantStateIndex, roundIndex, numRounds;
     std::optional<vector<bool>> playerFreeze;
 
 public:
     explicit RoundScript(const csknow::plant_states::PlantStatesResult & plantStatesResult, size_t plantStateIndex,
-                         size_t numRounds, std::mt19937 gen, std::uniform_real_distribution<> dis,
+                         size_t roundIndex, size_t numRounds, std::mt19937 gen, std::uniform_real_distribution<> dis,
                          std::optional<vector<bool>> playerFreeze, string baseName, std::optional<Vec3> cameraOrigin,
                          std::optional<Vec2> cameraAngle, int numHumans);
 
