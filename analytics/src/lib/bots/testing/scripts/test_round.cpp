@@ -257,7 +257,7 @@ vector<Script::Ptr> createPrebakedRoundScripts(const nav_mesh::nav_file & navFil
     vector<Script::Ptr> result;
 
     std::random_device rd;
-    std::mt19937 gen;
+    std::mt19937 gen(rd());
     std::uniform_real_distribution<> dis;
 
     int numRepeats = 99;

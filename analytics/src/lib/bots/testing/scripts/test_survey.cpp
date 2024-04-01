@@ -95,12 +95,15 @@ namespace csknow::survey {
             );
 
             // end commands
-            if (botIndex == static_cast<int>(actualBotNames.size())) {
-                string rankingInstructions = "Please rank the bots in this scenario based on the following statement: "
-                                             "Player movement matches your expectation of how humans would move in the scenario situation. "
-                                             "Please rank bots from best match of your expectations to worst match using a semicolon seperated list like 1,2,3,4";
+            if (botIndex == static_cast<int>(actualBotNames.size() - 1)) {
+                string rankingInstructions0 = "Please rank the bots in this scenario based on the following statement: "
+                                             "Player movement matches your expectation of how humans would move in the scenario situation. ";
+                string rankingInstructions1 = "Please rank bots from best match of your expectations to worst match using a comma seperated list like 1,2,3,4";
+                string rankingInstructions2 = "Type repeat if you'd like to play the scenario again before providing a ranking.";
                 Node::Ptr finish = make_unique<SequenceNode>(blackboard, Node::makeList(
-                        make_unique<SayCmd>(blackboard, rankingInstructions),
+                        make_unique<SayCmd>(blackboard, rankingInstructions0),
+                        make_unique<SayCmd>(blackboard, rankingInstructions1),
+                        make_unique<SayCmd>(blackboard, rankingInstructions2),
                         make_unique<CollectBotRankingCommand>(blackboard, scenarioIndex, botScenarioOrder),
                         make_unique<SetBotStop>(blackboard, "1"),
                         make_unique<SetUseLearnedModel>(blackboard, true, ENGINE_TEAM_T),
@@ -109,7 +112,9 @@ namespace csknow::survey {
                 ));
                 newCommandNodes.push_back(std::move(finish));
             }
-            commands = make_unique<SequenceNode>(blackboard, std::move(newCommandNodes));
+            commands = make_unique<RepeatDecorator>(blackboard,
+                                                    make_unique<SequenceNode>(blackboard, std::move(newCommandNodes)),
+                                                    true);
         }
     }
 
@@ -255,8 +260,13 @@ namespace csknow::survey {
 
     NodeState CollectBotRankingCommand::exec(const ServerState &state, TreeThinker &treeThinker) {
         bool foundRanking = false;
+        bool foundRepeat = false;
         for (const auto & sayEvent : state.sayEvents) {
             std::smatch rankingMatch;
+            if (sayEvent.message.find("repeat") != std::string::npos) {
+                foundRepeat = true;
+                break;
+            }
             if (std::regex_search(sayEvent.message, rankingMatch, rankingRegex)) {
                 vector<string> botRanking;
                 vector<bool> foundAllBots{false, false, false, false};
@@ -294,6 +304,9 @@ namespace csknow::survey {
         if (foundRanking) {
             playerNodeState[treeThinker.csgoId] = NodeState::Success;
         }
+        else if (foundRepeat) {
+            playerNodeState[treeThinker.csgoId] = NodeState::Failure;
+        }
         else {
             playerNodeState[treeThinker.csgoId] = NodeState::Running;
         }
@@ -318,7 +331,7 @@ namespace csknow::survey {
         vector<Script::Ptr> result;
 
         std::random_device rd;
-        std::mt19937 gen;
+        std::mt19937 gen(rd());
         std::uniform_real_distribution<> dis;
 
         size_t numRounds = static_cast<size_t>(plantStatesResult.size);
