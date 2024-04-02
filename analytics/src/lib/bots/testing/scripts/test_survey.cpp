@@ -125,6 +125,14 @@ namespace csknow::survey {
                 ));
 
             }
+            else {
+                externalFinishNodes = make_unique<SequenceNode>(blackboard, Node::makeList(
+                                make_unique<SetBotStop>(blackboard, "1"),
+                                make_unique<SetUseLearnedModel>(blackboard, true, ENGINE_TEAM_T),
+                                make_unique<SetUseLearnedModel>(blackboard, true, ENGINE_TEAM_CT),
+                                make_unique<SetUseUncertainModel>(blackboard, true)
+                ));
+            }
         }
 
         RoundScript::initialize(tree, state);
