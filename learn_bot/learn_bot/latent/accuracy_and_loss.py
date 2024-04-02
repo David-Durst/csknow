@@ -109,18 +109,17 @@ class TotalMaskStatistics:
 
 
 def compute_total_mask_statistics(Y, num_players, output_mask, total_mask_statistics: TotalMaskStatistics):
-    Y_per_player_time_step = rearrange(Y, "b (p t d) -> (b p t) d", p=num_players, t=num_radial_ticks)
+    Y_per_player_time_step = rearrange(Y, "b (p t) -> (b p t)", p=num_players, t=num_radial_ticks)
     total_mask_statistics.num_player_points_included_by_mask += \
-        int(torch.sum((Y_per_player_time_step.sum(axis=1) > 0.1) & output_mask))
+        int(torch.sum((Y_per_player_time_step >= 0) & output_mask))
     total_mask_statistics.num_player_points += output_mask.shape[0]
 
 
 def make_future_predictions_zero(Y, pred):
     pred_transformed = get_transformed_outputs(pred)
     pred_transformed[:, 0, 1:, :] = 0.
-    Y_nested = rearrange(Y, 'b (p t d) -> b p t d', p=pred_transformed.shape[1], t=pred_transformed.shape[2],
-                         d=pred_transformed.shape[3])
-    Y_nested[:, 0, 1:, :] = 0.
+    Y_nested = rearrange(Y, 'b (p t) -> b p t', p=pred_transformed.shape[1], t=pred_transformed.shape[2])
+    Y_nested[:, 0, 1:] = -1.
 
 
 # https://discuss.pytorch.org/t/how-to-combine-multiple-criterions-to-a-loss-function/348/4
