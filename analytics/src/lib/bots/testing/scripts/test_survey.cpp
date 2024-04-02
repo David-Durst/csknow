@@ -107,16 +107,23 @@ namespace csknow::survey {
                                              "Player movement matches your expectation of how humans would move in the scenario situation. ";
                 string rankingInstructions1 = "Please rank bots from best match of your expectations to worst match using a comma seperated list like 1,2,3,4";
                 string rankingInstructions2 = "Type replay if you want to play the scenario again before ranking.";
-                externalFinishNodes = make_unique<SequenceNode>(blackboard, Node::makeList(
-                        make_unique<SayCmd>(blackboard, rankingInstructions0),
-                        make_unique<SayCmd>(blackboard, rankingInstructions1),
-                        make_unique<SayCmd>(blackboard, rankingInstructions2),
-                        make_unique<CollectBotRankingCommand>(blackboard, roundIndex, scenarioIndex, botScenarioOrder),
-                        make_unique<SetBotStop>(blackboard, "1"),
-                        make_unique<SetUseLearnedModel>(blackboard, true, ENGINE_TEAM_T),
-                        make_unique<SetUseLearnedModel>(blackboard, true, ENGINE_TEAM_CT),
-                        make_unique<SetUseUncertainModel>(blackboard, true)
+
+                vector<CSGOId> neededBotIds = getNeededBotIds();
+
+                externalFinishNodes = make_unique<ParallelFirstNode>(blackboard, Node::makeList(
+                        make_unique<SequenceNode>(blackboard, Node::makeList(
+                                make_unique<SayCmd>(blackboard, rankingInstructions0),
+                                make_unique<SayCmd>(blackboard, rankingInstructions1),
+                                make_unique<SayCmd>(blackboard, rankingInstructions2),
+                                make_unique<CollectBotRankingCommand>(blackboard, roundIndex, scenarioIndex, botScenarioOrder),
+                                make_unique<SetBotStop>(blackboard, "1"),
+                                make_unique<SetUseLearnedModel>(blackboard, true, ENGINE_TEAM_T),
+                                make_unique<SetUseLearnedModel>(blackboard, true, ENGINE_TEAM_CT),
+                                make_unique<SetUseUncertainModel>(blackboard, true)
+                        )),
+                        make_unique<DisableActionsNode>(blackboard, "DisableFinish", neededBotIds, false)
                 ));
+
             }
         }
 
