@@ -769,7 +769,6 @@ namespace csknow::feature_store {
             }
             weapon_speed::MovementStatus movementStatus(columnData[playerColumn].weaponId[curTick],
                                                         columnData[playerColumn].velocity[curTick],
-                                                        columnData[playerColumn].velocity[futureTickIndex],
                                                         statureOption,
                                                         columnData[playerColumn].scoped[curTick],
                                                         columnData[playerColumn].airborne[futureTickIndex],

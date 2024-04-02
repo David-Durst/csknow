@@ -173,10 +173,9 @@ namespace csknow::weapon_speed {
     }
 
 
-    MovementStatus::MovementStatus(EngineWeaponId engineWeaponId, Vec3 curVel, Vec3 nextVel, StatureOptions statureOption,
+    MovementStatus::MovementStatus(EngineWeaponId engineWeaponId, Vec3 curVel, StatureOptions statureOption,
                                    bool scoped, bool airborne, bool jumping) : vel(curVel),
                                    statureOption(statureOption), jumping(jumping) {
-        (void) nextVel;
         double weaponMaxSpeed = engineWeaponIdToMaxSpeed(engineWeaponId, statureOption, scoped);
         // check if within threshold of moving or not moving. otherwise look ad delta in vel
         double movingSpeedThreshold = weaponMaxSpeed * stopped_threshold;

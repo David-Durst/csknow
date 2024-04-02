@@ -50,7 +50,17 @@ class MultiHDF5Wrapper:
         for hdf5_source in hdf5_sources:
             if isinstance(hdf5_source, Path):
                 if hdf5_source.is_dir():
-                    hdf5_files = hdf5_source.glob('behaviorTreeTeamFeatureStore*.hdf5')
+                    hdf5_files = list(hdf5_source.glob('behaviorTreeTeamFeatureStore*.hdf5'))
+                    # I assume _28 is first in other places (like when computing similarity)
+                    file_28_index = -1
+                    for i, hdf5_file in enumerate(hdf5_files):
+                        if "_28.hdf5" in str(hdf5_file):
+                            file_28_index = i
+                    if file_28_index > 0:
+                        tmp = hdf5_files[0]
+                        hdf5_files[0] = hdf5_files[file_28_index]
+                        hdf5_files[file_28_index] = tmp
+
                     # only need sample df from first file, rest can just be empty
                     for hdf5_file in hdf5_files:
                         self.hdf5_wrappers.append(HDF5Wrapper(hdf5_file, id_cols, sample_df=empty_like_first_sample_df,
