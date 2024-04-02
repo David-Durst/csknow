@@ -58,7 +58,7 @@ namespace csknow::survey {
             if (botIndex == 0) {
                 setupNodes.push_back(make_unique<SayCmd>(blackboard, scenarioInstructions));
             }
-            bool printBotNames = true;
+            bool printBotNames = false;
             // do bot stop change after wait so that players are forzen during waiting period
             Node::Ptr botStop;
             setupNodes.push_back(make_unique<SetBotStop>(blackboard, "1"));
