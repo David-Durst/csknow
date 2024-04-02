@@ -38,7 +38,7 @@ namespace csknow::weapon_speed {
         bool moving, jumping;
         int dir, zBin;
 
-        MovementStatus(EngineWeaponId engineWeaponId, Vec3 curVel, Vec3 nextVel, StatureOptions statureOption,
+        MovementStatus(EngineWeaponId engineWeaponId, Vec3 curVel, StatureOptions statureOption,
                        bool scoped, bool airborne, bool jumping);
         MovementStatus(EngineWeaponId engineWeaponId, bool scoped, int radialMovementBin);
 

@@ -173,15 +173,11 @@ namespace csknow::feature_store {
             columnCTData[i].walking.resize(size, false);
             columnTData[i].ducking.resize(size, false);
             columnCTData[i].ducking.resize(size, false);
-            for (int j = 0; j < weapon_speed::num_radial_bins; j++) {
-                columnTData[i].radialVel[j].resize(size, false);
-                columnCTData[i].radialVel[j].resize(size, false);
-            }
+            columnTData[i].radialVel.resize(size, -1);
+            columnCTData[i].radialVel.resize(size, -1);
             for (int j = 0; j < num_future_ticks; j++) {
-                for (int k = 0; k < weapon_speed::num_radial_bins; k++) {
-                    columnTData[i].futureRadialVel[j][k].resize(size, false);
-                    columnCTData[i].futureRadialVel[j][k].resize(size, false);
-                }
+                columnTData[i].futureRadialVel[j].resize(size, -1);
+                columnCTData[i].futureRadialVel[j].resize(size, -1);
             }
         }
         this->size = size;
@@ -434,15 +430,11 @@ namespace csknow::feature_store {
                 columnCTData[i].walking[rowIndex] = false;
                 columnTData[i].ducking[rowIndex] = false;
                 columnCTData[i].ducking[rowIndex] = false;
-                for (int j = 0; j < weapon_speed::num_radial_bins; j++) {
-                    columnTData[i].radialVel[j][rowIndex] = false;
-                    columnCTData[i].radialVel[j][rowIndex] = false;
-                }
+                columnTData[i].radialVel[rowIndex] = -1;
+                columnCTData[i].radialVel[rowIndex] = -1;
                 for (int j = 0; j < num_future_ticks; j++) {
-                    for (int k = 0; k < weapon_speed::num_radial_bins; k++) {
-                        columnTData[i].futureRadialVel[j][k][rowIndex] = false;
-                        columnCTData[i].futureRadialVel[j][k][rowIndex] = false;
-                    }
+                    columnTData[i].futureRadialVel[j][rowIndex] = -1;
+                    columnCTData[i].futureRadialVel[j][rowIndex] = -1;
                 }
             }
         }
@@ -718,9 +710,7 @@ namespace csknow::feature_store {
                 columnData[playerColumn].deltaPos[deltaPosGridIndex][curTick] = false;
             }
              */
-            for (int radialVelIndex = 0; radialVelIndex < weapon_speed::num_radial_bins; radialVelIndex++) {
-                columnData[playerColumn].radialVel[radialVelIndex][curTick] = false;
-            }
+            columnData[playerColumn].radialVel[curTick] = -1;
 
             // ignore players who aren't alive far enough in the future
             // look at next tick;
@@ -769,7 +759,6 @@ namespace csknow::feature_store {
             }
             weapon_speed::MovementStatus movementStatus(columnData[playerColumn].weaponId[curTick],
                                                         columnData[playerColumn].velocity[curTick],
-                                                        columnData[playerColumn].velocity[futureTickIndex],
                                                         statureOption,
                                                         columnData[playerColumn].scoped[curTick],
                                                         columnData[playerColumn].airborne[futureTickIndex],
@@ -805,7 +794,7 @@ namespace csknow::feature_store {
                 std::cout << "hi" << std::endl;
             }
             */
-            columnData[playerColumn].radialVel[movementStatus.toRadialMovementBin()][curTick] = true;
+            columnData[playerColumn].radialVel[curTick] = movementStatus.toRadialMovementBin();
         }
     }
 
@@ -837,35 +826,25 @@ namespace csknow::feature_store {
                 continue;
             }
 
-            for (int radialVelIndex = 0; radialVelIndex < weapon_speed::num_radial_bins; radialVelIndex++) {
-                columnData[playerColumn].futureRadialVel[0][radialVelIndex][curTick] =
-                        columnData[playerColumn].radialVel[radialVelIndex][futureTickIndexNext];
-                columnData[playerColumn].futureRadialVel[1][radialVelIndex][curTick] =
-                        columnData[playerColumn].radialVel[radialVelIndex][futureTickIndexSecondNext];
-            }
+            columnData[playerColumn].futureRadialVel[0][curTick] =
+                    columnData[playerColumn].radialVel[futureTickIndexNext];
+            columnData[playerColumn].futureRadialVel[1][curTick] =
+                    columnData[playerColumn].radialVel[futureTickIndexSecondNext];
         }
     }
 
     void TeamFeatureStoreResult::removePartialACausalLabels(int64_t curTick,
                                                             array<ColumnPlayerData,max_enemies> & columnData) {
         for (size_t playerColumn = 0; playerColumn < max_enemies; playerColumn++) {
-            // valid if one output set (assume never more than 1 set)
-            bool curPlayerTickValid = false, futurePlayerTickValidNext = false, futurePlayerTickValidSecondNext = false;
-            for (int radialVelIndex = 0; radialVelIndex < weapon_speed::num_radial_bins; radialVelIndex++) {
-                curPlayerTickValid = curPlayerTickValid || columnData[playerColumn].radialVel[radialVelIndex][curTick];
-                futurePlayerTickValidNext = futurePlayerTickValidNext ||
-                                            columnData[playerColumn].futureRadialVel[0][radialVelIndex][curTick];
-                futurePlayerTickValidSecondNext = futurePlayerTickValidSecondNext ||
-                                                 columnData[playerColumn].futureRadialVel[1][radialVelIndex][curTick];
-            }
+            bool curPlayerTickValid = columnData[playerColumn].radialVel[curTick] >= 0;
+            bool futurePlayerTickValidNext = columnData[playerColumn].futureRadialVel[0][curTick];
+            bool futurePlayerTickValidSecondNext = columnData[playerColumn].futureRadialVel[1][curTick];
 
             // disable all labels if any one isn't set
             if (!curPlayerTickValid || !futurePlayerTickValidNext || !futurePlayerTickValidSecondNext) {
-                for (int radialVelIndex = 0; radialVelIndex < weapon_speed::num_radial_bins; radialVelIndex++) {
-                    columnData[playerColumn].radialVel[radialVelIndex][curTick] = false;
-                    columnData[playerColumn].futureRadialVel[0][radialVelIndex][curTick] = false;
-                    columnData[playerColumn].futureRadialVel[1][radialVelIndex][curTick] = false;
-                }
+                columnData[playerColumn].radialVel[curTick] = false;
+                columnData[playerColumn].futureRadialVel[0][curTick] = false;
+                columnData[playerColumn].futureRadialVel[1][curTick] = false;
             }
         }
     }
@@ -1540,16 +1519,12 @@ namespace csknow::feature_store {
                                        columnData[columnPlayer].deltaPos[deltaPosIndex], hdf5FlatCreateProps);
                 }
                 */
-                for (int radialVelindex = 0; radialVelindex < weapon_speed::num_radial_bins; radialVelindex++) {
-                    file.createDataSet("/data/radial vel " + std::to_string(radialVelindex) + " " + columnTeam + " " + iStr,
-                                       columnData[columnPlayer].radialVel[radialVelindex], hdf5FlatCreateProps);
-                }
+                file.createDataSet("/data/radial vel " + columnTeam + " " + iStr,
+                                   columnData[columnPlayer].radialVel, hdf5FlatCreateProps);
                 for (int futureTick = 0; futureTick < num_future_ticks; futureTick++) {
-                    for (int radialVelindex = 0; radialVelindex < weapon_speed::num_radial_bins; radialVelindex++) {
-                        file.createDataSet("/data/radial vel " + std::to_string(radialVelindex) + " "
-                                            + columnTeam + " " + iStr + " t+" + std::to_string(futureTick+1),
-                                           columnData[columnPlayer].futureRadialVel[futureTick][radialVelindex], hdf5FlatCreateProps);
-                    }
+                    file.createDataSet("/data/radial vel " + columnTeam + " " + iStr +
+                                       " t+" + std::to_string(futureTick+1),
+                                       columnData[columnPlayer].futureRadialVel[futureTick], hdf5FlatCreateProps);
                 }
             }
         }
@@ -1665,18 +1640,14 @@ namespace csknow::feature_store {
                             file.getDataSet("/data/delta pos " + deltaPosIndexStr + " " + columnTeam + " " + iStr).read<std::vector<bool>>();
                 }
                  */
-                for (int radialVelindex = 0; radialVelindex < weapon_speed::num_radial_bins; radialVelindex++) {
-                    columnData[columnPlayer].radialVel[radialVelindex] =
-                            file.getDataSet("/data/radial vel " + std::to_string(radialVelindex) + " " + columnTeam + " " + iStr).read<std::vector<bool>>();
-                }
+                columnData[columnPlayer].radialVel =
+                        file.getDataSet("/data/radial vel " + columnTeam + " " + iStr).read<std::vector<int>>();
                 if (includePriorFuture) {
                     for (int futureTick = 0; futureTick < num_future_ticks; futureTick++) {
-                        for (int radialVelindex = 0; radialVelindex < weapon_speed::num_radial_bins; radialVelindex++) {
-                            columnData[columnPlayer].futureRadialVel[futureTick][radialVelindex] =
-                                    file.getDataSet("/data/radial vel " + std::to_string(radialVelindex) + " "
-                                                    + columnTeam + " " + iStr + " t+" + std::to_string(futureTick+1))
-                                            .read<std::vector<bool>>();
-                        }
+                        columnData[columnPlayer].futureRadialVel[futureTick] =
+                                file.getDataSet("/data/radial vel "  + columnTeam + " " + iStr +
+                                                " t+" + std::to_string(futureTick+1))
+                                        .read<std::vector<int>>();
                     }
                 }
             }
