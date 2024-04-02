@@ -133,11 +133,11 @@ def compute_loss(model: TransformerNestedHiddenLatentModel, pred, Y, X, X_orig: 
     losses = LatentLosses()
 
     # merging time steps so can do filtering before cross entropy loss
-    Y_per_player_time_step = rearrange(Y, "b (p t d) -> (b p t) d", p=num_players, t=num_radial_ticks)
+    Y_per_player_time_step = rearrange(Y.long(), "b (p t) -> (b p t)", p=num_players, t=num_radial_ticks)
     pred_transformed_per_player_time_step = rearrange(pred_transformed, "b p t d -> (b p t) d",
                                                       p=num_players, t=num_radial_ticks)
     duplicated_last_per_player_time_step = repeat(duplicated_last, "b -> (b repeat)", repeat=num_players * num_radial_ticks)
-    valid_rows = (Y_per_player_time_step.sum(axis=1) > 0.1) & output_mask
+    valid_rows = (Y_per_player_time_step >= 0) & output_mask
     valid_Y_transformed = Y_per_player_time_step[valid_rows]
     valid_pred_transformed = pred_transformed_per_player_time_step[valid_rows]
     valid_duplicated = duplicated_last_per_player_time_step[valid_rows]
@@ -259,18 +259,16 @@ def compute_accuracy_and_delta_diff(model, pred, Y, X, duplicated_last, accuracy
                                     stature_to_speed, output_mask, weight_shoot_only):
     pred_untransformed = get_untransformed_outputs(pred)
 
-    name = column_transformers.output_types.categorical_distribution_first_sub_cols[0]
+    name = column_transformers.output_types.categorical_cols[0]
 
     # keeping time steps flattened since just summing across all at end
-    Y_per_player = rearrange(Y, "b (p t d) -> b (p t) d", p=num_players, t=num_radial_ticks)
-    Y_label_per_player = torch.argmax(Y_per_player, -1)
+    Y_label_per_player = Y
     pred_untransformed_per_player = rearrange(pred_untransformed, "b p t d -> b (p t) d",
                                               p=num_players, t=num_radial_ticks)
     pred_untransformed_label_per_player = torch.argmax(pred_untransformed_per_player, -1)
     accuracy_per_player = (Y_label_per_player == pred_untransformed_label_per_player).type(torch.float)
-    Y_valid_per_player_row = Y_per_player.sum(axis=2) * rearrange(torch.where(output_mask, 1., 0.),
-                                                                  '(b p t) -> b (p t)',
-                                                                  p=num_players, t=num_radial_ticks)
+    Y_valid_per_player_row = (Y >= 0) * rearrange(torch.where(output_mask, 1., 0.),
+                                                  '(b p t) -> b (p t)', p=num_players, t=num_radial_ticks)
     if weight_shoot_only:
         # only 1 col, so everything is per player, no inner dimension d
         no_time_shoot_cur_tick = X[:, model.shots_cur_tick] > 0
