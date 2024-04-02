@@ -115,11 +115,11 @@ namespace csknow::survey {
                                 make_unique<SayCmd>(blackboard, rankingInstructions0),
                                 make_unique<SayCmd>(blackboard, rankingInstructions1),
                                 make_unique<SayCmd>(blackboard, rankingInstructions2),
-                                make_unique<CollectBotRankingCommand>(blackboard, roundIndex, scenarioIndex, botScenarioOrder),
                                 make_unique<SetBotStop>(blackboard, "1"),
                                 make_unique<SetUseLearnedModel>(blackboard, true, ENGINE_TEAM_T),
                                 make_unique<SetUseLearnedModel>(blackboard, true, ENGINE_TEAM_CT),
-                                make_unique<SetUseUncertainModel>(blackboard, true)
+                                make_unique<SetUseUncertainModel>(blackboard, true),
+                                make_unique<CollectBotRankingCommand>(blackboard, roundIndex, scenarioIndex, botScenarioOrder)
                         )),
                         make_unique<DisableActionsNode>(blackboard, "DisableFinish", neededBotIds, false)
                 ));
