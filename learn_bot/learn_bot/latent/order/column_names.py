@@ -12,7 +12,7 @@ class C4Status(Enum):
 
 num_c4_status = 3
 num_orders_per_site = 3
-num_prior_ticks = 24
+num_prior_ticks = 8
 all_prior_and_cur_ticks = num_prior_ticks + 1
 num_future_ticks = 2
 num_radial_ticks = num_future_ticks + 1
@@ -176,11 +176,11 @@ def get_delta_pos_columns(player_index: int, delta_pos_index: int, team_str: str
     return "delta pos " + str(delta_pos_index) + " " + team_str + " " + str(player_index)
 
 
-def get_radial_vel_columns(player_index: int, radial_vel_index: int, team_str: str) -> str:
-    return "radial vel " + str(radial_vel_index) + " " + team_str + " " + str(player_index)
+def get_radial_vel_column(player_index: int, team_str: str) -> str:
+    return "radial vel " + team_str + " " + str(player_index)
 
-def get_future_radial_vel_columns(player_index: int, radial_vel_index: int, team_str: str, history_index: int) -> str:
-    return "radial vel " + str(radial_vel_index) + " " + team_str + " " + str(player_index) + " t+" + str(history_index)
+def get_future_radial_vel_column(player_index: int, team_str: str, history_index: int) -> str:
+    return "radial vel " + team_str + " " + str(player_index) + " t+" + str(history_index)
 
 def get_player_prior_area_grid_cell_in_place_columns(player_index: int, area_grid_index: int, team_str: str,
                                                      history_index: int) -> str:

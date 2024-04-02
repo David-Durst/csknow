@@ -126,8 +126,8 @@ class PlayerPlaceAreaColumns:
         self.distribution_nearest_grid_area = []
         self.trace_is_bot_player = get_trace_is_bot_player(player_index, team_str)
         self.delta_pos = []
-        self.radial_vel = []
-        self.future_radial_vel: List[List] = []
+        self.radial_vel = get_radial_vel_column(player_index, team_str)
+        self.future_radial_vel: List = []
         for place_index in range(num_places):
             self.cur_place \
                 .append(get_player_cur_place_columns(player_index, place_index, team_str))
@@ -141,14 +141,9 @@ class PlayerPlaceAreaColumns:
         for delta_pos_index in range(delta_pos_grid_num_cells):
             self.delta_pos \
                 .append(get_delta_pos_columns(player_index, delta_pos_index, team_str))
-        for radial_vel_index in range(num_radial_bins):
-            self.radial_vel \
-                .append(get_radial_vel_columns(player_index, radial_vel_index, team_str))
         for future_tick in range(num_future_ticks):
-            self.future_radial_vel.append([])
-            for radial_vel_index in range(num_radial_bins):
-                self.future_radial_vel[future_tick] \
-                    .append(get_future_radial_vel_columns(player_index, radial_vel_index, team_str, future_tick+1))
+            self.future_radial_vel \
+                .append(get_future_radial_vel_column(player_index, team_str, future_tick+1))
         for prior_tick in range(1, num_prior_ticks+1):
             self.prior_nearest_crosshair_distance_to_enemy.append(
                 get_player_nearest_crosshair_distance_to_enemy_columns(player_index, team_str, prior_tick))
@@ -195,7 +190,7 @@ class PlayerPlaceAreaColumns:
     def to_extra_input_float_list(self) -> list[str]:
         return flatten_list([[self.player_shots_cur_tick]])
 
-    def to_output_cat_list(self, place: bool, area: bool, delta: bool, radial: bool) -> list[list[str]]:
+    def to_output_cat_list(self, place: bool, area: bool, delta: bool, radial: bool) -> list[str]:
         result = []
         if place:
             result.append(self.distribution_nearest_place)
@@ -214,7 +209,7 @@ class PlayerPlaceAreaColumns:
                 self.player_hurt_next_tick, self.player_kill_next_tick, self.player_killed_next_tick,
                 self.player_shots_cur_tick, self.player_weapon_id, self.player_scoped, self.player_helmet,
                 self.walking, self.ducking, self.player_fov_enemy_visible_in_last_5s,
-                self.nearest_world_distance_to_enemy, self.radial_vel[0], self.future_radial_vel[0][0]] \
+                self.nearest_world_distance_to_enemy, self.radial_vel, self.future_radial_vel[0]] \
             + self.vel + self.prior_vel[0:3] + self.view_angle
 
 
@@ -230,13 +225,13 @@ flat_input_distribution_cat_place_area_columns: list[list[str]] = \
 flat_input_passthrough_columns: list[str] = \
     flatten_list([cols.to_extra_input_float_list() for cols in specific_player_place_area_columns])
 #[['baiting'], [c4_plant_a_col, c4_plant_b_col, c4_not_planted_col]]
-flat_output_cat_place_distribution_columns: list[list[str]] = \
-    flatten_list([cols.to_output_cat_list(True, False, False, False) for cols in specific_player_place_area_columns])
-flat_output_cat_area_distribution_columns: list[list[str]] = \
-    flatten_list([cols.to_output_cat_list(False, True, False, False) for cols in specific_player_place_area_columns])
-flat_output_cat_delta_pos_columns: list[list[str]] = \
-    flatten_list([cols.to_output_cat_list(False, False, True, False) for cols in specific_player_place_area_columns])
-flat_output_cat_radial_vel_columns: list[list[str]] = \
+#flat_output_cat_place_distribution_columns: list[list[str]] = \
+#    flatten_list([cols.to_output_cat_list(True, False, False, False) for cols in specific_player_place_area_columns])
+#flat_output_cat_area_distribution_columns: list[list[str]] = \
+#    flatten_list([cols.to_output_cat_list(False, True, False, False) for cols in specific_player_place_area_columns])
+#flat_output_cat_delta_pos_columns: list[list[str]] = \
+#    flatten_list([cols.to_output_cat_list(False, False, True, False) for cols in specific_player_place_area_columns])
+flat_output_cat_radial_vel_columns: list[str] = \
     flatten_list([cols.to_output_cat_list(False, False, False, True) for cols in specific_player_place_area_columns])
 
 place_area_input_column_types = get_simplified_column_types(flat_input_float_place_area_columns,
@@ -247,10 +242,11 @@ place_area_input_column_types = get_simplified_column_types(flat_input_float_pla
                                                             #flat_input_distribution_cat_place_area_columns)
 #output_column_types = get_simplified_column_types([], flat_output_cat_columns, flat_output_num_options,
 #                                                  flat_output_cat_distribution_columns)
-place_output_column_types = get_simplified_column_types([], [], [], flat_output_cat_place_distribution_columns)
-area_output_column_types = get_simplified_column_types([], [], [], flat_output_cat_area_distribution_columns)
-delta_pos_output_column_types = get_simplified_column_types([], [], [], flat_output_cat_delta_pos_columns)
-radial_vel_output_column_types = get_simplified_column_types([], [], [], flat_output_cat_radial_vel_columns)
+#place_output_column_types = get_simplified_column_types([], [], [], flat_output_cat_place_distribution_columns)
+#area_output_column_types = get_simplified_column_types([], [], [], flat_output_cat_area_distribution_columns)
+#delta_pos_output_column_types = get_simplified_column_types([], [], [], flat_output_cat_delta_pos_columns)
+radial_vel_output_column_types = get_simplified_column_types([], flat_output_cat_radial_vel_columns,
+                                                             [num_radial_bins for _ in flat_output_cat_radial_vel_columns], [])
 
 vis_only_columns: list[str] = c4_pos_cols + \
                               flatten_list([player_place_area_columns.get_vis_only_columns() for

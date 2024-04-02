@@ -584,8 +584,8 @@ def compute_action_changes(alive_trajectory_vis_df: pd.DataFrame, player_place_a
     if trajectory_filter_options.compute_action_changes:
         if title not in title_to_action_changes:
             title_to_action_changes[title] = []
-        not_move = alive_trajectory_vis_df[player_place_area_columns.future_radial_vel[0][0]] > 0.5
-        not_move_lagged = alive_trajectory_vis_df[player_place_area_columns.radial_vel[0]] > 0.5
+        not_move = alive_trajectory_vis_df[player_place_area_columns.future_radial_vel[0]] == 0.
+        not_move_lagged = alive_trajectory_vis_df[player_place_area_columns.radial_vel] == 0.
         # not move contiguously 0
         # move contiguously 1
         # not move to move 2

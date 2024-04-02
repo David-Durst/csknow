@@ -163,8 +163,8 @@ namespace csknow::feature_store {
             vector<bool> airborne;
             vector<bool> walking;
             vector<bool> ducking;
-            vector<int> radialVel;
-            array<vector<int>, num_future_ticks> futureRadialVel;
+            vector<int16_t> radialVel;
+            array<vector<int16_t>, num_future_ticks> futureRadialVel;
         };
         array<ColumnPlayerData, max_enemies> columnCTData, columnTData;
         vector<std::reference_wrapper<const array<ColumnPlayerData, max_enemies>>> getAllColumnData() const {

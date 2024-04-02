@@ -842,9 +842,9 @@ namespace csknow::feature_store {
 
             // disable all labels if any one isn't set
             if (!curPlayerTickValid || !futurePlayerTickValidNext || !futurePlayerTickValidSecondNext) {
-                columnData[playerColumn].radialVel[curTick] = false;
-                columnData[playerColumn].futureRadialVel[0][curTick] = false;
-                columnData[playerColumn].futureRadialVel[1][curTick] = false;
+                columnData[playerColumn].radialVel[curTick] = -1;
+                columnData[playerColumn].futureRadialVel[0][curTick] = -1;
+                columnData[playerColumn].futureRadialVel[1][curTick] = -1;
             }
         }
     }
@@ -1641,13 +1641,13 @@ namespace csknow::feature_store {
                 }
                  */
                 columnData[columnPlayer].radialVel =
-                        file.getDataSet("/data/radial vel " + columnTeam + " " + iStr).read<std::vector<int>>();
+                        file.getDataSet("/data/radial vel " + columnTeam + " " + iStr).read<std::vector<int16_t>>();
                 if (includePriorFuture) {
                     for (int futureTick = 0; futureTick < num_future_ticks; futureTick++) {
                         columnData[columnPlayer].futureRadialVel[futureTick] =
                                 file.getDataSet("/data/radial vel "  + columnTeam + " " + iStr +
                                                 " t+" + std::to_string(futureTick+1))
-                                        .read<std::vector<int>>();
+                                        .read<std::vector<int16_t>>();
                     }
                 }
             }
