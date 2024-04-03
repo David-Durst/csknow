@@ -167,7 +167,10 @@ namespace csknow::survey {
     }
 
     NodeState CheckForSentinelFile::exec(const ServerState &, TreeThinker &treeThinker) {
-        if (std::filesystem::exists(filePath)) {
+        // ignore empty players that occur when connecting or disconnecting
+        if (filePath == "/home/steam/responses/sentinel/_csgo_experience.txt" ||
+            filePath == "/home/steam/responses/sentinel/_dev_experience.txt" ||
+            std::filesystem::exists(filePath)) {
             playerNodeState[treeThinker.csgoId] = NodeState::Success;
         }
         else {
