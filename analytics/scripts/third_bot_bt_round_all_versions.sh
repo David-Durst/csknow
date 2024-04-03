@@ -27,12 +27,12 @@ run_csknow_rounds() {
         ./scripts/deploy_latent_models_specific.sh $model 
         ./scripts/deploy_uncertain_models_specific.sh $uncertain_model 
         cd ${script_dir}/../build
-        echo "most recent demo file before $model_type $j"
+        echo "most recent demo file before $model_type $j $uncertain_option"
         new_demo=$(ls -tp /home/steam/csgo-ds/csgo/*.dem | grep -v /$ | head -1)
         new_demo_no_path=$(basename $new_demo)
         echo $new_demo
         new_demos+=($new_demo_no_path)
-        ./csknow_test_bt_bot ${script_dir}/../nav /home/steam/csgo-ds/csgo/addons/sourcemod/bot-link-data ${script_dir}/../ ${script_dir}/../../learn_bot/models ${script_dir}/../../learn_bot/learn_bot/libs/saved_train_test_splits $bot_type $custom_bots n $j
+        ./csknow_test_bt_bot ${script_dir}/../nav /home/steam/csgo-ds/csgo/addons/sourcemod/bot-link-data ${script_dir}/../ ${script_dir}/../../learn_bot/models ${script_dir}/../../learn_bot/learn_bot/libs/saved_train_test_splits $bot_type $custom_bots $uncertain_option $j
         sleep 40
         date
     done
@@ -71,16 +71,22 @@ if make -j 8; then
     #models=(01_15_2024__05_35_49_iw_256_bc_40_pr_0_fr_0_b_1024_it_1_ot_3_lr_4e-05_wd_0.0_l_4_h_4_n_20.0_ros_2.0_ct_SimilarityControl_pm_EveryoneMask_mpi_False_om_NoMask_w_None_dh_None_ifo_False_c_just_human_all)
     #models=(01_16_2024__10_18_32_iw_256_bc_40_pr_0_fr_0_b_1024_it_1_ot_3_lr_4e-05_wd_0.0_l_4_h_4_n_20.0_ros_2.0_ct_SimilarityControl_pm_EveryoneMask_mpi_True_om_NoMask_w_None_dh_None_ifo_False_c_just_human_all \
     #    01_16_2024__10_18_32_iw_256_bc_40_pr_0_fr_0_b_1024_it_1_ot_3_lr_4e-05_wd_0.0_l_4_h_4_n_20.0_ros_2.0_ct_SimilarityControl_pm_EveryoneMask_mpi_True_om_NoMask_w_None_dh_None_ifo_False_c_just_human_all)
-    models=(01_15_2024__05_35_49_iw_256_bc_20_pr_0_fr_0_b_1024_it_1_ot_3_lr_4e-05_wd_0.0_l_4_h_4_n_20.0_ros_2.0_ct_SimilarityControl_pm_NoMask_mpi_False_om_NoMask_w_None_dh_None_ifo_False_c_just_human_all \
-        01_15_2024__05_35_49_iw_256_bc_20_pr_0_fr_0_b_1024_it_1_ot_3_lr_4e-05_wd_0.0_l_4_h_4_n_20.0_ros_2.0_ct_SimilarityControl_pm_NoMask_mpi_False_om_NoMask_w_None_dh_None_ifo_False_c_just_human_all)
-    uncertain_models=(03_25_2024__12_22_32_iw_256_bc_20_pr_0_fr_0_b_1024_it_1_ot_3_lr_4e-05_wd_0.0_l_4_h_4_n_20.0_ros_2.0_ct_SimilarityControl_pm_NoMask_mpi_False_om_NoMask_w_None_ws_50.0_wns_0.0_dh_None_ifo_False_c_just_human_all \
-        03_25_2024__12_22_32_iw_256_bc_20_pr_0_fr_0_b_1024_it_1_ot_3_lr_4e-05_wd_0.0_l_4_h_4_n_20.0_ros_2.0_ct_SimilarityControl_pm_NoMask_mpi_False_om_NoMask_w_None_ws_50.0_wns_0.0_dh_None_ifo_False_c_just_human_all)
+    #models=(01_15_2024__05_35_49_iw_256_bc_20_pr_0_fr_0_b_1024_it_1_ot_3_lr_4e-05_wd_0.0_l_4_h_4_n_20.0_ros_2.0_ct_SimilarityControl_pm_NoMask_mpi_False_om_NoMask_w_None_dh_None_ifo_False_c_just_human_all \
+    #    01_15_2024__05_35_49_iw_256_bc_20_pr_0_fr_0_b_1024_it_1_ot_3_lr_4e-05_wd_0.0_l_4_h_4_n_20.0_ros_2.0_ct_SimilarityControl_pm_NoMask_mpi_False_om_NoMask_w_None_dh_None_ifo_False_c_just_human_all)
+    #uncertain_models=(03_25_2024__12_22_32_iw_256_bc_20_pr_0_fr_0_b_1024_it_1_ot_3_lr_4e-05_wd_0.0_l_4_h_4_n_20.0_ros_2.0_ct_SimilarityControl_pm_NoMask_mpi_False_om_NoMask_w_None_ws_50.0_wns_0.0_dh_None_ifo_False_c_just_human_all \
+    #    03_25_2024__12_22_32_iw_256_bc_20_pr_0_fr_0_b_1024_it_1_ot_3_lr_4e-05_wd_0.0_l_4_h_4_n_20.0_ros_2.0_ct_SimilarityControl_pm_NoMask_mpi_False_om_NoMask_w_None_ws_50.0_wns_0.0_dh_None_ifo_False_c_just_human_all)
+    models=(04_02_2024__04_40_51_iw_256_bc_20_pr_0_fr_0_b_1024_it_1_ot_3_lr_4e-05_wd_0.0_l_4_h_4_n_20.0_ros_2.0_ct_SimilarityControl_pm_NoMask_mpi_False_om_NoMask_w_None_ws_None_wns_None_dh_None_ifo_False_c_just_human_all \
+        04_02_2024__04_40_51_iw_256_bc_20_pr_0_fr_0_b_1024_it_1_ot_3_lr_4e-05_wd_0.0_l_4_h_4_n_20.0_ros_2.0_ct_SimilarityControl_pm_NoMask_mpi_False_om_NoMask_w_None_ws_None_wns_None_dh_None_ifo_False_c_just_human_all)
+    uncertain_models=(04_02_2024__04_40_51_iw_256_bc_20_pr_0_fr_0_b_1024_it_1_ot_3_lr_4e-05_wd_0.0_l_4_h_4_n_20.0_ros_2.0_ct_SimilarityControl_pm_NoMask_mpi_False_om_NoMask_w_None_ws_50.0_wns_0.0_dh_None_ifo_False_c_just_human_all \
+        04_02_2024__04_40_51_iw_256_bc_20_pr_0_fr_0_b_1024_it_1_ot_3_lr_4e-05_wd_0.0_l_4_h_4_n_20.0_ros_2.0_ct_SimilarityControl_pm_NoMask_mpi_False_om_NoMask_w_None_ws_50.0_wns_0.0_dh_None_ifo_False_c_just_human_all)
     #models=(01_06_2024__00_05_43_iw_256_bc_20_pr_0_fr_0_b_1024_it_1_ot_3_lr_4e-05_wd_0.0_l_4_h_4_n_20.0_ros_2.0_ct_NoControl_pm_NoMask_mpi_False_om_NoMask_w_None_dh_None_c_just_human_all)
     #uncertain_models=(12_29_2023__22_46_01_iw_256_bc_20_pr_0_fr_0_b_1024_it_1_ot_3_lr_4e-05_wd_0.0_l_4_h_4_n_20.0_ros_2.0_ct_TimeControl_pm_NoMask_mpi_False_om_NoMask_w_None_dh_None_c_just_human_all)
     #models=(12_25_2023__21_22_14_iw_256_bc_20_pr_0_fr_0_b_1024_it_1_ot_3_lr_4e-05_wd_0.0_l_4_h_4_n_20.0_ros_2.0_ct_SimilarityControl_pm_NoMask_mpi_False_om_NoMask_w_None_dh_None_c_just_human_all)
     #models=(12_28_2023__17_14_50_iw_256_bc_20_pr_0_fr_0_b_1024_it_1_ot_3_lr_4e-05_wd_0.0_l_4_h_4_n_20.0_ros_2.0_ct_SimilarityControl_pm_NoMask_mpi_False_om_NoMask_w_None_dh_None_c_just_human_all)
     #models=(12_28_2023__17_14_50_iw_256_bc_20_pr_0_fr_0_b_1024_it_1_ot_3_lr_4e-05_wd_0.0_l_4_h_4_n_20.0_ros_2.0_ct_SimilarityControl_pm_NoMask_mpi_False_om_NoMask_w_None_dh_None_c_just_human_all \
     #    12_28_2023__17_14_50_iw_256_bc_20_pr_0_fr_0_b_1024_it_3_ot_3_lr_4e-05_wd_0.0_l_4_h_4_n_20.0_ros_2.0_ct_SimilarityControl_pm_NoMask_mpi_False_om_NoMask_w_None_dh_None_c_just_human_all)
+    # set to nu for uncertain model enabled
+    uncertain_option="n"
     for (( i=0; i<${#models[*]}; i++ ))
     do
         model="${models[$i]}"

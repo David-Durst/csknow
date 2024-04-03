@@ -14,7 +14,7 @@ bool usePlaceAreaModelProbabilitiesT = true;
 bool usePlaceAreaModelProbabilitiesCT = true;
 bool runAllRounds = false;
 bool useRealProbT = true, useRealProbCT = true;
-bool useUncertainModel = true;
+bool useUncertainModel = false;
 
 void processModelArg(string modelArg) {
     bool runRoundsNoHeuristics = modelArg == "r" || modelArg == "tl" || modelArg == "s";
