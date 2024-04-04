@@ -102,6 +102,8 @@ namespace csknow::inference_manager {
     }
 
     //std::chrono::time_point<std::chrono::system_clock> lastInferenceTime;
+    vector<float> inferenceTimePerIteration;
+    size_t inferenceTimeIndex = 0;
     void InferenceManager::runInferences() {
         if (!valid) {
             //inferenceSeconds = 0;
@@ -133,6 +135,15 @@ namespace csknow::inference_manager {
         if (tmpInferenceSeconds > 1e-5) {
             inferenceSeconds = tmpInferenceSeconds;
         }
+        if (overallModelToRun == 0 || overallModelToRun == 8) {
+            if (inferenceTimePerIteration.size() < 10000) {
+                inferenceTimePerIteration.push_back(inferenceTime.count());
+            }
+            else {
+                inferenceTimePerIteration[inferenceTimeIndex] = inferenceTime.count();
+                inferenceTimeIndex = (inferenceTimeIndex + 1) % inferenceTimePerIteration.size();
+            }
+        }
     }
 
     bool InferenceManager::haveValidData() const {
@@ -152,5 +163,14 @@ namespace csknow::inference_manager {
         return true;
          */
     }
+
+    void saveInferenceTimeLog(string path) {
+        std::fstream inferenceTimeLogFile (path, std::fstream::out);
+        inferenceTimeLogFile << "inference time" << std::endl;
+        for (const auto & inferenceTime: inferenceTimePerIteration) {
+            inferenceTimeLogFile << inferenceTime << std::endl;
+        }
+    }
+
 
 }

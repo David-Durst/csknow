@@ -3,6 +3,7 @@
 //
 #include <regex>
 #include "bots/testing/scripts/test_survey.h"
+#include "bots/testing/log_helpers.h"
 
 namespace csknow::survey {
     const vector<string> actualBotNames{"Learned", "Learned Combat", "Hand-Crafted", "Default"};
@@ -156,14 +157,6 @@ namespace csknow::survey {
             headerStream.close();
         }
         return playerFile;
-    }
-
-    string getNowAsISOString() {
-        std::time_t t
-                = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
-        std::stringstream ss;
-        ss << std::put_time( std::localtime( &t ), "%FT%T%z");
-        return ss.str();
     }
 
     NodeState CheckForSentinelFile::exec(const ServerState &, TreeThinker &treeThinker) {

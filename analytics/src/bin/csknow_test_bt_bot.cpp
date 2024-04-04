@@ -27,6 +27,7 @@
 #include "bots/testing/scripts/learned/test_learned_all.h"
 #include "bots/testing/scripts/trace/trace_script.h"
 #include "bots/testing/scripts/test_say.h"
+#include "bots/testing/log_helpers.h"
 #include <iostream>
 #include <thread>
 #include <chrono>
@@ -86,7 +87,7 @@ int main(int argc, char * argv[]) {
 
     bool finishedTests = false;
     csknow::plant_states::PlantStatesResult plantStatesResult;
-    bool limitToNonConfounding = false;
+    bool limitToNonConfounding = true;
     if (limitToNonConfounding || runSurvey) {
         plantStatesResult.loadFromPython(savedDatasetsDir + "/non_confound_test_plant_states.hdf5", true);
     }
@@ -303,6 +304,7 @@ int main(int argc, char * argv[]) {
         }
         testLogFile.close();
         state.sleepUntilServerStateExists(priorFileTime);
+        csknow::inference_manager::saveInferenceTimeLog(logPath + "/" + getNowAsFileNameString() + ".log");
     }
 #pragma clang diagnostic pop
 

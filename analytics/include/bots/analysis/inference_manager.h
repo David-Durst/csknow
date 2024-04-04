@@ -54,6 +54,8 @@ namespace csknow::inference_manager {
         void runInferences();
         bool haveValidData() const;
     };
+
+    void saveInferenceTimeLog(string path);
 }
 
 #endif //CSKNOW_INFERENCE_MANAGER_H
