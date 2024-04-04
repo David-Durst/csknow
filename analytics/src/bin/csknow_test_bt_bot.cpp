@@ -304,9 +304,10 @@ int main(int argc, char * argv[]) {
         }
         testLogFile.close();
         state.sleepUntilServerStateExists(priorFileTime);
-        csknow::inference_manager::saveInferenceTimeLog(logPath + "/" + getNowAsFileNameString() + ".log");
     }
 #pragma clang diagnostic pop
+
+    csknow::inference_manager::saveInferenceTimeLog(logPath + "/" + getNowAsFileNameString() + ".log");
 
     exit(0);
 }

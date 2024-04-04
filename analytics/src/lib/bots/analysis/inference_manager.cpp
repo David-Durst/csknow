@@ -135,7 +135,7 @@ namespace csknow::inference_manager {
         if (tmpInferenceSeconds > 1e-5) {
             inferenceSeconds = tmpInferenceSeconds;
         }
-        if (overallModelToRun == 0 || overallModelToRun == 8) {
+        if (overallModelToRun - 1 == 0 || overallModelToRun - 1 == 8) {
             if (inferenceTimePerIteration.size() < 10000) {
                 inferenceTimePerIteration.push_back(inferenceTime.count());
             }
