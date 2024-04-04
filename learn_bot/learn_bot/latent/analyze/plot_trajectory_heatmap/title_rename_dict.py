@@ -37,4 +37,9 @@ title_rename_dict = {
     "3_23_24_fourth_default_repeat": "CSGOBot",
     "3_25_24_learned_push_combat": "CSMoveCombat",
     "3_28_24_learned_push_combat": "CSMoveCombat15",
+    "4_2_24_learned_push_standard": "CSMoveBot",
+    "4_2_24_second_learned_push_standard": "CSMoveBot",
+    "4_2_24_third_learned_push_standard": "CSMoveBot",
+    "4_2_24_fourth_learned_push_standard": "CSMoveBot",
+    "4_2_24_fifth_learned_push_standard": "CSMoveBot",
 }

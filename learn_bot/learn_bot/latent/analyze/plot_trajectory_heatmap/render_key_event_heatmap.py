@@ -87,7 +87,7 @@ def plot_key_event_heatmaps(title_to_team_to_key_event_pos: title_to_team_to_pos
                                                          max(canvas_min_max[0]), max(canvas_min_max[1])])
     cropped_np_d2_img = np.asarray(cropped_d2_img)
 
-    cmap = plt.get_cmap('tab20b').copy()
+    cmap = plt.get_cmap('turbo').copy()
     cmap.set_under((1, 1, 1, 0))
 
     max_points = 0

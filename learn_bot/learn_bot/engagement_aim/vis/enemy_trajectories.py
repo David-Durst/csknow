@@ -289,7 +289,7 @@ def vis_2d_trajectories(data_df: pd.DataFrame, distribution_trajectory_path: Pat
     filtered_df[victim_speed_abs_column] = (((filtered_df['victim vel x (t)']) ** 2) +
                                         ((filtered_df['victim vel y (t)']) ** 2)).pow(1./2)
 
-    color_map = mpl.colormaps['tab20b']
+    color_map = mpl.colormaps['turbo']
     norm = mpl.colors.Normalize(vmin=0., vmax=250., clip=True)
     mapper = cm.ScalarMappable(norm=norm, cmap=color_map)
 
@@ -337,7 +337,7 @@ def vis_2d_trajectories(data_df: pd.DataFrame, distribution_trajectory_path: Pat
     filtered_df[victim_speed_rel_column] = (((filtered_df['victim vel x (t)'] - filtered_df['attacker vel x (t)']) ** 2) +
                                         ((filtered_df['victim vel y (t)'] - filtered_df['attacker vel y (t)']) ** 2)).pow(1./2)
 
-    color_map = mpl.colormaps['tab20b']
+    color_map = mpl.colormaps['turbo']
     norm = mpl.colors.Normalize(vmin=0., vmax=500., clip=True)
     mapper = cm.ScalarMappable(norm=norm, cmap=color_map)
 

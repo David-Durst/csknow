@@ -84,7 +84,7 @@ def compute_coverage_metrics(loaded_model: LoadedModel, start_positions: bool):
     grid_x, grid_y = np.meshgrid(x_pos_bins, y_pos_bins)
 
     heatmap_im = ax.pcolor(grid_x, grid_y, sum_pos_heatmap, norm=LogNorm(vmin=1, vmax=sum_pos_heatmap.max()),
-                               cmap='tab20b')
+                               cmap='turbo')
     heatmap_im.set_edgecolor('face')
     cbar = fig.colorbar(heatmap_im, ax=ax)
     cbar.ax.tick_params(labelsize=8)

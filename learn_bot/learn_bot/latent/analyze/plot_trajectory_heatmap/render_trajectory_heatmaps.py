@@ -21,8 +21,8 @@ a_example_path = Path(__file__).parent / '..' / 'a_site_example.jpg'
 b_example_path = Path(__file__).parent / '..' / 'b_site_example.jpg'
 
 alpha_color = False
-tab20b_cmap = plt.get_cmap('tab20b')
-tab20b_np = np.asarray([[c[0] * 255, c[1] * 255, c[2] * 255, 255] for c in tab20b_cmap.colors])
+cmap = plt.get_cmap('turbo')
+cmap_np = np.asarray([[c[0] * 255, c[1] * 255, c[2] * 255, 255] for c in cmap.colors])
 
 def plot_one_image_one_team(title: str, ct_team: bool, team_color: List, saturated_team_color: List,
                             base_img: Image.Image, custom_buffer: Optional[np.ndarray] = None):
@@ -62,9 +62,9 @@ def plot_one_image_one_team(title: str, ct_team: bool, team_color: List, saturat
             above_saturated_scaled_buffer = (buffer - 256) / (max_value - 255)
         else:
             above_saturated_scaled_buffer = buffer
-        limit_scaled_buffer = np.where(buffer <= 255, buffer / 16, 16 + above_saturated_scaled_buffer * 4)
+        limit_scaled_buffer = np.where(buffer <= 255, buffer * (204 / 256), 204 + above_saturated_scaled_buffer * 51)
         uint_limit_scaled_buffer = np.uint8(limit_scaled_buffer)
-        color_buffer_with_bad_zeros = tab20b_np[uint_limit_scaled_buffer]
+        color_buffer_with_bad_zeros = cmap_np[uint_limit_scaled_buffer]
         transparent_color_buffer = color_buffer_with_bad_zeros.copy()
         transparent_color_buffer[:, :, 3] = 0
         color_buffer = np.where(buffer_repeated == 0., transparent_color_buffer, color_buffer_with_bad_zeros)
@@ -238,7 +238,7 @@ def plot_trajectories_to_image(titles: List[str], plot_teams_separately: bool, p
 def get_colorbar_image(plots_path: Path):
     a = np.array([[0, 1]])
     fig = plt.figure(figsize=(0.481, 3.217))
-    img = plt.imshow(a, cmap="tab20b")
+    img = plt.imshow(a, cmap="turbo")
     plt.gca().set_visible(False)
     cax = plt.axes([0.2, 0.1, 0.4, 0.8])
     cbar = plt.colorbar(orientation="vertical", cax=cax)
