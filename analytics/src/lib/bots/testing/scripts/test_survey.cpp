@@ -8,6 +8,21 @@
 namespace csknow::survey {
     const vector<string> actualBotNames{"Learned", "Learned Combat", "Hand-Crafted", "Default"};
 
+    string botTypeToCodeName(BotType botType) {
+        if (botType == BotType::Learned) {
+            return "Apple";
+        }
+        else if (botType == BotType::LearnedCombat) {
+            return "Banana";
+        }
+        else if (botType == BotType::Handcrafted) {
+            return "Cherry";
+        }
+        else {
+            return "Date";
+        }
+    }
+
     void SurveyScript::initialize(Tree &tree, ServerState &state) {
         if (tree.newBlackboard) {
             Blackboard &blackboard = *tree.blackboard;
@@ -96,6 +111,8 @@ namespace csknow::survey {
                     }
                 }
             }
+            string codeNameString = "Bot Codename: " + botTypeToCodeName(botScenarioOrder[botIndex]);
+            setupNodes.push_back(make_unique<SayCmd>(blackboard, codeNameString));
             // bot-specific instructions
             setupNodes.push_back(make_unique<SayCmd>(blackboard, botInstructions));
             setupNodes.push_back(make_unique<movement::WaitNode>(blackboard, 3));
@@ -107,7 +124,13 @@ namespace csknow::survey {
             if (botIndex == static_cast<int>(actualBotNames.size() - 1)) {
                 string rankingInstructions0 = "Please rank the bots in this scenario based on the following statement: "
                                              "Player movement matches your expectation of how humans would move in the scenario situation. ";
-                string rankingInstructions1 = "Please rank bots from best match of your expectations to worst match using a comma seperated list like 1,2,3,4";
+                string rankingInstructions1 = "Please rank bots from best match of your expectations to worst match using a comma seperated list like 1,2,3,4 (NO CODENAMES!). As a reminder, the codename order was: ";
+                for (size_t i = 0; i < botScenarioOrder.size(); i++) {
+                    if (i > 0) {
+                        rankingInstructions1 += ",";
+                    }
+                    rankingInstructions1 += botTypeToCodeName(botScenarioOrder[i]);
+                }
                 string rankingInstructions2 = "Type replay if you want to play the scenario again before ranking.";
 
                 vector<CSGOId> neededBotIds = getNeededBotIds();
