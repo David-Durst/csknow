@@ -87,24 +87,17 @@ struct NeedPreTestingInitNode : Node {
         int numBots = 0;
 
         // need preinit testing if any humans aren't spectators
-        int numHumans = 0;
+        int numHumanPlayers = 0;
         for (const auto & client : state.clients) {
-            if (!client.isBot) {
-                bool humanWrongTeam =
-                    (client.team != ENGINE_TEAM_SPEC && numHumans >= numHumansNonSpec) ||
-                    (client.team != ENGINE_TEAM_T && client.team != ENGINE_TEAM_CT && numHumans < numHumansNonSpec);
-                numHumans++;
-                if (humanWrongTeam) {
-                    playerNodeState[treeThinker.csgoId] = NodeState::Success;
-                    return playerNodeState[treeThinker.csgoId];
-                }
+            if (!client.isBot && (client.team == ENGINE_TEAM_T || client.team == ENGINE_TEAM_CT)) {
+                numHumanPlayers++;
             }
             if (client.isBot) {
                 numBots++;
             }
         }
         // need preinit testing if too few bots or humans
-        if (numBots < numNeededNonHumanBots || numHumans < numHumansNonSpec) {
+        if (numBots < numNeededNonHumanBots || numHumanPlayers < numHumansNonSpec) {
             playerNodeState[treeThinker.csgoId] = NodeState::Success;
             return playerNodeState[treeThinker.csgoId];
         }
@@ -129,24 +122,17 @@ struct PreTestingInitFinishedNode : Node {
         }
         int numBots = 0;
         // need preinit testing if any humans aren't spectators
-        int numHumans = 0;
+        int numHumanPlayers = 0;
         for (const auto & client : state.clients) {
-            if (!client.isBot) {
-                bool humanWrongTeam =
-                    (client.team != ENGINE_TEAM_SPEC && numHumans >= numHumansNonSpec) ||
-                    (client.team != ENGINE_TEAM_T && client.team != ENGINE_TEAM_CT && numHumans < numHumansNonSpec);
-                numHumans++;
-                if (humanWrongTeam) {
-                    playerNodeState[treeThinker.csgoId] = NodeState::Running;
-                    return playerNodeState[treeThinker.csgoId];
-                }
+            if (!client.isBot && (client.team == ENGINE_TEAM_T || client.team == ENGINE_TEAM_CT)) {
+                numHumanPlayers++;
             }
             if (client.isBot) {
                 numBots++;
             }
         }
         // need preinit testing if too few bots or humans
-        if (numBots < numNeededNonHumanBots || numHumans < numHumansNonSpec) {
+        if (numBots < numNeededNonHumanBots || numHumanPlayers < numHumansNonSpec) {
             playerNodeState[treeThinker.csgoId] = NodeState::Running;
             return playerNodeState[treeThinker.csgoId];
         }

@@ -24,6 +24,7 @@ namespace csknow::survey {
             string playerName;
             for (const auto & client : state.clients) {
                 if (!client.isBot && (client.team == ENGINE_TEAM_T || client.team == ENGINE_TEAM_CT)) {
+                    //std::cout << "grabbing " << client.name << std::endl;
                     playerName = client.name;
                     break;
                 }

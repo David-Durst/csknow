@@ -80,7 +80,7 @@ struct SavePos : Command {
 
     virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
         std::stringstream result;
-        result << "sm_savePos " << playerName;
+        result << "sm_savePos \"" << playerName << "\"";
         scriptLines = {result.str()};
         return Command::exec(state, treeThinker);
     }
@@ -112,7 +112,7 @@ struct Teleport : Command {
 
     virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
         std::stringstream result;
-        result << "sm_teleport " << playerName;
+        result << "sm_teleport \"" << playerName << "\"";
         scriptLines = {result.str()};
         return Command::exec(state, treeThinker);
     }
@@ -141,7 +141,7 @@ struct TeleportMultiple : Command {
             std::stringstream result;
             result << "sm_setPos " << playerPos[i].x << " " << playerPos[i].y << " " << playerPos[i].z << " "
                 << playerViewAngle[i].y << " " << playerViewAngle[i].x << std::endl;
-            result << "sm_teleport " << playerNames[i];
+            result << "sm_teleport \"" << playerNames[i] << "\"";
             scriptLines.push_back(result.str());
         }
         return Command::exec(state, treeThinker);
@@ -176,7 +176,7 @@ struct SlayAllBut : Command {
         std::stringstream result;
         result << "sm_slayAllBut";
         for (const auto & playerName : playerNames) {
-            result << " " << playerName;
+            result << " \"" << playerName << "\"";
         }
         scriptLines = {result.str()};
         return Command::exec(state, treeThinker);
@@ -194,7 +194,7 @@ struct SetArmor : Command {
 
     virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
         std::stringstream result;
-        result << "sm_setArmor " << playerName << " " << armorValue;
+        result << "sm_setArmor \"" << playerName << "\" " << armorValue;
         scriptLines = {result.str()};
         return Command::exec(state, treeThinker);
     }
@@ -211,7 +211,7 @@ struct SetHealth : Command {
 
     virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
         std::stringstream result;
-        result << "sm_setHealth " << playerName << " " << healthValue;
+        result << "sm_setHealth \"" << playerName << "\" " << healthValue;
         scriptLines = {result.str()};
         return Command::exec(state, treeThinker);
     }
@@ -240,9 +240,9 @@ struct SetHealthArmorHelmetMultiple : Command {
         scriptLines = {};
         for (size_t i = 0; i < playerNames.size(); i++) {
             std::stringstream result;
-            result << "sm_setHealth " << playerNames[i] << " " << health[i] << std::endl;
-            result << "sm_setArmor " << playerNames[i] << " " << armor[i] << std::endl;
-            result << "sm_setHelmet " << playerNames[i] << " " << (helmet[i] ? 1 : 0) << std::endl;
+            result << "sm_setHealth \"" << playerNames[i] << "\" " << health[i] << std::endl;
+            result << "sm_setArmor \"" << playerNames[i] << "\" " << armor[i] << std::endl;
+            result << "sm_setHelmet \"" << playerNames[i] << "\" " << (helmet[i] ? 1 : 0) << std::endl;
             scriptLines.push_back(result.str());
         }
         return Command::exec(state, treeThinker);
@@ -277,7 +277,7 @@ struct GiveItem : Command {
 
     virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
         std::stringstream result;
-        result << "sm_giveItem " << playerName << " " << itemName;
+        result << "sm_giveItem \"" << playerName << "\" " << itemName;
         scriptLines = {result.str()};
         return Command::exec(state, treeThinker);
     }
@@ -293,7 +293,7 @@ struct RemoveGuns : Command {
 
     virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
         std::stringstream result;
-        result << "sm_removeGuns " << playerName;
+        result << "sm_removeGuns \"" << playerName << "\"";
         scriptLines = {result.str()};
         return Command::exec(state, treeThinker);
     }
@@ -310,7 +310,7 @@ struct SetCurrentItem : Command {
 
     virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
         std::stringstream result;
-        result << "sm_setCurrentItem " << playerName << " " << itemName;
+        result << "sm_setCurrentItem \"" << playerName << "\" " << itemName;
         scriptLines = {result.str()};
         return Command::exec(state, treeThinker);
     }
@@ -330,7 +330,7 @@ struct SpecPlayerToTarget : Command {
 
     virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
         std::stringstream result;
-        result << "sm_specPlayerToTarget " << playerName << " " << targetName;
+        result << "sm_specPlayerToTarget \"" << playerName << "\" " << targetName;
         if (thirdPerson) {
             result << " t";
         }
@@ -353,7 +353,7 @@ struct SpecGoto : Command {
 
     virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
         std::stringstream result;
-        result << "sm_specGoto " << playerName << " " << pos.x << " " << pos.y << " " << pos.z << " " << angle.y << " " << angle.x;
+        result << "sm_specGoto \"" << playerName << "\" " << pos.x << " " << pos.y << " " << pos.z << " " << angle.y << " " << angle.x;
         scriptLines = {result.str()};
         return Command::exec(state, treeThinker);
     }
