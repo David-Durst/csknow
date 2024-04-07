@@ -33,7 +33,7 @@ struct PreTestingInit : Command {
             Command(blackboard, "PreTestingInitCmd"), numHumansNonSpec(numHumansNonSpec) { }
     virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
         blackboard.inTest = true;
-        scriptLines = {"sm_allHumansSpec " + std::to_string(numHumansNonSpec) + "; sm_botDebug f; sm_skipFirstRound;"};
+        scriptLines = {"sm_allHumansSpec " + std::to_string(numHumansNonSpec) + "; sm_botDebug f; sm_skipFirstRound; sm_draw;"};
         return Command::exec(state, treeThinker);
     }
 };

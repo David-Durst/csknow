@@ -132,7 +132,7 @@ namespace csknow::inference_manager {
         auto end = std::chrono::system_clock::now();
         std::chrono::duration<double> inferenceTime = end - start;
         double tmpInferenceSeconds = inferenceTime.count();
-        if (tmpInferenceSeconds > 1e-5) {
+        if (tmpInferenceSeconds > 1e-4) {
             inferenceSeconds = tmpInferenceSeconds;
         }
         if (overallModelToRun - 1 == 0 || overallModelToRun - 1 == 8) {

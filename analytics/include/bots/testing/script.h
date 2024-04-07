@@ -97,7 +97,7 @@ struct NeedPreTestingInitNode : Node {
             }
         }
         // need preinit testing if too few bots or humans
-        if (numBots < numNeededNonHumanBots || numHumanPlayers < numHumansNonSpec) {
+        if (numBots < numNeededNonHumanBots || numHumanPlayers != numHumansNonSpec) {
             playerNodeState[treeThinker.csgoId] = NodeState::Success;
             return playerNodeState[treeThinker.csgoId];
         }
@@ -132,7 +132,7 @@ struct PreTestingInitFinishedNode : Node {
             }
         }
         // need preinit testing if too few bots or humans
-        if (numBots < numNeededNonHumanBots || numHumanPlayers < numHumansNonSpec) {
+        if (numBots < numNeededNonHumanBots || numHumanPlayers != numHumansNonSpec) {
             playerNodeState[treeThinker.csgoId] = NodeState::Running;
             return playerNodeState[treeThinker.csgoId];
         }
@@ -152,12 +152,14 @@ public:
         if (tree.newBlackboard) {
             Blackboard & blackboard = *tree.blackboard;
             Script::initialize(tree, state);
-            int numNeededNonHumanBots = 0;
+            int numNeededNonHumanBots = 7 - numHumansNonSpec;
+            /*
             for (const auto & neededBot : neededBots) {
                 if (!neededBot.human) {
                     numNeededNonHumanBots++;
                 }
             }
+             */
             commands = make_unique<SequenceNode>(blackboard, Node::makeList(
                     make_unique<NeedPreTestingInitNode>(blackboard, numHumansNonSpec, numNeededNonHumanBots),
                     make_unique<PreTestingInit>(blackboard, numHumansNonSpec),

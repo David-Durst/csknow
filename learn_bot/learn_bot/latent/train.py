@@ -63,6 +63,8 @@ hyperparameter_option_range = [HyperparameterOptions(num_input_time_steps=1, con
                                HyperparameterOptions(num_input_time_steps=1, bc_epochs=80, layers=1, heads=1, control_type=ControlType.SimilarityControl),
                                HyperparameterOptions(num_input_time_steps=1, heads=1, control_type=ControlType.SimilarityControl,
                                                      weight_shoot=50., weight_not_shoot=0.),
+                               HyperparameterOptions(num_input_time_steps=1, layers=16, heads=1, control_type=ControlType.SimilarityControl),
+                               HyperparameterOptions(num_input_time_steps=1, layers=16, heads=4, control_type=ControlType.SimilarityControl),
                                HyperparameterOptions(num_input_time_steps=3, control_type=ControlType.SimilarityControl),
                                HyperparameterOptions(num_input_time_steps=1, control_type=ControlType.SimilarityControl,
                                                      weight_shoot=75.),
