@@ -59,4 +59,4 @@ def profile_loaded_model(model_path):
 
 
 if __name__ == '__main__':
-    profile_loaded_model(sys.args[1])
+    profile_loaded_model(sys.argv[1])
