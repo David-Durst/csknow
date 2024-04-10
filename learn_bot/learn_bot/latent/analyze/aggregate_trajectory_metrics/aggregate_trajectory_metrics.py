@@ -31,7 +31,9 @@ class MetricAggregation:
 def aggregate_one_metric_type(rollout_extensions: list[str], rollout_prefix: str, metric_data_path: Path,
                               diff_to_first_player_type: bool, aggregation_plots_path: Path, event_type: str,
                               # set if only one event in the event (like lifetimes), so need to convert series to dataframe
-                              event_name: Optional[str] = None) -> MetricAggregation:
+                              event_name: Optional[str] = None,
+                              # set if events need to be sorted (like lifetimes and shots per kill)
+                              sorted_example_path: Optional[Path] = None) -> MetricAggregation:
     event_nps: List[np.ndarray] = []
 
     for i, rollout_extension in enumerate(rollout_extensions):
@@ -43,6 +45,9 @@ def aggregate_one_metric_type(rollout_extensions: list[str], rollout_prefix: str
             new_event_dict = {k: [v] for k, v in new_event_dict.items()}
             new_event_df = pd.DataFrame.from_dict(new_event_dict)
             new_event_df.index = [event_name]
+            if sorted_example_path:
+                sorted_example_df = pd.read_csv(plots_path / sorted_example_path, index_col=0)
+                new_event_df = new_event_df[sorted_example_df.index]
         else:
             new_event_df = pd.read_csv(plots_path / metric_data_path, index_col=0)
         if i == 0:
@@ -205,10 +210,10 @@ def aggregate_trajectory_metrics(rollout_extensions: list[str], rollout_prefix: 
 
     lifetimes_no_filter = \
         aggregate_one_metric_type(rollout_extensions, rollout_prefix, Path("lifetimes_no_filter.txt"), False,
-                                  aggregation_plots_path, 'lifetimes_no_filter', 'Lifetimes')
+                                  aggregation_plots_path, 'lifetimes_no_filter', 'Lifetimes', Path("diff") / "emd_no_filter.txt")
     shots_per_kill_no_filter = \
         aggregate_one_metric_type(rollout_extensions, rollout_prefix, Path("shots_per_kill_no_filter.txt"), False,
-                                  aggregation_plots_path, 'shots_per_kill_no_filter', 'Shots Per Kill')
+                                  aggregation_plots_path, 'shots_per_kill_no_filter', 'Shots Per Kill', Path("diff") / "emd_no_filter.txt")
     create_latex_tables(offense_events, defense_events, emd_no_filter, emd_only_kill,
                         lifetimes_no_filter, shots_per_kill_no_filter, aggregation_plots_path)
 

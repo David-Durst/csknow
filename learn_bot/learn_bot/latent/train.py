@@ -62,6 +62,8 @@ hyperparameter_option_range = [HyperparameterOptions(num_input_time_steps=1, con
                                HyperparameterOptions(num_input_time_steps=1, heads=1, control_type=ControlType.SimilarityControl),
                                HyperparameterOptions(num_input_time_steps=1, heads=1, control_type=ControlType.SimilarityControl,
                                                      dim_feedforward=256),
+                               HyperparameterOptions(num_input_time_steps=1, heads=1, control_type=ControlType.SimilarityControl,
+                                                     weight_push=2., weight_save=0.),
                                HyperparameterOptions(num_input_time_steps=1, bc_epochs=80, layers=1, heads=1, control_type=ControlType.SimilarityControl),
                                HyperparameterOptions(num_input_time_steps=1, heads=1, control_type=ControlType.SimilarityControl,
                                                      weight_shoot=50., weight_not_shoot=0.),
@@ -342,7 +344,7 @@ def train(train_type: TrainType, multi_hdf5_wrapper: MultiHDF5Wrapper,
                         #print('bad pred')
                         sys.exit(0)
                     compute_total_mask_statistics(Y, model.num_players, output_mask, total_mask_statistics)
-                    batch_loss = compute_loss(model, pred_flattened, Y_flattened, X, X_flattened_orig, X_flattened_rollout,
+                    batch_loss = compute_loss(model, pred_flattened, Y_flattened, X, similarity, X_flattened_orig, X_flattened_rollout,
                                               duplicated_last_flattened, model.num_players,
                                               output_mask,
                                               hyperparameter_options.weight_not_move_loss,

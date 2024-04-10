@@ -124,7 +124,7 @@ def make_future_predictions_zero(Y, pred):
 
 
 # https://discuss.pytorch.org/t/how-to-combine-multiple-criterions-to-a-loss-function/348/4
-def compute_loss(model: TransformerNestedHiddenLatentModel, pred, Y, X, X_orig: Optional, X_rollout: Optional,
+def compute_loss(model: TransformerNestedHiddenLatentModel, pred, Y, X, similarity, X_orig: Optional, X_rollout: Optional,
                  duplicated_last, num_players, output_mask, weight_not_move_loss: Optional[float],
                  weight_shoot: Optional[float], weight_not_shoot: Optional[float]) -> LatentLosses:
     global cross_entropy_loss_fn
