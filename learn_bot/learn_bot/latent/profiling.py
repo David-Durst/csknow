@@ -47,6 +47,7 @@ def profile_loaded_model(model_path):
     first_row = torch.zeros([1, 1144])
     first_row_similarity = torch.zeros([1, 1])
     cpu_model = torch.jit.load(model_path)
+    print_trainable_parameters(cpu_model)
     cpu_model(first_row, first_row_similarity, temperature_cpu)
     cpu_model(first_row, first_row_similarity, temperature_cpu)
     cpu_model(first_row, first_row_similarity, temperature_cpu)
