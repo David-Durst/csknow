@@ -78,7 +78,7 @@ no_legend_set = {'Defense Spread'}
 
 
 def plot_place_title_df(df: pd.DataFrame, chart_name: str, plot_file_path: Path, y_label: str, y_ticks: List,
-                        margin_df: Optional[pd.DataFrame] = None):
+                        margin_df: Optional[pd.DataFrame] = None, force_y_min_zero = False):
     df.index = df.index.to_series().replace(situation_rename_dict)
     df.rename(title_rename_dict, axis=1, inplace=True)
     if margin_df is not None:
@@ -94,6 +94,8 @@ def plot_place_title_df(df: pd.DataFrame, chart_name: str, plot_file_path: Path,
     # ax.set_xlabel(x_label)
     ax.set_ylabel(y_label, fontsize=8)
     ax.set_yticks(y_ticks)
+    if force_y_min_zero:
+        ax.set_ylim(bottom=0)
 
     #ax.set_xticks(x_ticks)
 

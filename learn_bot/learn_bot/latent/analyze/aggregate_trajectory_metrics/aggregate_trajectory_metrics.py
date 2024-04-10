@@ -21,11 +21,16 @@ class MetricAggregation:
     per_event_median_df: pd.DataFrame
     per_event_iqr_df: pd.DataFrame
     all_events_median_iqr_df: pd.DataFrame
+    per_event_delta_median_df: Optional[pd.DataFrame]
+    per_event_delta_iqr_df: Optional[pd.DataFrame]
 
     def to_csv(self, plots_path: Path, event_name: str):
         self.per_event_median_df.to_csv(plots_path / (event_name + "_per_event_median.csv"))
         self.per_event_iqr_df.to_csv(plots_path / (event_name + "_per_event_iqr.csv"))
         self.all_events_median_iqr_df.to_csv(plots_path / (event_name + "_all_events.csv"))
+        if self.per_event_delta_median_df is not None:
+            self.per_event_delta_median_df.to_csv(plots_path / (event_name + "_per_event_delta_median.csv"))
+            self.per_event_delta_iqr_df.to_csv(plots_path / (event_name + "_per_event_delta_iqr.csv"))
 
 
 def aggregate_one_metric_type(rollout_extensions: list[str], rollout_prefix: str, metric_data_path: Path,
@@ -62,9 +67,16 @@ def aggregate_one_metric_type(rollout_extensions: list[str], rollout_prefix: str
     per_event_iqr_np = iqr(event_np, axis=2)
     per_event_iqr_df = pd.DataFrame(data=per_event_iqr_np, index=row_index, columns=column_names)
 
+    per_event_delta_median_df = None
+    per_event_delta_iqr_df = None
     if diff_to_first_player_type:
         column_names = column_names[1:]
+        event_delta_np = np.abs(event_np[:, 1:, :] - event_np[:, [0], :])
         event_np = np.abs((event_np[:, 1:, :] - event_np[:, [0], :]) / event_np[:, [0], :])
+        per_event_delta_median_np = np.median(event_delta_np, axis=2)
+        per_event_delta_median_df = pd.DataFrame(data=per_event_delta_median_np, index=row_index, columns=column_names)
+        per_event_delta_iqr_np = iqr(event_delta_np, axis=2)
+        per_event_delta_iqr_df = pd.DataFrame(data=per_event_delta_iqr_np, index=row_index, columns=column_names)
 
     # in order to aggregate across different events, get player type first dimension,
     # then event type, then different trials of events
@@ -73,7 +85,8 @@ def aggregate_one_metric_type(rollout_extensions: list[str], rollout_prefix: str
     all_events_iqr_np = iqr(player_event_trials_np, axis=1)
     all_events_median_iqr_df = \
         pd.DataFrame(data=[all_events_median_np, all_events_iqr_np], columns=column_names, index=['Median', 'IQR'])
-    result = MetricAggregation(per_event_median_df, per_event_iqr_df, all_events_median_iqr_df)
+    result = MetricAggregation(per_event_median_df, per_event_iqr_df, all_events_median_iqr_df,
+                               per_event_delta_median_df, per_event_delta_iqr_df)
     result.to_csv(aggregation_plots_path, event_type)
     return result
 
@@ -82,20 +95,20 @@ def plot_offense_defense(offense_events: MetricAggregation, defense_events: Metr
                          aggregation_plots_path: Path):
     fig, axs = plt.subplots(figsize=(3.3, 3.3*0.6 * 2), nrows=2, ncols=1)
 
-    offense_events_median_df = offense_events.per_event_median_df
+    offense_events_median_df = offense_events.per_event_delta_median_df
     offense_events_median_df.index = offense_events_median_df.index.to_series().replace(situation_rename_dict)
     offense_events_median_df.rename(title_rename_dict, axis=1, inplace=True)
-    offense_events_iqr_df = offense_events.per_event_iqr_df
+    offense_events_iqr_df = offense_events.per_event_delta_iqr_df
     offense_events_iqr_df.index = offense_events_iqr_df.index.to_series().replace(situation_rename_dict)
     offense_events_iqr_df.rename(title_rename_dict, axis=1, inplace=True)
 
     offense_events_median_df.plot(kind='bar', rot=0, ax=axs[0], yerr=offense_events_iqr_df)#, color=default_bar_color)
     axs[0].tick_params(axis="x", labelsize=8)
     axs[0].tick_params(axis="y", labelsize=8)
-    axs[0].set_title("Offense Flank Occurrences", fontsize=8)
+    axs[0].set_title("Human Delta Offense Flank Occurrences", fontsize=8)
     # ax.set_xlabel(x_label)
-    axs[0].set_ylabel('Rounds', fontsize=8)
-    axs[0].set_yticks([0, 40, 80])
+    axs[0].set_ylabel('Abs Rounds Delta Human', fontsize=8)
+    axs[0].set_yticks([0, 30, 60])
 
     axs[0].spines['top'].set_visible(False)
     axs[0].spines['right'].set_visible(False)
@@ -108,10 +121,10 @@ def plot_offense_defense(offense_events: MetricAggregation, defense_events: Metr
     axs[0].get_legend().remove()
 
 
-    defense_events_median_df = defense_events.per_event_median_df
+    defense_events_median_df = defense_events.per_event_delta_median_df
     defense_events_median_df.index = defense_events_median_df.index.to_series().replace(situation_rename_dict)
     defense_events_median_df.rename(title_rename_dict, axis=1, inplace=True)
-    defense_events_iqr_df = defense_events.per_event_iqr_df
+    defense_events_iqr_df = defense_events.per_event_delta_iqr_df
     defense_events_iqr_df.index = defense_events_iqr_df.index.to_series().replace(situation_rename_dict)
     defense_events_iqr_df.rename(title_rename_dict, axis=1, inplace=True)
 
@@ -120,8 +133,8 @@ def plot_offense_defense(offense_events: MetricAggregation, defense_events: Metr
     axs[1].tick_params(axis="y", labelsize=8)
     axs[1].set_title("Defense Spread Occurrences", fontsize=8)
     # ax.set_xlabel(x_label)
-    axs[1].set_ylabel('Rounds', fontsize=8)
-    axs[1].set_yticks([0, 40, 80])
+    axs[1].set_ylabel('Abs Rounds Delta Human', fontsize=8)
+    axs[1].set_yticks([0, 30, 60])
 
     axs[1].spines['top'].set_visible(False)
     axs[1].spines['right'].set_visible(False)
@@ -140,11 +153,11 @@ def plot_offense_defense(offense_events: MetricAggregation, defense_events: Metr
 
 def plot_mistakes(mistakes_events: MetricAggregation, aggregation_plots_path: Path):
     if len([s for s in mistakes_events.per_event_median_df.columns if 'CSGOBot' in s]) > 0:
-        y_ticks = [0, 100, 200]
+        y_ticks = [0, 75, 150]
     else:
         y_ticks = [0, 20, 40]
-    plot_place_title_df(mistakes_events.per_event_median_df, 'Mistakes', aggregation_plots_path / 'mistakes.pdf',
-                        'Rounds', y_ticks, mistakes_events.per_event_iqr_df)
+    plot_place_title_df(mistakes_events.per_event_delta_median_df, 'Mistakes', aggregation_plots_path / 'mistakes.pdf',
+                        'Abs Rounds Delta Human', y_ticks, mistakes_events.per_event_delta_iqr_df, force_y_min_zero=True)
 
 
 def create_latex_tables(offense_events: MetricAggregation, defense_events: MetricAggregation,
