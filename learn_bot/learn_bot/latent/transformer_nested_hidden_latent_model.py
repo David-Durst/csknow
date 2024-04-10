@@ -83,7 +83,7 @@ class TransformerNestedHiddenLatentModel(nn.Module):
 
     def __init__(self, cts: IOColumnTransformers, internal_width: int, num_players: int, num_input_time_steps: int,
                  num_layers: int, num_heads: int, control_type: ControlType, player_mask_type: PlayerMaskType,
-                 mask_partial_info: bool):
+                 mask_partial_info: bool, dim_feedforward: int):
         super(TransformerNestedHiddenLatentModel, self).__init__()
         self.cts = cts
         self.internal_width = internal_width
@@ -220,7 +220,7 @@ class TransformerNestedHiddenLatentModel(nn.Module):
         self.nav_data_cpu = NavData(CPU_DEVICE_STR)
         self.nav_data_cuda = NavData(CUDA_DEVICE_STR)
 
-        transformer_encoder_layer = nn.TransformerEncoderLayer(d_model=self.internal_width, nhead=num_heads, batch_first=True)
+        transformer_encoder_layer = nn.TransformerEncoderLayer(d_model=self.internal_width, nhead=num_heads, dim_feedforward=dim_feedforward, batch_first=True)
         self.transformer_encoder = nn.TransformerEncoder(transformer_encoder_layer, num_layers=num_layers, enable_nested_tensor=False)
 
         self.decoder = nn.Sequential(

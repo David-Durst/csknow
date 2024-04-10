@@ -60,6 +60,8 @@ hyperparameter_option_range = [HyperparameterOptions(num_input_time_steps=1, con
                                                      bc_epochs=40),
                                HyperparameterOptions(num_input_time_steps=1, bc_epochs=40, layers=1, control_type=ControlType.SimilarityControl),
                                HyperparameterOptions(num_input_time_steps=1, heads=1, control_type=ControlType.SimilarityControl),
+                               HyperparameterOptions(num_input_time_steps=1, heads=1, control_type=ControlType.SimilarityControl,
+                                                     dim_feedforward=256),
                                HyperparameterOptions(num_input_time_steps=1, bc_epochs=80, layers=1, heads=1, control_type=ControlType.SimilarityControl),
                                HyperparameterOptions(num_input_time_steps=1, heads=1, control_type=ControlType.SimilarityControl,
                                                      weight_shoot=50., weight_not_shoot=0.),
@@ -207,7 +209,8 @@ def train(train_type: TrainType, multi_hdf5_wrapper: MultiHDF5Wrapper,
                                                    hyperparameter_options.layers, hyperparameter_options.heads,
                                                    hyperparameter_options.control_type,
                                                    hyperparameter_options.player_mask_type,
-                                                   hyperparameter_options.mask_partial_info)
+                                                   hyperparameter_options.mask_partial_info,
+                                                   hyperparameter_options.dim_feedforward)
         if load_model_path:
             model_file = torch.load(load_model_path)
             model.load_state_dict(model_file['model_state_dict'])
