@@ -126,7 +126,8 @@ def make_future_predictions_zero(Y, pred):
 # https://discuss.pytorch.org/t/how-to-combine-multiple-criterions-to-a-loss-function/348/4
 def compute_loss(model: TransformerNestedHiddenLatentModel, pred, Y, X, similarity, X_orig: Optional, X_rollout: Optional,
                  duplicated_last, num_players, output_mask, weight_not_move_loss: Optional[float],
-                 weight_shoot: Optional[float], weight_not_shoot: Optional[float]) -> LatentLosses:
+                 weight_shoot: Optional[float], weight_not_shoot: Optional[float],
+                 weight_push: Optional[float], weight_save: Optional[float]) -> LatentLosses:
     global cross_entropy_loss_fn
     pred_transformed = get_transformed_outputs(pred)
 
@@ -190,14 +191,23 @@ def compute_loss(model: TransformerNestedHiddenLatentModel, pred, Y, X, similari
         weight_valid_shoot_cur_tick_per_player_time += not_valid_shoot_cur_tick_per_player * weight_not_shoot
     else:
         weight_valid_shoot_cur_tick_per_player_time = None
-    #    num_repeats = int(weight_not_move_loss) - 1
-    #    valid_pred_transformed_shoot = valid_pred_transformed[valid_shoot_cur_tick_per_player].repeat([num_repeats, 1])
-    #    valid_pred_transformed = torch.cat([valid_pred_transformed, valid_pred_transformed_shoot], 0)
-    #    valid_Y_transformed_shoot = valid_Y_transformed[valid_shoot_cur_tick_per_player].repeat([num_repeats, 1])
-    #    valid_Y_transformed = torch.cat([valid_Y_transformed, valid_Y_transformed_shoot], 0)
-    #    valid_duplicated_shoot = torch.full([valid_pred_transformed_shoot.shape[0]], False,
-    #                                        device=valid_Y_transformed.device)
-    #    valid_duplicated = torch.cat([valid_duplicated, valid_duplicated_shoot], 0)
+    if weight_push is not None or weight_save is not None:
+        if weight_push is None:
+            weight_push = 1.
+        if weight_save is None:
+            weight_save = 1.
+        # need to repeat so get value per player
+        no_time_push_cur_tick = (similarity > 0).repeat([1, model.num_players])
+        push_cur_tick_per_player_time = rearrange(
+            repeat(no_time_push_cur_tick, 'b p -> b (p repeat)', repeat=num_radial_ticks),
+            'b pt -> (b pt)'
+        )
+        valid_push_cur_tick_per_player = push_cur_tick_per_player_time[valid_rows]
+        weight_valid_push_cur_tick_per_player_time = valid_push_cur_tick_per_player * weight_push
+        not_valid_push_cur_tick_per_player = ~push_cur_tick_per_player_time[valid_rows]
+        weight_valid_push_cur_tick_per_player_time += not_valid_push_cur_tick_per_player * weight_save
+    else:
+        weight_valid_push_cur_tick_per_player_time = None
 
     if valid_Y_transformed[~valid_duplicated].shape[0] > 0:
         cat_loss = cross_entropy_loss_fn(valid_pred_transformed[~valid_duplicated],
@@ -206,6 +216,8 @@ def compute_loss(model: TransformerNestedHiddenLatentModel, pred, Y, X, similari
         #                                 valid_Y_transformed[~valid_duplicated])
         if weight_valid_shoot_cur_tick_per_player_time is not None:
             cat_loss = cat_loss * weight_valid_shoot_cur_tick_per_player_time
+        if weight_valid_push_cur_tick_per_player_time is not None:
+            cat_loss = cat_loss * weight_valid_push_cur_tick_per_player_time
         if torch.isnan(cat_loss).any():
             print('bad cat loss')
         losses.cat_loss = torch.mean(cat_loss)
@@ -254,9 +266,9 @@ def compute_loss(model: TransformerNestedHiddenLatentModel, pred, Y, X, similari
 
 duplicated_name_str = 'duplicated'
 
-def compute_accuracy_and_delta_diff(model, pred, Y, X, duplicated_last, accuracy, delta_diff_xy, delta_diff_xyz,
+def compute_accuracy_and_delta_diff(model, pred, Y, X, similarity, duplicated_last, accuracy, delta_diff_xy, delta_diff_xyz,
                                     valids_per_accuracy_column, num_players, column_transformers: IOColumnTransformers,
-                                    stature_to_speed, output_mask, weight_shoot_only):
+                                    stature_to_speed, output_mask, weight_shoot_only, weight_push_only):
     pred_untransformed = get_untransformed_outputs(pred)
 
     name = column_transformers.output_types.categorical_distribution_first_sub_cols[0]
@@ -276,6 +288,11 @@ def compute_accuracy_and_delta_diff(model, pred, Y, X, duplicated_last, accuracy
         no_time_shoot_cur_tick = X[:, model.shots_cur_tick] > 0
         shoot_cur_tick_per_player_time = repeat(no_time_shoot_cur_tick, 'b p -> b (p repeat)', repeat=num_radial_ticks)
         Y_valid_per_player_row *= shoot_cur_tick_per_player_time
+    if weight_push_only:
+        # only 1 col, so everything is per player, no inner dimension d
+        no_time_push_cur_tick = (similarity > 0).repeat([1, model.num_players])
+        push_cur_tick_per_player_time = repeat(no_time_push_cur_tick, 'b p -> b (p repeat)', repeat=num_radial_ticks)
+        Y_valid_per_player_row *= push_cur_tick_per_player_time
 
     masked_accuracy_per_player = accuracy_per_player * Y_valid_per_player_row
 

@@ -348,7 +348,8 @@ def train(train_type: TrainType, multi_hdf5_wrapper: MultiHDF5Wrapper,
                                               duplicated_last_flattened, model.num_players,
                                               output_mask,
                                               hyperparameter_options.weight_not_move_loss,
-                                              hyperparameter_options.weight_shoot, hyperparameter_options.weight_not_shoot)
+                                              hyperparameter_options.weight_shoot, hyperparameter_options.weight_not_shoot,
+                                              hyperparameter_options.weight_push, hyperparameter_options.weight_save)
                     # uncomment here and below causes memory issues
                     cumulative_loss += batch_loss
                     #losses.append(batch_loss.total_loss.tolist()[0])
@@ -359,11 +360,12 @@ def train(train_type: TrainType, multi_hdf5_wrapper: MultiHDF5Wrapper,
                     scaler.step(optimizer)
                     scaler.update()
 
-                compute_accuracy_and_delta_diff(model, pred_flattened, Y_flattened, X, duplicated_last_flattened,
+                compute_accuracy_and_delta_diff(model, pred_flattened, Y_flattened, X, similarity, duplicated_last_flattened,
                                                 accuracy, delta_diff_xy, delta_diff_xyz,
                                                 valids_per_accuracy_column, model.num_players, column_transformers,
                                                 model.stature_to_speed_gpu, output_mask,
-                                                hyperparameter_options.weight_not_shoot == 0.)
+                                                hyperparameter_options.weight_not_shoot == 0.,
+                                                hyperparameter_options.weight_save == 0.)
                 pbar.update(1)
                 if profiler is not None:
                     profiler.step()
