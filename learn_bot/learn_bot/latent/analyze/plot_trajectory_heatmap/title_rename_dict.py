@@ -42,6 +42,8 @@ title_rename_dict = {
     "4_2_24_third_learned_push_standard": "CSMoveBot",
     "4_2_24_fourth_learned_push_standard": "CSMoveBot",
     "4_2_24_fifth_learned_push_standard": "CSMoveBot",
+    "4_7_24_learned_layers_16_heads_4": "CSML16H4",
+    "4_7_24_learned_layers_16_heads_1": "CSML16H1",
     "4_6_24_learned_layers_1_heads_4": "CSML1H4",
     "4_6_24_learned_layers_1_heads_1": "CSML1H1",
     "4_4_24_learned_layers_4_heads_1": "CSML4H1",
