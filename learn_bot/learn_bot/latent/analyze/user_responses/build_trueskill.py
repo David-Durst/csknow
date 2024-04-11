@@ -59,7 +59,8 @@ class PlayerRatings:
         mus = [self.human.mu, self.learned.mu, self.handcrafted.mu, self.default.mu]
         sigmas = [self.human.sigma, self.learned.sigma, self.handcrafted.sigma, self.default.sigma]
 
-        ax.barh(nice_bot_types, mus, xerr=sigmas, align='center', ecolor='black', color=default_bar_color, capsize=1)
+        barlist = ax.barh(nice_bot_types, mus, xerr=sigmas, align='center', ecolor='black', color=default_bar_color, capsize=1)
+        barlist[1].set_color('#ef7a7a')
         ax.set_xlim(0, 40)
         ax.set_xticks([0, 20, 40])
         ax.set_xlabel('TrueSkill Rating', fontsize=8)
