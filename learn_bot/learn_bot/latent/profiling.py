@@ -1,4 +1,4 @@
-import pathlib
+from pathlib import Path
 import sys
 import time
 import torch
@@ -9,13 +9,17 @@ from torch._C._profiler import ProfilerActivity
 from torch.autograd.profiler import record_function
 from torch.profiler import profile
 
+from learn_bot.latent.engagement.column_names import max_enemies
+from learn_bot.latent.hyperparameter_options import HyperparameterOptions
+from learn_bot.latent.transformer_nested_hidden_latent_model import TransformerNestedHiddenLatentModel
+
 aggregate_batch_time = 0.
 num_batch_calls = 0
 aggregate_per_row_time = 0.
 num_per_row_calls = 0
 
 
-def profile_latent_model(model_path: pathlib.Path, batch_size: int, batch: torch.Tensor):
+def profile_latent_model(model_path: Path, batch_size: int, batch: torch.Tensor):
     global aggregate_batch_time, num_batch_calls, aggregate_per_row_time, num_per_row_calls
     torch.set_num_threads(1)
     model = torch.jit.optimize_for_inference(torch.jit.load(model_path))
@@ -47,15 +51,29 @@ def print_flop_analysis(model, x):
     print(flops.by_operator())
 
 
-def profile_loaded_model(model_path):
+def load_non_script_module(model_path: Path):
+    model_file = torch.load(model_path / "delta_pos_checkpoint.pt")
+    hyperparameter_options: HyperparameterOptions = model_file['hyperparameter_options']
+    model = TransformerNestedHiddenLatentModel(model_file['column_transformers'], hyperparameter_options.internal_width,
+                                               2 * max_enemies, hyperparameter_options.num_input_time_steps,
+                                               hyperparameter_options.layers, hyperparameter_options.heads,
+                                               hyperparameter_options.control_type,
+                                               hyperparameter_options.player_mask_type,
+                                               hyperparameter_options.mask_partial_info,
+                                               hyperparameter_options.dim_feedforward)
+    model.load_state_dict(model_file['model_state_dict'])
+    return model
+
+
+def profile_loaded_model(model_path: Path):
     torch.set_num_threads(1)
     torch.set_num_interop_threads(1)
     temperature_cpu = torch.Tensor([1.])
     first_row = torch.zeros([1, 1144])
     first_row_similarity = torch.zeros([1, 1])
-    cpu_model = torch.jit.load(model_path)
+    cpu_model = torch.jit.load(model_path / "delta_pos_script_model.pt")
     print_trainable_parameters(cpu_model)
-    print_flop_analysis(cpu_model, (first_row, first_row_similarity, temperature_cpu))
+    print_flop_analysis(load_non_script_module(model_path), (first_row, first_row_similarity, temperature_cpu))
     cpu_model(first_row, first_row_similarity, temperature_cpu)
     cpu_model(first_row, first_row_similarity, temperature_cpu)
     cpu_model(first_row, first_row_similarity, temperature_cpu)
@@ -68,4 +86,4 @@ def profile_loaded_model(model_path):
 
 
 if __name__ == '__main__':
-    profile_loaded_model(sys.argv[1])
+    profile_loaded_model(Path(sys.argv[1]))
