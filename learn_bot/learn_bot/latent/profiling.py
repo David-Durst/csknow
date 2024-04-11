@@ -4,6 +4,7 @@ import time
 import torch
 import random
 
+from fvcore.nn import FlopCountAnalysis
 from torch._C._profiler import ProfilerActivity
 from torch.autograd.profiler import record_function
 from torch.profiler import profile
@@ -40,6 +41,12 @@ def print_trainable_parameters(model):
     print(sum(p.numel() for p in model.parameters() if p.requires_grad))
 
 
+def print_flop_analysis(model, x):
+    flops = FlopCountAnalysis(model, x)
+    print(flops.total())
+    print(flops.by_operator())
+
+
 def profile_loaded_model(model_path):
     torch.set_num_threads(1)
     torch.set_num_interop_threads(1)
@@ -48,6 +55,7 @@ def profile_loaded_model(model_path):
     first_row_similarity = torch.zeros([1, 1])
     cpu_model = torch.jit.load(model_path)
     print_trainable_parameters(cpu_model)
+    print_flop_analysis(cpu_model, (first_row, first_row_similarity, temperature_cpu))
     cpu_model(first_row, first_row_similarity, temperature_cpu)
     cpu_model(first_row, first_row_similarity, temperature_cpu)
     cpu_model(first_row, first_row_similarity, temperature_cpu)
