@@ -137,8 +137,8 @@ def compute_plant_statistics():
 
     # plot ct per round
     plot_hist(axs[0, 0], players_per_round_df['ct per round'], [0.5, 1.5, 2.5, 3.5, 4.5, 5.5])
-    axs[0, 0].set_title('Initial Offense', fontsize=8, x=0.45)
-    axs[0, 0].set_xlabel('Players', fontsize=8, labelpad=2)
+    axs[0, 0].set_title('Offense', fontsize=8, x=0.45)
+    axs[0, 0].set_xlabel('Initial Players', fontsize=8, labelpad=2)
     axs[0, 0].set_ylabel('Percent Of Rounds', fontsize=7, labelpad=2)
     #axs[0, 0].text(3, 0.2, players_per_round_df['ct per round'].describe().to_string())
     axs[0, 0].set_ylim(0, 0.4)
@@ -159,8 +159,8 @@ def compute_plant_statistics():
 
     # plot t per round
     plot_hist(axs[0, 1], players_per_round_df['t per round'], [0.5, 1.5, 2.5, 3.5, 4.5, 5.5])
-    axs[0, 1].set_title('Initial Defense', fontsize=8, x=0.55)
-    axs[0, 1].set_xlabel('Players', fontsize=8, labelpad=2)
+    axs[0, 1].set_title('Defense', fontsize=8, x=0.55)
+    axs[0, 1].set_xlabel('Initial Players', fontsize=8, labelpad=2)
     #axs[0, 1].set_ylabel('Percent')
     #axs[0, 1].text(3, 0.2, players_per_round_df['t per round'].describe().to_string())
     axs[0, 1].set_ylim(0, 0.4)

@@ -88,11 +88,19 @@ def compute_coverage_metrics(loaded_model: LoadedModel, start_positions: bool):
     heatmap_im.set_edgecolor('face')
     cbar = fig.colorbar(heatmap_im, ax=ax)
     cbar.ax.tick_params(labelsize=8)
-    cbar.ax.set_ylabel('Player-Ticks', rotation=270, labelpad=3, fontsize=8)
+    cbar.ax.set_ylabel('Player-Ticks', rotation=270, labelpad=7, fontsize=8)
     if start_positions:
-        cbar.ax.set_yticks([10**3])
+        cbar.ax.set_yticks([1, 100, 10**3])
+        yticklabels = cbar.ax.get_yticklabels()
+        yticklabels[0] = "$\\mathdefault{1}$"
+        #yticklabels[1] = "$\\mathdefault{10}$"
+        cbar.ax.set_yticklabels(yticklabels)
     else:
-        cbar.ax.set_yticks([10**5])
+        cbar.ax.set_yticks([1, 1000, 10**5])
+        yticklabels = cbar.ax.get_yticklabels()
+        yticklabels[0] = "$\\mathdefault{1}$"
+        cbar.ax.set_yticklabels(yticklabels)
+    cbar.ax.yaxis.set_tick_params(pad=0)
     cbar.ax.tick_params(axis="y", labelsize=8)
 
     # remove right/top spine
