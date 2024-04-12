@@ -47,7 +47,7 @@ int main(int argc, char * argv[]) {
             << "5. path/to/saved/data\n"
             << "6. t for tests, tl for tests with learned, r for rounds, rh for rounds with hueristics, rht for rounds with t hueristics, rhct for rounds with ct heuristics, s for survey\n"
             << "7. 1 for all csknow bots, ct for ct only csknow bots, t for t only csknow bots, 0 for for no csknow bots\n"
-            << "8. y for traces, n for normal bots, nu for normal bots with uncertain model, b for prebaked rounds, br for prebaked rounds with position randomization"
+            << "8. y for traces, n for normal bots, nu for normal bots with uncertain model, nnc for normal bots with non-confounding, b for prebaked rounds, br for prebaked rounds with position randomization"
             << "(optional) 9. situation to run (if none provided, then run all)"
             << "(optional) 10. set if using remixed situations"
             << std::endl;
@@ -88,7 +88,8 @@ int main(int argc, char * argv[]) {
     bool finishedTests = false;
     csknow::plant_states::PlantStatesResult plantStatesResult;
     bool limitToNonConfounding = false;
-    if (limitToNonConfounding || runSurvey) {
+    bool nonConfoundingArg = tracesStr == "nnc";
+    if (limitToNonConfounding || nonConfoundingArg || runSurvey) {
         plantStatesResult.loadFromPython(savedDatasetsDir + "/non_confound_test_plant_states.hdf5", true);
     }
     else {
@@ -307,7 +308,7 @@ int main(int argc, char * argv[]) {
     }
 #pragma clang diagnostic pop
 
-    csknow::inference_manager::saveInferenceTimeLog(logPath + "/" + getNowAsFileNameString() + ".log");
+    csknow::inference_manager::saveInferenceTimeLog(logPath + "/inference_times.log");
 
     exit(0);
 }

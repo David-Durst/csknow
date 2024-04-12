@@ -135,7 +135,7 @@ namespace csknow::inference_manager {
         if (tmpInferenceSeconds > 1e-4) {
             inferenceSeconds = tmpInferenceSeconds;
         }
-        if (overallModelToRun - 1 == 0 || overallModelToRun - 1 == 8) {
+        if ((getUseUncertainModel() && overallModelToRun - 1 == 0) || overallModelToRun - 1 == 8) {
             if (inferenceTimePerIteration.size() < 10000) {
                 inferenceTimePerIteration.push_back(inferenceTime.count());
             }
@@ -165,6 +165,9 @@ namespace csknow::inference_manager {
     }
 
     void saveInferenceTimeLog(string path) {
+        if (inferenceTimePerIteration.size() < 200) {
+            return;
+        }
         std::fstream inferenceTimeLogFile (path, std::fstream::out);
         inferenceTimeLogFile << "inference time" << std::endl;
         for (const auto & inferenceTime: inferenceTimePerIteration) {
