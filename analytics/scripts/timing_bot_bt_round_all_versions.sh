@@ -35,6 +35,9 @@ run_csknow_rounds() {
         ./csknow_test_bt_bot ${script_dir}/../nav /home/steam/csgo-ds/csgo/addons/sourcemod/bot-link-data ${script_dir}/../ ${script_dir}/../../learn_bot/models ${script_dir}/../../learn_bot/learn_bot/libs/saved_train_test_splits $bot_type $custom_bots $uncertain_option $j
         sleep 40
         date
+
+        cd ${script_dir}/../../learn_bot/
+        ./scripts/compute_inference_time.sh ${script_dir}/../inference_times.log $model
     done
 
     type_str="${model_type} demos for $model:"
@@ -47,9 +50,6 @@ run_csknow_rounds() {
     export IFS=$old_ifs
     result_strs+=("$new_demos_str")
     result_strs+=("")
-
-    cd ${script_dir}/../../learn_bot/
-    ./scripts/compute_inference_time.sh ${script_dir}/../inference_times.log $model
 }
 
 git log -n 1
