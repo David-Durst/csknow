@@ -105,7 +105,7 @@ def plot_offense_defense(offense_events: MetricAggregation, defense_events: Metr
     offense_events_median_df.plot(kind='bar', rot=0, ax=axs[0], yerr=offense_events_iqr_df)#, color=default_bar_color)
     axs[0].tick_params(axis="x", labelsize=8)
     axs[0].tick_params(axis="y", labelsize=8)
-    axs[0].set_title("Human Delta Offense Flank Occurrences", fontsize=8)
+    axs[0].set_title("Offense Flank Occurrences", fontsize=8)
     # ax.set_xlabel(x_label)
     axs[0].set_ylabel('Abs Rounds Delta Human', fontsize=8)
     axs[0].set_yticks([0, 30, 60])

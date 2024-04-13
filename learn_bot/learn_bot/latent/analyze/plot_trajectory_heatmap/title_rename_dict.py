@@ -52,7 +52,9 @@ title_rename_dict = {
     "4_8_24_third_learned_layers_4_heads_1": "MLMove",
     "4_8_24_fourth_learned_layers_4_heads_1": "MLMove",
     "4_9_24_learned_layers_4_heads_1_d_256": "CSML4H1D256",
+    "4_11_24_learned_layers_1_heads_1_d_256": "CSML1H1D256",
     "4_9_24_learned_layers_4_everyone_mask_only": "NoAttention",
     "4_9_24_learned_layers_4_everyone_mask_and_mpi": "PositionC4Only",
     "4_11_24_push_only_layers_4_heads_1": "PushOnly",
+    "4_11_24_learned_layers_4_head_1_time": "MLHistory",
 }
