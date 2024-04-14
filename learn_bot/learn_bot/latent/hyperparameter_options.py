@@ -38,6 +38,7 @@ class HyperparameterOptions:
     dim_feedforward: int = 2048
     weight_push: Optional[float] = None
     weight_save: Optional[float] = None
+    include_dead: bool = False
     comment: str = ""
 
     def __str__(self):
@@ -50,7 +51,7 @@ class HyperparameterOptions:
                f"mpi_{self.mask_partial_info}_om_{str(self.output_mask)}_" \
                f"w_{self.weight_not_move_loss}_ws_{self.weight_shoot}_wns_{self.weight_not_shoot}_" \
                f"dh_{self.drop_history_probability}_ifo_{self.ignore_future_outputs}_d_{self.dim_feedforward}_" \
-               f"wp_{self.weight_push}_wsa_{self.weight_save}_c_{self.comment}"
+               f"wp_{self.weight_push}_wsa_{self.weight_save}_id_{self.include_dead}_c_{self.comment}"
 
     def get_checkpoints_path(self) -> Path:
         return checkpoints_path / str(self)

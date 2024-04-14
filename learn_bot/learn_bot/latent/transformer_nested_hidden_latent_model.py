@@ -83,11 +83,12 @@ class TransformerNestedHiddenLatentModel(nn.Module):
 
     def __init__(self, cts: IOColumnTransformers, internal_width: int, num_players: int, num_input_time_steps: int,
                  num_layers: int, num_heads: int, control_type: ControlType, player_mask_type: PlayerMaskType,
-                 mask_partial_info: bool, dim_feedforward: int):
+                 mask_partial_info: bool, dim_feedforward: int, include_dead: bool):
         super(TransformerNestedHiddenLatentModel, self).__init__()
         self.cts = cts
         self.internal_width = internal_width
         self.mask_partial_info = mask_partial_info
+        self.include_dead = include_dead
         # transformed/transformed doesn't matter since no angles and all categorical variables are
         # "distirbution" type meaning pre one hot encoded
         all_c4_columns_ranges = range_list_to_index_list(cts.get_name_ranges(True, True, contained_str="c4"))
@@ -315,6 +316,8 @@ class TransformerNestedHiddenLatentModel(nn.Module):
 
         # figure out alive and dead for masking out dead ploayers
         alive_gathered = x[:, self.alive_columns]
+        if self.include_dead:
+            alive_gathered[:, :] = 1.
         dead_gathered = alive_gathered < 0.5
 
         combined_mask = combine_padding_sequence_masks(self.input_per_player_mask_cpu.to(x.device.type),

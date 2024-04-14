@@ -61,7 +61,8 @@ def load_non_script_module(model_path: Path):
                                                hyperparameter_options.control_type,
                                                hyperparameter_options.player_mask_type,
                                                hyperparameter_options.mask_partial_info,
-                                               hyperparameter_options.dim_feedforward)
+                                               hyperparameter_options.dim_feedforward,
+                                               hyperparameter_options.include_dead)
     model.load_state_dict(model_file['model_state_dict'])
     return model
 
