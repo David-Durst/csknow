@@ -20,6 +20,7 @@ class HyperparameterOptions:
     full_rollout_epochs: int = 0
     batch_size: int = 1024
     num_input_time_steps: int = 1
+    num_output_time_steps: int = 3
     learning_rate: float = 4e-5
     weight_decay: float = 0.
     layers: int = 4
@@ -42,9 +43,10 @@ class HyperparameterOptions:
     comment: str = ""
 
     def __str__(self):
+        assert self.num_output_time_steps == 1 or self.num_output_time_steps == num_radial_ticks
         return f"{now_str}_iw_{self.internal_width}_" \
                f"bc_{self.bc_epochs}_pr_{self.probabilistic_rollout_epochs}_fr_{self.full_rollout_epochs}_" \
-               f"b_{self.batch_size}_it_{self.num_input_time_steps}_ot_{num_radial_ticks}_" \
+               f"b_{self.batch_size}_it_{self.num_input_time_steps}_ot_{self.num_output_time_steps}_" \
                f"lr_{self.learning_rate}_wd_{self.weight_decay}_" \
                f"l_{self.layers}_h_{self.heads}_n_{self.noise_var}_" \
                f"ros_{self.rollout_seconds}_ct_{str(self.control_type)}_pm_{str(self.player_mask_type)}_" \

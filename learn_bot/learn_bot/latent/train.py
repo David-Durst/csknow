@@ -23,7 +23,7 @@ from learn_bot.latent.latent_hdf5_dataset import MultipleLatentHDF5Dataset
 from learn_bot.latent.place_area.load_data import human_latent_team_hdf5_data_path, manual_latent_team_hdf5_data_path, \
     LoadDataResult, LoadDataOptions
 from learn_bot.latent.place_area.column_names import place_area_input_column_types, radial_vel_output_column_types, \
-    test_success_col
+    test_success_col, num_radial_bins, num_radial_ticks
 from learn_bot.latent.place_area.simulation.rollout_simulator import rollout_simulate
 from learn_bot.latent.profiling import profile_latent_model
 from learn_bot.latent.train_paths import checkpoints_path, runs_path, train_test_split_file_name, \
@@ -42,6 +42,7 @@ from learn_bot.libs.multi_hdf5_wrapper import MultiHDF5Wrapper
 from tqdm import tqdm
 from dataclasses import dataclass
 from typing import Optional
+from einops import rearrange
 
 time_model = False
 
@@ -64,6 +65,7 @@ hyperparameter_option_range = [HyperparameterOptions(num_input_time_steps=1, con
                                                      mask_partial_info=True),
                                HyperparameterOptions(num_input_time_steps=1, heads=1, control_type=ControlType.SimilarityControl,
                                                      include_dead=True),
+                               HyperparameterOptions(num_input_time_steps=1, num_output_time_steps=1, heads=1, control_type=ControlType.SimilarityControl),
                                HyperparameterOptions(num_input_time_steps=3, heads=1, bc_epochs=40, control_type=ControlType.SimilarityControl),
                                HyperparameterOptions(num_input_time_steps=1, bc_epochs=160, layers=1, heads=1, control_type=ControlType.SimilarityControl,
                                                      dim_feedforward=256),
@@ -293,6 +295,9 @@ def train(train_type: TrainType, multi_hdf5_wrapper: MultiHDF5Wrapper,
                         first_row_similarity = similarity[0:1, 0, :].float()
                 X, Y, duplicated_last = X.to(device), Y.to(device), duplicated_last.to(device)
                 Y = Y.float()
+                if hyperparameter_options.num_output_time_steps == 1 and num_radial_ticks > 1:
+                    Y_tmp = rearrange(Y, 'b (p t d) -> b p t d', t=num_radial_ticks, d=num_radial_bins)
+                    Y_tmp[:, :, 1:, :] = Y_tmp[:, :, [0], :]
                 similarity = similarity.to(device).float()
                 # XR = torch.randn_like(X, device=device)
                 # XR[:,0] = X[:,0]
