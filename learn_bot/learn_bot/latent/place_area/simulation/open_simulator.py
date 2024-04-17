@@ -410,7 +410,8 @@ def run_analysis_per_mask(loaded_model: LoadedModel, all_data_loaded_model: Load
                                             loaded_model.get_cur_vis_df(),
                                             loaded_model.cur_simulated_dataset.X,
                                             TrajectoryFilterOptions(trajectory_counter=trajectory_counter, no_metrics=True),
-                                            str(player_mask_config))
+                                            str(player_mask_config),
+                                            print_on_jump=True)
             per_iteration_displacement_errors.append(hdf5_displacement_errors)
 
         per_iteration_ade: List[List[float]] = [de.player_trajectory_ades for de in per_iteration_displacement_errors]

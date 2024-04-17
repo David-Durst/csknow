@@ -219,7 +219,8 @@ def plot_gaussian(buffer: np.ndarray, row: int, col: int, num_points: int):
 
 
 def plot_one_trajectory_dataset(loaded_model: LoadedModel, id_df: pd.DataFrame, vis_df: pd.DataFrame,
-                                dataset: np.ndarray, trajectory_filter_options: TrajectoryFilterOptions, title: str):
+                                dataset: np.ndarray, trajectory_filter_options: TrajectoryFilterOptions, title: str,
+                                print_on_jump: bool = False):
     if title not in title_to_line_buffers:
         title_to_line_buffers[title] = ImageBuffers()
         title_to_point_buffers[title] = ImageBuffers()
@@ -456,8 +457,16 @@ def plot_one_trajectory_dataset(loaded_model: LoadedModel, id_df: pd.DataFrame, 
                 for i in range(len(canvas_pos_xy) - 1):
                     if ((canvas_pos_xy[i][0] - canvas_pos_xy[i + 1][0]) ** 2. +
                         (canvas_pos_xy[i][1] - canvas_pos_xy[i + 1][1]) ** 2.) ** 0.5 > 100:
-                        assert i > 10 and len(canvas_pos_xy) - i < 5
-                        canvas_pos_xy = canvas_pos_xy[:i+1]
+                        # one tick in one demo makes this difficult, not used in real vis,
+                        # just ignore it when doing debug vis
+                        if print_on_jump:
+                            if not (i > 10 and len(canvas_pos_xy) - i < 5):
+                                print('jump in data point')
+                            else:
+                                canvas_pos_xy = canvas_pos_xy[:i+1]
+                        else:
+                            assert i > 10 and len(canvas_pos_xy) - i < 5
+                            canvas_pos_xy = canvas_pos_xy[:i + 1]
                 for pos_xy in canvas_pos_xy:
                     #plot_gaussian(point_buffer, pos_xy[1], pos_xy[0], 1)
                     point_buffer[pos_xy[1], pos_xy[0]] += 1
