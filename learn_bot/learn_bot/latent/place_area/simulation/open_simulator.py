@@ -381,8 +381,8 @@ def run_analysis_per_mask(loaded_model: LoadedModel, all_data_loaded_model: Load
     displacement_errors = DisplacementErrors()
     mask_iterations = num_iterations if player_mask_config not in deterministic_configs else 1
     for i, hdf5_wrapper in enumerate(loaded_model.dataset.data_hdf5s):
-        if i > 3:
-            break
+        #if i > 3:
+        #    break
 
         print(f"Processing hdf5 {i} / {len(loaded_model.dataset.data_hdf5s)}: {hdf5_wrapper.hdf5_path}")
         per_iteration_displacement_errors: List[DisplacementErrors] = []
@@ -441,17 +441,17 @@ def run_analysis(loaded_model: LoadedModel, all_data_loaded_model: LoadedModel):
     mask_result_strs = []
     mask_result_latex_strs = ["Simulation Type & minJADE & minJFDE \\\\",
                               "\\hline"]
-    player_mask_configs = [PlayerMaskConfig.ALL,]
-                           #PlayerMaskConfig.CT, PlayerMaskConfig.T,
-                           ##PlayerMaskConfig.LAST_ALIVE,
-                           #PlayerMaskConfig.STARTING_CMD,
-                           #PlayerMaskConfig.STARTING_POSITION,
-                           #PlayerMaskConfig.INTERPOLATION_ROLLOUT_POSITION,
-                           #PlayerMaskConfig.INTERPOLATION_ROUND_POSITION,
-                           #PlayerMaskConfig.NN_POSITION,
-                           #PlayerMaskConfig.GROUND_TRUTH_CMD,
-                           #PlayerMaskConfig.GROUND_TRUTH_POSITION,
-                           #PlayerMaskConfig.RANDOM_CMD]
+    player_mask_configs = [PlayerMaskConfig.ALL,
+                           PlayerMaskConfig.CT, PlayerMaskConfig.T,
+                           #PlayerMaskConfig.LAST_ALIVE,
+                           PlayerMaskConfig.STARTING_CMD,
+                           PlayerMaskConfig.STARTING_POSITION,
+                           PlayerMaskConfig.INTERPOLATION_ROLLOUT_POSITION,
+                           PlayerMaskConfig.INTERPOLATION_ROUND_POSITION,
+                           PlayerMaskConfig.NN_POSITION,
+                           PlayerMaskConfig.GROUND_TRUTH_CMD,
+                           PlayerMaskConfig.GROUND_TRUTH_POSITION,
+                           PlayerMaskConfig.RANDOM_CMD]
     ades_per_mask_config: List[pd.Series] = []
     fdes_per_mask_config: List[pd.Series] = []
     for i, player_mask_config in enumerate(player_mask_configs):
@@ -477,7 +477,7 @@ def run_analysis(loaded_model: LoadedModel, all_data_loaded_model: LoadedModel):
     os.makedirs(plots_path, exist_ok=True)
     # compute here so only plot subset of configs in this run
     mask_config_plot_titles = [str(mc) for mc in possible_mask_configs_to_plot if mc in player_mask_configs]
-    #plot_trajectories_to_image(mask_config_plot_titles, True, plots_path, default_trajectory_filter_options)
+    plot_trajectories_to_image(mask_config_plot_titles, True, plots_path, default_trajectory_filter_options)
 
     plot_ade_fde(player_mask_configs, ades_per_mask_config, axs[0], True)
     plot_ade_fde(player_mask_configs, fdes_per_mask_config, axs[1], False)
