@@ -57,4 +57,7 @@ title_rename_dict = {
     "4_9_24_learned_layers_4_everyone_mask_and_mpi": "PositionC4Only",
     "4_11_24_push_only_layers_4_heads_1": "PushOnly",
     "4_11_24_learned_layers_4_head_1_time": "MLHistory",
+    "4_14_24_layers_4_head_1_mpi_only": "MPIOnly",
+    "4_14_24_layers_4_head_1_output_one": "OT1",
+    "4_14_24_layers_4_head_1_include_dead": "ID",
 }
