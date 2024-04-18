@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Optional, List
 
+from cycler import cycler
 from einops import rearrange
 import numpy as np
 import pandas as pd
@@ -93,8 +94,11 @@ def aggregate_one_metric_type(rollout_extensions: list[str], rollout_prefix: str
 
 def plot_offense_defense(offense_events: MetricAggregation, defense_events: MetricAggregation,
                          aggregation_plots_path: Path):
-    fig, axs = plt.subplots(figsize=(3.3, 3.3*0.6 * 2), nrows=2, ncols=1)
+    # add extra height for label
+    fig, axs = plt.subplots(figsize=(3.3, 3.3*0.6 * 2 * 1.12), nrows=2, ncols=1)
 
+    #next(axs[0]._get_lines.prop_cycler)
+    #next(axs[1]._get_lines.prop_cycler)
     offense_events_median_df = offense_events.per_event_delta_median_df
     offense_events_median_df.index = offense_events_median_df.index.to_series().replace(situation_rename_dict)
     offense_events_median_df.rename(title_rename_dict, axis=1, inplace=True)
@@ -102,12 +106,13 @@ def plot_offense_defense(offense_events: MetricAggregation, defense_events: Metr
     offense_events_iqr_df.index = offense_events_iqr_df.index.to_series().replace(situation_rename_dict)
     offense_events_iqr_df.rename(title_rename_dict, axis=1, inplace=True)
 
-    offense_events_median_df.plot(kind='bar', rot=0, ax=axs[0], yerr=offense_events_iqr_df)#, color=default_bar_color)
+    colors = plt.rcParams['axes.prop_cycle'].by_key()['color'][1:]
+    offense_events_median_df.plot(kind='bar', rot=0, ax=axs[0], color=colors, yerr=offense_events_iqr_df)#, color=default_bar_color)
     axs[0].tick_params(axis="x", labelsize=8)
     axs[0].tick_params(axis="y", labelsize=8)
-    axs[0].set_title("Offense Flank Occurrences", fontsize=8)
+    axs[0].set_title("Offense Flank Occurrence Errors", fontsize=8)
     # ax.set_xlabel(x_label)
-    axs[0].set_ylabel('Abs Rounds Delta Human', fontsize=8)
+    axs[0].set_ylabel('Rounds', fontsize=8)
     axs[0].set_yticks([0, 30, 60])
     axs[0].set_ylim(bottom=0)
 
@@ -129,12 +134,12 @@ def plot_offense_defense(offense_events: MetricAggregation, defense_events: Metr
     defense_events_iqr_df.index = defense_events_iqr_df.index.to_series().replace(situation_rename_dict)
     defense_events_iqr_df.rename(title_rename_dict, axis=1, inplace=True)
 
-    defense_events_median_df.plot(kind='bar', rot=0, ax=axs[1], yerr=defense_events_iqr_df)#, color=default_bar_color)
+    defense_events_median_df.plot(kind='bar', rot=0, ax=axs[1], color=colors, yerr=defense_events_iqr_df)#, color=default_bar_color)
     axs[1].tick_params(axis="x", labelsize=8)
     axs[1].tick_params(axis="y", labelsize=8)
-    axs[1].set_title("Defense Spread Occurrences", fontsize=8)
+    axs[1].set_title("Defense Spread Occurrence Errors", fontsize=8)
     # ax.set_xlabel(x_label)
-    axs[1].set_ylabel('Abs Rounds Delta Human', fontsize=8)
+    axs[1].set_ylabel('Rounds', fontsize=8)
     axs[1].set_yticks([0, 30, 60])
     axs[1].set_ylim(bottom=0)
 
@@ -158,8 +163,8 @@ def plot_mistakes(mistakes_events: MetricAggregation, aggregation_plots_path: Pa
         y_ticks = [0, 75, 150]
     else:
         y_ticks = [0, 20, 40]
-    plot_place_title_df(mistakes_events.per_event_delta_median_df, 'Mistakes', aggregation_plots_path / 'mistakes.pdf',
-                        'Abs Rounds Delta Human', y_ticks, mistakes_events.per_event_delta_iqr_df, force_y_min_zero=True)
+    plot_place_title_df(mistakes_events.per_event_median_df, 'Mistakes', aggregation_plots_path / 'mistakes.pdf',
+                        'Rounds', y_ticks, mistakes_events.per_event_iqr_df, force_y_min_zero=True)
 
 
 def create_latex_tables(offense_events: MetricAggregation, defense_events: MetricAggregation,
