@@ -150,7 +150,7 @@ def plot_offense_defense(offense_events: MetricAggregation, defense_events: Metr
     axs[1].yaxis.grid(True, color='#EEEEEE', dashes=[4, 1])
     axs[1].xaxis.grid(False)
     #axs[1].legend(bbox_to_anchor=(2.5, -0.15), loc='center', bbox_transform=axs[1].transAxes, fontsize=8, ncol=len(defense_key_places.columns))
-    axs[1].legend(bbox_to_anchor=(0.45, -0.15), loc='upper center', fontsize=8, ncol=len(defense_events.per_event_median_df.columns) // 2)
+    axs[1].legend(bbox_to_anchor=(0.45, -0.15), loc='upper center', fontsize=8, ncol=len(defense_events.per_event_median_df.columns) // 1)
     #axs[1].legend(loc=())
     #plt.subplots_adjust(left=0.065, right=0.97, top=0.96, bottom=0.065, wspace=0.14)
     #fig.tight_layout()
