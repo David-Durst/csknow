@@ -95,7 +95,7 @@ def aggregate_one_metric_type(rollout_extensions: list[str], rollout_prefix: str
 def plot_offense_defense(offense_events: MetricAggregation, defense_events: MetricAggregation,
                          aggregation_plots_path: Path):
     # add extra height for label
-    fig, axs = plt.subplots(figsize=(3.3, 3.3*0.6 * 2 * 1.12), nrows=2, ncols=1)
+    fig, axs = plt.subplots(figsize=(3.3, 3.3*0.6 * 2 * 1.15), nrows=2, ncols=1)
 
     #next(axs[0]._get_lines.prop_cycler)
     #next(axs[1]._get_lines.prop_cycler)
