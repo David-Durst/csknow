@@ -63,6 +63,7 @@ def leave_one_out_similarity_analysis(push_save_round_labels: PushSaveRoundLabel
         predicted_similarity_label = round_id_and_similarity_row[get_similarity_column(0)]
         ground_truth_similarity_label = push_save_round_labels.round_id_to_data[round_id].to_float_label()
         similarity_error = abs(predicted_similarity_label - ground_truth_similarity_label)
+        # these are labeled in the ground truth data, the DTWADE doesn't find a match (number of combos of players alive and slope constraint prevent some matches)
         not_labeled = predicted_similarity_label < 0.
         if is_test_round:
             if not_labeled:
