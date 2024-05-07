@@ -133,6 +133,7 @@ def plot_count_by_rank(df: pd.DataFrame):
     ax.xaxis.grid(False)
 
     plt.savefig(user_study_plots / 'count_by_rank.pdf')
+    plt.savefig(user_study_plots / 'count_by_rank.png')
 
 
 def significance_tests(df: pd.DataFrame, plot_path: Path):

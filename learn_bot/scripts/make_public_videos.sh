@@ -1,9 +1,9 @@
 src_videos_path="/home/durst/Videos/kdenlive/questionnaire"
-dst_videos_path="/home/durst/Videos/kdenlive/questionnaire/public"
+dst_videos_path="/home/durst/Videos/kdenlive/questionnaire/public_renamed"
 human_name=Human
-learned_name=CSMoveBot
-default_name=CSGOBot
-handcrafted_name=RuleBot
+learned_name=MLMove
+default_name=GameBot
+handcrafted_name=RuleMove
 
 mkdir -p $dst_videos_path
 
