@@ -497,7 +497,7 @@ vector<Script::Ptr> createPrebakedRoundScripts(const nav_mesh::nav_file & navFil
         plantStatesResult.ctPlayerStates[0].pos.back() = {-1445.885375, 2497.657958, 1.294036};
         plantStatesResult.ctPlayerStates[0].viewAngle.back() = {4.949440, -126.222084};
         plantStatesResult.tPlayerStates[0].alive.back() = true;
-        plantStatesResult.tPlayerStates[0].pos.back() = {-1977.860229, 1665.813110, 31.853256};
+        plantStatesResult.tPlayerStates[0].pos.back() = {-1977.860229, 1436.813110, 31.853256};
         plantStatesResult.tPlayerStates[0].viewAngle.back() = {-19.819931, 3.903996};
         playerFreeze.push_back({true, false, false, false, false,
                                 false, false, false, false, false});
@@ -513,7 +513,7 @@ vector<Script::Ptr> createPrebakedRoundScripts(const nav_mesh::nav_file & navFil
         plantStatesResult.ctPlayerStates[0].pos.back() = {-1078.543823, 1232.906372, -87.452003};
         plantStatesResult.ctPlayerStates[0].viewAngle.back() = {4.949440, -126.222084};
         plantStatesResult.tPlayerStates[0].alive.back() = true;
-        plantStatesResult.tPlayerStates[0].pos.back() = {-1977.860229, 1665.813110, 31.853256};
+        plantStatesResult.tPlayerStates[0].pos.back() = {-1977.860229, 1436.813110, 31.853256};
         plantStatesResult.tPlayerStates[0].viewAngle.back() = {-19.819931, 3.903996};
         playerFreeze.push_back({true, false, false, false, false,
                                 false, false, false, false, false});
