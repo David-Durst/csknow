@@ -14,6 +14,7 @@
 #include "bots/testing/scripts/test_defuse.h"
 #include "bots/testing/scripts/test_head_position.h"
 #include "bots/testing/scripts/test_round.h"
+#include "bots/testing/scripts/test_oral_examples.h"
 #include "bots/testing/scripts/learned/test_learned_nav.h"
 #include "bots/testing/scripts/learned/test_learned_hold.h"
 #include "bots/testing/scripts/learned/test_out_distribution.h"
@@ -119,7 +120,9 @@ int main(int argc, char * argv[]) {
                                                                         situationId, false), false);
 
     ScriptsRunner scriptsRunner(Script::makeList(
-         make_unique<GooseToCatScript>(state),
+            make_unique<PositionCoverScript>(state)
+            //make_unique<PositionVisibilityScript>(state)
+         //make_unique<GooseToCatScript>(state),
                  /*
             make_unique<GooseToCatShortScript>(state)
             make_unique<CTPushLongScript>(state),
@@ -136,7 +139,7 @@ int main(int argc, char * argv[]) {
             make_unique<HoldBSitePushScript>(state),
             make_unique<HoldBSiteBaitScript>(state)
              */
-            make_unique<AimAndKillWithinTimeCheck>(state)
+            //make_unique<AimAndKillWithinTimeCheck>(state)
                     /*
              * /
             make_unique<CTEngageSpacingScript>(state),
