@@ -119,4 +119,58 @@ public:
     }
 };
 
+class JumpingExampleScript : public Script {
+public:
+    OrderId addedOrderId;
+
+    explicit JumpingExampleScript(const ServerState &) :
+            Script("JumpingExampleScript", {{0, ENGINE_TEAM_T}, {0, ENGINE_TEAM_T}},
+                   {ObserveType::Absolute, 0, {-1659.575805, 2660.717285, 423.976562}, {47.740009, -31.929656}}) { }
+
+    void initialize(Tree & tree, ServerState & state) override {
+        if (tree.newBlackboard) {
+            Blackboard & blackboard = *tree.blackboard;
+            Script::initialize(tree, state);
+            Node::Ptr setupCommands = make_unique<SequenceNode>(blackboard, Node::makeList(
+                                                                        make_unique<InitTestingRound>(blackboard, name),
+                                                                        make_unique<movement::WaitNode>(blackboard, 1.0),
+                                                                        make_unique<SpecDynamic>(blackboard, neededBots, observeSettings),
+                                                                        make_unique<movement::WaitNode>(blackboard, 0.1),
+                                                                        make_unique<SlayAllBut>(blackboard, vector{neededBots[0].id, neededBots[1].id}, state),
+                                                                        make_unique<movement::WaitNode>(blackboard, 0.3),
+                                                                        make_unique<SetPos>(blackboard, Vec3({-1070.031250, 2584.099365, 138.724563}), Vec2({-26.319856, 21.757965})),
+                                                                        make_unique<movement::WaitNode>(blackboard, 0.1),
+                                                                        make_unique<Teleport>(blackboard, neededBots[0].id, state),
+                                                                        make_unique<movement::WaitNode>(blackboard, 0.1),
+                                                                        make_unique<SetPos>(blackboard, Vec3({-1558.946899, 2585.853515, 4.330099}), Vec2({-5.529698, 2.265953})),
+                                                                        make_unique<movement::WaitNode>(blackboard, 0.1),
+                                                                        make_unique<Teleport>(blackboard, neededBots[1].id, state),
+                                                                        make_unique<movement::WaitNode>(blackboard, 0.1),
+                                                                        make_unique<ClearMemoryCommunicationDangerNode>(blackboard),
+                                                                        make_unique<movement::WaitNode>(blackboard, 40.0)),
+                                                                "DangerSetup");
+            /*
+            Node::Ptr disableAllBothDuringSetup = make_unique<ParallelFirstNode>(blackboard, Node::makeList(
+                    make_unique<DisableActionsNode>(blackboard, "DisableSetup", vector{neededBots[0].id, neededBots[1].id, neededBots[2].id, neededBots[3].id}, false)
+            ), "DangerDisableDuringSetup");
+             */
+
+            /*
+            commands = make_unique<SequenceNode>(blackboard, Node::makeList(
+                                                         std::move(disableAllBothDuringSetup),
+                                                         make_unique<ParallelFirstNode>(blackboard, Node::makeList(
+                                                                                                make_unique<DisableActionsNode>(blackboard, "DisableSetup", vector{neededBots[0].id, neededBots[1].id}),
+                                                                                                // if the inner node doesn't finish in 15 seconds, fail right after
+                                                                                                make_unique<movement::WaitNode>(blackboard, 36, false)),
+                                                                                        "DangerTwoPlayerCondition")),
+                                                 "JumpingExampleSequence");
+                                                 */
+            commands = make_unique<ParallelFirstNode>(blackboard, Node::makeList(
+                                                              make_unique<DisableActionsNode>(blackboard, "DisableSetup", vector{neededBots[0].id, neededBots[1].id}),
+                                                              std::move(setupCommands)),
+                                                      "JumpingExampleSequence");
+        }
+    }
+};
+
 #endif //CSKNOW_TEST_ORAL_EXAMPLES_H

@@ -120,8 +120,9 @@ int main(int argc, char * argv[]) {
                                                                         situationId, false), false);
 
     ScriptsRunner scriptsRunner(Script::makeList(
-            make_unique<PositionCoverScript>(state)
+            //make_unique<PositionCoverScript>(state),
             //make_unique<PositionVisibilityScript>(state)
+            make_unique<JumpingExampleScript>(state)
          //make_unique<GooseToCatScript>(state),
                  /*
             make_unique<GooseToCatShortScript>(state)
