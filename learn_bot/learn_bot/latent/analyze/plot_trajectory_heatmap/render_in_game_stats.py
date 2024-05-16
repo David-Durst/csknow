@@ -10,6 +10,7 @@ from matplotlib import pyplot as plt
 from learn_bot.latent.analyze.compare_trajectories.process_trajectory_comparison import plot_hist, generate_bins
 from learn_bot.latent.analyze.plot_trajectory_heatmap.render_key_places_and_mistakes import plot_specific_key_places, \
     plot_key_places, plot_mistakes
+from learn_bot.latent.analyze.plot_trajectory_heatmap.render_move_not_move import render_all_move_not_move_histograms
 from learn_bot.latent.analyze.plot_trajectory_heatmap.render_time_to_event_and_distance_histograms import \
     compute_time_to_event_and_distance_histograms
 from learn_bot.latent.analyze.plot_trajectory_heatmap.title_rename_dict import title_rename_dict
@@ -146,6 +147,7 @@ def compute_metrics(trajectory_filter_options: TrajectoryFilterOptions, plots_pa
         compute_one_metric_histograms(get_title_to_speeds(), 'Weapon/Scoped Scaled Speed', 0.1, 1., 'Percent Max Speed',
                                       plots_path / ('speeds_' + str(trajectory_filter_options) + '.png'))
     if trajectory_filter_options.compute_action_changes:
+        render_all_move_not_move_histograms(trajectory_filter_options, plots_path)
         compute_one_metric_histograms(get_title_to_delta_speeds(), 'Weapon/Scoped Scaled Delta Speed', 0.02, 1.,
                                       'Percent Max Speed',
                                       plots_path / ('delta_speeds_' + str(trajectory_filter_options) + '.png'))
