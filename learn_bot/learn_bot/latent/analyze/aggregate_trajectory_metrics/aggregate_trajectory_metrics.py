@@ -112,7 +112,7 @@ def plot_offense_defense(offense_events: MetricAggregation, defense_events: Metr
     axs[0].tick_params(axis="y", labelsize=8)
     axs[0].set_title("Offense Flank Occurrence Errors", fontsize=8)
     # ax.set_xlabel(x_label)
-    axs[0].set_ylabel('Rounds', fontsize=8)
+    axs[0].set_ylabel('Absolute Error Rounds', fontsize=8)
     axs[0].set_yticks([0, 30, 60])
     axs[0].set_ylim(bottom=0)
 
@@ -139,7 +139,7 @@ def plot_offense_defense(offense_events: MetricAggregation, defense_events: Metr
     axs[1].tick_params(axis="y", labelsize=8)
     axs[1].set_title("Defense Spread Occurrence Errors", fontsize=8)
     # ax.set_xlabel(x_label)
-    axs[1].set_ylabel('Rounds', fontsize=8)
+    axs[1].set_ylabel('Absolute Error Rounds', fontsize=8)
     axs[1].set_yticks([0, 30, 60])
     axs[1].set_ylim(bottom=0)
 
