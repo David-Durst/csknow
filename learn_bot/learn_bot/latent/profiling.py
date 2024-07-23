@@ -52,6 +52,18 @@ def get_flop_analysis(model, x) -> int:
     return flops.total()
 
 
+def get_parameter_and_buffer_size_mb(model) -> int:
+    param_size = 0
+    for param in model.parameters():
+        param_size += param.nelement() * param.element_size()
+    buffer_size = 0
+    for buffer in model.buffers():
+        buffer_size += buffer.nelement() * buffer.element_size()
+
+    size_all_mb = (param_size + buffer_size) / 1024 ** 2
+    return size_all_mb
+
+
 def load_non_script_module(model_path: Path):
     model_file = torch.load(model_path / "delta_pos_checkpoint.pt")
     hyperparameter_options: HyperparameterOptions = model_file['hyperparameter_options']
@@ -80,7 +92,9 @@ def profile_loaded_model(model_path: Path, run_pytorch_profiler):
     first_row_similarity = torch.zeros([1, 1])
     cpu_model = torch.jit.load(model_path / "delta_pos_script_model.pt")
     trainable_parameters = get_trainable_parameters(cpu_model)
-    flops = get_flop_analysis(load_non_script_module(model_path), (first_row, first_row_similarity, temperature_cpu))
+    size_mb = get_parameter_and_buffer_size_mb(cpu_model)
+    #flops = get_flop_analysis(load_non_script_module(model_path), (first_row, first_row_similarity, temperature_cpu))
+    flops = 0
     if run_pytorch_profiler:
         print(trainable_parameters)
         print(flops)
@@ -93,7 +107,7 @@ def profile_loaded_model(model_path: Path, run_pytorch_profiler):
         print(prof.key_averages().table(sort_by="self_cpu_time_total", row_limit=10))
         print(prof.key_averages().table(sort_by="cpu_time_total", row_limit=10))
         #prof.export_chrome_trace('/tmp/profiler_output')
-    return trainable_parameters, flops
+    return trainable_parameters, flops, size_mb
 
 models = {
     "L4H1": "04_04_2024__12_01_47_iw_256_bc_20_pr_0_fr_0_b_1024_it_1_ot_3_lr_4e-05_wd_0.0_l_4_h_1_n_20.0_ros_2.0_ct_SimilarityControl_pm_NoMask_mpi_False_om_NoMask_w_None_ws_None_wns_None_dh_None_ifo_False_c_just_human_all",
@@ -103,6 +117,7 @@ models = {
     "L16H1": "04_07_2024__00_09_55_iw_256_bc_20_pr_0_fr_0_b_1024_it_1_ot_3_lr_4e-05_wd_0.0_l_16_h_1_n_20.0_ros_2.0_ct_SimilarityControl_pm_NoMask_mpi_False_om_NoMask_w_None_ws_None_wns_None_dh_None_ifo_False_c_just_human_all",
     "L16H4": "04_07_2024__00_09_55_iw_256_bc_20_pr_0_fr_0_b_1024_it_1_ot_3_lr_4e-05_wd_0.0_l_16_h_4_n_20.0_ros_2.0_ct_SimilarityControl_pm_NoMask_mpi_False_om_NoMask_w_None_ws_None_wns_None_dh_None_ifo_False_c_just_human_all",
     "L4H1D256": "04_09_2024__22_25_25_iw_256_bc_20_pr_0_fr_0_b_1024_it_1_ot_3_lr_4e-05_wd_0.0_l_4_h_1_n_20.0_ros_2.0_ct_SimilarityControl_pm_NoMask_mpi_False_om_NoMask_w_None_ws_None_wns_None_dh_None_ifo_False_d_256_c_just_human_all",
+    "L1H1D256": "04_11_2024__02_34_52_iw_256_bc_160_pr_0_fr_0_b_1024_it_1_ot_3_lr_4e-05_wd_0.0_l_1_h_1_n_20.0_ros_2.0_ct_SimilarityControl_pm_NoMask_mpi_False_om_NoMask_w_None_ws_None_wns_None_dh_None_ifo_False_d_256_wp_None_wsa_None_c_just_human_all",
 }
 
 if __name__ == '__main__':
@@ -111,7 +126,7 @@ if __name__ == '__main__':
     else:
         profile_dicts = []
         for k,v in models.items():
-            p, f = profile_loaded_model(Path('/home/durst/dev/csknow/learn_bot/learn_bot/latent/checkpoints') / v, False)
-            profile_dicts.append({'Trainable Parameters': float(p), 'FLOPs': float(f)})
+            p, f, s = profile_loaded_model(Path('/home/durst/dev/csknow/learn_bot/learn_bot/latent/checkpoints') / v, False)
+            profile_dicts.append({'Trainable Parameters': float(p), 'FLOPs': float(f), 'Size (MB)': float(s)})
         profile_df = pd.DataFrame.from_records(profile_dicts, index=list(models.keys()))
-        profile_df.to_csv('/home/durst/dev/csknow/learn_bot/learn_bot/latent/analyze/plots/model_profile.csv', float_format='%.1E')
+        profile_df.to_csv('/home/durst/dev/csknow/learn_bot/learn_bot/latent/analyze/plots/model_profile.csv', float_format='%.2E')
