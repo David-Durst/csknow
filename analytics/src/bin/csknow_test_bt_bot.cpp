@@ -122,7 +122,7 @@ int main(int argc, char * argv[]) {
     ScriptsRunner scriptsRunner(Script::makeList(
             //make_unique<PositionCoverScript>(state),
             //make_unique<PositionVisibilityScript>(state)
-            make_unique<JumpingExampleScript>(state)
+            //make_unique<JumpingExampleScript>(state)
          //make_unique<GooseToCatScript>(state),
                  /*
             make_unique<GooseToCatShortScript>(state)
@@ -159,7 +159,9 @@ int main(int argc, char * argv[]) {
             make_unique<CommunicationIgnoreCheck>(state),
             make_unique<SpawnPossibleNavAreasCheck>(state),
             make_unique<DiffusionPossibleNavAreasCheck>(state),
-            make_unique<VisibilityPossibleNavAreasCheck>(state),
+                     */
+            make_unique<VisibilityPossibleNavAreasCheck>(state)
+                    /*
             make_unique<DangerOnePlayerCheck>(state),
             make_unique<DangerTwoPlayerCheck>(state)
              */
