@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Optional, List
 
+import matplotlib
 from cycler import cycler
 from einops import rearrange
 import numpy as np
@@ -16,6 +17,9 @@ from learn_bot.latent.analyze.plot_trajectory_heatmap.render_key_places_and_mist
     situation_rename_dict
 from learn_bot.latent.analyze.plot_trajectory_heatmap.title_rename_dict import title_rename_dict
 
+plt.rc('font', family='Arial')
+matplotlib.rcParams['pdf.fonttype'] = 42
+matplotlib.rcParams['ps.fonttype'] = 42
 
 @dataclass
 class MetricAggregation:

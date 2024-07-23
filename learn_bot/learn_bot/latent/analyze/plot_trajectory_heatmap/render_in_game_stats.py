@@ -3,6 +3,7 @@ from pathlib import Path
 from pprint import pformat
 from typing import List, Dict, Union, Optional
 
+import matplotlib
 import pandas as pd
 import scipy
 from matplotlib import pyplot as plt
@@ -58,10 +59,12 @@ def compute_one_metric_histograms(title_to_values: Dict[str, List[float]], metri
         with open(plot_file_path.with_suffix('.txt'), 'w') as f:
             for k, v in title_to_values.items():
                 f.write(f"{f}: {len(v)} / {title_to_num_points[k]} : {len(v) / title_to_num_points[k]:.3f}\n")
+    plt.close(fig)
 
 
 plt.rc('font', family='Arial')
-
+matplotlib.rcParams['pdf.fonttype'] = 42
+matplotlib.rcParams['ps.fonttype'] = 42
 
 def compute_one_metric_four_histograms(title_to_values: Dict[str, List[float]], metric_title: Optional[str],
                                        bin_width: Union[int, float], max_bin_end: float, y_max: float,
@@ -116,6 +119,7 @@ def compute_one_metric_four_histograms(title_to_values: Dict[str, List[float]], 
 
         ax_index += 1
     plt.savefig(plot_file_path)
+    plt.close(fig)
 
 
 def compute_one_metric_emd(title_to_values: Dict[str, List[float]], plot_file_path: Path):

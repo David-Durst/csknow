@@ -135,3 +135,4 @@ def plot_key_event_heatmaps(title_to_team_to_key_event_pos: title_to_team_to_pos
         f.write(f"num y points less than 1000: {title_to_num_y_points_less_than_1000}\n")
         f.write(f"num x points between negative 1200 and 0: {title_to_num_x_points_between_negative_1200_and_0}\n")
         f.write(f"num points: {title_to_num_points}\n")
+    plt.close(fig)

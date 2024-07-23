@@ -34,6 +34,7 @@ def render_diff_metric_bar_charts(plots_path: Path):
         ax_index += 1
 
     plt.savefig(plots_path / 'diff' / 'emd_bar_plots.png')
+    plt.close(fig)
 
 
 if __name__ == '__main__':

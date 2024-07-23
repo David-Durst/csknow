@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Tuple, List, Optional, Union
 
+import matplotlib
 import numpy as np
 import pandas as pd
 import trueskill
@@ -15,6 +16,8 @@ from learn_bot.latent.analyze.plot_trajectory_heatmap.title_rename_dict import t
 from learn_bot.latent.analyze.user_responses.user_constants import bot_types, nice_bot_types
 
 plt.rc('font', family='Arial')
+matplotlib.rcParams['pdf.fonttype'] = 42
+matplotlib.rcParams['ps.fonttype'] = 42
 
 class PlayerRatings:
     human: Rating

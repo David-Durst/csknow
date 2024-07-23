@@ -170,6 +170,7 @@ def compute_one_distribution_pair_metrics(dist_a: ImageBuffers, dist_b: ImageBuf
             fig.canvas.draw()
             model_team_flow[title_a].append(
                 Image.frombytes('RGB', fig.canvas.get_width_height(), fig.canvas.tostring_rgb()))
+            plt.close(fig)
 
 
 title_font = ImageFont.truetype("arial.ttf", 12)
