@@ -10,6 +10,7 @@ specifications, I recommend creating a machine on AWS using [my
 guide](https://github.com/David-Durst/csknow/blob/master/docs/aws_machine_creation_guide.md).
 
 ## Server Setup
+1. Make sure you are using a user named steam `sudo usermod -a -G sudo steam` and do all further instructions on their account.
 1. Checkout this repository in the home folder of the CSGO server.
 2. Copy the update and run scripts to the home folder: `cd ~; cp csknow/demo_generator/no_docker_scripts/*.sh .` 
 3. Install csgo by running `./update.sh`
